@@ -1,0 +1,8 @@
+{
+  "name": "OED Training Management System",
+  "description": "Training Management System for Orascom Construction Equipment Department",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
