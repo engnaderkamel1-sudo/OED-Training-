@@ -27,13 +27,6 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ message: 'No target tokens provided' });
     }
 
-    const payload = {
-      notification: {
-        title: title || 'تنبيه من منصة OED',
-        body: body || 'لديك إشعار جديد',
-      },
-    };
-
     // Filter out invalid or empty tokens
     const validTokens = targetTokens.filter(t => typeof t === 'string' && t.length > 10);
     
@@ -43,10 +36,10 @@ export default async function handler(req: any, res: any) {
 
     const payload = {
       notification: {
-        title,
-        body,
+        title: title || 'تنبيه جديد',
+        body: body || 'رسالة جديدة من الإدارة',
       },
-      tokens: targetTokens,
+      tokens: validTokens,
     };
     const response = await admin.messaging().sendEachForMulticast(payload);
     
