@@ -52,10 +52,17 @@ import { importFromOneDrive } from "../utils/dataSync";
 import { exportCloudBackup } from "../utils/exportUtils";
 declare const XLSX: any;
 export const AdminDashboard: React.FC = () => {
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
+
   const UserAvatarWithName = ({ user }: { user: User }) => (
     <div className="flex items-center gap-3">
       {user.profileImageUrl ? (
-        <img src={user.profileImageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0" />
+        <img 
+          src={user.profileImageUrl} 
+          alt="" 
+          className="w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
+          onClick={() => setViewingImage(user.profileImageUrl!)}
+        />
       ) : (
         <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-xs shrink-0">
           {user.name.charAt(0).toUpperCase()}
@@ -2035,6 +2042,26 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Image Viewer Modal */}
+      {viewingImage && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black bg-opacity-80 flex items-center justify-center p-4"
+          onClick={() => setViewingImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center" onClick={e => e.stopPropagation()}>
+            <button 
+              className="absolute -top-10 right-0 text-white hover:text-gray-300"
+              onClick={() => setViewingImage(null)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <img src={viewingImage} alt="Profile Full" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

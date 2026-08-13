@@ -12,16 +12,16 @@ export const TopNav: React.FC = () => {
   return (
     <nav className="bg-[#002D62] text-white shadow-md print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          <div className="flex items-center gap-4">
+        <div className="flex justify-between h-16 items-center px-2 md:px-0">
+          <div className="flex items-center gap-2 md:gap-4">
             {/* Company Logo */}
             <div className="flex-shrink-0 flex items-center justify-center bg-white p-1 rounded shadow-sm">
-              <img src="/orascom_logo.jpg" alt="OED Orascom Construction" className="h-10 object-contain" />
+              <img src="/orascom_logo.jpg" alt="OED Orascom Construction" className="h-8 md:h-10 object-contain max-w-[120px] md:max-w-[200px]" />
             </div>
-            <span className="font-bold text-lg md:text-xl tracking-wide">{t('appTitle')}</span>
+            <span className="hidden sm:inline-block font-bold text-lg md:text-xl tracking-wide">{t('appTitle')}</span>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <button 
               onClick={toggleLanguage}
               className="flex items-center gap-1 hover:text-[#FFC000] transition-colors px-2 py-1"
