@@ -78,6 +78,11 @@ export const Login: React.FC = () => {
   };
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+        await Notification.requestPermission();
+      }
+    } catch(e) {}
     setError("");
     setSuccessMsg("");
     const loginInput = email.trim().toLowerCase();
@@ -143,6 +148,11 @@ export const Login: React.FC = () => {
   };
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+        await Notification.requestPermission();
+      }
+    } catch(e) {}
     setError("");
     setSuccessMsg("");
     const cleanHrCode = hrCode.trim();

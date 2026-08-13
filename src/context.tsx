@@ -45,7 +45,22 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('en');
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const stored = localStorage.getItem('oed_training_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('oed_training_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('oed_training_user');
+    }
+  }, [user]);
   
   // Base states
   const [localUsers, setLocalUsers] = useState<User[]>([]);
@@ -95,6 +110,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       unsubData();
     };
   }, []);
+
+  useEffect(() => {
+    if (user && localUsers.length > 0) {
+      const updatedUser = localUsers.find(u => u.id === user.id);
+      if (updatedUser && JSON.stringify(updatedUser) !== JSON.stringify(user)) {
+        setUser(updatedUser);
+      }
+    }
+  }, [localUsers, user]);
 
   const setUpcomingSessions = (sessions: UpcomingSession[] | ((prev: UpcomingSession[]) => UpcomingSession[])) => {
     // This function is mostly for wholesale updates, but we'll adapt it
