@@ -12,6 +12,27 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
+        includeAssets: ['orascom_logo.jpg'],
+        manifest: {
+          name: 'OED Training Management',
+          short_name: 'OED Training',
+          description: 'Orascom Construction Equipment Department Training System',
+          theme_color: '#002D62',
+          background_color: '#ffffff',
+          display: 'standalone',
+          icons: [
+            {
+              src: 'orascom_logo.jpg',
+              sizes: '192x192',
+              type: 'image/jpeg'
+            },
+            {
+              src: 'orascom_logo.jpg',
+              sizes: '512x512',
+              type: 'image/jpeg'
+            }
+          ]
+        },
         devOptions: {
           enabled: true
         }

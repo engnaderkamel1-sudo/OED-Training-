@@ -1,12 +1,20 @@
 import React from 'react';
 import { useAppContext } from '../context';
-import { LogOut, Globe } from 'lucide-react';
+import { LogOut, Globe, Bell } from 'lucide-react';
 
 export const TopNav: React.FC = () => {
-  const { language, setLanguage, user, setUser, t } = useAppContext();
+  const { language, setLanguage, user, setUser, users, setUsers, t } = useAppContext();
 
   const toggleLanguage = () => {
     setLanguage(language === 'ar' ? 'en' : 'ar');
+  };
+
+  const handleClearNotifications = () => {
+    if (user && user.hasUnreadNotifications) {
+      const updatedUser = { ...user, hasUnreadNotifications: false };
+      setUser(updatedUser);
+      setUsers(users.map(u => u.id === user.id ? updatedUser : u));
+    }
   };
 
   return (
@@ -22,6 +30,18 @@ export const TopNav: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2 md:gap-4">
+            {user && user.role === 'trainee' && (
+              <button 
+                onClick={handleClearNotifications}
+                className="relative flex items-center gap-1 hover:text-[#FFC000] transition-colors px-2 py-1"
+                title="Notifications"
+              >
+                <Bell size={18} />
+                {user.hasUnreadNotifications && (
+                  <span className="absolute top-0 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-[#002D62]"></span>
+                )}
+              </button>
+            )}
             <button 
               onClick={toggleLanguage}
               className="flex items-center gap-1 hover:text-[#FFC000] transition-colors px-2 py-1"

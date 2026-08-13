@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useAppContext } from "../context";
 import { User, Role } from "../types";
 import { Fingerprint, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { auth } from "../firebase";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 export const Login: React.FC = () => {
   const { t, language, setUser, users, setUsers, uniqueDepartments } =
     useAppContext();
@@ -73,13 +75,14 @@ export const Login: React.FC = () => {
   const handleBiometricLogin = () => {
     /* Remains the same */
   };
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccessMsg("");
-    const cleanHrCode = hrCode.trim().toLowerCase();
+    const loginInput = email.trim().toLowerCase();
 
-    if (cleanHrCode === "admin" && password === "admin123") {
+    // Legacy admin bypass
+    if (loginInput === "admin" && password === "admin123") {
       const adminUser =
         users.find((u) => u.hrCode.toLowerCase() === "admin") ||
         ({
@@ -96,99 +99,92 @@ export const Login: React.FC = () => {
       localStorage.setItem("savedUserId", adminUser.id);
       return;
     }
-    let foundUser = users.find((u) => u.hrCode.toLowerCase() === cleanHrCode);
 
-    if (
-      foundUser &&
-      (password === "123456" || foundUser.password === password)
-    ) {
-    } else {
-      foundUser = undefined;
-    }
-    if (!foundUser && cleanHrCode === "hr1001" && password === "123456") {
-      foundUser = {
-        id: "u1",
-        hrCode: "HR1001",
-        name: "Ahmed Hassan",
-        department: "Heavy Machinery",
-        role: "trainee",
-        phone: "01000000001",
-        status: "approved",
-        password: "123456",
-      };
-    }
-    if (!foundUser && cleanHrCode === "sup1001" && password === "123456") {
-      foundUser = {
-        id: "s1",
-        hrCode: "SUP1001",
-        name: "Omar Supervisor",
-        department: "Heavy Machinery",
-        role: "supervisor",
-        phone: "01000000002",
-        status: "approved",
-        password: "123456",
-      };
-    }
-    if (foundUser) {
-      if (foundUser.status === "pending") {
-        setError(
-          language === "ar"
-            ? "حسابك قيد المراجعة ولم يتم تفعيله بعد"
-            : "Your account is pending approval",
-        );
-      } else if (foundUser.status === "rejected") {
-        setError(
-          language === "ar"
-            ? "عذراً، تم رفض طلبك. لمزيد من المعلومات يرجى مراسلة nader.reda@orascom.com"
-            : "Your request was rejected. For more info, please email nader.reda@orascom.com",
-        );
-      } else if (foundUser.status === "deleted") {
-        setError(
-          language === "ar"
-            ? "هذا الحساب معطل (تم حذفه)."
-            : "This account has been deactivated."
-        );
-      } else {
-        setUser(foundUser);
-        localStorage.setItem("savedUserId", foundUser.id);
+    let foundUser = users.find((u) => u.email?.toLowerCase() === loginInput || u.hrCode.toLowerCase() === loginInput);
+
+    if (foundUser && foundUser.email) {
+      try {
+        await signInWithEmailAndPassword(auth, foundUser.email, password);
+      } catch (err) {
+        if (foundUser.password !== password) {
+          setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
+          return;
+        }
+      }
+    } else if (foundUser) {
+      // Legacy user without email
+      if (foundUser.password !== password && password !== "123456") {
+        setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
+        return;
       }
     } else {
-      setError(
-        language === "ar"
-          ? "الرقم الوظيفي أو الرقم السري غير صحيح"
-          : "Invalid HR Code or Password",
-      );
+      // Mock data fallback
+      if (loginInput === "hr1001" && password === "123456") {
+        foundUser = { id: "u1", hrCode: "HR1001", name: "Ahmed Hassan", department: "Heavy Machinery", role: "trainee", phone: "01000000001", status: "approved", password: "123456" };
+      } else if (loginInput === "sup1001" && password === "123456") {
+        foundUser = { id: "s1", hrCode: "SUP1001", name: "Omar Supervisor", department: "Heavy Machinery", role: "supervisor", phone: "01000000002", status: "approved", password: "123456" };
+      } else {
+        setError(language === "ar" ? "الحساب غير موجود" : "Account not found");
+        return;
+      }
+    }
+
+    if (foundUser.status === "pending") {
+      setError(language === "ar" ? "حسابك قيد المراجعة ولم يتم تفعيله بعد" : "Your account is pending approval");
+    } else if (foundUser.status === "rejected") {
+      setError(language === "ar" ? "عذراً تم رفض طلبك. لمزيد من المعلومات يرجى مراسلة nader.reda@orascom.com" : "Your request was rejected. For more info, please email nader.reda@orascom.com");
+    } else if (foundUser.status === "deleted") {
+      setError(language === "ar" ? "تم إيقاف هذا الحساب (غير متاح)." : "This account has been deactivated.");
+    } else {
+      setUser(foundUser);
+      localStorage.setItem("savedUserId", foundUser.id);
     }
   };
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccessMsg("");
     const cleanHrCode = hrCode.trim();
-    if (!cleanHrCode || !password || !name || !department) {
-      setError(
-        language === "ar"
-          ? "برجاء التأكد من ملء جميع البيانات"
-          : "Please fill all fields",
-      );
+    if (!cleanHrCode || !password || !name || !department || !email.trim()) {
+      setError(language === "ar" ? "الرجاء ملء جميع الحقول المطلوبة بما فيها البريد الإلكتروني" : "Please fill all required fields including email");
       return;
     }
+    
+    // Data Validation
+    if (phone.length !== 11 || !/^(010|011|012|015)/.test(phone)) {
+      setError(language === "ar" ? "رقم الهاتف يجب أن يكون 11 رقماً ويبدأ بـ 010, 011, 012, أو 015" : "Phone must be 11 digits and start with valid Egyptian prefix");
+      return;
+    }
+    if (password.length < 6) {
+      setError(language === "ar" ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError(language === "ar" ? "البريد الإلكتروني غير صحيح" : "Invalid email format");
+      return;
+    }
+
     if (password !== confirmPassword) {
-      setError(
-        language === "ar" ? "الرقم السري غير متطابق" : "Passwords do not match",
-      );
+      setError(language === "ar" ? "كلمة المرور غير متطابقة" : "Passwords do not match");
       return;
     }
-    if (
-      users.find((u) => u.hrCode.toLowerCase() === cleanHrCode.toLowerCase())
-    ) {
-      setError(
-        language === "ar"
-          ? "الرقم الوظيفي مسجل بالفعل"
-          : "HR Code already exists",
-      );
+    
+    if (users.find((u) => u.hrCode.toLowerCase() === cleanHrCode.toLowerCase() || u.email?.toLowerCase() === email.trim().toLowerCase())) {
+      setError(language === "ar" ? "الرقم الوظيفي أو البريد الإلكتروني مسجل بالفعل" : "HR Code or Email already exists");
       return;
     }
+
+    setIsRegistering(true);
+    try {
+      await createUserWithEmailAndPassword(auth, email.trim(), password);
+      await auth.signOut();
+    } catch (err: any) {
+      console.error(err);
+      setError(language === "ar" ? "حدث خطأ أثناء إنشاء الحساب، قد يكون البريد مستخدماً" : "Error creating account, email might be in use");
+      setIsRegistering(false);
+      return;
+    }
+
     const newUser: User = {
       id: `u${users.length + 1}_${Date.now()}`,
       hrCode: cleanHrCode,
@@ -204,11 +200,7 @@ export const Login: React.FC = () => {
       profileImageUrl: profileImage,
     };
     setUsers([...users, newUser]);
-    setSuccessMsg(
-      language === "ar"
-        ? "تم ارسال طلب تسجيلك بنجاح وفي انتظار المراجعة والموافقة قريباً"
-        : "Registration request sent and pending approval",
-    );
+    setSuccessMsg(language === "ar" ? "تم إرسال طلب تسجيلك بنجاح وفي انتظار الموافقة قريباً" : "Registration request sent and pending approval");
     setIsRegistering(false);
     setPassword("");
     setConfirmPassword("");
@@ -236,19 +228,19 @@ export const Login: React.FC = () => {
         )}
         {!isRegistering ? (
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ar" ? "الرقم الوظيفي (HR Code)" : "HR Code"}
-              </label>
-              <input
-                type="text"
-                value={hrCode}
-                onChange={(e) => setHrCode(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-[#002D62]"
-                dir="ltr"
-                required
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {language === "ar" ? "البريد الإلكتروني" : "Email"}
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-[#002D62]"
+                  dir="ltr"
+                  required
+                />
+              </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {language === "ar" ? "الرقم السري" : "Password"}

@@ -98,6 +98,19 @@ export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("userManagement");
   const [userManagementTab, setUserManagementTab] = useState<"pending" | "processed" | "deleted">("pending");
   // State for forms
+
+  const sendPushNotification = async (title: string, body: string, targetTokens: string[]) => {
+    if (!targetTokens || targetTokens.length === 0) return;
+    try {
+      await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, body, targetTokens })
+      });
+    } catch (err) {
+      console.error("Failed to send push notification", err);
+    }
+  };
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [reminderToast, setReminderToast] = useState<string | null>(null);
   const [activeReminderDropdown, setActiveReminderDropdown] = useState<
@@ -241,17 +254,25 @@ export const AdminDashboard: React.FC = () => {
     .sort((a, b) => b.count - a.count);
   const handleApprove = (id: string) => {
     setUsers(
-      users.map((u) => (u.id === id ? { ...u, status: "approved" } : u)),
+      users.map((u) => (u.id === id ? { ...u, status: "approved", hasUnreadNotifications: true } : u)),
     );
+    const approvedUser = users.find(u => u.id === id);
+    if (approvedUser && approvedUser.fcmToken) {
+      sendPushNotification(
+        language === "ar" ? "تم تفعيل حسابك" : "Account Approved",
+        language === "ar" ? "مرحباً بك في منصة OED للتدريب" : "Welcome to OED Training",
+        [approvedUser.fcmToken]
+      );
+    }
     alert(
       language === "ar"
-        ? "تمت الموافقة! (تم إرسال إيميل افتراضي للمستخدم)"
-        : "Approved! (Simulated email sent to user)",
+        ? "تم القبول! (تم إرسال إشعار للمستخدم)"
+        : "Approved! (Notification sent to user)",
     );
   };
   const handleReject = (id: string) => {
     setUsers(
-      users.map((u) => (u.id === id ? { ...u, status: "rejected" } : u)),
+      users.map((u) => (u.id === id ? { ...u, status: "rejected", hasUnreadNotifications: true } : u)),
     );
   };
   
@@ -265,7 +286,7 @@ export const AdminDashboard: React.FC = () => {
 
   const handleRestoreUser = (id: string) => {
     setUsers(
-      users.map((u) => (u.id === id ? { ...u, status: "approved" } : u)),
+      users.map((u) => (u.id === id ? { ...u, status: "approved", hasUnreadNotifications: true } : u)),
     );
   };
   const handleCreateSession = (e: React.FormEvent) => {
@@ -304,6 +325,16 @@ export const AdminDashboard: React.FC = () => {
         createdAt: new Date().toISOString(),
       };
       addUpcomingSession(newSession);
+      
+      const validTokens = users.filter(u => u.fcmToken).map(u => u.fcmToken as string);
+      if (validTokens.length > 0) {
+        sendPushNotification(
+          language === "ar" ? "دورة تدريبية جديدة!" : "New Training Course!",
+          language === "ar" ? `تم إضافة دورة ${courseTitle}. بادر بالتسجيل!` : `Course ${courseTitle} is now available. Register now!`,
+          validTokens
+        );
+      }
+      
       alert(t("sessionPublished"));
     }
     // Clear form fields
@@ -376,8 +407,6 @@ export const AdminDashboard: React.FC = () => {
       ...session,
       reminderLog: [...(session.reminderLog || []), newLogItem],
     };
-    updateUpcomingSession(updatedSession);
-    setActiveReminderDropdown(null);
     const isFinal = reminderType === "Final";
     const typeLabel = isFinal
       ? language === "ar"
@@ -386,11 +415,23 @@ export const AdminDashboard: React.FC = () => {
       : language === "ar"
         ? "تذكير عادي"
         : "Standard reminder";
+        
+    const validTokens = users.filter(u => u.fcmToken).map(u => u.fcmToken as string);
+    if (validTokens.length > 0) {
+      sendPushNotification(
+        isFinal ? (language === "ar" ? "تنبيه نهائي للتسجيل" : "Final Registration Alert") : (language === "ar" ? "تذكير للتسجيل في الدورة" : "Course Registration Alert"),
+        language === "ar" ? `تم إرسال تذكير بخصوص دورة ${session.courseTitle}` : `Reminder for course ${session.courseTitle}`,
+        validTokens
+      );
+    }
+    
     const toastMsg =
       language === "ar"
-        ? `${isFinal ? "🚨" : "🔔"} تم إرسال ${typeLabel} بنجاح لجميع المتدربين المسجلين في [${session.courseTitle}]!`
+        ? `${isFinal ? "🚨" : "🔔"} تم إرسال إشعار ${typeLabel} بنجاح لجميع المتدربين المسجلين في [${session.courseTitle}]!`
         : `${isFinal ? "🚨" : "🔔"} ${typeLabel} alert sent successfully to all registered trainees for [${session.courseTitle}]!`;
     setReminderToast(toastMsg);
+    updateUpcomingSession(updatedSession);
+    setActiveReminderDropdown(null);
     setTimeout(() => {
       setReminderToast(null);
     }, 4500);

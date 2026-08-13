@@ -15,6 +15,8 @@ export interface User {
   password?: string;
   createdAt?: string;
   profileImageUrl?: string;
+  hasUnreadNotifications?: boolean;
+  fcmToken?: string;
 }
 
 export interface Course {

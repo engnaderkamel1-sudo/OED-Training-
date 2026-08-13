@@ -12,9 +12,33 @@ import { ManagerDashboard } from './components/ManagerDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { SiteSupervisorDashboard } from './components/SiteSupervisorDashboard';
 import { Loader2 } from 'lucide-react';
+import { messaging, db } from './firebase';
+import { getToken } from 'firebase/messaging';
+import { doc, updateDoc } from 'firebase/firestore';
 
 const AppContent: React.FC = () => {
   const { user, isLoading, t } = useAppContext();
+
+  React.useEffect(() => {
+    if (user && messaging) {
+      const requestPermission = async () => {
+        try {
+          const permission = await Notification.requestPermission();
+          if (permission === 'granted') {
+            const vapidKey = 'BLkYiBtoSBZjrTlPYF2yP5WVndyWBCmOV5b1WPuLRhCn-8F9Rx6F3e7SQIznNQwgEl7m7DoKLoGl2F_lY55OxX4'; 
+            const currentToken = await getToken(messaging, { vapidKey });
+            if (currentToken && currentToken !== user.fcmToken) {
+              const userRef = doc(db, 'users', user.id);
+              await updateDoc(userRef, { fcmToken: currentToken });
+            }
+          }
+        } catch (error) {
+          console.error('Notification permission error:', error);
+        }
+      };
+      requestPermission();
+    }
+  }, [user]);
 
   // Determine active role
   const activeRole = user?.role;
