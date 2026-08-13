@@ -107,10 +107,13 @@ export const AdminDashboard: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, body, targetTokens })
       });
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Vercel API Error:", text);
-        alert(`Vercel Server Error: ${text}\n(Check Vercel Environment Variables)`);
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to send push notification');
+      }
+      
+      if (data.response && data.response.failureCount > 0) {
+        alert(`Warning: Failed to send to ${data.response.failureCount} devices. The users might have deleted the app or blocked notifications.`);
       }
     } catch (err) {
       console.error("Failed to send push notification", err);

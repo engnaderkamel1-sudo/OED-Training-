@@ -44,12 +44,7 @@ const AppContent: React.FC = () => {
     if (messaging) {
       const unsubscribe = onMessage(messaging, (payload) => {
         if (payload.notification) {
-          // Standard browser notification for foreground
-          new Notification(payload.notification.title || "تنبيه جديد", {
-            body: payload.notification.body,
-            icon: '/oed-ttms-logo-v2.png'
-          });
-          // Also show an alert inside the app
+          // Show an alert inside the app
           alert(`${payload.notification.title}\n\n${payload.notification.body}`);
         }
       });
