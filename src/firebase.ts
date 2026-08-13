@@ -4,7 +4,7 @@ import { getAuth } from "firebase/auth";
 import { getMessaging } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBDnuE-xR4kot3Jzj88T0OevDxWS26l-_c",
+  apiKey: "AIzaSyBDnuE-xR4kot3Jzj88T0OevDxWS261-_c",
   authDomain: "oed-training.firebaseapp.com",
   projectId: "oed-training",
   storageBucket: "oed-training.firebasestorage.app",
