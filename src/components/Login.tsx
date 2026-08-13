@@ -29,8 +29,8 @@ export const Login: React.FC = () => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        const MAX_WIDTH = 400;
-        const MAX_HEIGHT = 400;
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
         let width = img.width;
         let height = img.height;
 
@@ -51,7 +51,7 @@ export const Login: React.FC = () => {
         ctx?.drawImage(img, 0, 0, width, height);
         
         // Compress to high-quality JPEG
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
         setProfileImage(dataUrl);
       };
       img.src = event.target?.result as string;

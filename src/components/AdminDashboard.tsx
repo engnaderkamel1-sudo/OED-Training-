@@ -1131,7 +1131,7 @@ export const AdminDashboard: React.FC = () => {
                         <DataField>{u.hrCode}</DataField>
                       </td>
                       <td className="p-3">
-                        <DataField>{u.name}</DataField>
+                        <UserAvatarWithName user={u} />
                       </td>
                       <td className="p-3">
                         <DataField>{u.department}</DataField>
