@@ -12,7 +12,7 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['oed-ttms-icon.jpg', 'orascom_logo.jpg'],
+        includeAssets: ['oed-ttms-logo-v2.jpg', 'orascom_logo.jpg'],
         manifest: {
           name: 'OED TTMS (Technical Training Management System)',
           short_name: 'OED-TTMS',
@@ -22,12 +22,12 @@ export default defineConfig(() => {
           display: 'standalone',
           icons: [
             {
-              src: 'oed-ttms-icon.jpg',
+              src: 'oed-ttms-logo-v2.jpg',
               sizes: '192x192',
               type: 'image/jpeg'
             },
             {
-              src: 'oed-ttms-icon.jpg',
+              src: 'oed-ttms-logo-v2.jpg',
               sizes: '512x512',
               type: 'image/jpeg'
             }
