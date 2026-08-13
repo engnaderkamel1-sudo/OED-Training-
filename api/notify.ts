@@ -57,14 +57,10 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json({ success: true, response });
   } catch (error: any) {
     console.error('Error sending push notification:', error);
-    const debugInfo = {
-       projectIdEnv: process.env.FIREBASE_PROJECT_ID,
-       appProjectId: admin.apps.length > 0 ? admin.app().options.projectId : 'NO_APP',
-    };
     return res.status(500).json({ 
       success: false, 
-      error: error.message,
-      debug: debugInfo
+      error: error.message || 'Unknown error',
+      debug: process.env.FIREBASE_PROJECT_ID || 'MISSING_PROJECT_ID'
     });
   }
 }
