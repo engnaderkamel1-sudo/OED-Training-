@@ -682,11 +682,10 @@ export const AdminDashboard: React.FC = () => {
       {/* Tabs */}
       <div className="flex overflow-x-auto border-b border-gray-200 mb-6 pb-2 scrollbar-hide space-x-2 rtl:space-x-reverse print:hidden">
         {[
-          { id: "approval", label: t("userApproval"), icon: Users },
           {
-            id: "processed",
-            label: language === "ar" ? "طلبات منتهية" : "Processed Requests",
-            icon: FileText,
+            id: "userManagement",
+            label: language === "ar" ? "إدارة الحسابات" : "User Management",
+            icon: Users,
           },
           { id: "records", label: t("globalRecords"), icon: FileText },
           { id: "analytics", label: t("analytics"), icon: BarChart },
@@ -702,7 +701,6 @@ export const AdminDashboard: React.FC = () => {
           { id: "tna", label: t("tna"), icon: BarChart },
           { id: "resources", label: t("resourceSharing"), icon: Share2 },
           { id: "sync", label: "Sync Excel Data", icon: Database },
-          { id: "deleted", label: language === "ar" ? "المتدربين المحذوفين" : "Deleted Trainees", icon: Users },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -719,9 +717,10 @@ export const AdminDashboard: React.FC = () => {
         ))}
       </div>
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 min-h-[400px]">
-        {/* User Approval Tab */}
-        {activeTab === "approval" && (
-          <div>
+        {/* User Management Tab (Combined) */}
+        {activeTab === "userManagement" && (
+          <div className="space-y-12">
+            <div>
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
               {t("pendingUsers")}
             </h2>
@@ -889,10 +888,8 @@ export const AdminDashboard: React.FC = () => {
             ) : (
               <p className="text-gray-500">No pending users.</p>
             )}
-          </div>
-        )}
-        {activeTab === "processed" && (
-          <div>
+            {/* Processed Requests Section */}
+            <div className="border-t border-gray-200 pt-8">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
               {language === "ar" ? "طلبات منتهية" : "Processed Requests"}
             </h2>
@@ -1016,11 +1013,8 @@ export const AdminDashboard: React.FC = () => {
             ) : (
               <p className="text-gray-500">No processed requests.</p>
             )}
-          </div>
-        )}
-        
-        {activeTab === "deleted" && (
-          <div>
+            {/* Deleted Trainees Section */}
+            <div className="border-t border-gray-200 pt-8">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
               {language === "ar" ? "المتدربين المحذوفين" : "Deleted Trainees"}
             </h2>
@@ -1054,6 +1048,7 @@ export const AdminDashboard: React.FC = () => {
             ) : (
               <p className="text-gray-500">{language === "ar" ? "لا يوجد متدربين محذوفين." : "No deleted trainees."}</p>
             )}
+            </div>
           </div>
         )}
         {/* Trainees Tab */}
