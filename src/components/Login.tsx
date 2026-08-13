@@ -228,10 +228,10 @@ export const Login: React.FC = () => {
           <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {language === "ar" ? "البريد الإلكتروني" : "Email"}
+                  {language === "ar" ? "البريد الإلكتروني أو الرقم الوظيفي" : "Email or HR Code"}
                 </label>
                 <input
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-[#002D62]"
@@ -296,7 +296,7 @@ export const Login: React.FC = () => {
                 )}
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/png, image/jpeg, image/jpg"
                   className="hidden"
                   onChange={handleImageUpload}
                 />
@@ -372,7 +372,7 @@ export const Login: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ar" ? "البريد الإلكتروني (اختياري)" : "Email (Optional)"}
+                {language === "ar" ? "البريد الإلكتروني" : "Email"}
               </label>
               <input
                 type="email"
@@ -380,6 +380,7 @@ export const Login: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full border rounded px-3 py-2"
                 dir="ltr"
+                required
               />
             </div>
             <div>
