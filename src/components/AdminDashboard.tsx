@@ -102,11 +102,16 @@ export const AdminDashboard: React.FC = () => {
   const sendPushNotification = async (title: string, body: string, targetTokens: string[]) => {
     if (!targetTokens || targetTokens.length === 0) return;
     try {
-      await fetch('/api/notify', {
+      const res = await fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, body, targetTokens })
       });
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Vercel API Error:", text);
+        alert(`Vercel Server Error: ${text}\n(Check Vercel Environment Variables)`);
+      }
     } catch (err) {
       console.error("Failed to send push notification", err);
     }

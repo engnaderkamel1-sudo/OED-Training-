@@ -12,8 +12,8 @@ import { ManagerDashboard } from './components/ManagerDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { SiteSupervisorDashboard } from './components/SiteSupervisorDashboard';
 import { Loader2 } from 'lucide-react';
-import { messaging, db } from './firebase';
-import { getToken } from 'firebase/messaging';
+import { auth, db, messaging } from './firebase';
+import { getToken, onMessage } from 'firebase/messaging';
 import { doc, updateDoc } from 'firebase/firestore';
 
 const AppContent: React.FC = () => {
@@ -31,6 +31,19 @@ const AppContent: React.FC = () => {
               const userRef = doc(db, 'users', user.id);
               await updateDoc(userRef, { fcmToken: currentToken });
             }
+            
+            // Handle foreground notifications
+            onMessage(messaging, (payload) => {
+              if (payload.notification) {
+                // Standard browser notification for foreground
+                new Notification(payload.notification.title || "تنبيه جديد", {
+                  body: payload.notification.body,
+                  icon: '/oed-ttms-icon.jpg'
+                });
+                // Also show an alert inside the app
+                alert(`${payload.notification.title}\n\n${payload.notification.body}`);
+              }
+            });
           }
         } catch (error) {
           console.error('Notification permission error:', error);
