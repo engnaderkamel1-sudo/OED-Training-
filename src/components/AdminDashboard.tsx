@@ -68,7 +68,10 @@ export const AdminDashboard: React.FC = () => {
           {user.name.charAt(0).toUpperCase()}
         </div>
       )}
-      <span className="font-medium text-gray-800"><DataField>{user.name}</DataField></span>
+      <div className="flex flex-col">
+        <span className="font-medium text-gray-800"><DataField>{user.name}</DataField></span>
+        {user.email && <span className="text-sm text-gray-500">{user.email}</span>}
+      </div>
     </div>
   );
 

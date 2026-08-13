@@ -10,6 +10,7 @@ export interface User {
   role: Role;
   jobRole?: string;
   phone: string;
+  email?: string;
   status: "pending" | "approved" | "rejected" | "deleted";
   password?: string;
   createdAt?: string;

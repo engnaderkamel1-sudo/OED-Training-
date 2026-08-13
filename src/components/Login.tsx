@@ -9,6 +9,7 @@ export const Login: React.FC = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [hrCode, setHrCode] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -193,6 +194,7 @@ export const Login: React.FC = () => {
       hrCode: cleanHrCode,
       name: name.trim(),
       phone: phone.trim(),
+      email: email.trim(),
       department,
       role: accessRole,
       jobRole: jobRole,
@@ -212,6 +214,7 @@ export const Login: React.FC = () => {
     setConfirmPassword("");
     setHrCode("");
     setPhone("");
+    setEmail("");
     setName("");
     setProfileImage(undefined);
   };
@@ -304,7 +307,6 @@ export const Login: React.FC = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  capture="environment"
                   className="hidden"
                   onChange={handleImageUpload}
                 />
@@ -373,6 +375,18 @@ export const Login: React.FC = () => {
                 className="w-full border rounded px-3 py-2"
                 dir="ltr"
                 required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {language === "ar" ? "البريد الإلكتروني (اختياري)" : "Email (Optional)"}
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border rounded px-3 py-2"
+                dir="ltr"
               />
             </div>
             <div>
