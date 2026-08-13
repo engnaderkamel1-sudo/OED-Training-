@@ -151,8 +151,8 @@ export const Login: React.FC = () => {
     }
     
     // Data Validation
-    if (phone.length !== 11 || !/^(010|011|012|015)/.test(phone)) {
-      setError(language === "ar" ? "رقم الهاتف يجب أن يكون 11 رقماً ويبدأ بـ 010, 011, 012, أو 015" : "Phone must be 11 digits and start with valid Egyptian prefix");
+    if (phone.length !== 10 || !/^(10|11|12|15)/.test(phone)) {
+      setError(language === "ar" ? "رقم الهاتف غير صحيح، يجب أن يتكون من 10 أرقام بعد كود مصر (+20)" : "Phone must be 10 digits after +20 (e.g. 10xxxxxxxx)");
       return;
     }
     if (password.length < 6) {
@@ -187,7 +187,7 @@ export const Login: React.FC = () => {
       id: `u${users.length + 1}_${Date.now()}`,
       hrCode: cleanHrCode,
       name: name.trim(),
-      phone: phone.trim(),
+      phone: "0" + phone.trim(),
       email: email.trim(),
       department,
       role: accessRole,
@@ -297,7 +297,6 @@ export const Login: React.FC = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  capture="user"
                   className="hidden"
                   onChange={handleImageUpload}
                 />
@@ -359,14 +358,17 @@ export const Login: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t("phone")}
               </label>
-              <input
-                type="text"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-                dir="ltr"
-                required
-              />
+              <div className="flex border rounded overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62]" dir="ltr">
+                <span className="bg-gray-100 px-3 py-2 border-r text-gray-600 font-medium">+20</span>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                  className="w-full px-3 py-2 outline-none"
+                  placeholder="10xxxxxxxx"
+                  required
+                />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
