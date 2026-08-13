@@ -1074,7 +1074,7 @@ export const AdminDashboard: React.FC = () => {
                 </thead>
                 <tbody>
                   {traineeUsers.map((u) => (
-                    <tr key={u.id} className="border-b">
+                    <tr key={u.id} className={`border-b hover:bg-gray-50 transition-colors ${u.status === "deleted" ? "bg-red-50 text-red-700" : ""}`}>
                       <td className="p-3">
                         <DataField>{u.hrCode}</DataField>
                       </td>
@@ -1446,7 +1446,7 @@ export const AdminDashboard: React.FC = () => {
                       return (
                         <tr
                           key={r.id}
-                          className="border-b last:border-0 hover:bg-gray-50"
+                          className={`border-b last:border-0 hover:bg-gray-50 transition-colors ${user?.status === "deleted" ? "bg-red-50 text-red-700" : ""}`}
                         >
                           <td className="p-3 font-medium text-gray-800">
                             <DataField>{user?.hrCode || r.hrCode}</DataField>

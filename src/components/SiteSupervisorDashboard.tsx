@@ -190,7 +190,7 @@ export const SiteSupervisorDashboard: React.FC = () => {
                 {teamMembers.map((m) => {
                   const userRecords = records.filter((r) => r.userId === m.id);
                   return (
-                    <tr key={m.id} className="border-b hover:bg-gray-50">
+                    <tr key={m.id} className={`border-b hover:bg-gray-50 transition-colors ${m.status === "deleted" ? "bg-red-50 text-red-700" : ""}`}>
                       <td className="p-3">
                         <DataField>{m.hrCode}</DataField>
                       </td>

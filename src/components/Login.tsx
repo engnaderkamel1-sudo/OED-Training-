@@ -98,8 +98,14 @@ export const Login: React.FC = () => {
       } else if (foundUser.status === "rejected") {
         setError(
           language === "ar"
-            ? "عذراً تم رفض طلبك، لمعلومات أكثر برجاء إرسال إيميل على nader.reda@orascom.com"
+            ? "عذراً، تم رفض طلبك. لمزيد من المعلومات يرجى مراسلة nader.reda@orascom.com"
             : "Your request was rejected. For more info, please email nader.reda@orascom.com",
+        );
+      } else if (foundUser.status === "deleted") {
+        setError(
+          language === "ar"
+            ? "هذا الحساب معطل (تم حذفه)."
+            : "This account has been deactivated."
         );
       } else {
         setUser(foundUser);
