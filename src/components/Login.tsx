@@ -169,8 +169,13 @@ export const Login: React.FC = () => {
       return;
     }
     
-    if (users.find((u) => u.hrCode.toLowerCase() === cleanHrCode.toLowerCase() || u.email?.toLowerCase() === email.trim().toLowerCase())) {
-      setError(language === "ar" ? "الرقم الوظيفي أو البريد الإلكتروني مسجل بالفعل" : "HR Code or Email already exists");
+    if (users.find((u) => u.hrCode.toLowerCase() === cleanHrCode.toLowerCase())) {
+      setError(language === "ar" ? "الرقم الوظيفي مسجل بالفعل لمستخدم آخر" : "HR Code already exists");
+      return;
+    }
+    
+    if (users.find((u) => u.email?.toLowerCase() === email.trim().toLowerCase())) {
+      setError(language === "ar" ? "البريد الإلكتروني مسجل بالفعل" : "Email already exists");
       return;
     }
 
