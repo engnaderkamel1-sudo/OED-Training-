@@ -31,19 +31,6 @@ const AppContent: React.FC = () => {
               const userRef = doc(db, 'users', user.id);
               await updateDoc(userRef, { fcmToken: currentToken });
             }
-            
-            // Handle foreground notifications
-            onMessage(messaging, (payload) => {
-              if (payload.notification) {
-                // Standard browser notification for foreground
-                new Notification(payload.notification.title || "تنبيه جديد", {
-                  body: payload.notification.body,
-                  icon: '/oed-ttms-icon.jpg'
-                });
-                // Also show an alert inside the app
-                alert(`${payload.notification.title}\n\n${payload.notification.body}`);
-              }
-            });
           }
         } catch (error) {
           console.error('Notification permission error:', error);
@@ -52,6 +39,23 @@ const AppContent: React.FC = () => {
       requestPermission();
     }
   }, [user]);
+
+  React.useEffect(() => {
+    if (messaging) {
+      const unsubscribe = onMessage(messaging, (payload) => {
+        if (payload.notification) {
+          // Standard browser notification for foreground
+          new Notification(payload.notification.title || "تنبيه جديد", {
+            body: payload.notification.body,
+            icon: '/oed-ttms-icon.jpg'
+          });
+          // Also show an alert inside the app
+          alert(`${payload.notification.title}\n\n${payload.notification.body}`);
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, []);
 
   // Determine active role
   const activeRole = user?.role;
