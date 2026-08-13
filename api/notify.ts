@@ -41,18 +41,30 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ message: 'No valid tokens found' });
     }
 
-    const response = await admin.messaging().sendMulticast({
-      tokens: validTokens,
-      notification: payload.notification,
-    });
+    const payload = {
+      notification: {
+        title,
+        body,
+      },
+      tokens: targetTokens,
+    };
+    const response = await admin.messaging().sendEachForMulticast(payload);
+    
+    if (response.failureCount > 0) {
+      console.log('Failed to send to some tokens:', response.responses);
+    }
 
-    res.status(200).json({ 
-      success: true, 
-      successCount: response.successCount, 
-      failureCount: response.failureCount 
-    });
+    return res.status(200).json({ success: true, response });
   } catch (error: any) {
-    console.error('Error sending message:', error);
-    res.status(500).json({ success: false, error: error.message });
+    console.error('Error sending push notification:', error);
+    const debugInfo = {
+       projectIdEnv: process.env.FIREBASE_PROJECT_ID,
+       appProjectId: admin.apps.length > 0 ? admin.app().options.projectId : 'NO_APP',
+    };
+    return res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      debug: debugInfo
+    });
   }
 }
