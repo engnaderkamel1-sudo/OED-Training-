@@ -34,16 +34,15 @@ export const exportCloudBackup = (
     // 2. Sessions Sheet
     const sessionsData = upcomingSessions.map(s => ({
       'ID': s.id,
-      'Course Name': s.courseName,
-      'Instructor': s.instructor,
-      'Date': s.date,
-      'Duration': s.duration,
-      'Max Attendees': s.maxAttendees,
-      'Location': s.location,
-      'Status': s.status,
+      'Course Name': s.courseTitle || s.courseId || '',
+      'Session Number': s.sessionNumber || '',
+      'Start Date': s.startDate || '',
+      'End Date': s.endDate || '',
+      'Start Time': s.startTime || '',
+      'Target Participants': s.targetParticipants || '',
+      'Location': s.location || '',
       'Registered Count': s.registeredUsers?.length || 0,
-      'Registered HR Codes': (s.registeredUsers || []).join(', '),
-      'Created At': s.createdAt || ''
+      'Registered HR Codes': (s.registeredUsers || []).join(', ')
     }));
     const wsSessions = XLSX.utils.json_to_sheet(sessionsData);
     XLSX.utils.book_append_sheet(wb, wsSessions, "Sessions");
