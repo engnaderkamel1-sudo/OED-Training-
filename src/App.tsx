@@ -47,7 +47,7 @@ const AppContent: React.FC = () => {
           // Standard browser notification for foreground
           new Notification(payload.notification.title || "تنبيه جديد", {
             body: payload.notification.body,
-            icon: '/oed-ttms-icon.jpg'
+            icon: '/oed-ttms-logo-v2.png'
           });
           // Also show an alert inside the app
           alert(`${payload.notification.title}\n\n${payload.notification.body}`);
