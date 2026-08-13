@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession } from "../types";
@@ -49,6 +49,7 @@ import { DataField } from "./DataField";
 import { SessionCard } from "./SessionCard";
 import { AnalyticsDashboardTab } from "./AnalyticsDashboardTab";
 import { importFromOneDrive } from "../utils/dataSync";
+import { exportCloudBackup } from "../utils/exportUtils";
 declare const XLSX: any;
 export const AdminDashboard: React.FC = () => {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -69,6 +70,7 @@ export const AdminDashboard: React.FC = () => {
     restoreUpcomingSession,
     cancelSession,
     reactivateSession,
+    cleanedData,
   } = useAppContext();
   const [activeTab, setActiveTab] = useState("approval");
   // State for forms
@@ -112,6 +114,29 @@ export const AdminDashboard: React.FC = () => {
   const [syncSuccess, setSyncSuccess] = useState(false);
   const pendingUsers = users.filter((u) => u.status === "pending");
   const allTrainees = users.filter((u) => u.role === "trainee");
+
+  // --- Auto Backup Logic ---
+  useEffect(() => {
+    const checkAndRunAutoBackup = () => {
+      const lastBackup = localStorage.getItem('last_auto_backup');
+      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+      
+      if (!lastBackup || Date.now() - parseInt(lastBackup, 10) > SEVEN_DAYS_MS) {
+        setTimeout(() => {
+          console.log("Running scheduled weekly backup...");
+          const success = exportCloudBackup(users, records, upcomingSessions, cleanedData || []);
+          if (success) {
+            localStorage.setItem('last_auto_backup', Date.now().toString());
+          }
+        }, 5000); // 5 second delay to ensure data is loaded
+      }
+    };
+    
+    if (users.length > 0) {
+      checkAndRunAutoBackup();
+    }
+  }, [users.length]);
+
   // Dynamic Courses from Records
   const dynamicCourses = useMemo(() => {
     const map = new Map<string, string>();
@@ -625,11 +650,21 @@ export const AdminDashboard: React.FC = () => {
   const courseSessions: string[] = selectedCourseDetails
     ? Array.from(new Set(filteredRecords.map((r) => r.attendanceDate)))
     : [];
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 print:p-0">
-      <h1 className="text-2xl md:text-3xl font-bold text-[#002D62] border-b-2 border-[#FFC000] pb-2 inline-block mb-6 print:hidden">
-        {t("adminView")}
-      </h1>
+      <div className="flex justify-between items-center border-b-2 border-[#FFC000] pb-2 mb-6 print:hidden">
+        <h1 className="text-2xl md:text-3xl font-bold text-[#002D62]">
+          {t("adminView")}
+        </h1>
+        <button 
+          onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])}
+          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm"
+        >
+          <Download size={20} />
+          {language === 'ar' ? 'تحميل نسخة احتياطية' : 'Download Backup'}
+        </button>
+      </div>
       {/* Tabs */}
       <div className="flex overflow-x-auto border-b border-gray-200 mb-6 pb-2 scrollbar-hide space-x-2 rtl:space-x-reverse print:hidden">
         {[
