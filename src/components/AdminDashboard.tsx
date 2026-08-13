@@ -888,6 +888,7 @@ export const AdminDashboard: React.FC = () => {
             ) : (
               <p className="text-gray-500">No pending users.</p>
             )}
+            </div>
             {/* Processed Requests Section */}
             <div className="border-t border-gray-200 pt-8">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
@@ -1013,6 +1014,7 @@ export const AdminDashboard: React.FC = () => {
             ) : (
               <p className="text-gray-500">No processed requests.</p>
             )}
+            </div>
             {/* Deleted Trainees Section */}
             <div className="border-t border-gray-200 pt-8">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
