@@ -18,6 +18,46 @@ export const Login: React.FC = () => {
   const [accessRole, setAccessRole] = useState<Role>("trainee");
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 150;
+        const MAX_HEIGHT = 150;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Compress to high-quality JPEG
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        setProfileImage(dataUrl);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
 
   React.useEffect(() => {
     if (uniqueDepartments && uniqueDepartments.length > 0) {
@@ -159,6 +199,7 @@ export const Login: React.FC = () => {
       status: "pending",
       password: password,
       createdAt: new Date().toISOString(),
+      profileImageUrl: profileImage,
     };
     setUsers([...users, newUser]);
     setSuccessMsg(
@@ -172,6 +213,7 @@ export const Login: React.FC = () => {
     setHrCode("");
     setPhone("");
     setName("");
+    setProfileImage(undefined);
   };
   return (
     <div className="flex justify-center items-center h-[calc(100vh-6rem)]">
@@ -250,6 +292,24 @@ export const Login: React.FC = () => {
           </form>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4">
+            <div className="flex flex-col items-center mb-4">
+              <label className="relative cursor-pointer w-24 h-24 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden hover:border-[#002D62] transition-colors">
+                {profileImage ? (
+                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="text-center p-2">
+                    <span className="text-xs text-gray-500">{language === "ar" ? "أضف صورة" : "Add Photo"}</span>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+              </label>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t("name")}

@@ -13,6 +13,7 @@ export interface User {
   status: "pending" | "approved" | "rejected" | "deleted";
   password?: string;
   createdAt?: string;
+  profileImageUrl?: string;
 }
 
 export interface Course {

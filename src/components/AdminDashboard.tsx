@@ -52,6 +52,19 @@ import { importFromOneDrive } from "../utils/dataSync";
 import { exportCloudBackup } from "../utils/exportUtils";
 declare const XLSX: any;
 export const AdminDashboard: React.FC = () => {
+  const UserAvatarWithName = ({ user }: { user: User }) => (
+    <div className="flex items-center gap-3">
+      {user.profileImageUrl ? (
+        <img src={user.profileImageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0" />
+      ) : (
+        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-xs shrink-0">
+          {user.name.charAt(0).toUpperCase()}
+        </div>
+      )}
+      <span><DataField>{user.name}</DataField></span>
+    </div>
+  );
+
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<User>>({});
   const {
@@ -72,7 +85,8 @@ export const AdminDashboard: React.FC = () => {
     reactivateSession,
     cleanedData,
   } = useAppContext();
-  const [activeTab, setActiveTab] = useState("approval");
+  const [activeTab, setActiveTab] = useState("userManagement");
+  const [userManagementTab, setUserManagementTab] = useState<"pending" | "processed" | "deleted">("pending");
   // State for forms
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [reminderToast, setReminderToast] = useState<string | null>(null);
@@ -719,9 +733,34 @@ export const AdminDashboard: React.FC = () => {
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 min-h-[400px]">
         {/* User Management Tab (Combined) */}
         {activeTab === "userManagement" && (
-          <div className="space-y-12">
-            <div>
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Sidebar */}
+            <div className="md:w-64 shrink-0 flex flex-col space-y-2 border-b md:border-b-0 md:border-r rtl:border-r-0 rtl:border-l border-gray-100 pb-4 md:pb-0 md:pr-4 rtl:md:pl-4">
+              <button
+                onClick={() => setUserManagementTab('pending')}
+                className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors ${userManagementTab === 'pending' ? 'bg-[#002D62] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                {t("pendingUsers")}
+              </button>
+              <button
+                onClick={() => setUserManagementTab('processed')}
+                className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors ${userManagementTab === 'processed' ? 'bg-[#002D62] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                {language === "ar" ? "طلبات منتهية" : "Processed Requests"}
+              </button>
+              <button
+                onClick={() => setUserManagementTab('deleted')}
+                className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors ${userManagementTab === 'deleted' ? 'bg-[#002D62] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                {language === "ar" ? "المتدربين المحذوفين" : "Deleted Trainees"}
+              </button>
+            </div>
+            
+            {/* Content Area */}
+            <div className="flex-1 overflow-x-auto">
+              {userManagementTab === 'pending' && (
+                <div>
+                  <h2 className="text-xl font-semibold mb-4 text-gray-800">
               {t("pendingUsers")}
             </h2>
             {pendingUsers.length > 0 ? (
@@ -840,7 +879,7 @@ export const AdminDashboard: React.FC = () => {
                               <DataField>{u.hrCode}</DataField>
                             </td>
                             <td className="p-3">
-                              <DataField>{u.name}</DataField>
+                              <UserAvatarWithName user={u} />
                             </td>
                             <td className="p-3">
                               <DataField>{u.department}</DataField>
@@ -889,8 +928,11 @@ export const AdminDashboard: React.FC = () => {
               <p className="text-gray-500">No pending users.</p>
             )}
             </div>
+            )}
+            
             {/* Processed Requests Section */}
-            <div className="border-t border-gray-200 pt-8">
+            {userManagementTab === 'processed' && (
+            <div>
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
               {language === "ar" ? "طلبات منتهية" : "Processed Requests"}
             </h2>
@@ -974,7 +1016,7 @@ export const AdminDashboard: React.FC = () => {
                                 <DataField>{u.hrCode}</DataField>
                               </td>
                               <td className="p-3">
-                                <DataField>{u.name}</DataField>
+                                <UserAvatarWithName user={u} />
                               </td>
                               <td className="p-3">
                                 <DataField>{u.department}</DataField>
@@ -1015,8 +1057,10 @@ export const AdminDashboard: React.FC = () => {
               <p className="text-gray-500">No processed requests.</p>
             )}
             </div>
+            )}
             {/* Deleted Trainees Section */}
-            <div className="border-t border-gray-200 pt-8">
+            {userManagementTab === 'deleted' && (
+            <div>
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
               {language === "ar" ? "المتدربين المحذوفين" : "Deleted Trainees"}
             </h2>
@@ -1035,7 +1079,9 @@ export const AdminDashboard: React.FC = () => {
                     {users.filter(u => u.status === "deleted").map(u => (
                       <tr key={u.id} className="border-b bg-red-50 opacity-80">
                         <td className="p-3">{u.hrCode}</td>
-                        <td className="p-3">{u.name}</td>
+                        <td className="p-3">
+                          <UserAvatarWithName user={u} />
+                        </td>
                         <td className="p-3">{u.department}</td>
                         <td className="p-3">
                           <button onClick={() => handleRestoreUser(u.id)} className="flex items-center text-green-600 bg-green-100 px-3 py-1 rounded hover:bg-green-200">
@@ -1051,7 +1097,9 @@ export const AdminDashboard: React.FC = () => {
               <p className="text-gray-500">{language === "ar" ? "لا يوجد متدربين محذوفين." : "No deleted trainees."}</p>
             )}
             </div>
+            )}
           </div>
+        </div>
         )}
         {/* Trainees Tab */}
         {activeTab === "trainees" && (
