@@ -174,14 +174,12 @@ export const Login: React.FC = () => {
       return;
     }
 
-    setIsRegistering(true);
     try {
       await createUserWithEmailAndPassword(auth, email.trim(), password);
       await auth.signOut();
     } catch (err: any) {
       console.error(err);
       setError(language === "ar" ? "حدث خطأ أثناء إنشاء الحساب، قد يكون البريد مستخدماً" : "Error creating account, email might be in use");
-      setIsRegistering(false);
       return;
     }
 
@@ -299,6 +297,7 @@ export const Login: React.FC = () => {
                 <input
                   type="file"
                   accept="image/*"
+                  capture="user"
                   className="hidden"
                   onChange={handleImageUpload}
                 />
