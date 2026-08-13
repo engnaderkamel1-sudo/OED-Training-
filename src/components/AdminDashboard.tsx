@@ -230,6 +230,20 @@ export const AdminDashboard: React.FC = () => {
       users.map((u) => (u.id === id ? { ...u, status: "rejected" } : u)),
     );
   };
+  
+  const handleDeleteUser = (id: string) => {
+    if (confirm(language === "ar" ? "هل أنت متأكد من حذف هذا المتدرب؟" : "Are you sure you want to delete this trainee?")) {
+      setUsers(
+        users.map((u) => (u.id === id ? { ...u, status: "deleted" } : u)),
+      );
+    }
+  };
+
+  const handleRestoreUser = (id: string) => {
+    setUsers(
+      users.map((u) => (u.id === id ? { ...u, status: "approved" } : u)),
+    );
+  };
   const handleCreateSession = (e: React.FormEvent) => {
     e.preventDefault();
     const foundCourse = dynamicCourses.find((c) => c.id === selectedCourseId);
@@ -662,7 +676,7 @@ export const AdminDashboard: React.FC = () => {
           className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm"
         >
           <Download size={20} />
-          {language === 'ar' ? 'تحميل نسخة احتياطية' : 'Download Backup'}
+          {language === 'ar' ? 'تنزيل نسخة احتياطية' : 'Download Backup'}
         </button>
       </div>
       {/* Tabs */}
@@ -688,6 +702,7 @@ export const AdminDashboard: React.FC = () => {
           { id: "tna", label: t("tna"), icon: BarChart },
           { id: "resources", label: t("resourceSharing"), icon: Share2 },
           { id: "sync", label: "Sync Excel Data", icon: Database },
+          { id: "deleted", label: language === "ar" ? "المتدربين المحذوفين" : "Deleted Trainees", icon: Users },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -904,6 +919,7 @@ export const AdminDashboard: React.FC = () => {
                       <th className="p-3">
                         {language === "ar" ? "تاريخ الطلب" : "Request Date"}
                       </th>
+                      <th className="p-3">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -916,36 +932,82 @@ export const AdminDashboard: React.FC = () => {
                       )
                       .map((u) => (
                         <tr key={u.id} className="border-b">
-                          <td className="p-3">
-                            <DataField>{u.hrCode}</DataField>
-                          </td>
-                          <td className="p-3">
-                            <DataField>{u.name}</DataField>
-                          </td>
-                          <td className="p-3">
-                            <DataField>{u.department}</DataField>
-                          </td>
-                          <td className="p-3">
-                            <DataField>{u.role}</DataField>
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className={`px-2 py-1 rounded text-sm font-semibold ${u.status === "approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
-                            >
-                              {u.status === "approved"
-                                ? language === "ar"
-                                  ? "موافق عليه"
-                                  : "Approved"
-                                : language === "ar"
-                                  ? "مرفوض"
-                                  : "Rejected"}
-                            </span>
-                          </td>
-                          <td className="p-3">
-                            <DataField>
-                              {new Date(u.createdAt!).toLocaleString()}
-                            </DataField>
-                          </td>
+                          {editingUserId === u.id ? (
+                            <>
+                              <td className="p-3">
+                                <input type="text" value={editFormData.hrCode || ""} onChange={(e) => setEditFormData({ ...editFormData, hrCode: e.target.value })} className="border rounded px-2 py-1 w-24" />
+                              </td>
+                              <td className="p-3">
+                                <input type="text" value={editFormData.name || ""} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} className="border rounded px-2 py-1 w-32" />
+                              </td>
+                              <td className="p-3">
+                                <input type="text" value={editFormData.department || ""} onChange={(e) => setEditFormData({ ...editFormData, department: e.target.value })} className="border rounded px-2 py-1 w-32" />
+                              </td>
+                              <td className="p-3">
+                                <select value={editFormData.role || "trainee"} onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value as any })} className="border rounded px-2 py-1">
+                                  <option value="trainee">Trainee</option>
+                                  <option value="manager">Manager</option>
+                                  <option value="supervisor">Site Supervisor</option>
+                                  <option value="admin">Admin</option>
+                                </select>
+                              </td>
+                              <td className="p-3">
+                                <span className={`px-2 py-1 rounded text-sm font-semibold ${u.status === "approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                                  {u.status === "approved" ? (language === "ar" ? "موافق عليه" : "Approved") : (language === "ar" ? "مرفوض" : "Rejected")}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <DataField>
+                                  {new Date(u.createdAt!).toLocaleString()}
+                                </DataField>
+                              </td>
+                              <td className="p-3 flex gap-2">
+                                <button onClick={() => { setUsers(users.map((user) => user.id === u.id ? { ...user, ...editFormData } : user)); setEditingUserId(null); }} className="text-blue-600 bg-blue-50 px-3 py-1 rounded">
+                                  {language === "ar" ? "حفظ" : "Save"}
+                                </button>
+                                <button onClick={() => setEditingUserId(null)} className="text-gray-600 bg-gray-50 px-3 py-1 rounded">
+                                  {language === "ar" ? "إلغاء" : "Cancel"}
+                                </button>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="p-3">
+                                <DataField>{u.hrCode}</DataField>
+                              </td>
+                              <td className="p-3">
+                                <DataField>{u.name}</DataField>
+                              </td>
+                              <td className="p-3">
+                                <DataField>{u.department}</DataField>
+                              </td>
+                              <td className="p-3">
+                                <DataField>{u.role}</DataField>
+                              </td>
+                              <td className="p-3">
+                                <span className={`px-2 py-1 rounded text-sm font-semibold ${u.status === "approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                                  {u.status === "approved" ? (language === "ar" ? "موافق عليه" : "Approved") : (language === "ar" ? "مرفوض" : "Rejected")}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <DataField>
+                                  {new Date(u.createdAt!).toLocaleString()}
+                                </DataField>
+                              </td>
+                              <td className="p-3 flex gap-2">
+                                {u.status === "approved" && (
+                                  <>
+                                    <button onClick={() => { setEditingUserId(u.id); setEditFormData(u); }} className="text-blue-600 bg-blue-50 px-3 py-1 rounded hover:bg-blue-100">
+                                      {language === "ar" ? "تعديل" : "Edit"}
+                                    </button>
+                                    <button onClick={() => handleDeleteUser(u.id)} className="text-red-600 bg-red-50 px-3 py-1 rounded hover:bg-red-100">
+                                      {language === "ar" ? "حذف" : "Delete"}
+                                    </button>
+                                  </>
+                                )}
+                              </td>
+                            </>
+                          )}
                         </tr>
                       ))}
                   </tbody>
@@ -953,6 +1015,44 @@ export const AdminDashboard: React.FC = () => {
               </div>
             ) : (
               <p className="text-gray-500">No processed requests.</p>
+            )}
+          </div>
+        )}
+        
+        {activeTab === "deleted" && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">
+              {language === "ar" ? "المتدربين المحذوفين" : "Deleted Trainees"}
+            </h2>
+            {users.filter(u => u.status === "deleted").length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-600 border-b">
+                      <th className="p-3">{language === "ar" ? "الرقم الوظيفي" : "HR Code"}</th>
+                      <th className="p-3">{t("name")}</th>
+                      <th className="p-3">{t("department")}</th>
+                      <th className="p-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.filter(u => u.status === "deleted").map(u => (
+                      <tr key={u.id} className="border-b bg-red-50 opacity-80">
+                        <td className="p-3">{u.hrCode}</td>
+                        <td className="p-3">{u.name}</td>
+                        <td className="p-3">{u.department}</td>
+                        <td className="p-3">
+                          <button onClick={() => handleRestoreUser(u.id)} className="flex items-center text-green-600 bg-green-100 px-3 py-1 rounded hover:bg-green-200">
+                            {language === "ar" ? "استرجاع" : "Restore"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-gray-500">{language === "ar" ? "لا يوجد متدربين محذوفين." : "No deleted trainees."}</p>
             )}
           </div>
         )}
