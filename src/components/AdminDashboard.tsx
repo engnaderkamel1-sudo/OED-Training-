@@ -60,15 +60,15 @@ export const AdminDashboard: React.FC = () => {
         <img 
           src={user.profileImageUrl} 
           alt="" 
-          className="w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
+          className="w-14 h-14 rounded-full object-cover border border-gray-200 shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
           onClick={() => setViewingImage(user.profileImageUrl!)}
         />
       ) : (
-        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-xs shrink-0">
+        <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-lg shrink-0">
           {user.name.charAt(0).toUpperCase()}
         </div>
       )}
-      <span><DataField>{user.name}</DataField></span>
+      <span className="font-medium text-gray-800"><DataField>{user.name}</DataField></span>
     </div>
   );
 
