@@ -15,6 +15,7 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState("");
   const [department, setDepartment] = useState("Heavy Machinery");
   const [jobRole, setJobRole] = useState("Engineer");
@@ -159,8 +160,8 @@ export const Login: React.FC = () => {
       setError(language === "ar" ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError(language === "ar" ? "البريد الإلكتروني غير صحيح" : "Invalid email format");
+    if (!email.toLowerCase().endsWith("@orascom.com")) {
+      setError(language === "ar" ? "عذراً، يُسمح بالتسجيل لموظفي الشركة فقط (يجب أن ينتهي الإيميل بـ @orascom.com)" : "Registration is restricted to company employees (@orascom.com)");
       return;
     }
 
@@ -184,7 +185,7 @@ export const Login: React.FC = () => {
       await auth.signOut();
     } catch (err: any) {
       console.error(err);
-      setError(language === "ar" ? "حدث خطأ أثناء إنشاء الحساب، قد يكون البريد مستخدماً" : "Error creating account, email might be in use");
+      setError(language === "ar" ? `حدث خطأ من السيرفر: ${err.message}` : `Server error: ${err.message}`);
       return;
     }
 
@@ -337,27 +338,45 @@ export const Login: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {language === "ar" ? "الرقم السري" : "Password"}
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-                dir="ltr"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2 pr-10 focus:ring-2 focus:ring-[#002D62]"
+                  dir="ltr"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {language === "ar" ? "تأكيد الرقم السري" : "Confirm Password"}
               </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-                dir="ltr"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2 pr-10 focus:ring-2 focus:ring-[#002D62]"
+                  dir="ltr"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 pr-3"
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
