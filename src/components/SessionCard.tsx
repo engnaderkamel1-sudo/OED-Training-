@@ -13,6 +13,7 @@ interface SessionCardProps {
   isAdminView?: boolean;
   onEdit?: (session: UpcomingSession) => void;
   onSendReminder?: (sessionId: string, type: 'Standard' | 'Final') => void;
+  onFinalizeRequest?: (session: UpcomingSession) => void;
   registeredCourseIds?: string[];
   onRegister?: (session: UpcomingSession) => void;
   onUnregister?: (session: UpcomingSession) => void;
@@ -23,6 +24,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   isAdminView = false,
   onEdit,
   onSendReminder,
+  onFinalizeRequest,
   registeredCourseIds = [],
   onRegister,
   onUnregister
@@ -122,7 +124,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
           <div className="flex items-center gap-1.5 flex-wrap">
             {session.sessionNumber && (
               <span className="text-xs bg-blue-50 text-[#002D62] px-2 py-0.5 rounded font-semibold border border-blue-200 shadow-sm">
-                {session.sessionNumber === 'sessionOne' ? t('sessionOne') : session.sessionNumber === 'sessionTwo' ? t('sessionTwo') : session.sessionNumber}
+                {session.sessionNumber === 'sessionOne' ? t('sessionOne') : session.sessionNumber === 'sessionTwo' ? t('sessionTwo') : session.sessionNumber === 'sessionThree' ? t('sessionThree') : session.sessionNumber}
               </span>
             )}
             {isCancelled && (
@@ -240,11 +242,19 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 </button>
                 <button 
                   type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(onEdit) onEdit(session); }}
-                  className="cursor-pointer bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-medium"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onEdit) onEdit(session); }}
+                  className="cursor-pointer bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-bold shadow-sm"
                 >
-                  <Edit2 size={13} />
-                  <span>{t('editSession')}</span>
+                  <Edit2 size={14} />
+                  <span>{t('edit')}</span>
+                </button>
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onFinalizeRequest) onFinalizeRequest(session); }}
+                  className="cursor-pointer bg-[#002D62] hover:bg-blue-900 text-white text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-bold shadow-sm"
+                >
+                  <CheckCircle size={14} />
+                  <span>{language === 'ar' ? 'إنهاء وحضور' : 'Finalize & Grade'}</span>
                 </button>
                 <button 
                   type="button"
@@ -327,3 +337,6 @@ export const SessionCard: React.FC<SessionCardProps> = ({
     </>
   );
 };
+
+
+

@@ -20,6 +20,9 @@ export const Login: React.FC = () => {
   const [department, setDepartment] = useState("Heavy Machinery");
   const [jobRole, setJobRole] = useState("Engineer");
   const [accessRole, setAccessRole] = useState<Role>("trainee");
+  const [managerEmail1, setManagerEmail1] = useState("");
+  const [managerEmail2, setManagerEmail2] = useState("");
+  const [managerEmail3, setManagerEmail3] = useState("");
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
@@ -220,8 +223,8 @@ export const Login: React.FC = () => {
       jobRole: jobRole,
       status: "pending",
       createdAt: new Date().toISOString(),
+      managerEmails: [managerEmail1, managerEmail2, managerEmail3].filter(e => e.trim() !== ""),
       password: password,
-      createdAt: new Date().toISOString(),
       profileImageUrl: profileImage,
     };
     setUsers([...users, newUser]);
@@ -419,6 +422,47 @@ export const Login: React.FC = () => {
                 />
               </div>
             </div>
+
+            {accessRole === "trainee" && (
+              <div className="space-y-4 border border-blue-100 bg-blue-50/50 p-4 rounded-lg mt-4 animate-fadeIn">
+                <h4 className="text-sm font-bold text-[#002D62] mb-2">{language === "ar" ? "بريد المديرين (لإرسال التقارير)" : "Manager Emails (For Reports)"}</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{language === "ar" ? "مدير 1 (إلزامي)" : "Manager 1 (Required)"}</label>
+                    <input
+                      type="email"
+                      value={managerEmail1}
+                      onChange={(e) => setManagerEmail1(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#002D62] outline-none"
+                      required
+                      placeholder="manager1@orascom.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{language === "ar" ? "مدير 2 (اختياري)" : "Manager 2 (Optional)"}</label>
+                    <input
+                      type="email"
+                      value={managerEmail2}
+                      onChange={(e) => setManagerEmail2(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#002D62] outline-none"
+                      placeholder="manager2@orascom.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{language === "ar" ? "مدير 3 (اختياري)" : "Manager 3 (Optional)"}</label>
+                    <input
+                      type="email"
+                      value={managerEmail3}
+                      onChange={(e) => setManagerEmail3(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#002D62] outline-none"
+                      placeholder="manager3@orascom.com"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {language === "ar" ? "البريد الإلكتروني" : "Email"}

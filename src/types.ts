@@ -13,8 +13,10 @@ export interface User {
   email?: string;
   status: "pending" | "approved" | "rejected" | "deleted";
   createdAt?: string;
+  managerEmails?: string[];
   password?: string;
   createdAt?: string;
+  managerEmails?: string[];
   profileImageUrl?: string;
   hasUnreadNotifications?: boolean;
   fcmToken?: string;
@@ -69,6 +71,7 @@ export interface UpcomingSession {
   registeredUsers?: string[];
   unregisteredUsers?: string[];
   createdAt?: string;
+  managerEmails?: string[];
   isDeleted?: boolean;
   status?: "Active" | "Cancelled";
   reminderLog?: ReminderLogItem[];
@@ -87,4 +90,5 @@ export interface CleanedRecord {
   attendedDays?: string | number;
   raw?: any;
 }
+
 

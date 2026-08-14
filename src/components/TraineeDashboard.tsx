@@ -29,9 +29,11 @@ const formatDateToStandard = (dateStr: any): string => {
 };
 
 export const TraineeDashboard: React.FC = () => {
-  const { t, user, records, language, upcomingSessions, registerTrainee, unregisterTrainee, currentView } = useAppContext();
+  const { t, user, records, language, upcomingSessions, registerTrainee, unregisterTrainee, currentView, users, setUsers } = useAppContext();
   const [requestedTopic, setRequestedTopic] = useState('');
   const [requestSent, setRequestSent] = useState(false);
+  const [registeringSession, setRegisteringSession] = useState<UpcomingSession | null>(null);
+  const [tempManagerEmails, setTempManagerEmails] = useState<string[]>(['', '', '']);
   const [registeredCourseIds, setRegisteredCourseIds] = useState<string[]>([]);
   const [actionToast, setActionToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
@@ -134,19 +136,40 @@ export const TraineeDashboard: React.FC = () => {
   }, [allNotifications, readNotifIds]);
 
   const handleRegisterSession = (session: UpcomingSession) => {
-    const userCode = user?.hrCode || 'trainee';
-    registerTrainee(session.id, userCode);
+    setRegisteringSession(session);
+    setTempManagerEmails([
+      user?.managerEmails?.[0] || '',
+      user?.managerEmails?.[1] || '',
+      user?.managerEmails?.[2] || ''
+    ]);
+  };
 
-    if (!registeredCourseIds.includes(session.id)) {
-      setRegisteredCourseIds(prev => [...prev, session.id]);
+  const confirmRegistration = () => {
+    if (!registeringSession) return;
+    
+    // Save updated manager emails to the user profile
+    if (user && setUsers) {
+      const updatedUser = { 
+        ...user, 
+        managerEmails: tempManagerEmails.filter(e => e.trim() !== '') 
+      };
+      setUsers(users.map(u => u.id === user.id ? updatedUser : u));
+    }
+
+    const userCode = user?.hrCode || 'trainee';
+    registerTrainee(registeringSession.id, userCode);
+
+    if (!registeredCourseIds.includes(registeringSession.id)) {
+      setRegisteredCourseIds(prev => [...prev, registeringSession.id]);
     }
 
     const toastMsg = language === 'ar'
-      ? `تم تسجيل حضورك بنجاح في دورة [${session.courseTitle}]`
-      : `You have successfully registered for [${session.courseTitle}].`;
+      ? `تم تسجيل طلبك بنجاح في كورس [${registeringSession.courseTitle}]`
+      : `You have successfully registered for [${registeringSession.courseTitle}].`;
 
     setActionToast({ message: toastMsg, type: 'success' });
     setTimeout(() => setActionToast(null), 4000);
+    setRegisteringSession(null);
   };
 
   const handleCancelRegistration = (sessionId: string) => {
@@ -458,6 +481,58 @@ export const TraineeDashboard: React.FC = () => {
           </a>
         </section>
         </div>
+        </div>
+      )}
+      {registeringSession && (
+        <div className="fixed inset-0 bg-black/60 z-[99999] flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-xl shadow-2xl flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-[#002D62]">
+                {language === 'ar' ? '????? ??????? ????????' : 'Confirm Manager Emails'}
+              </h2>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-4">
+                {language === 'ar' ? '???? ????? ?? ????? ??????? ???????? ?????? ?????? ??? ?????? ?????.' : 'Please confirm or update your manager emails for course reports.'}
+              </p>
+              <div className="space-y-4">
+                {[1, 2, 3].map((num, i) => (
+                  <div key={num}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {language === 'ar' ? "???? ${num}" : "Manager ${num}"} {i === 0 && <span className="text-red-500">*</span>}
+                    </label>
+                    <input
+                      type="email"
+                      value={tempManagerEmails[i]}
+                      onChange={(e) => {
+                        const newEmails = [...tempManagerEmails];
+                        newEmails[i] = e.target.value;
+                        setTempManagerEmails(newEmails);
+                      }}
+                      className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]"
+                      placeholder={manager${num}@orascom.com}
+                      required={i === 0}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 rounded-b-xl">
+              <button 
+                onClick={() => setRegisteringSession(null)}
+                className="px-4 py-2 border border-gray-300 rounded font-bold text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                {language === 'ar' ? '?????' : 'Cancel'}
+              </button>
+              <button
+                onClick={confirmRegistration}
+                disabled={!tempManagerEmails[0]?.trim()}
+                className="bg-[#002D62] text-white px-6 py-2 rounded font-bold hover:bg-blue-900 transition-colors disabled:opacity-50"
+              >
+                {language === 'ar' ? '????? ??????' : 'Confirm & Register'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
