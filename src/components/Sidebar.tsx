@@ -57,19 +57,19 @@ export const Sidebar: React.FC = () => {
   return (
     <>
       {/* Mobile Hamburger Button */}
-      <div className="sm:hidden fixed bottom-4 right-4 rtl:right-auto rtl:left-4 z-50 print:hidden">
+      <div className="sm:hidden fixed bottom-20 left-4 rtl:left-auto rtl:right-4 z-[9999] print:hidden">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="bg-[#002D62] text-white p-3 rounded-full shadow-lg hover:bg-blue-900 transition-colors"
+          className="bg-[#FFC000] text-[#002D62] p-4 rounded-full shadow-2xl hover:bg-yellow-500 transition-transform active:scale-95 border-2 border-[#002D62]"
         >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
+          {isOpen ? <X size={28} /> : <Menu size={28} strokeWidth={2.5} />}
         </button>
       </div>
 
       {/* Sidebar Overlay for Mobile */}
       {isOpen && (
         <div 
-          className="sm:hidden fixed inset-0 bg-black/50 z-40 print:hidden"
+          className="sm:hidden fixed inset-0 bg-black/60 z-[9998] print:hidden backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -77,8 +77,8 @@ export const Sidebar: React.FC = () => {
       {/* Sidebar Container */}
       <aside 
         className={`
-          fixed sm:sticky top-0 h-screen sm:h-[calc(100vh-4rem)] bg-white border-r rtl:border-r-0 rtl:border-l border-gray-200 shadow-sm w-64 shrink-0
-          transition-transform duration-300 ease-in-out z-40 overflow-y-auto print:hidden
+          fixed sm:sticky top-0 h-[100dvh] sm:h-[calc(100vh-4rem)] bg-white border-r rtl:border-r-0 rtl:border-l border-gray-200 shadow-xl sm:shadow-sm w-72 sm:w-64 shrink-0
+          transition-transform duration-300 ease-in-out z-[9999] sm:z-40 overflow-y-auto print:hidden
           ${isOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full sm:translate-x-0'}
         `}
       >

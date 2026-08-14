@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context';
 import { mockCourses } from '../data';
 import { ExternalLink, CheckCircle, Calendar, Printer, Download, Bell, BellOff, AlertTriangle, XCircle, Users, Clock, MapPin, Tag, Ban } from 'lucide-react';
-import { formatScore, parseScore, formatDateToStandard } from '../utils/formatters';
 import { safePrintReport, downloadReportPDF, ReportOptions } from '../utils/printUtils';
 import { DataField } from './DataField';
 import { SessionCard } from './SessionCard';
@@ -168,122 +167,12 @@ export const TraineeDashboard: React.FC = () => {
     }
   };
 
-  const getTraineeReportOptions = (): ReportOptions => ({
-    title: language === 'ar' ? 'تقرير تدريب فردي' : 'Individual Trainee Training Report',
-    language: (language === 'ar' ? 'ar' : 'en') as 'ar' | 'en',
-    records: userRecords,
-    singleTrainee: {
-      name: user?.name || 'Trainee',
-      hrCode: user?.hrCode || 'N/A',
-      department: user?.department || 'General',
-    },
-    fileName: `Individual_Training_Report_${user?.hrCode || 'Trainee'}.pdf`,
-  });
-
-  const handlePrint = () => {
-    safePrintReport(getTraineeReportOptions());
-  };
-
-  const handleDownloadPDF = async () => {
-    await downloadReportPDF(getTraineeReportOptions());
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
       <div className="flex justify-between items-center print:hidden">
         <h1 className="text-2xl md:text-3xl font-bold text-[#002D62] border-b-2 border-[#FFC000] pb-2 inline-block">
           {t('traineeView')}
         </h1>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={handlePrint} 
-            className="bg-[#002D62] text-white px-3.5 py-2 rounded flex items-center gap-1.5 shadow hover:bg-blue-900 transition-colors text-sm font-medium"
-          >
-            <Printer size={16} />
-            {language === 'ar' ? 'طباعة التقرير' : 'Print Report'}
-          </button>
-          <button 
-            onClick={handleDownloadPDF} 
-            className="bg-emerald-700 text-white px-3.5 py-2 rounded flex items-center gap-1.5 shadow hover:bg-emerald-800 transition-colors text-sm font-medium"
-          >
-            <Download size={16} />
-            {language === 'ar' ? 'تحميل PDF' : 'Download PDF'}
-          </button>
-        </div>
-      </div>
-
-      <div className="hidden print:block text-black bg-white">
-        <div className="flex justify-between items-end border-b-2 border-[#002D62] pb-4 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-gray-100 border-2 border-gray-300 flex items-center justify-center text-xs text-gray-500 font-bold uppercase text-center rounded-lg">
-              OED<br/>Logo
-            </div>
-          </div>
-          <div className="text-right">
-            <h2 className="text-2xl font-bold text-[#002D62] mb-1">OED - Technical Training Department</h2>
-            <p className="text-gray-600 text-sm">{language === 'ar' ? 'إدارة المعدات' : 'Equipment Department'}</p>
-          </div>
-        </div>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-center uppercase tracking-wider mb-2 text-gray-800">
-            {language === 'ar' ? 'تقرير تدريب فردي' : 'Individual Trainee Training Report'}
-          </h1>
-          <p className="text-center text-sm text-gray-500 mb-8">
-            {language === 'ar' ? 'تم الإنشاء في:' : 'Generated on:'} {formatDateToStandard(new Date())}
-          </p>
-          {user && (
-            <div className="bg-gray-50 border-2 border-gray-200 p-5 rounded-lg flex flex-wrap justify-between gap-4">
-              <div className="flex-1 min-w-[200px]">
-                <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('name')}</span> 
-                <span className="text-lg font-bold text-[#002D62]">{user.name}</span>
-              </div>
-              <div className="flex-1 min-w-[150px]">
-                <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('hrCode')}</span> 
-                <span className="text-lg font-bold text-gray-800">{user.hrCode}</span>
-              </div>
-              <div className="flex-1 min-w-[200px]">
-                <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('department')}</span> 
-                <span className="text-lg font-medium text-gray-800">{user.department}</span>
-              </div>
-            </div>
-          )}
-        </div>
-        <table className="w-full text-left border-collapse text-sm print:table mb-12">
-          <thead className="print:table-header-group">
-            <tr className="border-b-2 border-gray-800 bg-gray-100 text-gray-800">
-              <th className="p-3 font-bold">{t('courseName')}</th>
-              <th className="p-3 font-bold">{language === 'ar' ? 'مدة الدورة' : 'Duration'}</th>
-              <th className="p-3 font-bold">{language === 'ar' ? 'أيام الحضور' : 'Attended Days'}</th>
-              <th className="p-3 font-bold">{t('score')}</th>
-              <th className="p-3 font-bold">{t('date')}</th>
-            </tr>
-          </thead>
-          <tbody className="print:table-row-group">
-            {userRecords.map(r => {
-              const course = mockCourses.find(c => c.id === r.courseId);
-              const totalDaysStr = r.raw?.['Course Duration'] || r.totalDays || course?.duration || '1 Day';
-              const attendedDaysStr = r.raw?.['Attended Days'] || r.daysAttended || totalDaysStr;
-              return (
-                <tr key={r.id} className="border-b border-gray-300 break-inside-avoid">
-                  <td className="p-3 font-medium text-gray-900">{course?.title || r.courseName || 'Unknown Course'}</td>
-                  <td className="p-3 text-gray-700">{totalDaysStr}</td>
-                  <td className="p-3 text-gray-700">{attendedDaysStr}</td>
-                  <td className="p-3 font-bold text-gray-900">{formatScore(r.raw?.['Score'] || r.score)}</td>
-                  <td className="p-3 text-gray-700">{formatDateToStandard(r.attendanceDate)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <div className="mt-16 pt-4 border-t-2 border-gray-300 flex justify-between items-end print:fixed print:bottom-0 print:left-0 print:w-full bg-white print:pb-8">
-          <div>
-            <p className="font-bold text-gray-800 mb-8">{language === 'ar' ? 'اعتماد مدير التدريب الفني' : 'Authorized by Technical Training Manager'}</p>
-            <p className="text-[#002D62] font-medium text-lg">Nader Kamel</p>
-          </div>
-          <div className="text-right text-gray-400 text-xs">
-            OED Training Management System
-          </div>
-        </div>
       </div>
 
       {/* Stats Section */}
