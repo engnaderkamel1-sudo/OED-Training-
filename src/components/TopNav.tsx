@@ -24,9 +24,12 @@ export const TopNav: React.FC = () => {
           <div className="flex items-center gap-2 md:gap-4">
             {/* Company Logo */}
             <div className="flex-shrink-0 flex items-center justify-center bg-white p-1 rounded shadow-sm">
-              <img src="/orascom_logo.jpg" alt="OED Orascom Construction" className="h-8 md:h-10 object-contain max-w-[120px] md:max-w-[200px]" />
+              <img src="/orascom_logo.jpg" alt="Orascom Construction" className="h-8 md:h-11 object-contain" />
             </div>
-            <span className="hidden sm:inline-block font-bold text-lg md:text-xl tracking-wide">{t('appTitle')}</span>
+            <div className="hidden sm:flex flex-col justify-center">
+              <span className="font-bold text-lg md:text-xl tracking-wide leading-tight uppercase">Orascom Construction</span>
+              <span className="text-xs md:text-sm text-[#FFC000] font-semibold tracking-wider">Technical Training Management System (TTMS)</span>
+            </div>
           </div>
           
           <div className="flex items-center gap-2 md:gap-4">

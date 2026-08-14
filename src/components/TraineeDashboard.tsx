@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context';
 import { mockCourses } from '../data';
 import { ExternalLink, CheckCircle, Calendar, Printer, Download, Bell, BellOff, AlertTriangle, XCircle, Users, Clock, MapPin, Tag, Ban } from 'lucide-react';
-import { formatScore, formatDateToStandard } from '../utils/formatters';
+import { formatScore, parseScore, formatDateToStandard } from '../utils/formatters';
 import { safePrintReport, downloadReportPDF, ReportOptions } from '../utils/printUtils';
 import { DataField } from './DataField';
 import { SessionCard } from './SessionCard';
@@ -37,7 +37,7 @@ export const TraineeDashboard: React.FC = () => {
   );
   const totalCourses = userRecords.length;
   const averageScore = userRecords.length > 0 
-    ? Math.round(userRecords.reduce((acc, curr) => acc + curr.score, 0) / userRecords.length) 
+    ? Math.round(userRecords.reduce((acc, curr) => acc + parseScore(curr.raw?.['Score'] || curr.score), 0) / userRecords.length) 
     : 0;
   
   const activeUpcomingSessions = upcomingSessions.filter(s => !s.isDeleted && s.status !== 'Cancelled');
