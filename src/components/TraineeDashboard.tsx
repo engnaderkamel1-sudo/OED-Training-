@@ -499,7 +499,7 @@ export const TraineeDashboard: React.FC = () => {
                 {[1, 2, 3].map((num, i) => (
                   <div key={num}>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {language === 'ar' ? "???? ${num}" : "Manager ${num}"} {i === 0 && <span className="text-red-500">*</span>}
+                      {language === 'ar' ? `مدير ${num}` : `Manager ${num}`} {i === 0 && <span className="text-red-500">*</span>}
                     </label>
                     <input
                       type="email"
