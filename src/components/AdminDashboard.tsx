@@ -744,19 +744,13 @@ export const AdminDashboard: React.FC = () => {
         <h1 className="text-2xl md:text-3xl font-bold text-[#002D62]">
           {t("adminView")}
         </h1>
-        <button 
-          onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])}
-          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm"
-        >
-          <Download size={20} />
-          {language === 'ar' ? 'تنزيل نسخة احتياطية' : 'Download Backup'}
-        </button>
       </div>
       {/* Content Area */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 min-h-[400px]">
         {/* User Management Tab (Combined) */}
         {(currentView === "userManagement" || currentView === "dashboard") && (
-          <div className="flex flex-col md:flex-row gap-6">
+          <div className="space-y-12">
+            <div className="flex flex-col md:flex-row gap-6">
             {/* Sidebar */}
             <div className="md:w-64 shrink-0 flex flex-col space-y-2 border-b md:border-b-0 md:border-r rtl:border-r-0 rtl:border-l border-gray-100 pb-4 md:pb-0 md:pr-4 rtl:md:pl-4">
               <button
@@ -1120,56 +1114,26 @@ export const AdminDashboard: React.FC = () => {
               <p className="text-gray-500">{language === "ar" ? "لا يوجد متدربين محذوفين." : "No deleted trainees."}</p>
             )}
             </div>
-            )}
-          </div>
-        </div>
-        )}
-        {/* Trainees Tab */}
-        {currentView === "trainees" && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">
-              {t("traineeManagement")}
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 text-gray-600 border-b">
-                    <th className="p-3">{t("hrCode")}</th>
-                    <th className="p-3">{t("name")}</th>
-                    <th className="p-3">{t("department")}</th>
-                    <th className="p-3">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {traineeUsers.map((u) => (
-                    <tr key={u.id} className={`border-b hover:bg-gray-50 transition-colors ${u.status === "deleted" ? "bg-red-50 text-red-700" : ""}`}>
-                      <td className="p-3">
-                        <DataField>{u.hrCode}</DataField>
-                      </td>
-                      <td className="p-3">
-                        <UserAvatarWithName user={u} />
-                      </td>
-                      <td className="p-3">
-                        <DataField>{u.department}</DataField>
-                      </td>
-                      <td className="p-3">
-                        <button
-                          onClick={() => handleReject(u.id)}
-                          className="flex items-center text-red-600 bg-red-50 px-3 py-1 rounded hover:bg-red-100"
-                        >
-                          {t("remove")}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
-          </div>
-        )}
-        {/* Records Tab */}
-        {currentView === "records" && (
-          <div>
+            )}
+            
+            {/* Embedded Records Section */}
+            <div className="border-t border-gray-200 pt-8 mt-8 w-full overflow-hidden">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
+                  {t("globalRecords")}
+                </h2>
+                <div className="flex gap-2 print:hidden">
+                  <button onClick={handlePrint} className="flex items-center gap-1 bg-[#002D62] text-white px-3 py-1.5 rounded hover:bg-blue-900 transition-colors shadow-sm text-sm">
+                    <Printer size={16} />
+                    {language === "ar" ? "طباعة" : "Print"}
+                  </button>
+                  <button onClick={handleDownloadPDF} className="flex items-center gap-1 bg-[#FFC000] text-[#002D62] px-3 py-1.5 rounded hover:bg-yellow-500 transition-colors shadow-sm font-semibold text-sm">
+                    <Download size={16} />
+                    {language === "ar" ? "تنزيل PDF" : "Download PDF"}
+                  </button>
+                </div>
+              </div>
             {/* Dynamic KPI Summary Bar (Web View) */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 print:hidden">
               <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
@@ -1563,16 +1527,30 @@ export const AdminDashboard: React.FC = () => {
                     )}
                   </tbody>
                 </table>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
+            {/* End of Dashboard view */}
           </div>
         )}
         {/* Analytics Tab */}
         {currentView === "analytics" && (
           <div>
-            <h2 className="text-xl font-semibold mb-6 text-gray-800">
-              {t("analytics")}
-            </h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-800 border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
+                {t("analytics")}
+              </h2>
+              <div className="flex gap-2 print:hidden">
+                <button onClick={handlePrint} className="flex items-center gap-1 bg-[#002D62] text-white px-3 py-1.5 rounded hover:bg-blue-900 transition-colors shadow-sm text-sm">
+                  <Printer size={16} />
+                  {language === "ar" ? "طباعة" : "Print"}
+                </button>
+                <button onClick={handleDownloadPDF} className="flex items-center gap-1 bg-[#FFC000] text-[#002D62] px-3 py-1.5 rounded hover:bg-yellow-500 transition-colors shadow-sm font-semibold text-sm">
+                  <Download size={16} />
+                  {language === "ar" ? "تنزيل PDF" : "Download PDF"}
+                </button>
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col items-center justify-center">
                 <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">
@@ -1674,14 +1652,24 @@ export const AdminDashboard: React.FC = () => {
                   })}
                 </div>
               </div>
+              <div className="mt-12 border-t border-gray-200 pt-8">
+                <h3 className="font-bold text-[#002D62] text-xl mb-6">
+                  {language === "ar" ? "الرسوم البيانية" : "Advanced Charts"}
+                </h3>
+                <AnalyticsDashboardTab />
+              </div>
             </div>
           </div>
         )}
-        {/* Analytics Dashboard Tab */}
-        {currentView === "analyticsDashboard" && <AnalyticsDashboardTab />}
-        {/* Session Announcements Tab */}
-        {currentView === "announcements" && (
-          <div className="space-y-6">
+        {/* Admin Tools Tab */}
+        {currentView === "tools" && (
+          <div className="space-y-12">
+            {/* Session Announcements Section */}
+            <div>
+              <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
+                {t('sessionAnnouncements')}
+              </h2>
+              <div className="space-y-6">
             {reminderToast && (
               <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded shadow-sm text-emerald-800 flex items-center justify-between transition-all animate-fadeIn">
                 <div className="flex items-center gap-2">
@@ -1847,17 +1835,14 @@ export const AdminDashboard: React.FC = () => {
                       </li>
                     ))}
                   </ul>
-                )}
               </div>
             </div>
-          </div>
-        )}
-        {/* Training Needs Analysis Tab */}
-        {currentView === "tna" && (
-          <div>
-            <h2 className="text-xl font-semibold mb-6 text-gray-800">
-              {t("tna")}
-            </h2>
+            
+            {/* Training Needs Analysis Section */}
+            <div className="border-t border-gray-200 pt-8 mt-8">
+              <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
+                {t("tna")}
+              </h2>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
@@ -1876,15 +1861,15 @@ export const AdminDashboard: React.FC = () => {
                   />
                 </BarChart>
               </ResponsiveContainer>
+              </ResponsiveContainer>
             </div>
-          </div>
-        )}
-        {/* Resource Sharing Tab */}
-        {currentView === "resources" && (
-          <div className="max-w-md">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">
-              {t("resourceSharing")}
-            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-gray-200 pt-8 mt-8">
+              {/* Resource Sharing Section */}
+              <div className="max-w-md">
+                <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
+                  {t("resourceSharing")}
+                </h2>
             <form onSubmit={handleShareResource} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1918,146 +1903,174 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <button
                 type="submit"
-                className="bg-[#002D62] text-white font-bold py-2 px-6 rounded hover:bg-blue-900 flex items-center"
-              >
-                <Share2 size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />{" "}
-                {t("share")}
-              </button>
-            </form>
-          </div>
-        )}
-        {/* Sync Data Tab */}
-        {currentView === "sync" && (
-          <div className="max-w-xl">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">
-              {language === "ar"
-                ? "تحديث البيانات من OneDrive"
-                : "Sync Excel Data to Database"}
-            </h2>
-            <p className="text-gray-600 mb-6">
-              {language === "ar"
-                ? "قم بتوفير رابط OneDrive لملف Excel الخاص بك لمزامنة سجلات التدريب."
-                : "Provide a OneDrive link to your Excel file to synchronize training records."}
-              <br />
-              Expected columns:{" "}
-              <DataField className="bg-gray-100 px-1 py-0.5 rounded text-sm">
-                ID, Prticipent Name, Department, Total Courses, Date 1, Duration
-                1, Scoor 1
-              </DataField>
-            </p>
-            {syncSuccess && (
-              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6 flex items-center">
-                <CheckCircle
-                  size={20}
-                  className="mr-2 rtl:ml-2 rtl:mr-0 flex-shrink-0"
-                />
-                <span className="font-medium">
-                  Data successfully synced from OneDrive!
-                </span>
+                <form onSubmit={handleShareResource} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {t("courseName")}
+                    </label>
+                    <select
+                      value={selectedCourseForResource}
+                      onChange={(e) => setSelectedCourseForResource(e.target.value)}
+                      className="w-full border rounded px-3 py-2 focus:ring-[#002D62] font-sans"
+                      dir="ltr"
+                    >
+                      {dynamicCourses.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {t("googleDriveLink")}
+                    </label>
+                    <input
+                      type="url"
+                      required
+                      value={resourceLink}
+                      onChange={(e) => setResourceLink(e.target.value)}
+                      placeholder="https://drive.google.com/..."
+                      className="w-full border rounded px-3 py-2 focus:ring-[#002D62]"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="bg-[#002D62] text-white font-bold py-2 px-6 rounded hover:bg-blue-900 flex items-center"
+                  >
+                    <Share2 size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />{" "}
+                    {t("share")}
+                  </button>
+                </form>
               </div>
-            )}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {language === "ar"
-                  ? "رابط ملف OneDrive"
-                  : "OneDrive Shared Link"}
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none rtl:left-auto rtl:right-0 rtl:pl-0 rtl:pr-3">
-                  <Database size={18} className="text-gray-400" />
-                </div>
-                <input
-                  type="url"
-                  placeholder={
-                    language === "ar"
-                      ? "الصق رابط OneDrive هنا..."
-                      : "Paste your OneDrive Excel link here..."
-                  }
-                  value={syncLink}
-                  onChange={(e) => setSyncLink(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg pl-10 rtl:pl-3 rtl:pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-[#002D62] text-gray-700"
-                  dir="ltr"
-                />
-              </div>
-            </div>
-            {isSyncing && (
-              <div className="mb-6">
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>
+
+              {/* Sync Data & Backup Section */}
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
                     {language === "ar"
-                      ? "جاري الجلب والمزامنة..."
-                      : "Fetching & Syncing..."}
-                  </span>
-                  <span>{syncProgress}%</span>
+                      ? "إدارة البيانات والنسخ الاحتياطي"
+                      : "Data Management & Backup"}
+                  </h2>
+                  <button 
+                    onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"
+                  >
+                    <Download size={18} />
+                    {language === 'ar' ? 'تنزيل نسخة احتياطية' : 'Download Backup'}
+                  </button>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className="bg-[#002D62] h-2.5 rounded-full transition-all duration-300"
-                    style={{ width: `${syncProgress}%` }}
-                  ></div>
+                <p className="text-gray-600 mb-6">
+                  {language === "ar"
+                    ? "قم بتوفير رابط OneDrive لملف Excel الخاص بك لمزامنة سجلات التدريب."
+                    : "Provide a OneDrive link to your Excel file to synchronize training records."}
+                  <br />
+                  Expected columns:{" "}
+                  <span className="bg-gray-100 px-1 py-0.5 rounded text-sm">
+                    ID, Participant Name, Department, Total Courses, Date 1, Duration 1, Score 1
+                  </span>
+                </p>
+                {syncSuccess && (
+                  <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6 flex items-center">
+                    <CheckCircle
+                      size={20}
+                      className="mr-2 rtl:ml-2 rtl:mr-0 flex-shrink-0"
+                    />
+                    <span className="font-medium">
+                      Data successfully synced from OneDrive!
+                    </span>
+                  </div>
+                )}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {language === "ar" ? "رابط ملف OneDrive" : "OneDrive Shared Link"}
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none rtl:left-auto rtl:right-0 rtl:pl-0 rtl:pr-3">
+                      <Database size={18} className="text-gray-400" />
+                    </div>
+                    <input
+                      type="url"
+                      placeholder={
+                        language === "ar"
+                          ? "الصق رابط OneDrive هنا..."
+                          : "Paste your OneDrive Excel link here..."
+                      }
+                      value={syncLink}
+                      onChange={(e) => setSyncLink(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg pl-10 rtl:pl-3 rtl:pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-[#002D62] text-gray-700"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+                {isSyncing && (
+                  <div className="mb-6">
+                    <div className="flex justify-between text-sm text-gray-600 mb-1">
+                      <span>
+                        {language === "ar" ? "جاري الجلب والمزامنة..." : "Fetching & Syncing..."}
+                      </span>
+                      <span>{syncProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className="bg-[#002D62] h-2.5 rounded-full transition-all duration-300"
+                        style={{ width: `${syncProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+                <button
+                  onClick={handleSyncData}
+                  disabled={!syncLink.trim() || isSyncing}
+                  className={`w-full font-bold py-3 px-6 rounded-lg transition-colors flex justify-center items-center ${
+                    !syncLink.trim() || isSyncing
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-[#FFC000] text-[#002D62] hover:bg-yellow-500 shadow"
+                  }`}
+                >
+                  {isSyncing ? (
+                    <>
+                      <RefreshCw size={18} className="animate-spin mr-2 rtl:ml-2 rtl:mr-0" />
+                      {language === "ar" ? "جاري المعالجة..." : "Processing..."}
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
+                      {language === "ar" ? "تحديث البيانات من OneDrive" : "Sync from OneDrive"}
+                    </>
+                  )}
+                </button>
+                <div className="flex items-center my-6">
+                  <div className="flex-grow border-t border-gray-300"></div>
+                  <span className="mx-4 text-gray-500 text-sm font-medium">
+                    {language === "ar" ? "أو" : "OR"}
+                  </span>
+                  <div className="flex-grow border-t border-gray-300"></div>
+                </div>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center bg-gray-50">
+                  <UploadCloud size={48} className="text-gray-400 mb-4" />
+                  <input
+                    type="file"
+                    id="excel-upload"
+                    accept=".xlsx, .xls"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                  />
+                  <label
+                    htmlFor="excel-upload"
+                    className="cursor-pointer bg-white border border-gray-300 px-4 py-2 rounded shadow-sm hover:bg-gray-50 flex items-center mb-2 font-medium text-gray-700"
+                  >
+                    <UploadCloud size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
+                    {language === "ar" ? "اختر ملف Excel محلي" : "Select Local Excel File"}
+                  </label>
+                  {syncFile && (
+                    <p className="text-sm text-green-600 font-medium">
+                      Selected: {syncFile.name}
+                    </p>
+                  )}
                 </div>
               </div>
-            )}
-            <button
-              onClick={handleSyncData}
-              disabled={!syncLink.trim() || isSyncing}
-              className={`w-full font-bold py-3 px-6 rounded-lg transition-colors flex justify-center items-center ${
-                !syncLink.trim() || isSyncing
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-[#FFC000] text-[#002D62] hover:bg-yellow-500 shadow"
-              }`}
-            >
-              {isSyncing ? (
-                <>
-                  <RefreshCw
-                    size={18}
-                    className="animate-spin mr-2 rtl:ml-2 rtl:mr-0"
-                  />
-                  {language === "ar" ? "جاري المعالجة..." : "Processing..."}
-                </>
-              ) : (
-                <>
-                  <RefreshCw size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
-                  {language === "ar"
-                    ? "تحديث البيانات من OneDrive"
-                    : "Sync from OneDrive"}
-                </>
-              )}
-            </button>
-            <div className="flex items-center my-6">
-              <div className="flex-grow border-t border-gray-300"></div>
-              <span className="mx-4 text-gray-500 text-sm font-medium">
-                {language === "ar" ? "أو" : "OR"}
-              </span>
-              <div className="flex-grow border-t border-gray-300"></div>
             </div>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center bg-gray-50">
-              <UploadCloud size={48} className="text-gray-400 mb-4" />
-              <input
-                type="file"
-                id="excel-upload"
-                accept=".xlsx, .xls"
-                className="hidden"
-                onChange={handleFileUpload}
-              />
-              <label
-                htmlFor="excel-upload"
-                className="cursor-pointer bg-white border border-gray-300 px-4 py-2 rounded shadow-sm hover:bg-gray-50 flex items-center mb-2 font-medium text-gray-700"
-              >
-                <UploadCloud size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
-                {language === "ar"
-                  ? "اختر ملف Excel محلي"
-                  : "Select Local Excel File"}
-              </label>
-              {syncFile && (
-                <p className="text-sm text-green-600 font-medium">
-                  Selected: {syncFile.name}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
       
       {/* Image Viewer Modal */}
       {viewingImage && (

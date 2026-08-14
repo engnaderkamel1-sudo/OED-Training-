@@ -7,6 +7,27 @@ import { DataField } from './DataField';
 import { SessionCard } from './SessionCard';
 import { UpcomingSession } from '../types';
 
+// Helper functions that were accidentally removed
+const parseScore = (score: any): number => {
+  if (typeof score === 'number') return score;
+  if (typeof score === 'string') {
+    const parsed = parseFloat(score.replace(/[^0-9.]/g, ''));
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+};
+
+const formatScore = (score: any): string => {
+  const parsed = parseScore(score);
+  return parsed ? `${parsed}%` : 'N/A';
+};
+
+const formatDateToStandard = (dateStr: any): string => {
+  if (!dateStr) return 'N/A';
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? String(dateStr) : d.toLocaleDateString('en-GB');
+};
+
 export const TraineeDashboard: React.FC = () => {
   const { t, user, records, language, upcomingSessions, registerTrainee, unregisterTrainee } = useAppContext();
   const [requestedTopic, setRequestedTopic] = useState('');

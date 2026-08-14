@@ -32,14 +32,9 @@ export const Sidebar: React.FC = () => {
     ];
   } else if (role === 'admin') {
     links = [
-      { id: 'dashboard', label: language === 'ar' ? 'إدارة الحسابات' : 'User Management', icon: Users },
-      { id: 'records', label: t('globalRecords'), icon: FileText },
+      { id: 'dashboard', label: language === 'ar' ? 'لوحة القيادة' : 'Dashboard', icon: LayoutDashboard },
       { id: 'analytics', label: t('analytics'), icon: BarChart },
-      { id: 'analyticsDashboard', label: language === 'ar' ? 'لوحة التحليلات المتقدمة' : 'Analytics Dashboard', icon: BarChart },
-      { id: 'announcements', label: t('sessionAnnouncements'), icon: Bell },
-      { id: 'tna', label: t('tna'), icon: BarChart },
-      { id: 'resources', label: t('resourceSharing'), icon: Share2 },
-      { id: 'sync', label: language === 'ar' ? 'مزامنة البيانات' : 'Sync Data', icon: Database },
+      { id: 'tools', label: language === 'ar' ? 'أدوات الإدارة' : 'Admin Tools', icon: Database },
       { id: 'profile', label: language === 'ar' ? 'بياناتي الشخصية' : 'My Profile', icon: UserCircle },
     ];
   } else if (role === 'manager' || role === 'supervisor') {
@@ -57,12 +52,12 @@ export const Sidebar: React.FC = () => {
   return (
     <>
       {/* Mobile Hamburger Button */}
-      <div className="sm:hidden fixed bottom-20 left-4 rtl:left-auto rtl:right-4 z-[9999] print:hidden">
+      <div className="sm:hidden fixed top-20 left-4 rtl:left-auto rtl:right-4 z-[9999] print:hidden">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="bg-[#FFC000] text-[#002D62] p-4 rounded-full shadow-2xl hover:bg-yellow-500 transition-transform active:scale-95 border-2 border-[#002D62]"
+          className="bg-[#002D62]/80 backdrop-blur-md text-white p-3 rounded-full shadow-lg hover:bg-blue-900 transition-transform active:scale-95 border border-white/20"
         >
-          {isOpen ? <X size={28} /> : <Menu size={28} strokeWidth={2.5} />}
+          {isOpen ? <X size={26} /> : <Menu size={26} strokeWidth={2.5} />}
         </button>
       </div>
 
@@ -93,7 +88,6 @@ export const Sidebar: React.FC = () => {
           </div>
 
           {links.map((link) => {
-            // Treat userManagement equivalent to dashboard for Admin highlighting
             const isActive = currentView === link.id || (link.id === 'dashboard' && currentView === 'userManagement');
             return (
               <button
