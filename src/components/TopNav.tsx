@@ -20,15 +20,15 @@ export const TopNav: React.FC = () => {
   return (
     <nav className="bg-[#002D62] text-white shadow-md print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center px-2 md:px-0">
-          <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+        <div className="flex justify-between min-h-16 py-1 sm:py-0 items-center px-2 md:px-0">
+          <div className="flex flex-col-reverse sm:flex-row items-start sm:items-center gap-0.5 sm:gap-2 md:gap-4 flex-1 min-w-0">
             {/* Company Logo */}
             <div className="flex-shrink-0 flex items-center justify-center bg-white p-0.5 sm:p-1 rounded shadow-sm">
-              <img src="/orascom_logo.jpg" alt="Orascom Construction" className="h-6 sm:h-8 md:h-11 object-contain" />
+              <img src="/orascom_logo.jpg" alt="Orascom Construction" className="h-5 sm:h-8 md:h-11 object-contain" />
             </div>
-            <div className="flex flex-col justify-center flex-1 min-w-0">
-              <span className="font-bold text-[10px] sm:text-lg md:text-xl tracking-tight sm:tracking-wide leading-tight uppercase truncate">Orascom Construction</span>
-              <span className="text-[7px] sm:text-xs md:text-sm text-[#FFC000] font-semibold tracking-tight sm:tracking-wider leading-tight truncate">Technical Training Management System (TTMS)</span>
+            <div className="flex flex-col justify-center flex-1 min-w-0 w-full">
+              <span className="font-bold text-[11px] sm:text-lg md:text-xl tracking-tight sm:tracking-wide leading-none sm:leading-tight uppercase truncate">Orascom Construction</span>
+              <span className="text-[8px] sm:text-xs md:text-sm text-[#FFC000] font-semibold tracking-tight sm:tracking-wider leading-tight truncate">Technical Training Management System (TTMS)</span>
             </div>
           </div>
           
