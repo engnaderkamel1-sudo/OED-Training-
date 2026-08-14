@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+﻿import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession } from "../types";
@@ -269,14 +269,14 @@ export const AdminDashboard: React.FC = () => {
     const approvedUser = users.find(u => u.id === id);
     if (approvedUser && approvedUser.fcmToken) {
       sendPushNotification(
-        language === "ar" ? "ØªÙ… ØªÙØ¹ÙŠÙ„ Ø­Ø³Ø§Ø¨Ùƒ" : "Account Approved",
-        language === "ar" ? "Ù…Ø±Ø­Ø¨Ø§Ù‹ Ø¨Ùƒ ÙÙŠ Ù…Ù†ØµØ© OED Ù„Ù„ØªØ¯Ø±ÙŠØ¨" : "Welcome to OED Training",
+        language === "ar" ? "Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ™ÂÃ˜Â¹Ã™Å Ã™â€ž Ã˜Â­Ã˜Â³Ã˜Â§Ã˜Â¨Ã™Æ’" : "Account Approved",
+        language === "ar" ? "Ã™â€¦Ã˜Â±Ã˜Â­Ã˜Â¨Ã˜Â§Ã™â€¹ Ã˜Â¨Ã™Æ’ Ã™ÂÃ™Å  Ã™â€¦Ã™â€ Ã˜ÂµÃ˜Â© OED Ã™â€žÃ™â€žÃ˜ÂªÃ˜Â¯Ã˜Â±Ã™Å Ã˜Â¨" : "Welcome to OED Training",
         [approvedUser.fcmToken]
       );
     }
     alert(
       language === "ar"
-        ? "ØªÙ… Ø§Ù„Ù‚Ø¨ÙˆÙ„! (ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø¥Ø´Ø¹Ø§Ø± Ù„Ù„Ù…Ø³ØªØ®Ø¯Ù…)"
+        ? "Ã˜ÂªÃ™â€¦ Ã˜Â§Ã™â€žÃ™â€šÃ˜Â¨Ã™Ë†Ã™â€ž! (Ã˜ÂªÃ™â€¦ Ã˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â¥Ã˜Â´Ã˜Â¹Ã˜Â§Ã˜Â± Ã™â€žÃ™â€žÃ™â€¦Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦)"
         : "Approved! (Notification sent to user)",
     );
   };
@@ -287,7 +287,7 @@ export const AdminDashboard: React.FC = () => {
   };
   
   const handleDeleteUser = (id: string) => {
-    if (confirm(language === "ar" ? "Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ù…ØªØ¯Ø±Ø¨ØŸ" : "Are you sure you want to delete this trainee?")) {
+    if (confirm(language === "ar" ? "Ã™â€¡Ã™â€ž Ã˜Â£Ã™â€ Ã˜Âª Ã™â€¦Ã˜ÂªÃ˜Â£Ã™Æ’Ã˜Â¯ Ã™â€¦Ã™â€  Ã˜Â­Ã˜Â°Ã™Â Ã™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â¯Ã˜Â±Ã˜Â¨Ã˜Å¸" : "Are you sure you want to delete this trainee?")) {
       setUsers(
         users.map((u) => (u.id === id ? { ...u, status: "deleted" } : u)),
       );
@@ -339,8 +339,8 @@ export const AdminDashboard: React.FC = () => {
       const validTokens = users.filter(u => u.fcmToken).map(u => u.fcmToken as string);
       if (validTokens.length > 0) {
         sendPushNotification(
-          language === "ar" ? "Ø¯ÙˆØ±Ø© ØªØ¯Ø±ÙŠØ¨ÙŠØ© Ø¬Ø¯ÙŠØ¯Ø©!" : "New Training Course!",
-          language === "ar" ? `ØªÙ… Ø¥Ø¶Ø§ÙØ© Ø¯ÙˆØ±Ø© ${courseTitle}. Ø¨Ø§Ø¯Ø± Ø¨Ø§Ù„ØªØ³Ø¬ÙŠÙ„!` : `Course ${courseTitle} is now available. Register now!`,
+          language === "ar" ? "Ã˜Â¯Ã™Ë†Ã˜Â±Ã˜Â© Ã˜ÂªÃ˜Â¯Ã˜Â±Ã™Å Ã˜Â¨Ã™Å Ã˜Â© Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯Ã˜Â©!" : "New Training Course!",
+          language === "ar" ? `Ã˜ÂªÃ™â€¦ Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â¯Ã™Ë†Ã˜Â±Ã˜Â© ${courseTitle}. Ã˜Â¨Ã˜Â§Ã˜Â¯Ã˜Â± Ã˜Â¨Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€ž!` : `Course ${courseTitle} is now available. Register now!`,
           validTokens
         );
       }
@@ -420,25 +420,25 @@ export const AdminDashboard: React.FC = () => {
     const isFinal = reminderType === "Final";
     const typeLabel = isFinal
       ? language === "ar"
-        ? "Ø§Ù„ØªØ°ÙƒÙŠØ± Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ"
+        ? "Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â°Ã™Æ’Ã™Å Ã˜Â± Ã˜Â§Ã™â€žÃ™â€ Ã™â€¡Ã˜Â§Ã˜Â¦Ã™Å "
         : "FINAL REMINDER"
       : language === "ar"
-        ? "ØªØ°ÙƒÙŠØ± Ø¹Ø§Ø¯ÙŠ"
+        ? "Ã˜ÂªÃ˜Â°Ã™Æ’Ã™Å Ã˜Â± Ã˜Â¹Ã˜Â§Ã˜Â¯Ã™Å "
         : "Standard reminder";
         
     const validTokens = users.filter(u => u.fcmToken).map(u => u.fcmToken as string);
     if (validTokens.length > 0) {
       sendPushNotification(
-        isFinal ? (language === "ar" ? "ØªÙ†Ø¨ÙŠÙ‡ Ù†Ù‡Ø§Ø¦ÙŠ Ù„Ù„ØªØ³Ø¬ÙŠÙ„" : "Final Registration Alert") : (language === "ar" ? "ØªØ°ÙƒÙŠØ± Ù„Ù„ØªØ³Ø¬ÙŠÙ„ ÙÙŠ Ø§Ù„Ø¯ÙˆØ±Ø©" : "Course Registration Alert"),
-        language === "ar" ? `ØªÙ… Ø¥Ø±Ø³Ø§Ù„ ØªØ°ÙƒÙŠØ± Ø¨Ø®ØµÙˆØµ Ø¯ÙˆØ±Ø© ${session.courseTitle}` : `Reminder for course ${session.courseTitle}`,
+        isFinal ? (language === "ar" ? "Ã˜ÂªÃ™â€ Ã˜Â¨Ã™Å Ã™â€¡ Ã™â€ Ã™â€¡Ã˜Â§Ã˜Â¦Ã™Å  Ã™â€žÃ™â€žÃ˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€ž" : "Final Registration Alert") : (language === "ar" ? "Ã˜ÂªÃ˜Â°Ã™Æ’Ã™Å Ã˜Â± Ã™â€žÃ™â€žÃ˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€ž Ã™ÂÃ™Å  Ã˜Â§Ã™â€žÃ˜Â¯Ã™Ë†Ã˜Â±Ã˜Â©" : "Course Registration Alert"),
+        language === "ar" ? `Ã˜ÂªÃ™â€¦ Ã˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜ÂªÃ˜Â°Ã™Æ’Ã™Å Ã˜Â± Ã˜Â¨Ã˜Â®Ã˜ÂµÃ™Ë†Ã˜Âµ Ã˜Â¯Ã™Ë†Ã˜Â±Ã˜Â© ${session.courseTitle}` : `Reminder for course ${session.courseTitle}`,
         validTokens
       );
     }
     
     const toastMsg =
       language === "ar"
-        ? `${isFinal ? "ðŸš¨" : "ðŸ””"} ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø¥Ø´Ø¹Ø§Ø± ${typeLabel} Ø¨Ù†Ø¬Ø§Ø­ Ù„Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…ØªØ¯Ø±Ø¨ÙŠÙ† Ø§Ù„Ù…Ø³Ø¬Ù„ÙŠÙ† ÙÙŠ [${session.courseTitle}]!`
-        : `${isFinal ? "ðŸš¨" : "ðŸ””"} ${typeLabel} alert sent successfully to all registered trainees for [${session.courseTitle}]!`;
+        ? `${isFinal ? "Ã°Å¸Å¡Â¨" : "Ã°Å¸â€â€"} Ã˜ÂªÃ™â€¦ Ã˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â¥Ã˜Â´Ã˜Â¹Ã˜Â§Ã˜Â± ${typeLabel} Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­ Ã™â€žÃ˜Â¬Ã™â€¦Ã™Å Ã˜Â¹ Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â¯Ã˜Â±Ã˜Â¨Ã™Å Ã™â€  Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â³Ã˜Â¬Ã™â€žÃ™Å Ã™â€  Ã™ÂÃ™Å  [${session.courseTitle}]!`
+        : `${isFinal ? "Ã°Å¸Å¡Â¨" : "Ã°Å¸â€â€"} ${typeLabel} alert sent successfully to all registered trainees for [${session.courseTitle}]!`;
     setReminderToast(toastMsg);
     updateUpcomingSession(updatedSession);
     setActiveReminderDropdown(null);
@@ -467,10 +467,10 @@ export const AdminDashboard: React.FC = () => {
   const getAdminReportOptions = (): ReportOptions => {
     const reportTitle = isSingleTraineeFiltered
       ? language === "ar"
-        ? "ØªÙ‚Ø±ÙŠØ± ØªØ¯Ø±ÙŠØ¨ ÙØ±Ø¯ÙŠ"
+        ? "Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã˜ÂªÃ˜Â¯Ã˜Â±Ã™Å Ã˜Â¨ Ã™ÂÃ˜Â±Ã˜Â¯Ã™Å "
         : "Individual Trainee Training Report"
       : language === "ar"
-        ? "ØªÙ‚Ø±ÙŠØ± Ø§Ù„ØªØ¯Ø±ÙŠØ¨ Ø§Ù„ÙÙ†ÙŠ"
+        ? "Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¯Ã˜Â±Ã™Å Ã˜Â¨ Ã˜Â§Ã™â€žÃ™ÂÃ™â€ Ã™Å "
         : "Technical Training Report";
     return {
       title: reportTitle,
@@ -773,13 +773,13 @@ export const AdminDashboard: React.FC = () => {
                 onClick={() => setUserManagementTab('processed')}
                 className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors ${userManagementTab === 'processed' ? 'bg-[#002D62] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
               >
-                {language === "ar" ? "Ø·Ù„Ø¨Ø§Øª Ù…Ù†ØªÙ‡ÙŠØ©" : "Processed Requests"}
+                {language === "ar" ? "Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€ Ã˜ÂªÃ™â€¡Ã™Å Ã˜Â©" : "Processed Requests"}
               </button>
               <button
                 onClick={() => setUserManagementTab('deleted')}
                 className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors ${userManagementTab === 'deleted' ? 'bg-[#002D62] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
               >
-                {language === "ar" ? "Ø§Ù„Ù…ØªØ¯Ø±Ø¨ÙŠÙ† Ø§Ù„Ù…Ø­Ø°ÙˆÙÙŠÙ†" : "Deleted Trainees"}
+                {language === "ar" ? "Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â¯Ã˜Â±Ã˜Â¨Ã™Å Ã™â€  Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜Â°Ã™Ë†Ã™ÂÃ™Å Ã™â€ " : "Deleted Trainees"}
               </button>
             </div>
             
@@ -796,15 +796,15 @@ export const AdminDashboard: React.FC = () => {
                   <thead>
                     <tr className="bg-gray-50 text-gray-600 border-b">
                       <th className="p-3">
-                        {language === "ar" ? "Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ÙˆØ¸ÙŠÙÙŠ" : "HR Code"}
+                        {language === "ar" ? "Ã˜Â§Ã™â€žÃ˜Â±Ã™â€šÃ™â€¦ Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â¸Ã™Å Ã™ÂÃ™Å " : "HR Code"}
                       </th>
                       <th className="p-3">{t("name")}</th>
                       <th className="p-3">{t("department")}</th>
                       <th className="p-3">
-                        {language === "ar" ? "ØµÙ„Ø§Ø­ÙŠØ© Ø§Ù„ÙˆØµÙˆÙ„" : "Access Role"}
+                        {language === "ar" ? "Ã˜ÂµÃ™â€žÃ˜Â§Ã˜Â­Ã™Å Ã˜Â© Ã˜Â§Ã™â€žÃ™Ë†Ã˜ÂµÃ™Ë†Ã™â€ž" : "Access Role"}
                       </th>
                       <th className="p-3">
-                        {language === "ar" ? "ØªØ§Ø±ÙŠØ® Ø§Ù„Ø·Ù„Ø¨" : "Request Date"}
+                        {language === "ar" ? "Ã˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â® Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨" : "Request Date"}
                       </th>
                       <th className="p-3">Action</th>
                     </tr>
@@ -961,7 +961,7 @@ export const AdminDashboard: React.FC = () => {
             {userManagementTab === 'processed' && (
             <div>
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
-              {language === "ar" ? "Ø·Ù„Ø¨Ø§Øª Ù…Ù†ØªÙ‡ÙŠØ©" : "Processed Requests"}
+              {language === "ar" ? "Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª Ã™â€¦Ã™â€ Ã˜ÂªÃ™â€¡Ã™Å Ã˜Â©" : "Processed Requests"}
             </h2>
             {users.filter(
               (u) =>
@@ -973,18 +973,18 @@ export const AdminDashboard: React.FC = () => {
                   <thead>
                     <tr className="bg-gray-50 text-gray-600 border-b">
                       <th className="p-3">
-                        {language === "ar" ? "Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ÙˆØ¸ÙŠÙÙŠ" : "HR Code"}
+                        {language === "ar" ? "Ã˜Â§Ã™â€žÃ˜Â±Ã™â€šÃ™â€¦ Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â¸Ã™Å Ã™ÂÃ™Å " : "HR Code"}
                       </th>
                       <th className="p-3">{t("name")}</th>
                       <th className="p-3">{t("department")}</th>
                       <th className="p-3">
-                        {language === "ar" ? "ØµÙ„Ø§Ø­ÙŠØ© Ø§Ù„ÙˆØµÙˆÙ„" : "Access Role"}
+                        {language === "ar" ? "Ã˜ÂµÃ™â€žÃ˜Â§Ã˜Â­Ã™Å Ã˜Â© Ã˜Â§Ã™â€žÃ™Ë†Ã˜ÂµÃ™Ë†Ã™â€ž" : "Access Role"}
                       </th>
                       <th className="p-3">
-                        {language === "ar" ? "Ø§Ù„Ø­Ø§Ù„Ø©" : "Status"}
+                        {language === "ar" ? "Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ˜Â©" : "Status"}
                       </th>
                       <th className="p-3">
-                        {language === "ar" ? "ØªØ§Ø±ÙŠØ® Ø§Ù„Ø·Ù„Ø¨" : "Request Date"}
+                        {language === "ar" ? "Ã˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â® Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨" : "Request Date"}
                       </th>
                       <th className="p-3">Action</th>
                     </tr>
@@ -1020,7 +1020,7 @@ export const AdminDashboard: React.FC = () => {
                               </td>
                               <td className="p-3">
                                 <span className={`px-2 py-1 rounded text-sm font-semibold ${u.status === "approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                                  {u.status === "approved" ? (language === "ar" ? "Ù…ÙˆØ§ÙÙ‚ Ø¹Ù„ÙŠÙ‡" : "Approved") : (language === "ar" ? "Ù…Ø±ÙÙˆØ¶" : "Rejected")}
+                                  {u.status === "approved" ? (language === "ar" ? "Ã™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€š Ã˜Â¹Ã™â€žÃ™Å Ã™â€¡" : "Approved") : (language === "ar" ? "Ã™â€¦Ã˜Â±Ã™ÂÃ™Ë†Ã˜Â¶" : "Rejected")}
                                 </span>
                               </td>
                               <td className="p-3">
@@ -1030,10 +1030,10 @@ export const AdminDashboard: React.FC = () => {
                               </td>
                               <td className="p-3 flex gap-2">
                                 <button onClick={() => { setUsers(users.map((user) => user.id === u.id ? { ...user, ...editFormData } : user)); setEditingUserId(null); }} className="text-blue-600 bg-blue-50 px-3 py-1 rounded">
-                                  {language === "ar" ? "Ø­ÙØ¸" : "Save"}
+                                  {language === "ar" ? "Ã˜Â­Ã™ÂÃ˜Â¸" : "Save"}
                                 </button>
                                 <button onClick={() => setEditingUserId(null)} className="text-gray-600 bg-gray-50 px-3 py-1 rounded">
-                                  {language === "ar" ? "Ø¥Ù„ØºØ§Ø¡" : "Cancel"}
+                                  {language === "ar" ? "Ã˜Â¥Ã™â€žÃ˜ÂºÃ˜Â§Ã˜Â¡" : "Cancel"}
                                 </button>
                               </td>
                             </>
@@ -1053,7 +1053,7 @@ export const AdminDashboard: React.FC = () => {
                               </td>
                               <td className="p-3">
                                 <span className={`px-2 py-1 rounded text-sm font-semibold ${u.status === "approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                                  {u.status === "approved" ? (language === "ar" ? "Ù…ÙˆØ§ÙÙ‚ Ø¹Ù„ÙŠÙ‡" : "Approved") : (language === "ar" ? "Ù…Ø±ÙÙˆØ¶" : "Rejected")}
+                                  {u.status === "approved" ? (language === "ar" ? "Ã™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€š Ã˜Â¹Ã™â€žÃ™Å Ã™â€¡" : "Approved") : (language === "ar" ? "Ã™â€¦Ã˜Â±Ã™ÂÃ™Ë†Ã˜Â¶" : "Rejected")}
                                 </span>
                               </td>
                               <td className="p-3">
@@ -1065,10 +1065,10 @@ export const AdminDashboard: React.FC = () => {
                                 {u.status === "approved" && (
                                   <>
                                     <button onClick={() => { setEditingUserId(u.id); setEditFormData(u); }} className="text-blue-600 bg-blue-50 px-3 py-1 rounded hover:bg-blue-100">
-                                      {language === "ar" ? "ØªØ¹Ø¯ÙŠÙ„" : "Edit"}
+                                      {language === "ar" ? "Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž" : "Edit"}
                                     </button>
                                     <button onClick={() => handleDeleteUser(u.id)} className="text-red-600 bg-red-50 px-3 py-1 rounded hover:bg-red-100">
-                                      {language === "ar" ? "Ø­Ø°Ù" : "Delete"}
+                                      {language === "ar" ? "Ã˜Â­Ã˜Â°Ã™Â" : "Delete"}
                                     </button>
                                   </>
                                 )}
@@ -1089,14 +1089,14 @@ export const AdminDashboard: React.FC = () => {
             {userManagementTab === 'deleted' && (
             <div>
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
-              {language === "ar" ? "Ø§Ù„Ù…ØªØ¯Ø±Ø¨ÙŠÙ† Ø§Ù„Ù…Ø­Ø°ÙˆÙÙŠÙ†" : "Deleted Trainees"}
+              {language === "ar" ? "Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â¯Ã˜Â±Ã˜Â¨Ã™Å Ã™â€  Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜Â°Ã™Ë†Ã™ÂÃ™Å Ã™â€ " : "Deleted Trainees"}
             </h2>
             {users.filter(u => u.status === "deleted").length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-gray-50 text-gray-600 border-b">
-                      <th className="p-3">{language === "ar" ? "Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ÙˆØ¸ÙŠÙÙŠ" : "HR Code"}</th>
+                      <th className="p-3">{language === "ar" ? "Ã˜Â§Ã™â€žÃ˜Â±Ã™â€šÃ™â€¦ Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â¸Ã™Å Ã™ÂÃ™Å " : "HR Code"}</th>
                       <th className="p-3">{t("name")}</th>
                       <th className="p-3">{t("department")}</th>
                       <th className="p-3">Action</th>
@@ -1112,7 +1112,7 @@ export const AdminDashboard: React.FC = () => {
                         <td className="p-3">{u.department}</td>
                         <td className="p-3">
                           <button onClick={() => handleRestoreUser(u.id)} className="flex items-center text-green-600 bg-green-100 px-3 py-1 rounded hover:bg-green-200">
-                            {language === "ar" ? "Ø§Ø³ØªØ±Ø¬Ø§Ø¹" : "Restore"}
+                            {language === "ar" ? "Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â¬Ã˜Â§Ã˜Â¹" : "Restore"}
                           </button>
                         </td>
                       </tr>
@@ -1121,7 +1121,7 @@ export const AdminDashboard: React.FC = () => {
                 </table>
               </div>
             ) : (
-              <p className="text-gray-500">{language === "ar" ? "Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ù…ØªØ¯Ø±Ø¨ÙŠÙ† Ù…Ø­Ø°ÙˆÙÙŠÙ†." : "No deleted trainees."}</p>
+              <p className="text-gray-500">{language === "ar" ? "Ã™â€žÃ˜Â§ Ã™Å Ã™Ë†Ã˜Â¬Ã˜Â¯ Ã™â€¦Ã˜ÂªÃ˜Â¯Ã˜Â±Ã˜Â¨Ã™Å Ã™â€  Ã™â€¦Ã˜Â­Ã˜Â°Ã™Ë†Ã™ÂÃ™Å Ã™â€ ." : "No deleted trainees."}</p>
             )}
             </div>
             )}
@@ -1143,11 +1143,11 @@ export const AdminDashboard: React.FC = () => {
                 <div className="flex gap-2 print:hidden">
                   <button onClick={handlePrint} className="flex items-center gap-1 bg-[#002D62] text-white px-3 py-1.5 rounded hover:bg-blue-900 transition-colors shadow-sm text-sm">
                     <Printer size={16} />
-                    {language === "ar" ? "Ø·Ø¨Ø§Ø¹Ø©" : "Print"}
+                    {language === "ar" ? "Ã˜Â·Ã˜Â¨Ã˜Â§Ã˜Â¹Ã˜Â©" : "Print"}
                   </button>
                   <button onClick={handleDownloadPDF} className="flex items-center gap-1 bg-[#FFC000] text-[#002D62] px-3 py-1.5 rounded hover:bg-yellow-500 transition-colors shadow-sm font-semibold text-sm">
                     <Download size={16} />
-                    {language === "ar" ? "ØªÙ†Ø²ÙŠÙ„ PDF" : "Download PDF"}
+                    {language === "ar" ? "Ã˜ÂªÃ™â€ Ã˜Â²Ã™Å Ã™â€ž PDF" : "Download PDF"}
                   </button>
                 </div>
               </div>
@@ -1156,7 +1156,7 @@ export const AdminDashboard: React.FC = () => {
               <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
                 <BookOpen className="text-[#002D62] mb-2" size={24} />
                 <span className="text-xs text-gray-500 font-semibold mb-1">
-                  {language === "ar" ? "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„ÙƒÙˆØ±Ø³Ø§Øª" : "Total Courses"}
+                  {language === "ar" ? "Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ™Æ’Ã™Ë†Ã˜Â±Ã˜Â³Ã˜Â§Ã˜Âª" : "Total Courses"}
                 </span>
                 <span className="text-xl font-bold text-[#002D62]">
                   {kpiStats.totalCourses}
@@ -1166,7 +1166,7 @@ export const AdminDashboard: React.FC = () => {
                 <Calendar className="text-[#FFC000] mb-2" size={24} />
                 <span className="text-xs text-gray-500 font-semibold mb-1">
                   {language === "ar"
-                    ? "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù†Ø¹Ù‚Ø§Ø¯ Ø§Ù„Ø¯ÙˆØ±Ø§Øª"
+                    ? "Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€ Ã˜Â¹Ã™â€šÃ˜Â§Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â¯Ã™Ë†Ã˜Â±Ã˜Â§Ã˜Âª"
                     : "Total Sessions"}
                 </span>
                 <span className="text-xl font-bold text-[#002D62]">
@@ -1177,7 +1177,7 @@ export const AdminDashboard: React.FC = () => {
                 <Users className="text-green-600 mb-2" size={24} />
                 <span className="text-xs text-gray-500 font-semibold mb-1">
                   {language === "ar"
-                    ? "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…ØªØ¯Ø±Ø¨ÙŠÙ†"
+                    ? "Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â¯Ã˜Â±Ã˜Â¨Ã™Å Ã™â€ "
                     : "Total Participants"}
                 </span>
                 <span className="text-xl font-bold text-[#002D62]">
@@ -1187,7 +1187,7 @@ export const AdminDashboard: React.FC = () => {
               <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
                 <HardHat className="text-blue-500 mb-2" size={24} />
                 <span className="text-xs text-gray-500 font-semibold mb-1">
-                  {language === "ar" ? "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ù‡Ù†Ø¯Ø³ÙŠÙ†" : "Total Engineers"}
+                  {language === "ar" ? "Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ™â€¦Ã™â€¡Ã™â€ Ã˜Â¯Ã˜Â³Ã™Å Ã™â€ " : "Total Engineers"}
                 </span>
                 <span className="text-xl font-bold text-[#002D62]">
                   {kpiStats.totalEngineers}
@@ -1196,7 +1196,7 @@ export const AdminDashboard: React.FC = () => {
               <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
                 <Wrench className="text-purple-500 mb-2" size={24} />
                 <span className="text-xs text-gray-500 font-semibold mb-1">
-                  {language === "ar" ? "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„ÙÙ†ÙŠÙŠÙ†" : "Total Technicians"}
+                  {language === "ar" ? "Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ™ÂÃ™â€ Ã™Å Ã™Å Ã™â€ " : "Total Technicians"}
                 </span>
                 <span className="text-xl font-bold text-[#002D62]">
                   {kpiStats.totalTechnicians}
@@ -1205,7 +1205,7 @@ export const AdminDashboard: React.FC = () => {
               <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
                 <Settings className="text-gray-500 mb-2" size={24} />
                 <span className="text-xs text-gray-500 font-semibold mb-1">
-                  {language === "ar" ? "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø´ØºÙ„ÙŠÙ†" : "Total Operators"}
+                  {language === "ar" ? "Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â´Ã˜ÂºÃ™â€žÃ™Å Ã™â€ " : "Total Operators"}
                 </span>
                 <span className="text-xl font-bold text-[#002D62]">
                   {kpiStats.totalOperators}
@@ -1301,7 +1301,7 @@ export const AdminDashboard: React.FC = () => {
                     <tr className="bg-gray-50 border-b border-gray-200">
                       <th className="p-3">
                         <div className="font-semibold text-gray-700 mb-2">
-                          {language === "ar" ? "Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ÙˆØ¸ÙŠÙÙŠ" : "HR Code"}
+                          {language === "ar" ? "Ã˜Â§Ã™â€žÃ˜Â±Ã™â€šÃ™â€¦ Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â¸Ã™Å Ã™ÂÃ™Å " : "HR Code"}
                         </div>
                         <div className="relative">
                           <input
@@ -1403,12 +1403,12 @@ export const AdminDashboard: React.FC = () => {
                       </th>
                       <th className="p-3 align-top">
                         <div className="font-semibold text-gray-700 mb-2">
-                          {language === "ar" ? "Ù…Ø¯Ø© Ø§Ù„Ø¯ÙˆØ±Ø©" : "Duration"}
+                          {language === "ar" ? "Ã™â€¦Ã˜Â¯Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¯Ã™Ë†Ã˜Â±Ã˜Â©" : "Duration"}
                         </div>
                       </th>
                       <th className="p-3 align-top">
                         <div className="font-semibold text-gray-700 mb-2">
-                          {language === "ar" ? "Ø£ÙŠØ§Ù… Ø§Ù„Ø­Ø¶ÙˆØ±" : "Attended Days"}
+                          {language === "ar" ? "Ã˜Â£Ã™Å Ã˜Â§Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â¶Ã™Ë†Ã˜Â±" : "Attended Days"}
                         </div>
                       </th>
                       <th className="p-3 align-top">
@@ -1430,7 +1430,7 @@ export const AdminDashboard: React.FC = () => {
                               }
                               className="w-full border rounded px-2 py-1 text-xs focus:ring-[#002D62] pr-6"
                               title={
-                                language === "ar" ? "Ù…Ù† ØªØ§Ø±ÙŠØ®" : "From Date"
+                                language === "ar" ? "Ã™â€¦Ã™â€  Ã˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â®" : "From Date"
                               }
                             />
                             {fromDateFilter && (
@@ -1454,7 +1454,7 @@ export const AdminDashboard: React.FC = () => {
                               onChange={(e) => setToDateFilter(e.target.value)}
                               className="w-full border rounded px-2 py-1 text-xs focus:ring-[#002D62] pr-6"
                               title={
-                                language === "ar" ? "Ø¥Ù„Ù‰ ØªØ§Ø±ÙŠØ®" : "To Date"
+                                language === "ar" ? "Ã˜Â¥Ã™â€žÃ™â€° Ã˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â®" : "To Date"
                               }
                             />
                             {toDateFilter && (
@@ -1558,18 +1558,18 @@ export const AdminDashboard: React.FC = () => {
               <div className="flex gap-2 print:hidden">
                 <button onClick={handlePrint} className="flex items-center gap-1 bg-[#002D62] text-white px-3 py-1.5 rounded hover:bg-blue-900 transition-colors shadow-sm text-sm">
                   <Printer size={16} />
-                  {language === "ar" ? "طباعة" : "Print"}
+                  {language === "ar" ? "Ø·Ø¨Ø§Ø¹Ø©" : "Print"}
                 </button>
                 <button onClick={handleDownloadPDF} className="flex items-center gap-1 bg-[#FFC000] text-[#002D62] px-3 py-1.5 rounded hover:bg-yellow-500 transition-colors shadow-sm font-semibold text-sm">
                   <Download size={16} />
-                  {language === "ar" ? "تنزيل PDF" : "Download PDF"}
+                  {language === "ar" ? "ØªÙ†Ø²ÙŠÙ„ PDF" : "Download PDF"}
                 </button>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col items-center justify-center">
                 <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">
-                  {language === "ar" ? "إجمالي السجلات" : "Total Records"}
+                  {language === "ar" ? "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø³Ø¬Ù„Ø§Øª" : "Total Records"}
                 </span>
                 <span className="text-3xl font-bold text-[#002D62]">
                   {records.length}
@@ -1577,7 +1577,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col items-center justify-center">
                 <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">
-                  {language === "ar" ? "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…ØªØ¯Ø±Ø¨ÙŠÙ†" : "Unique Trainees"}
+                  {language === "ar" ? "Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â¯Ã˜Â±Ã˜Â¨Ã™Å Ã™â€ " : "Unique Trainees"}
                 </span>
                 <span className="text-3xl font-bold text-[#FFC000]">
                   {totalUniqueTrainees}
@@ -1585,7 +1585,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col items-center justify-center">
                 <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">
-                  {language === "ar" ? "Ø§Ù„Ø¯ÙˆØ±Ø§Øª Ø§Ù„Ù…ØªÙ…ÙŠØ²Ø©" : "Distinct Courses"}
+                  {language === "ar" ? "Ã˜Â§Ã™â€žÃ˜Â¯Ã™Ë†Ã˜Â±Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ™â€¦Ã™Å Ã˜Â²Ã˜Â©" : "Distinct Courses"}
                 </span>
                 <span className="text-3xl font-bold text-green-600">
                   {totalDistinctCourses}
@@ -1598,7 +1598,7 @@ export const AdminDashboard: React.FC = () => {
                 <div className="bg-white z-10 pb-3 border-b border-gray-200 flex-none">
                   <h3 className="font-bold text-[#002D62] text-base">
                     {language === "ar"
-                      ? "Ø§Ù„Ø¯ÙˆØ±Ø§Øª Ø­Ø³Ø¨ Ø§Ù„Ø­Ø¶ÙˆØ±"
+                      ? "Ã˜Â§Ã™â€žÃ˜Â¯Ã™Ë†Ã˜Â±Ã˜Â§Ã˜Âª Ã˜Â­Ã˜Â³Ã˜Â¨ Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â¶Ã™Ë†Ã˜Â±"
                       : "Courses by Attendance"}
                   </h3>
                 </div>
@@ -1635,7 +1635,7 @@ export const AdminDashboard: React.FC = () => {
                 <div className="bg-white z-10 pb-3 border-b border-gray-200 flex-none">
                   <h3 className="font-bold text-[#D97706] text-base">
                     {language === "ar"
-                      ? "Ø§Ù„Ù…ØªØ¯Ø±Ø¨ÙŠÙ† Ø­Ø³Ø¨ Ø§Ù„Ù‚Ø³Ù…"
+                      ? "Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â¯Ã˜Â±Ã˜Â¨Ã™Å Ã™â€  Ã˜Â­Ã˜Â³Ã˜Â¨ Ã˜Â§Ã™â€žÃ™â€šÃ˜Â³Ã™â€¦"
                       : "Trainees by Department"}
                   </h3>
                 </div>
@@ -1669,7 +1669,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <div className="mt-12 border-t border-gray-200 pt-8">
                 <h3 className="font-bold text-[#002D62] text-xl mb-6">
-                  {language === "ar" ? "Ø§Ù„Ø±Ø³ÙˆÙ… Ø§Ù„Ø¨ÙŠØ§Ù†ÙŠØ©" : "Advanced Charts"}
+                  {language === "ar" ? "Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â³Ã™Ë†Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã™Å Ã˜Â©" : "Advanced Charts"}
                 </h3>
                 <AnalyticsDashboardTab />
               </div>
@@ -1697,7 +1697,7 @@ export const AdminDashboard: React.FC = () => {
                   onClick={() => setReminderToast(null)}
                   className="text-emerald-600 hover:text-emerald-900 font-bold text-sm"
                 >
-                  âœ•
+                  Ã¢Å“â€¢
                 </button>
               </div>
             )}
@@ -1706,7 +1706,7 @@ export const AdminDashboard: React.FC = () => {
                 <h2 className="text-xl font-semibold mb-4 text-gray-800">
                   {editingSessionId ? t("editSession") : t("createNewSession")}
                 </h2>
-                <form onSubmit={handleCreateSession} className="space-y-4">
+                  <X size={16} />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1762,7 +1762,8 @@ export const AdminDashboard: React.FC = () => {
                       >
                         <option value="">{t("selectSession")}</option>
                         <option value="sessionOne">{t("sessionOne")}</option>
-                        <option value="sessionTwo">{t("sessionTwo")}</option>`n                        <option value="sessionThree">{t("sessionThree")}</option>
+                        <option value="sessionTwo">{t("sessionTwo")}</option>
+                          <option value="sessionThree">{t("sessionThree")}</option>
                       </select>
                     </div>
                     <div>
@@ -1934,7 +1935,7 @@ export const AdminDashboard: React.FC = () => {
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
                     {language === "ar"
-                      ? "Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª ÙˆØ§Ù„Ù†Ø³Ø® Ø§Ù„Ø§Ø­ØªÙŠØ§Ø·ÙŠ"
+                      ? "Ã˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™Ë†Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â® Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â­Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â·Ã™Å "
                       : "Data Management & Backup"}
                   </h2>
                                     <div className="flex gap-2">
@@ -1943,20 +1944,20 @@ export const AdminDashboard: React.FC = () => {
                       className="flex items-center gap-2 bg-[#002D62] hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"
                     >
                       <Mail size={18} />
-                      {language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}
+                      {language === 'ar' ? 'ØªÙ‚Ø±ÙŠØ± Ø§Ù„ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø´Ù‡Ø±ÙŠ' : 'Monthly Update Report'}
                     </button>
                     <button 
                       onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])}
                       className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"
                     >
                       <Download size={18} />
-                      {language === 'ar' ? 'تحميل نسخة احتياطية' : 'Download Backup'}
+                      {language === 'ar' ? 'ØªØ­Ù…ÙŠÙ„ Ù†Ø³Ø®Ø© Ø§Ø­ØªÙŠØ§Ø·ÙŠØ©' : 'Download Backup'}
                     </button>
                   </div>
                 </div>
                 <p className="text-gray-600 mb-6">
                   {language === "ar"
-                    ? "Ù‚Ù… Ø¨ØªÙˆÙÙŠØ± Ø±Ø§Ø¨Ø· OneDrive Ù„Ù…Ù„Ù Excel Ø§Ù„Ø®Ø§Øµ Ø¨Ùƒ Ù„Ù…Ø²Ø§Ù…Ù†Ø© Ø³Ø¬Ù„Ø§Øª Ø§Ù„ØªØ¯Ø±ÙŠØ¨."
+                    ? "Ã™â€šÃ™â€¦ Ã˜Â¨Ã˜ÂªÃ™Ë†Ã™ÂÃ™Å Ã˜Â± Ã˜Â±Ã˜Â§Ã˜Â¨Ã˜Â· OneDrive Ã™â€žÃ™â€¦Ã™â€žÃ™Â Excel Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â§Ã˜Âµ Ã˜Â¨Ã™Æ’ Ã™â€žÃ™â€¦Ã˜Â²Ã˜Â§Ã™â€¦Ã™â€ Ã˜Â© Ã˜Â³Ã˜Â¬Ã™â€žÃ˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¯Ã˜Â±Ã™Å Ã˜Â¨."
                     : "Provide a OneDrive link to your Excel file to synchronize training records."}
                   <br />
                   Expected columns:{" "}
@@ -1977,7 +1978,7 @@ export const AdminDashboard: React.FC = () => {
                 )}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {language === "ar" ? "Ø±Ø§Ø¨Ø· Ù…Ù„Ù OneDrive" : "OneDrive Shared Link"}
+                    {language === "ar" ? "Ã˜Â±Ã˜Â§Ã˜Â¨Ã˜Â· Ã™â€¦Ã™â€žÃ™Â OneDrive" : "OneDrive Shared Link"}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none rtl:left-auto rtl:right-0 rtl:pl-0 rtl:pr-3">
@@ -1987,7 +1988,7 @@ export const AdminDashboard: React.FC = () => {
                       type="url"
                       placeholder={
                         language === "ar"
-                          ? "ألصق رابط OneDrive Excel هنا..."
+                          ? "Ø£Ù„ØµÙ‚ Ø±Ø§Ø¨Ø· OneDrive Excel Ù‡Ù†Ø§..."
                           : "Paste your OneDrive Excel link here..."
                       }
                       value={syncLink}
@@ -2001,7 +2002,7 @@ export const AdminDashboard: React.FC = () => {
                   <div className="mb-6">
                     <div className="flex justify-between text-sm text-gray-600 mb-1">
                       <span>
-                        {language === "ar" ? "Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø¬Ù„Ø¨ ÙˆØ§Ù„Ù…Ø²Ø§Ù…Ù†Ø©..." : "Fetching & Syncing..."}
+                        {language === "ar" ? "Ã˜Â¬Ã˜Â§Ã˜Â±Ã™Å  Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€žÃ˜Â¨ Ã™Ë†Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â²Ã˜Â§Ã™â€¦Ã™â€ Ã˜Â©..." : "Fetching & Syncing..."}
                       </span>
                       <span>{syncProgress}%</span>
                     </div>
@@ -2025,19 +2026,19 @@ export const AdminDashboard: React.FC = () => {
                   {isSyncing ? (
                     <>
                       <RefreshCw size={18} className="animate-spin mr-2 rtl:ml-2 rtl:mr-0" />
-                      {language === "ar" ? "Ø¬Ø§Ø±ÙŠ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø©..." : "Processing..."}
+                      {language === "ar" ? "Ã˜Â¬Ã˜Â§Ã˜Â±Ã™Å  Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¹Ã˜Â§Ã™â€žÃ˜Â¬Ã˜Â©..." : "Processing..."}
                     </>
                   ) : (
                     <>
                       <RefreshCw size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
-                      {language === "ar" ? "مزامنة من OneDrive" : "Sync from OneDrive"}
+                      {language === "ar" ? "Ù…Ø²Ø§Ù…Ù†Ø© Ù…Ù† OneDrive" : "Sync from OneDrive"}
                     </>
                   )}
                 </button>
                 <div className="flex items-center my-6">
                   <div className="flex-grow border-t border-gray-300"></div>
                   <span className="mx-4 text-gray-500 text-sm font-medium">
-                    {language === "ar" ? "Ø£Ùˆ" : "OR"}
+                    {language === "ar" ? "Ã˜Â£Ã™Ë†" : "OR"}
                   </span>
                   <div className="flex-grow border-t border-gray-300"></div>
                 </div>
@@ -2055,7 +2056,7 @@ export const AdminDashboard: React.FC = () => {
                     className="cursor-pointer bg-white border border-gray-300 px-4 py-2 rounded shadow-sm hover:bg-gray-50 flex items-center mb-2 font-medium text-gray-700"
                   >
                     <UploadCloud size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
-                    {language === "ar" ? "Ø§Ø®ØªØ± Ù…Ù„Ù Excel Ù…Ø­Ù„ÙŠ" : "Select Local Excel File"}
+                    {language === "ar" ? "Ã˜Â§Ã˜Â®Ã˜ÂªÃ˜Â± Ã™â€¦Ã™â€žÃ™Â Excel Ã™â€¦Ã˜Â­Ã™â€žÃ™Å " : "Select Local Excel File"}
                   </label>
                   {syncFile && (
                     <p className="text-sm text-green-600 font-medium">
@@ -2106,3 +2107,4 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
+
