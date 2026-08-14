@@ -53,8 +53,8 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
-      {/* Mobile Hamburger Button */}
-      <div className="sm:hidden fixed top-20 left-4 rtl:left-auto rtl:right-4 z-[9999] print:hidden">
+      {/* Hamburger Button */}
+      <div className="fixed top-20 left-4 rtl:left-auto rtl:right-4 z-[9999] print:hidden">
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="bg-[#002D62]/80 backdrop-blur-md text-white p-3 rounded-full shadow-lg hover:bg-blue-900 transition-transform active:scale-95 border border-white/20"
@@ -63,10 +63,10 @@ export const Sidebar: React.FC = () => {
         </button>
       </div>
 
-      {/* Sidebar Overlay for Mobile */}
+      {/* Sidebar Overlay */}
       {isOpen && (
         <div 
-          className="sm:hidden fixed inset-0 bg-black/60 z-[9998] print:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/60 z-[9998] print:hidden backdrop-blur-sm transition-opacity"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -74,14 +74,14 @@ export const Sidebar: React.FC = () => {
       {/* Sidebar Container */}
       <aside 
         className={`
-          fixed sm:sticky top-0 h-[100dvh] sm:h-[calc(100vh-4rem)] bg-white border-r rtl:border-r-0 rtl:border-l border-gray-200 shadow-xl sm:shadow-sm w-72 sm:w-64 shrink-0
-          transition-transform duration-300 ease-in-out z-[9999] sm:z-40 overflow-y-auto print:hidden
-          ${isOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full sm:translate-x-0'}
+          fixed top-0 h-[100dvh] bg-white border-r rtl:border-r-0 rtl:border-l border-gray-200 shadow-xl w-72 shrink-0
+          transition-transform duration-300 ease-in-out z-[9999] overflow-y-auto print:hidden
+          ${isOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'}
         `}
       >
         <div className="p-4 flex flex-col gap-2">
-          {/* Mobile Header inside Sidebar */}
-          <div className="sm:hidden pb-4 mb-4 border-b border-gray-100 flex items-center justify-center">
+          {/* Header inside Sidebar */}
+          <div className="pb-4 mb-4 border-b border-gray-100 flex items-center justify-center">
             <img src="/orascom_logo.jpg" alt="Logo" className="h-8 object-contain" />
           </div>
 
