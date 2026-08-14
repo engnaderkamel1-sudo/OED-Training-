@@ -1856,39 +1856,6 @@ export const AdminDashboard: React.FC = () => {
                 <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
                   {t("resourceSharing")}
                 </h2>
-            <form onSubmit={handleShareResource} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("courseName")}
-                </label>
-                <select
-                  value={selectedCourseForResource}
-                  onChange={(e) => setSelectedCourseForResource(e.target.value)}
-                  className="w-full border rounded px-3 py-2 focus:ring-[#002D62] font-sans"
-                  dir="ltr"
-                >
-                  {dynamicCourses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("googleDriveLink")}
-                </label>
-                <input
-                  type="url"
-                  required
-                  value={resourceLink}
-                  onChange={(e) => setResourceLink(e.target.value)}
-                  placeholder="https://drive.google.com/..."
-                  className="w-full border rounded px-3 py-2 focus:ring-[#002D62]"
-                />
-              </div>
-              <button
-                type="submit"
                 <form onSubmit={handleShareResource} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
