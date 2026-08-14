@@ -1851,7 +1851,6 @@ export const AdminDashboard: React.FC = () => {
                   />
                 </BarChart>
               </ResponsiveContainer>
-              </ResponsiveContainer>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-gray-200 pt-8 mt-8">
