@@ -32,14 +32,16 @@ export const Sidebar: React.FC = () => {
     ];
   } else if (role === 'admin') {
     links = [
-      { id: 'dashboard', label: language === 'ar' ? 'لوحة القيادة' : 'Dashboard', icon: LayoutDashboard },
+      { id: 'dashboard', label: language === 'ar' ? '???? ???????' : 'Dashboard', icon: LayoutDashboard },
+      { id: 'userManagement', label: language === 'ar' ? '????? ???????' : 'User Requests', icon: Users },
       { id: 'analytics', label: t('analytics'), icon: BarChart },
       { id: 'tools', label: language === 'ar' ? 'أدوات الإدارة' : 'Admin Tools', icon: Database },
       { id: 'profile', label: language === 'ar' ? 'بياناتي الشخصية' : 'My Profile', icon: UserCircle },
     ];
   } else if (role === 'manager' || role === 'supervisor') {
     links = [
-      { id: 'dashboard', label: language === 'ar' ? 'لوحة القيادة' : 'Dashboard', icon: LayoutDashboard },
+      { id: 'dashboard', label: language === 'ar' ? '???? ???????' : 'Dashboard', icon: LayoutDashboard },
+      { id: 'userManagement', label: language === 'ar' ? '????? ???????' : 'User Requests', icon: Users },
       { id: 'profile', label: language === 'ar' ? 'بياناتي الشخصية' : 'My Profile', icon: UserCircle },
     ];
   }
@@ -111,3 +113,4 @@ export const Sidebar: React.FC = () => {
     </>
   );
 };
+

@@ -219,7 +219,7 @@ export const AdminDashboard: React.FC = () => {
   const departmentStats = useMemo(() => {
     const stats: Record<string, Set<string>> = {};
     records.forEach((r) => {
-      const u = users.find((user) => user.id === r.userId);
+      const u = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === "HR${r.userId}");
       if (u && u.department) {
         if (!stats[u.department]) stats[u.department] = new Set();
         stats[u.department].add(r.userId);
@@ -637,7 +637,7 @@ export const AdminDashboard: React.FC = () => {
     reader.readAsArrayBuffer(file);
   };
   const filteredRecords = records.filter((r) => {
-    const user = users.find((u) => u.id === r.userId);
+    const user = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === "HR${r.userId}");
     if (
       searchHrCode &&
       !user?.hrCode?.toLowerCase().includes(searchHrCode.toLowerCase())
@@ -679,7 +679,7 @@ export const AdminDashboard: React.FC = () => {
     let techniciansCount = 0;
     let operatorsCount = 0;
     filteredRecords.forEach((r) => {
-      const u = users.find((user) => user.id === r.userId);
+      const u = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === "HR${r.userId}");
       const cName = r.courseName || r.courseId;
       coursesSet.add(cName);
       sessionsSet.add(`${cName}-${r.attendanceDate}`);
@@ -705,7 +705,7 @@ export const AdminDashboard: React.FC = () => {
         new Set(
           filteredRecords
             .map((r) => {
-              const u = users.find((u) => u.id === r.userId);
+              const u = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === "HR${r.userId}");
               return u?.hrCode;
             })
             .filter(Boolean),
@@ -733,8 +733,8 @@ export const AdminDashboard: React.FC = () => {
       </div>
       {/* Content Area */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 min-h-[400px]">
-        {/* User Management Tab (Combined) */}
-        {(currentView === "userManagement" || currentView === "dashboard") && (
+        {/* User Management Tab */}
+        {currentView === "userManagement" && (
           <div className="space-y-12">
             <div className="flex flex-col md:flex-row gap-6">
             {/* Sidebar */}
@@ -1103,9 +1103,14 @@ export const AdminDashboard: React.FC = () => {
             )}
             </div>
           </div>
+        )}
+
+        {/* Dashboard Tab */}
+        {currentView === "dashboard" && (
+          <div className="space-y-12">
             
           {/* Embedded Records Section */}
-          <div className="border-t border-gray-200 pt-8 mt-8 w-full overflow-hidden">
+          <div className="w-full overflow-hidden">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
                   {t("globalRecords")}
@@ -1237,9 +1242,7 @@ export const AdminDashboard: React.FC = () => {
                               </thead>
                               <tbody>
                                 {attendeesOnDate.map((r) => {
-                                  const u = users.find(
-                                    (user) => user.id === r.userId,
-                                  );
+                                  const u = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === "HR${r.userId}");
                                   return (
                                     <tr
                                       key={r.id}
@@ -1450,7 +1453,7 @@ export const AdminDashboard: React.FC = () => {
                   <tbody>
                     {filteredRecords.map((r) => {
                       console.log("Rendering record (Admin Web):", r);
-                      const user = users.find((u) => u.id === r.userId);
+                      const user = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === "HR${r.userId}");
                       const course = dynamicCourses.find(
                         (c) => c.id === r.courseId,
                       );
@@ -2053,3 +2056,4 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
+
