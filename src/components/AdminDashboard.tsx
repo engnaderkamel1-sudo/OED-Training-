@@ -1705,7 +1705,7 @@ export const AdminDashboard: React.FC = () => {
                   onClick={() => setReminderToast(null)}
                   className="text-emerald-600 hover:text-emerald-900 font-bold text-sm"
                 >
-                  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢
+                  <X size={16} />
                 </button>
               </div>
             )}
@@ -2115,6 +2115,8 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
+
+
 
 
 
