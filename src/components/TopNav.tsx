@@ -18,23 +18,15 @@ export const TopNav: React.FC = () => {
   };
 
   return (
+    <>
     <nav className="bg-[#002D62] text-white shadow-md print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between min-h-16 py-1 sm:py-0 items-center px-2 md:px-0">
           
           {/* Mobile Branding Layout (Hidden on Desktop) */}
-          <div className="flex sm:hidden flex-col flex-1 min-w-0 mr-2 rtl:ml-2 rtl:mr-0 gap-1 justify-center">
-            {/* Top Row: App Name Centered */}
-            <div className="w-full text-center">
-              <span className="text-[9px] text-[#FFC000] font-semibold tracking-tight leading-none">Technical Training Management System (TTMS)</span>
-            </div>
-            {/* Bottom Row: Logo Left, Company Right (Enforced ltr for specific visual placement) */}
-            <div className="flex justify-between items-center w-full" dir="ltr">
-              <div className="flex-shrink-0 bg-white p-0.5 rounded shadow-sm">
-                <img src="/orascom_logo.jpg" alt="Logo" className="h-4 object-contain" />
-              </div>
-              <span className="font-bold text-[10px] tracking-tight uppercase truncate text-right">Orascom Construction</span>
-            </div>
+          <div className="flex sm:hidden flex-col flex-1 min-w-0 mr-2 rtl:ml-2 rtl:mr-0 gap-0.5 justify-center text-left" dir="ltr">
+            <span className="font-bold text-sm tracking-tight uppercase leading-none">Orascom Construction</span>
+            <span className="text-[9px] text-[#FFC000] font-semibold tracking-tight leading-none">Technical Training Management System (TTMS)</span>
           </div>
 
           {/* Desktop Branding Layout (Hidden on Mobile) */}
@@ -83,5 +75,10 @@ export const TopNav: React.FC = () => {
         </div>
       </div>
     </nav>
+    {/* Mobile Logo Under Navbar */}
+    <div className="sm:hidden flex justify-center items-center bg-gray-50 py-2 shadow-sm border-b border-gray-200">
+      <img src="/orascom_logo.jpg" alt="Orascom Construction Logo" className="h-10 object-contain" />
+    </div>
+    </>
   );
 };
