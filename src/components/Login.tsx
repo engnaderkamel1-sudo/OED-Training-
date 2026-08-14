@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAppContext } from "../context";
 import { User, Role } from "../types";
-import { Fingerprint, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { Fingerprint, CheckCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { auth } from "../firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 export const Login: React.FC = () => {
@@ -23,6 +23,7 @@ export const Login: React.FC = () => {
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -78,6 +79,8 @@ export const Login: React.FC = () => {
   };
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
         await Notification.requestPermission();
@@ -145,9 +148,14 @@ export const Login: React.FC = () => {
       setUser(foundUser);
       localStorage.setItem("savedUserId", foundUser.id);
     }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
         await Notification.requestPermission();
@@ -224,6 +232,9 @@ export const Login: React.FC = () => {
     setEmail("");
     setName("");
     setProfileImage(undefined);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   return (
     <div className="flex justify-center items-center h-[calc(100vh-6rem)]">
@@ -280,9 +291,10 @@ export const Login: React.FC = () => {
             )}
             <button
               type="submit"
-              className="w-full bg-[#002D62] text-white font-bold py-2 px-4 rounded"
+              disabled={isSubmitting}
+              className={`w-full text-white font-bold py-2 px-4 rounded ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#002D62]'}`}
             >
-              {t("login")}
+              {isSubmitting ? <Loader2 size={20} className="animate-spin mx-auto" /> : t("login")}
             </button>
             <div className="text-center mt-4">
               <button
@@ -499,9 +511,10 @@ export const Login: React.FC = () => {
             )}
             <button
               type="submit"
-              className="w-full bg-[#002D62] text-white font-bold py-2 px-4 rounded"
+              disabled={isSubmitting}
+              className={`w-full text-white font-bold py-2 px-4 rounded ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#002D62]'}`}
             >
-              {t("createAccount")}
+              {isSubmitting ? <Loader2 size={20} className="animate-spin mx-auto" /> : t("createAccount")}
             </button>
             <div className="text-center mt-4">
               <button
