@@ -11,13 +11,15 @@ import { TraineeDashboard } from './components/TraineeDashboard';
 import { ManagerDashboard } from './components/ManagerDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { SiteSupervisorDashboard } from './components/SiteSupervisorDashboard';
+import { Sidebar } from './components/Sidebar';
+import { ProfilePage } from './components/ProfilePage';
 import { Loader2 } from 'lucide-react';
 import { auth, db, messaging } from './firebase';
 import { getToken, onMessage } from 'firebase/messaging';
 import { doc, updateDoc } from 'firebase/firestore';
 
 const AppContent: React.FC = () => {
-  const { user, isLoading, t } = useAppContext();
+  const { user, isLoading, t, currentView } = useAppContext();
 
   React.useEffect(() => {
     if (user && messaging) {
@@ -65,22 +67,26 @@ const AppContent: React.FC = () => {
   return (
     <>
       <TopNav />
-      <main className="min-h-[calc(100vh-4rem)] bg-gray-50 flex flex-col relative print:bg-white print:min-h-0">
-        {isLoading ? (
-          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gray-50 bg-opacity-75">
-            <Loader2 className="w-12 h-12 text-[#002D62] animate-spin mb-4" />
-            <p className="text-[#002D62] font-semibold text-lg animate-pulse">{t('loading') || 'Loading...'}</p>
+      <div className="flex bg-gray-50 min-h-[calc(100vh-4rem)] relative print:bg-white print:min-h-0">
+        {user && <Sidebar />}
+        <main className="flex-1 flex flex-col relative w-full min-w-0">
+          {isLoading ? (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gray-50 bg-opacity-75">
+              <Loader2 className="w-12 h-12 text-[#002D62] animate-spin mb-4" />
+              <p className="text-[#002D62] font-semibold text-lg animate-pulse">{t('loading') || 'Loading...'}</p>
+            </div>
+          ) : null}
+          
+          <div className={`flex-grow transition-opacity duration-300 ${isLoading ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+            {!activeRole && <Login />}
+            {activeRole && currentView === 'profile' && <ProfilePage />}
+            {activeRole === 'trainee' && currentView !== 'profile' && <TraineeDashboard />}
+            {activeRole === 'manager' && currentView !== 'profile' && <ManagerDashboard />}
+            {activeRole === 'admin' && currentView !== 'profile' && <AdminDashboard />}
+            {activeRole === 'supervisor' && currentView !== 'profile' && <SiteSupervisorDashboard />}
           </div>
-        ) : null}
-        
-        <div className={`flex-grow transition-opacity duration-300 ${isLoading ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
-          {!activeRole && <Login />}
-          {activeRole === 'trainee' && <TraineeDashboard />}
-          {activeRole === 'manager' && <ManagerDashboard />}
-          {activeRole === 'admin' && <AdminDashboard />}
-          {activeRole === 'supervisor' && <SiteSupervisorDashboard />}
-        </div>
-      </main>
+        </main>
+      </div>
     </>
   );
 };

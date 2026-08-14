@@ -94,8 +94,8 @@ export const AdminDashboard: React.FC = () => {
     cancelSession,
     reactivateSession,
     cleanedData,
+    currentView,
   } = useAppContext();
-  const [activeTab, setActiveTab] = useState("userManagement");
   const [userManagementTab, setUserManagementTab] = useState<"pending" | "processed" | "deleted">("pending");
   // State for forms
 
@@ -752,46 +752,10 @@ export const AdminDashboard: React.FC = () => {
           {language === 'ar' ? 'تنزيل نسخة احتياطية' : 'Download Backup'}
         </button>
       </div>
-      {/* Tabs */}
-      <div className="flex overflow-x-auto border-b border-gray-200 mb-6 pb-2 scrollbar-hide space-x-2 rtl:space-x-reverse print:hidden">
-        {[
-          {
-            id: "userManagement",
-            label: language === "ar" ? "إدارة الحسابات" : "User Management",
-            icon: Users,
-          },
-          { id: "records", label: t("globalRecords"), icon: FileText },
-          { id: "analytics", label: t("analytics"), icon: BarChart },
-          {
-            id: "analyticsDashboard",
-            label:
-              language === "ar"
-                ? "لوحة التحليلات المتقدمة"
-                : "Analytics Dashboard",
-            icon: BarChart,
-          },
-          { id: "announcements", label: t("sessionAnnouncements"), icon: Bell },
-          { id: "tna", label: t("tna"), icon: BarChart },
-          { id: "resources", label: t("resourceSharing"), icon: Share2 },
-          { id: "sync", label: "Sync Excel Data", icon: Database },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center whitespace-nowrap px-4 py-2 rounded-t-lg transition-colors ${
-              activeTab === tab.id
-                ? "bg-[#002D62] text-white font-medium"
-                : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-            }`}
-          >
-            <tab.icon size={16} className="mr-2 rtl:ml-2 rtl:mr-0" />
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Content Area */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 min-h-[400px]">
         {/* User Management Tab (Combined) */}
-        {activeTab === "userManagement" && (
+        {(currentView === "userManagement" || currentView === "dashboard") && (
           <div className="flex flex-col md:flex-row gap-6">
             {/* Sidebar */}
             <div className="md:w-64 shrink-0 flex flex-col space-y-2 border-b md:border-b-0 md:border-r rtl:border-r-0 rtl:border-l border-gray-100 pb-4 md:pb-0 md:pr-4 rtl:md:pl-4">
@@ -1161,7 +1125,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
         )}
         {/* Trainees Tab */}
-        {activeTab === "trainees" && (
+        {currentView === "trainees" && (
           <div>
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
               {t("traineeManagement")}
@@ -1204,7 +1168,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
         {/* Records Tab */}
-        {activeTab === "records" && (
+        {currentView === "records" && (
           <div>
             {/* Dynamic KPI Summary Bar (Web View) */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 print:hidden">
@@ -1604,7 +1568,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
         {/* Analytics Tab */}
-        {activeTab === "analytics" && (
+        {currentView === "analytics" && (
           <div>
             <h2 className="text-xl font-semibold mb-6 text-gray-800">
               {t("analytics")}
@@ -1714,9 +1678,9 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
         {/* Analytics Dashboard Tab */}
-        {activeTab === "analyticsDashboard" && <AnalyticsDashboardTab />}
+        {currentView === "analyticsDashboard" && <AnalyticsDashboardTab />}
         {/* Session Announcements Tab */}
-        {activeTab === "announcements" && (
+        {currentView === "announcements" && (
           <div className="space-y-6">
             {reminderToast && (
               <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded shadow-sm text-emerald-800 flex items-center justify-between transition-all animate-fadeIn">
@@ -1889,7 +1853,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
         {/* Training Needs Analysis Tab */}
-        {activeTab === "tna" && (
+        {currentView === "tna" && (
           <div>
             <h2 className="text-xl font-semibold mb-6 text-gray-800">
               {t("tna")}
@@ -1916,7 +1880,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
         {/* Resource Sharing Tab */}
-        {activeTab === "resources" && (
+        {currentView === "resources" && (
           <div className="max-w-md">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
               {t("resourceSharing")}
@@ -1963,7 +1927,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
         {/* Sync Data Tab */}
-        {activeTab === "sync" && (
+        {currentView === "sync" && (
           <div className="max-w-xl">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
               {language === "ar"

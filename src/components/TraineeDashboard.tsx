@@ -6,8 +6,6 @@ import { formatScore, parseScore, formatDateToStandard } from '../utils/formatte
 import { safePrintReport, downloadReportPDF, ReportOptions } from '../utils/printUtils';
 import { DataField } from './DataField';
 import { SessionCard } from './SessionCard';
-import { EditProfileModal } from './EditProfileModal';
-
 import { UpcomingSession } from '../types';
 
 export const TraineeDashboard: React.FC = () => {
@@ -16,7 +14,6 @@ export const TraineeDashboard: React.FC = () => {
   const [requestSent, setRequestSent] = useState(false);
   const [registeredCourseIds, setRegisteredCourseIds] = useState<string[]>([]);
   const [actionToast, setActionToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Unread Notifications State
   const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
@@ -289,41 +286,6 @@ export const TraineeDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Profile Card */}
-      <section className="bg-white p-6 rounded-lg shadow flex flex-col md:flex-row gap-6 items-start md:items-center border-l-4 border-[#002D62] print:hidden relative">
-        <button
-          onClick={() => setIsEditingProfile(true)}
-          className="absolute top-4 right-4 rtl:right-auto rtl:left-4 text-sm text-[#002D62] hover:text-blue-800 font-semibold underline"
-        >
-          {language === 'ar' ? 'تعديل البيانات' : 'Edit Profile'}
-        </button>
-        <div className="w-16 h-16 bg-[#002D62] text-white rounded-full flex items-center justify-center text-2xl font-bold overflow-hidden border-2 border-[#FFC000]">
-          {user?.profileImageUrl ? (
-            <img src={user.profileImageUrl} alt="Profile" className="w-full h-full object-cover" />
-          ) : (
-            user?.name.charAt(0).toUpperCase()
-          )}
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
-          <div>
-            <p className="text-sm text-gray-500">{t('name')}</p>
-            <p className="font-semibold text-lg"><DataField>{user?.name}</DataField></p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">{t('hrCode')}</p>
-            <p className="font-semibold"><DataField>{user?.hrCode}</DataField></p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">{t('department')}</p>
-            <p className="font-semibold"><DataField>{user?.department}</DataField></p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">{t('phone')}</p>
-            <p className="font-semibold"><DataField>{user?.phone}</DataField></p>
-          </div>
-        </div>
-      </section>
-
       {/* Stats Section */}
       <section className="print:hidden">
         <h2 className="text-xl font-semibold mb-4 text-gray-800">{t('personalStats')}</h2>
@@ -576,10 +538,6 @@ export const TraineeDashboard: React.FC = () => {
           </a>
         </section>
       </div>
-
-      {isEditingProfile && user && (
-        <EditProfileModal user={user} onClose={() => setIsEditingProfile(false)} />
-      )}
     </div>
   );
 };

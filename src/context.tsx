@@ -14,6 +14,8 @@ export const generateUUID = (): string => {
 interface AppContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
+  currentView: string;
+  setCurrentView: (view: string) => void;
   user: User | null;
   setUser: (user: User | null) => void;
   users: User[];
@@ -45,6 +47,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('en');
+  const [currentView, setCurrentView] = useState<string>('dashboard');
   const [user, setUser] = useState<User | null>(() => {
     try {
       const stored = localStorage.getItem('oed_training_user');
@@ -293,6 +296,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   return (
     <AppContext.Provider value={{ 
       language, setLanguage, 
+      currentView, setCurrentView,
       user, setUser, 
       users, setUsers: setUsersWrapper, 
       records, setRecords: setLocalRecords, 
