@@ -219,6 +219,7 @@ export const Login: React.FC = () => {
       role: accessRole,
       jobRole: jobRole,
       status: "pending",
+      createdAt: new Date().toISOString(),
       password: password,
       createdAt: new Date().toISOString(),
       profileImageUrl: profileImage,
@@ -539,3 +540,4 @@ export const Login: React.FC = () => {
     </div>
   );
 };
+

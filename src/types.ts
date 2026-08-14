@@ -12,6 +12,7 @@ export interface User {
   phone: string;
   email?: string;
   status: "pending" | "approved" | "rejected" | "deleted";
+  createdAt?: string;
   password?: string;
   createdAt?: string;
   profileImageUrl?: string;
@@ -86,3 +87,4 @@ export interface CleanedRecord {
   attendedDays?: string | number;
   raw?: any;
 }
+

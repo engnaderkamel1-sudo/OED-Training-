@@ -8,10 +8,11 @@ import { UpcomingSession } from '../types';
 
 // Helper functions that were accidentally removed
 const parseScore = (score: any): number => {
-  if (typeof score === 'number') return score;
+  if (typeof score === 'number') return score <= 1 && score > 0 ? score * 100 : score;
   if (typeof score === 'string') {
     const parsed = parseFloat(score.replace(/[^0-9.]/g, ''));
-    return isNaN(parsed) ? 0 : parsed;
+    if (isNaN(parsed)) return 0;
+    return parsed <= 1 && score.includes('%') ? parsed * 100 : parsed;
   }
   return 0;
 };
@@ -28,7 +29,7 @@ const formatDateToStandard = (dateStr: any): string => {
 };
 
 export const TraineeDashboard: React.FC = () => {
-  const { t, user, records, language, upcomingSessions, registerTrainee, unregisterTrainee } = useAppContext();
+  const { t, user, records, language, upcomingSessions, registerTrainee, unregisterTrainee, currentView } = useAppContext();
   const [requestedTopic, setRequestedTopic] = useState('');
   const [requestSent, setRequestSent] = useState(false);
   const [registeredCourseIds, setRegisteredCourseIds] = useState<string[]>([]);
@@ -91,10 +92,19 @@ export const TraineeDashboard: React.FC = () => {
         });
       }
     });
+    // Filter notifications sent before user registered
+    const userCreatedAt = user?.createdAt ? new Date(user.createdAt).getTime() : 0;
+    
+    const filteredList = list.filter(notif => {
+      if (!userCreatedAt) return true; // If no createdAt, show all
+      // notif.timestamp is like "13-Aug-2026 01:57"
+      const notifTime = new Date(notif.timestamp).getTime();
+      return isNaN(notifTime) || notifTime >= userCreatedAt;
+    });
 
     // Newest reminders first
-    return list.reverse();
-  }, [activeUpcomingSessions]);
+    return filteredList.reverse();
+  }, [activeUpcomingSessions, user?.createdAt]);
 
   const markNotifAsRead = (id: string) => {
     if (!readNotifIds.includes(id)) {
@@ -195,9 +205,10 @@ export const TraineeDashboard: React.FC = () => {
         </h1>
       </div>
 
-      {/* Stats Section */}
-      <section className="print:hidden">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">{t('personalStats')}</h2>
+      {/* Stats Section (dashboard) */}
+      {currentView === 'dashboard' && (
+        <section className="print:hidden animate-fadeIn">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">{t('personalStats')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white p-6 rounded-lg shadow border-l-4 border-[#002D62]">
             <p className="text-sm text-gray-500">{t('totalCourses')}</p>
@@ -233,6 +244,7 @@ export const TraineeDashboard: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* Action Feedback Toast */}
       {actionToast && (
@@ -251,32 +263,28 @@ export const TraineeDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Trainee Notification Center / My Alerts Section */}
-      <section className="bg-white p-6 rounded-lg shadow border-t-4 border-[#002D62] print:hidden space-y-4">
-        <div className="flex justify-between items-center flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Bell className="h-6 w-6 text-[#002D62] animate-pulse" />
+      {/* Trainee Notification Center / My Alerts Section (notifications) */}
+      {currentView === 'notifications' && (
+        <section className="bg-white p-6 rounded-lg shadow border-t-4 border-[#002D62] print:hidden space-y-4 animate-fadeIn">
+          <div className="flex justify-between items-center flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Bell className="h-6 w-6 text-[#002D62] animate-pulse" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full border-2 border-white animate-bounce">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+              <h2 className="text-xl font-bold text-gray-800">{t('notificationCenter')}</h2>
               {unreadCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full border-2 border-white animate-bounce">
-                  {unreadCount}
+                <span className="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-red-200">
+                  {unreadCount} {language === 'ar' ? 'غير مقروء' : 'unread'}
                 </span>
               )}
             </div>
-            <h2 className="text-xl font-bold text-gray-800">{t('notificationCenter')}</h2>
-            {allNotifications.length > 0 && (
-              <span className="bg-[#FFC000] text-[#002D62] text-xs font-black px-2.5 py-0.5 rounded-full shadow-sm">
-                {allNotifications.length} {language === 'ar' ? 'تنبيه' : 'alerts'}
-              </span>
-            )}
-            {unreadCount > 0 && (
-              <span className="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-red-200">
-                {unreadCount} {language === 'ar' ? 'غير مقروء' : 'unread'}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            {unreadCount > 0 && (
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
               <button 
                 type="button"
                 onClick={markAllNotifsAsRead}
@@ -381,11 +389,13 @@ export const TraineeDashboard: React.FC = () => {
               );
             })}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
-      {/* Upcoming Sessions */}
-      <section className="print:hidden">
+      {/* Upcoming Sessions & Actions (newCourses) */}
+      {currentView === 'newCourses' && (
+        <div className="space-y-8 animate-fadeIn">
+          <section className="print:hidden">
         <h2 className="text-xl font-semibold mb-4 text-gray-800">{t('upcomingSessions')}</h2>
         {upcomingSessions.length === 0 ? (
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center text-gray-500 py-8">
@@ -446,7 +456,9 @@ export const TraineeDashboard: React.FC = () => {
             {t('goToForm')} <ExternalLink size={18} className="ml-2 rtl:mr-2 rtl:ml-0" />
           </a>
         </section>
-      </div>
+        </div>
+        </div>
+      )}
     </div>
   );
 };
