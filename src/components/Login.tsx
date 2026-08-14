@@ -82,10 +82,11 @@ export const Login: React.FC = () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
-        await Notification.requestPermission();
-      }
-    } catch(e) {}
+      try {
+        if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+          await Notification.requestPermission();
+        }
+      } catch(e) {}
     setError("");
     setSuccessMsg("");
     const loginInput = email.trim().toLowerCase();
@@ -157,10 +158,11 @@ export const Login: React.FC = () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
-        await Notification.requestPermission();
-      }
-    } catch(e) {}
+      try {
+        if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+          await Notification.requestPermission();
+        }
+      } catch(e) {}
     setError("");
     setSuccessMsg("");
     const cleanHrCode = hrCode.trim();
