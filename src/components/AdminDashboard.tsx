@@ -607,15 +607,23 @@ export const AdminDashboard: React.FC = () => {
                 mockCourses.find((mc) =>
                   mc.title.toLowerCase().includes(courseName.toLowerCase()),
                 )?.id || `course_${c}`;
-              newRecords.push({
-                id: `record_${Date.now()}_${r}_${c}`,
-                userId: id,
-                hrCode: `HR${id}`,
-                courseId: courseId,
-                courseName: courseName,
-                attendanceDate: formattedDate,
-                score: formattedScore,
-              });
+              const isDuplicate = 
+                records.some(rec => rec.userId === id && rec.courseName === courseName && rec.attendanceDate === formattedDate) ||
+                newRecords.some(rec => rec.userId === id && rec.courseName === courseName && rec.attendanceDate === formattedDate);
+
+              if (!isDuplicate) {
+                newRecords.push({
+                  id: `record_${Date.now()}_${r}_${c}`,
+                  userId: id,
+                  hrCode: `HR${id}`,
+                  traineeName: name,
+                  department: dept || "General",
+                  courseId: courseId,
+                  courseName: courseName,
+                  attendanceDate: formattedDate,
+                  score: formattedScore,
+                });
+              }
             }
           }
         }
@@ -1475,10 +1483,10 @@ export const AdminDashboard: React.FC = () => {
                             <DataField>{user?.hrCode || r.hrCode}</DataField>
                           </td>
                           <td className="p-3 font-medium text-[#002D62]">
-                            <DataField>{user?.name || r.userId}</DataField>
+                            <DataField>{r.traineeName || user?.name || r.userId}</DataField>
                           </td>
                           <td className="p-3 text-gray-600">
-                            <DataField>{user?.department}</DataField>
+                            <DataField>{r.department || user?.department}</DataField>
                           </td>
                           <td className="p-3">
                             <DataField>{displayCourseTitle}</DataField>
