@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession } from "../types";
@@ -1558,18 +1558,18 @@ export const AdminDashboard: React.FC = () => {
               <div className="flex gap-2 print:hidden">
                 <button onClick={handlePrint} className="flex items-center gap-1 bg-[#002D62] text-white px-3 py-1.5 rounded hover:bg-blue-900 transition-colors shadow-sm text-sm">
                   <Printer size={16} />
-                  {language === "ar" ? "Ø·Ø¨Ø§Ø¹Ø©" : "Print"}
+                  {language === "ar" ? "طباعة" : "Print"}
                 </button>
                 <button onClick={handleDownloadPDF} className="flex items-center gap-1 bg-[#FFC000] text-[#002D62] px-3 py-1.5 rounded hover:bg-yellow-500 transition-colors shadow-sm font-semibold text-sm">
                   <Download size={16} />
-                  {language === "ar" ? "ØªÙ†Ø²ÙŠÙ„ PDF" : "Download PDF"}
+                  {language === "ar" ? "تنزيل PDF" : "Download PDF"}
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col items-center justify-center">
                 <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">
-                  {language === "ar" ? "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø³Ø¬Ù„Ø§Øª" : "Total Records"}
+                  {language === "ar" ? "إجمالي السجلات" : "Total Records"}
                 </span>
                 <span className="text-3xl font-bold text-[#002D62]">
                   {records.length}
@@ -1987,7 +1987,7 @@ export const AdminDashboard: React.FC = () => {
                       type="url"
                       placeholder={
                         language === "ar"
-                          ? "Ø§Ù„ØµÙ‚ Ø±Ø§Ø¨Ø· OneDrive Ù‡Ù†Ø§..."
+                          ? "ألصق رابط OneDrive Excel هنا..."
                           : "Paste your OneDrive Excel link here..."
                       }
                       value={syncLink}
@@ -2030,7 +2030,7 @@ export const AdminDashboard: React.FC = () => {
                   ) : (
                     <>
                       <RefreshCw size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
-                      {language === "ar" ? "ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ù…Ù† OneDrive" : "Sync from OneDrive"}
+                      {language === "ar" ? "مزامنة من OneDrive" : "Sync from OneDrive"}
                     </>
                   )}
                 </button>

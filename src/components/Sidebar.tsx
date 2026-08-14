@@ -11,7 +11,8 @@ import {
   LayoutDashboard,
   Menu,
   X,
-  UserCircle
+  UserCircle,
+  BookOpen
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -28,21 +29,23 @@ export const Sidebar: React.FC = () => {
   if (role === 'trainee') {
     links = [
       { id: 'dashboard', label: t('traineeDashboard') || 'Dashboard', icon: LayoutDashboard },
-      { id: 'profile', label: language === 'ar' ? 'بياناتي الشخصية' : 'My Profile', icon: UserCircle },
+      { id: 'newCourses', label: language === 'ar' ? 'Ø§Ù„Ø¯ÙˆØ±Ø§Øª Ø§Ù„Ù…ØªØ§Ø­Ø©' : 'Available Courses', icon: BookOpen },
+      { id: 'notifications', label: language === 'ar' ? 'Ø§Ù„ØªÙ†Ø¨ÙŠÙ‡Ø§Øª' : 'Notifications', icon: Bell },
+      { id: 'profile', label: language === 'ar' ? 'Ù…Ù„ÙÙŠ Ø§Ù„Ø´Ø®ØµÙŠ' : 'My Profile', icon: UserCircle },
     ];
   } else if (role === 'admin') {
     links = [
-      { id: 'dashboard', label: language === 'ar' ? '???? ???????' : 'Dashboard', icon: LayoutDashboard },
-      { id: 'userManagement', label: language === 'ar' ? '????? ???????' : 'User Requests', icon: Users },
+      { id: 'dashboard', label: language === 'ar' ? 'Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…' : 'Dashboard', icon: LayoutDashboard },
+      { id: 'userManagement', label: language === 'ar' ? 'Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ†' : 'User Requests', icon: Users },
       { id: 'analytics', label: t('analytics'), icon: BarChart },
-      { id: 'tools', label: language === 'ar' ? 'أدوات الإدارة' : 'Admin Tools', icon: Database },
-      { id: 'profile', label: language === 'ar' ? 'بياناتي الشخصية' : 'My Profile', icon: UserCircle },
+      { id: 'tools', label: language === 'ar' ? 'Ø£Ø¯ÙˆØ§Øª Ø§Ù„Ù…Ø´Ø±Ù' : 'Admin Tools', icon: Database },
+      { id: 'profile', label: language === 'ar' ? 'Ù…Ù„ÙÙŠ Ø§Ù„Ø´Ø®ØµÙŠ' : 'My Profile', icon: UserCircle },
     ];
   } else if (role === 'manager' || role === 'supervisor') {
     links = [
-      { id: 'dashboard', label: language === 'ar' ? '???? ???????' : 'Dashboard', icon: LayoutDashboard },
-      { id: 'userManagement', label: language === 'ar' ? '????? ???????' : 'User Requests', icon: Users },
-      { id: 'profile', label: language === 'ar' ? 'بياناتي الشخصية' : 'My Profile', icon: UserCircle },
+      { id: 'dashboard', label: language === 'ar' ? 'Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…' : 'Dashboard', icon: LayoutDashboard },
+      { id: 'userManagement', label: language === 'ar' ? 'Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ†' : 'User Requests', icon: Users },
+      { id: 'profile', label: language === 'ar' ? 'Ù…Ù„ÙÙŠ Ø§Ù„Ø´Ø®ØµÙŠ' : 'My Profile', icon: UserCircle },
     ];
   }
 
@@ -86,7 +89,7 @@ export const Sidebar: React.FC = () => {
           </div>
 
           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
-            {language === 'ar' ? 'القائمة الرئيسية' : 'Main Menu'}
+            {language === 'ar' ? 'Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©' : 'Main Menu'}
           </div>
 
           {links.map((link) => {
