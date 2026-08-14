@@ -26,7 +26,14 @@ const AppContent: React.FC = () => {
           const permission = await Notification.requestPermission();
           if (permission === 'granted') {
             const vapidKey = 'BLkYiBtoSBZjrTlPYF2yP5WVndyWBCmOV5b1WPuLRhCn-8F9Rx6F3e7SQIznNQwgEl7m7DoKLoGl2F_lY55OxX4'; 
-            const currentToken = await getToken(messaging, { vapidKey });
+            let registration;
+            if ('serviceWorker' in navigator) {
+              registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            }
+            const currentToken = await getToken(messaging, { 
+              vapidKey, 
+              serviceWorkerRegistration: registration 
+            });
             if (currentToken && currentToken !== user.fcmToken) {
               const userRef = doc(db, 'users', user.id);
               await updateDoc(userRef, { fcmToken: currentToken });

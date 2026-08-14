@@ -179,16 +179,17 @@ export const Login: React.FC = () => {
       setError(language === "ar" ? "كلمة المرور غير متطابقة" : "Passwords do not match");
       return;
     }
-    
-    if (users.find((u) => u.hrCode.toLowerCase() === cleanHrCode.toLowerCase())) {
-      setError(language === "ar" ? "الرقم الوظيفي مسجل بالفعل لمستخدم آخر" : "HR Code already exists");
-      return;
-    }
-    
-    if (users.find((u) => u.email?.toLowerCase() === email.trim().toLowerCase())) {
-      setError(language === "ar" ? "البريد الإلكتروني مسجل بالفعل" : "Email already exists");
-      return;
-    }
+        const existingHrCode = users.find((u) => u.hrCode.toLowerCase() === cleanHrCode.toLowerCase());
+      if (existingHrCode && !existingHrCode.id.startsWith("derived_")) {
+        setError(language === "ar" ? "الكود الوظيفي مسجل بالفعل كحساب حقيقي" : "HR Code already exists as a registered account");
+        return;
+      }
+      
+      const existingEmail = users.find((u) => u.email?.toLowerCase() === email.trim().toLowerCase());
+      if (existingEmail && !existingEmail.id.startsWith("derived_")) {
+        setError(language === "ar" ? "البريد الإلكتروني مسجل بالفعل" : "Email already exists");
+        return;
+      }
 
     try {
       await createUserWithEmailAndPassword(auth, email.trim(), password);
