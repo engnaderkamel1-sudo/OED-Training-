@@ -231,16 +231,6 @@ export const Login: React.FC = () => {
         <h2 className="text-2xl font-bold text-center text-[#002D62] mb-6">
           {isRegistering ? t("createAccount") : t("login")}
         </h2>
-        {error && (
-          <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">
-            {error}
-          </div>
-        )}
-        {successMsg && (
-          <div className="bg-green-100 text-green-700 p-3 rounded mb-4 text-sm">
-            {successMsg}
-          </div>
-        )}
         {!isRegistering ? (
           <form onSubmit={handleLogin} className="space-y-4">
               <div>
@@ -278,6 +268,16 @@ export const Login: React.FC = () => {
                 </button>
               </div>
             </div>
+            {error && (
+              <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm text-center">
+                {error}
+              </div>
+            )}
+            {successMsg && (
+              <div className="bg-green-100 text-green-700 p-3 rounded mb-4 text-sm text-center">
+                {successMsg}
+              </div>
+            )}
             <button
               type="submit"
               className="w-full bg-[#002D62] text-white font-bold py-2 px-4 rounded"
@@ -487,6 +487,16 @@ export const Login: React.FC = () => {
                 </select>
               </div>
             </div>
+            {error && (
+              <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm text-center font-bold animate-pulse">
+                {error}
+              </div>
+            )}
+            {successMsg && (
+              <div className="bg-green-100 text-green-700 p-3 rounded mb-4 text-sm text-center font-bold">
+                {successMsg}
+              </div>
+            )}
             <button
               type="submit"
               className="w-full bg-[#002D62] text-white font-bold py-2 px-4 rounded"
