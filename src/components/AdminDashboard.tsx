@@ -1835,6 +1835,7 @@ export const AdminDashboard: React.FC = () => {
                       </li>
                     ))}
                   </ul>
+                )}
               </div>
             </div>
             
@@ -2071,7 +2072,9 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-      
+          </div>
+        )}
+      </div>
       {/* Image Viewer Modal */}
       {viewingImage && (
         <div 
