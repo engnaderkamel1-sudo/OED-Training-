@@ -29,7 +29,12 @@ export const TraineeDashboard: React.FC = () => {
   });
 
   // Calculate stats for current user
-  const userRecords = records.filter(r => r.userId === user?.id || r.userId === 'u1'); // Default to u1 if in debug mode
+  const userRecords = records.filter(r => 
+    r.userId === user?.id || 
+    r.userId === user?.hrCode || 
+    r.hrCode === user?.hrCode || 
+    r.userId === 'u1'
+  );
   const totalCourses = userRecords.length;
   const averageScore = userRecords.length > 0 
     ? Math.round(userRecords.reduce((acc, curr) => acc + curr.score, 0) / userRecords.length) 

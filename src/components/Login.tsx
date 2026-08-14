@@ -25,6 +25,8 @@ export const Login: React.FC = () => {
   const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const enforceEnglish = (val: string) => val.replace(/[^a-zA-Z0-9@.\-_ ]/g, '');
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -166,22 +168,19 @@ export const Login: React.FC = () => {
     setError("");
     setSuccessMsg("");
     const cleanHrCode = hrCode.trim();
+    const fullEmail = email.trim().toLowerCase() + "@orascom.com";
     if (!cleanHrCode || !password || !name || !department || !email.trim()) {
       setError(language === "ar" ? "الرجاء ملء جميع الحقول المطلوبة بما فيها البريد الإلكتروني" : "Please fill all required fields including email");
       return;
     }
     
     // Data Validation
-    if (phone.length !== 10 || !/^(10|11|12|15)/.test(phone)) {
-      setError(language === "ar" ? "رقم الهاتف غير صحيح، يجب أن يتكون من 10 أرقام بعد كود مصر (+20)" : "Phone must be 10 digits after +20 (e.g. 10xxxxxxxx)");
+    if (phone.length !== 11 || !/^01(0|1|2|5)/.test(phone)) {
+      setError(language === "ar" ? "رقم الهاتف غير صحيح، يجب أن يتكون من 11 رقماً ويبدأ بـ 01" : "Phone must be 11 digits and start with 01 (e.g. 010xxxxxxxx)");
       return;
     }
     if (password.length < 6) {
       setError(language === "ar" ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
-      return;
-    }
-    if (!email.toLowerCase().endsWith("@orascom.com")) {
-      setError(language === "ar" ? "عذراً، يُسمح بالتسجيل لموظفي الشركة فقط (يجب أن ينتهي الإيميل بـ @orascom.com)" : "Registration is restricted to company employees (@orascom.com)");
       return;
     }
 
@@ -195,14 +194,14 @@ export const Login: React.FC = () => {
         return;
       }
       
-      const existingEmail = users.find((u) => u.email?.toLowerCase() === email.trim().toLowerCase());
+      const existingEmail = users.find((u) => u.email?.toLowerCase() === fullEmail);
       if (existingEmail && !existingEmail.id.startsWith("derived_")) {
         setError(language === "ar" ? "البريد الإلكتروني مسجل بالفعل" : "Email already exists");
         return;
       }
 
     try {
-      await createUserWithEmailAndPassword(auth, email.trim(), password);
+      await createUserWithEmailAndPassword(auth, fullEmail, password);
       await auth.signOut();
     } catch (err: any) {
       console.error(err);
@@ -214,8 +213,8 @@ export const Login: React.FC = () => {
       id: `u${users.length + 1}_${Date.now()}`,
       hrCode: cleanHrCode,
       name: name.trim(),
-      phone: "0" + phone.trim(),
-      email: email.trim(),
+      phone: phone.trim(),
+      email: fullEmail,
       department,
       role: accessRole,
       jobRole: jobRole,
@@ -340,7 +339,7 @@ export const Login: React.FC = () => {
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(enforceEnglish(e.target.value))}
                 className="w-full border rounded px-3 py-2"
                 dir="ltr"
                 required
@@ -353,7 +352,7 @@ export const Login: React.FC = () => {
               <input
                 type="text"
                 value={hrCode}
-                onChange={(e) => setHrCode(e.target.value)}
+                onChange={(e) => setHrCode(enforceEnglish(e.target.value))}
                 className="w-full border rounded px-3 py-2"
                 dir="ltr"
                 required
@@ -408,13 +407,13 @@ export const Login: React.FC = () => {
                 {t("phone")}
               </label>
               <div className="flex border rounded overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62]" dir="ltr">
-                <span className="bg-gray-100 px-3 py-2 border-r text-gray-600 font-medium">+20</span>
+                <span className="bg-gray-100 px-3 py-2 border-r text-gray-600 font-medium">+2</span>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                   className="w-full px-3 py-2 outline-none"
-                  placeholder="10xxxxxxxx"
+                  placeholder="010xxxxxxxx"
                   required
                 />
               </div>
@@ -423,14 +422,17 @@ export const Login: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {language === "ar" ? "البريد الإلكتروني" : "Email"}
               </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-                dir="ltr"
-                required
-              />
+              <div className="flex border rounded overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62]" dir="ltr">
+                <input
+                  type="text"
+                  value={email}
+                  onChange={(e) => setEmail(enforceEnglish(e.target.value))}
+                  className="w-full px-3 py-2 outline-none"
+                  placeholder="name"
+                  required
+                />
+                <span className="bg-gray-100 px-3 py-2 border-l text-gray-600 font-medium">@orascom.com</span>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
