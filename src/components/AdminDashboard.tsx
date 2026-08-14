@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession } from "../types";
@@ -1714,7 +1714,7 @@ export const AdminDashboard: React.FC = () => {
                 <h2 className="text-xl font-semibold mb-4 text-gray-800">
                   {editingSessionId ? t("editSession") : t("createNewSession")}
                 </h2>
-                  <X size={16} />
+                <form onSubmit={handleCreateSession} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
