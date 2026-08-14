@@ -21,14 +21,31 @@ export const TopNav: React.FC = () => {
     <nav className="bg-[#002D62] text-white shadow-md print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between min-h-16 py-1 sm:py-0 items-center px-2 md:px-0">
-          <div className="flex flex-col-reverse sm:flex-row items-start sm:items-center gap-0.5 sm:gap-2 md:gap-4 flex-1 min-w-0">
-            {/* Company Logo */}
-            <div className="flex-shrink-0 flex items-center justify-center bg-white p-0.5 sm:p-1 rounded shadow-sm">
-              <img src="/orascom_logo.jpg" alt="Orascom Construction" className="h-5 sm:h-8 md:h-11 object-contain" />
+          
+          {/* Mobile Branding Layout (Hidden on Desktop) */}
+          <div className="flex sm:hidden flex-col flex-1 min-w-0 mr-2 rtl:ml-2 rtl:mr-0 gap-1 justify-center">
+            {/* Top Row: App Name Centered */}
+            <div className="w-full text-center">
+              <span className="text-[9px] text-[#FFC000] font-semibold tracking-tight leading-none">Technical Training Management System (TTMS)</span>
             </div>
-            <div className="flex flex-col justify-center flex-1 min-w-0 w-full">
-              <span className="font-bold text-[11px] sm:text-lg md:text-xl tracking-tight sm:tracking-wide leading-none sm:leading-tight uppercase truncate">Orascom Construction</span>
-              <span className="text-[8px] sm:text-xs md:text-sm text-[#FFC000] font-semibold tracking-tight sm:tracking-wider leading-tight truncate">Technical Training Management System (TTMS)</span>
+            {/* Bottom Row: Logo Left, Company Right (Enforced ltr for specific visual placement) */}
+            <div className="flex justify-between items-center w-full" dir="ltr">
+              <div className="flex-shrink-0 bg-white p-0.5 rounded shadow-sm">
+                <img src="/orascom_logo.jpg" alt="Logo" className="h-4 object-contain" />
+              </div>
+              <span className="font-bold text-[10px] tracking-tight uppercase truncate text-right">Orascom Construction</span>
+            </div>
+          </div>
+
+          {/* Desktop Branding Layout (Hidden on Mobile) */}
+          <div className="hidden sm:flex flex-row items-center gap-2 md:gap-4 flex-1 min-w-0">
+            {/* Company Logo */}
+            <div className="flex-shrink-0 flex items-center justify-center bg-white p-1 rounded shadow-sm">
+              <img src="/orascom_logo.jpg" alt="Orascom Construction" className="h-8 md:h-11 object-contain" />
+            </div>
+            <div className="flex flex-col justify-center flex-1 min-w-0">
+              <span className="font-bold text-lg md:text-xl tracking-wide leading-tight uppercase truncate">Orascom Construction</span>
+              <span className="text-xs md:text-sm text-[#FFC000] font-semibold tracking-wider leading-tight truncate">Technical Training Management System (TTMS)</span>
             </div>
           </div>
           
