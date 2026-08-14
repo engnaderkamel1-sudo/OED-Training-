@@ -389,7 +389,8 @@ export const TraineeDashboard: React.FC = () => {
               );
             })}
           </div>
-        </section>
+        )}
+      </section>
       )}
 
       {/* Upcoming Sessions & Actions (newCourses) */}
