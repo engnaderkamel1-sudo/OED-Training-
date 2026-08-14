@@ -208,7 +208,7 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
                   </thead>
                   <tbody>
                     {aggregatedCourses.map((course, idx) => (
-                      <tr key={course.id} className={order-t border-gray-100 hover:bg-gray-50 }>
+                      <tr key={course.id} className={`border-t border-gray-100 hover:bg-gray-50 ${!selectedCourseIds.has(course.id) ? 'opacity-50 bg-gray-50' : ''}`}>
                         <td className="p-3 text-center">
                           <input 
                             type="checkbox" 
