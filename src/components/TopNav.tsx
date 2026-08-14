@@ -24,9 +24,14 @@ export const TopNav: React.FC = () => {
         <div className="flex justify-between min-h-16 py-1 sm:py-0 items-center px-2 md:px-0">
           
           {/* Mobile Branding Layout (Hidden on Desktop) */}
-          <div className="flex sm:hidden flex-col flex-1 min-w-0 mr-2 rtl:ml-2 rtl:mr-0 gap-0.5 justify-center text-left" dir="ltr">
-            <span className="font-bold text-sm tracking-tight uppercase leading-none">Orascom Construction</span>
-            <span className="text-[9px] text-[#FFC000] font-semibold tracking-tight leading-none">Technical Training Management System (TTMS)</span>
+          <div className="flex sm:hidden flex-row items-center flex-1 min-w-0 mr-1 rtl:ml-1 rtl:mr-0 gap-2 justify-start" dir="ltr">
+            <div className="flex-shrink-0 bg-white p-0.5 rounded shadow-sm">
+              <img src="/orascom_logo.jpg" alt="Logo" className="h-5 object-contain" />
+            </div>
+            <div className="flex flex-col justify-center text-left min-w-0">
+              <span className="text-[10px] text-[#FFC000] font-bold tracking-tight leading-tight truncate">Technical Training Management System (TTMS)</span>
+              <span className="font-bold text-[8px] tracking-tight uppercase leading-none truncate text-white">Orascom Construction</span>
+            </div>
           </div>
 
           {/* Desktop Branding Layout (Hidden on Mobile) */}
@@ -75,10 +80,6 @@ export const TopNav: React.FC = () => {
         </div>
       </div>
     </nav>
-    {/* Mobile Logo Under Navbar */}
-    <div className="sm:hidden flex justify-center items-center bg-gray-50 py-2 shadow-sm border-b border-gray-200">
-      <img src="/orascom_logo.jpg" alt="Orascom Construction Logo" className="h-10 object-contain" />
-    </div>
     </>
   );
 };
