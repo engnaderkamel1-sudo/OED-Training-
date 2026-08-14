@@ -1101,9 +1101,11 @@ export const AdminDashboard: React.FC = () => {
             )}
             </div>
             )}
+            </div>
+          </div>
             
-            {/* Embedded Records Section */}
-            <div className="border-t border-gray-200 pt-8 mt-8 w-full overflow-hidden">
+          {/* Embedded Records Section */}
+          <div className="border-t border-gray-200 pt-8 mt-8 w-full overflow-hidden">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
                   {t("globalRecords")}
@@ -1823,8 +1825,10 @@ export const AdminDashboard: React.FC = () => {
                 )}
               </div>
             </div>
+          </div>
+        </div>
             
-            {/* Training Needs Analysis Section */}
+        {/* Training Needs Analysis Section */}
             <div className="border-t border-gray-200 pt-8 mt-8">
               <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
                 {t("tna")}
@@ -2022,7 +2026,6 @@ export const AdminDashboard: React.FC = () => {
                     </p>
                   )}
                 </div>
-              </div>
             </div>
           </div>
         )}
@@ -2046,6 +2049,8 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
       )}
+    </div>
+    </div>
     </div>
   );
 };
