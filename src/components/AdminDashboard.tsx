@@ -1100,7 +1100,6 @@ export const AdminDashboard: React.FC = () => {
               <p className="text-gray-500">{language === "ar" ? "لا يوجد متدربين محذوفين." : "No deleted trainees."}</p>
             )}
             </div>
-            </div>
             )}
             
             {/* Embedded Records Section */}
