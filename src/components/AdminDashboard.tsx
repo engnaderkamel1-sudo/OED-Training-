@@ -2026,9 +2026,11 @@ export const AdminDashboard: React.FC = () => {
                     </p>
                   )}
                 </div>
+              </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
       </div>
       {/* Image Viewer Modal */}
       {viewingImage && (
@@ -2049,8 +2051,6 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
-    </div>
     </div>
   );
 };
