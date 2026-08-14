@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context';
 import { mockCourses } from '../data';
-import { ExternalLink, CheckCircle, Calendar, Printer, Download, Bell, BellOff, AlertTriangle, XCircle, Users, Clock, MapPin, Tag, Ban } from 'lucide-react';
-import { safePrintReport, downloadReportPDF, ReportOptions } from '../utils/printUtils';
+import { ExternalLink, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag } from 'lucide-react';
 import { DataField } from './DataField';
 import { SessionCard } from './SessionCard';
 import { UpcomingSession } from '../types';
