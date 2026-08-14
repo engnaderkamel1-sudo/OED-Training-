@@ -1,5 +1,5 @@
-﻿import React, { useState, useMemo, useEffect } from 'react';
-import { X, Mail, CheckCircle } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { X, Mail } from 'lucide-react';
 import { TrainingRecord, UpcomingSession } from '../types';
 import { useAppContext } from '../context';
 
@@ -64,7 +64,7 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
   const handleGenerateEML = () => {
     const activeCourses = aggregatedCourses.filter(c => selectedCourseIds.has(c.id));
     if (activeCourses.length === 0) {
-      alert(language === 'ar' ? 'يرجى تحديد دورة واحدة على الأقل.' : 'Please select at least one course.');
+      alert(language === 'ar' ? '???? ????? ???? ????? ??? ?????.' : 'Please select at least one course.');
       return;
     }
 
@@ -75,16 +75,16 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
     const emailSubject = "RE: Technical Training Monthly Update - " + monthName + " " + selectedYear;
     
     // Build HTML Table for the email body
-    const tableRows = activeCourses.map((c, i) => "
+    const tableRows = activeCourses.map((c, i) => `
       <tr>
-        <td style='border: 1px solid black; padding: 5px; text-align: center; background-color: #d9e8f5;'>" + (i + 1) + "</td>
-        <td style='border: 1px solid black; padding: 5px; background-color: #d9e8f5;'>" + c.name + "</td>
-        <td style='border: 1px solid black; padding: 5px; text-align: center;'>" + c.participants + "</td>
-        <td style='border: 1px solid black; padding: 5px; text-align: center; background-color: #d9e8f5;'>" + c.count + "</td>
+        <td style='border: 1px solid black; padding: 5px; text-align: center; background-color: #d9e8f5;'>${i + 1}</td>
+        <td style='border: 1px solid black; padding: 5px; background-color: #d9e8f5;'>${c.name}</td>
+        <td style='border: 1px solid black; padding: 5px; text-align: center;'>${c.participants}</td>
+        <td style='border: 1px solid black; padding: 5px; text-align: center; background-color: #d9e8f5;'>${c.count}</td>
       </tr>
-    ").join('');
+    `).join('');
 
-    const htmlBody = "
+    const htmlBody = `
       <html>
       <head>
         <meta charset='utf-8'>
@@ -102,21 +102,21 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
             </tr>
           </thead>
           <tbody>
-            " + tableRows + "
+            ${tableRows}
           </tbody>
         </table>
         <br/>
         <ul style='list-style-type: disc;'>
-          <li>Total Sessions: " + totalSessions + "</li>
-          <li>Total Participants: " + totalParticipants + "</li>
+          <li>Total Sessions: ${totalSessions}</li>
+          <li>Total Participants: ${totalParticipants}</li>
         </ul>
         <br/>
         <p>Best Regards,<br/>Nader kamel</p>
       </body>
       </html>
-    ";
+    `;
 
-    const emlContent = "To: Yasser.Elsaied@orascom.com\nCc: Rami.Samir@orascom.com\nSubject: " + emailSubject + "\nX-Unsent: 1\nContent-Type: text/html; charset=utf-8\n\n" + htmlBody;
+    const emlContent = `To: Yasser.Elsaied@orascom.com\nCc: Rami.Samir@orascom.com\nSubject: ${emailSubject}\nX-Unsent: 1\nContent-Type: text/html; charset=utf-8\n\n${htmlBody}`;
 
     const blob = new Blob(['\ufeff', emlContent], { type: 'message/rfc822' });
     const url = URL.createObjectURL(blob);
@@ -129,7 +129,7 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
   };
 
   const monthsEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const monthsAr = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  const monthsAr = ['?????', '??????', '????', '?????', '????', '?????', '?????', '?????', '??????', '??????', '??????', '??????'];
   
   const years = Array.from({length: 5}, (_, i) => currentDate.getFullYear() - 2 + i);
 
@@ -138,7 +138,7 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
       <div className="bg-white w-full max-w-3xl rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center p-4 border-b border-gray-200">
           <h2 className="text-xl font-bold text-[#002D62]">
-            {language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}
+            {language === 'ar' ? '????? ??????? ??????' : 'Monthly Update Report'}
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-red-600 transition-colors">
             <X size={24} />
@@ -148,7 +148,7 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
         <div className="p-6 flex flex-col gap-6 overflow-y-auto">
           <div className="flex gap-4 items-center bg-gray-50 p-4 rounded border border-gray-200">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">{language === 'ar' ? 'الشهر' : 'Month'}</label>
+              <label className="block text-sm font-bold text-gray-700 mb-1">{language === 'ar' ? '?????' : 'Month'}</label>
               <select 
                 value={selectedMonth} 
                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
@@ -160,7 +160,7 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
               </select>
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">{language === 'ar' ? 'السنة' : 'Year'}</label>
+              <label className="block text-sm font-bold text-gray-700 mb-1">{language === 'ar' ? '?????' : 'Year'}</label>
               <select 
                 value={selectedYear} 
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -175,15 +175,15 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
 
           <div>
             <h3 className="font-bold text-gray-800 mb-3 flex justify-between items-center">
-              <span>{language === 'ar' ? 'الدورات المكتملة' : 'Completed Sessions'}</span>
+              <span>{language === 'ar' ? '??????? ????????' : 'Completed Sessions'}</span>
               <span className="text-sm bg-[#002D62] text-white px-2 py-1 rounded">
-                {aggregatedCourses.filter(c => selectedCourseIds.has(c.id)).length} {language === 'ar' ? 'محددة' : 'Selected'}
+                {aggregatedCourses.filter(c => selectedCourseIds.has(c.id)).length} {language === 'ar' ? '?????' : 'Selected'}
               </span>
             </h3>
             
             {aggregatedCourses.length === 0 ? (
               <div className="text-center p-8 bg-gray-50 border border-dashed rounded text-gray-500">
-                {language === 'ar' ? 'لا توجد دورات مكتملة في هذا الشهر.' : 'No completed sessions found for this month.'}
+                {language === 'ar' ? '?? ???? ????? ?????? ?? ??? ?????.' : 'No completed sessions found for this month.'}
               </div>
             ) : (
               <div className="border border-gray-200 rounded overflow-hidden">
@@ -201,9 +201,9 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
                           className="w-4 h-4 cursor-pointer"
                         />
                       </th>
-                      <th className="p-3 font-semibold">{language === 'ar' ? 'اسم الدورة' : 'Course Name'}</th>
-                      <th className="p-3 font-semibold">{language === 'ar' ? 'الفئة المستهدفة' : 'Participant Category'}</th>
-                      <th className="p-3 font-semibold text-center">{language === 'ar' ? 'عدد الحاضرين' : 'Attendees'}</th>
+                      <th className="p-3 font-semibold">{language === 'ar' ? '??? ??????' : 'Course Name'}</th>
+                      <th className="p-3 font-semibold">{language === 'ar' ? '????? ?????????' : 'Participant Category'}</th>
+                      <th className="p-3 font-semibold text-center">{language === 'ar' ? '??? ????????' : 'Attendees'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -231,7 +231,7 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
 
         <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 rounded-b-xl">
           <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded font-bold text-gray-700 hover:bg-gray-100 transition-colors">
-            {language === 'ar' ? 'إلغاء' : 'Cancel'}
+            {language === 'ar' ? '?????' : 'Cancel'}
           </button>
           <button 
             onClick={handleGenerateEML}
@@ -239,10 +239,11 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
             className="bg-[#002D62] text-white px-6 py-2 rounded font-bold flex items-center gap-2 hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
           >
             <Mail size={18} />
-            {language === 'ar' ? 'توليد إيميل جاهز (.eml)' : 'Generate Email (.eml)'}
+            {language === 'ar' ? '????? ????? ???? (.eml)' : 'Generate Email (.eml)'}
           </button>
         </div>
       </div>
     </div>
   );
 };
+
