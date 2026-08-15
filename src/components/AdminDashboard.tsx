@@ -20,6 +20,7 @@ import {
   Download,
   Mail,
   Globe,
+  Megaphone,
 } from "lucide-react";
 import {
   BarChart,
