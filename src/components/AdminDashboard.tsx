@@ -90,8 +90,15 @@ export const AdminDashboard: React.FC = () => {
     cancelSession,
     reactivateSession,
     cleanedData,
+    loginLogs,
     currentView,
   } = useAppContext();
+  const handleToggleFeedback = (session: UpcomingSession) => {
+    updateUpcomingSession({
+      ...session,
+      feedbackEnabled: !session.feedbackEnabled
+    });
+  };
   const [userManagementTab, setUserManagementTab] = useState<"pending" | "processed" | "deleted">("pending");
   // State for forms
 
@@ -2233,7 +2240,6 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
-
 
 
 
