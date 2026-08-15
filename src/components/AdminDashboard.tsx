@@ -164,7 +164,7 @@ export const AdminDashboard: React.FC = () => {
   const [syncFile, setSyncFile] = useState<File | null>(null);
   const [exporting, setExporting] = useState(false);
   const [showGlobalAnnouncement, setShowGlobalAnnouncement] = useState(false);
-  const [showAnnouncementManager, setShowAnnouncementManager] = useState(false);
+  const [showAnnouncementManager, setShowAnnouncementManager] = useState<string | null>(null);
   const [announcingSession, setAnnouncingSession] = useState<UpcomingSession | null>(null);
   const [syncProgress, setSyncProgress] = useState(0);
   const [syncSuccess, setSyncSuccess] = useState(false);
@@ -1862,6 +1862,7 @@ export const AdminDashboard: React.FC = () => {
                           onEdit={handleStartEdit}
                           onSendReminder={handleSendReminder}
                           onAnnounceRequest={setAnnouncingSession}
+                          onManageAnnouncementsRequest={setShowAnnouncementManager}
                           onFinalizeRequest={setFinalizingSession}
                         />
                       </li>
@@ -1964,7 +1965,7 @@ export const AdminDashboard: React.FC = () => {
                           {language === 'ar' ? 'تنبيه عام لجميع المستخدمين' : 'Global Broadcast'}
                         </button>
                         <button 
-                          onClick={() => setShowAnnouncementManager(true)}
+                          onClick={() => setShowAnnouncementManager("GLOBAL")}
                           className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"
                         >
                           <Megaphone size={18} />
@@ -2143,7 +2144,8 @@ export const AdminDashboard: React.FC = () => {
       )}
       {showAnnouncementManager && (
         <AnnouncementManagerModal
-          onClose={() => setShowAnnouncementManager(false)}
+          sessionId={showAnnouncementManager === "GLOBAL" ? undefined : showAnnouncementManager}
+          onClose={() => setShowAnnouncementManager(null)}
         />
       )}
       {showMonthlyReport && (

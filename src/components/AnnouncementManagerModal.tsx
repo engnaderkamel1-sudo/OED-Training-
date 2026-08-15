@@ -5,10 +5,16 @@ import { formatDateToStandard } from '../utils/formatters';
 
 interface AnnouncementManagerModalProps {
   onClose: () => void;
+  sessionId?: string;
 }
 
-export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> = ({ onClose }) => {
+export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> = ({ onClose, sessionId }) => {
   const { language, announcements, deleteAnnouncement } = useAppContext();
+  
+  const filteredAnnouncements = React.useMemo(() => {
+    if (!sessionId) return announcements;
+    return announcements.filter(a => a.sessionId === sessionId);
+  }, [announcements, sessionId]);
 
   return (
     <div className="fixed inset-0 bg-black/60 z-[99999] flex items-center justify-center p-4">
@@ -25,13 +31,13 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
 
         {/* List */}
         <div className="overflow-y-auto p-4 flex-1 bg-gray-50/50">
-          {announcements.length === 0 ? (
+          {filteredAnnouncements.length === 0 ? (
             <div className="text-center py-10 text-gray-500">
               {language === 'ar' ? 'لا توجد تنبيهات مرسلة حالياً.' : 'No announcements sent yet.'}
             </div>
           ) : (
             <div className="space-y-3">
-              {announcements.map(ann => (
+              {filteredAnnouncements.map(ann => (
                 <div key={ann.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-start">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">

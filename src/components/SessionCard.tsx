@@ -14,6 +14,7 @@ interface SessionCardProps {
   onEdit?: (session: UpcomingSession) => void;
   onSendReminder?: (sessionId: string, type: 'Standard' | 'Final') => void;
   onAnnounceRequest?: (session: UpcomingSession) => void;
+  onManageAnnouncementsRequest?: (sessionId: string) => void;
   onFinalizeRequest?: (session: UpcomingSession) => void;
   registeredCourseIds?: string[];
   onRegister?: (session: UpcomingSession) => void;
@@ -26,6 +27,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   onEdit,
   onSendReminder,
   onAnnounceRequest,
+  onManageAnnouncementsRequest,
   onFinalizeRequest,
   registeredCourseIds = [],
   onRegister,
@@ -249,6 +251,14 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   title={language === 'ar' ? 'إرسال تنبيه للمجموعة' : 'Announce to Group'}
                 >
                   <Megaphone size={13} />
+                </button>
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onManageAnnouncementsRequest) onManageAnnouncementsRequest(session.id); }}
+                  className="cursor-pointer bg-purple-100 text-purple-800 hover:bg-purple-200 border border-purple-300 text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-medium"
+                  title={language === 'ar' ? 'سجل التنبيهات' : 'Announcements Log'}
+                >
+                  <Clock size={13} />
                 </button>
                 <button 
                   type="button"

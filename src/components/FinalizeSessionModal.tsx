@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { UpcomingSession, User, TrainingRecord } from '../types';
 import { useAppContext } from '../context';
 import { X, Save, FileText, Mail, CheckCircle, Ban } from 'lucide-react';
