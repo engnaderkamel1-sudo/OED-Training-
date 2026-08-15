@@ -159,6 +159,7 @@ export const AdminDashboard: React.FC = () => {
     setExpandedDates((prev) => ({ ...prev, [date]: !prev[date] }));
   };
   // Sync State
+  const [isSyncing, setIsSyncing] = useState(false);
   const [syncLink, setSyncLink] = useState("");
   const [syncFile, setSyncFile] = useState<File | null>(null);
   const [exporting, setExporting] = useState(false);
