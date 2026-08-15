@@ -2238,7 +2238,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
       </div>
       {/* Image Viewer Modal */}
@@ -2303,6 +2303,7 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
+
 
 
 
