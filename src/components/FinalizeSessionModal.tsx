@@ -40,7 +40,7 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
   };
 
   const activeTrainees = useMemo(() => {
-    return registeredUsers.filter(u => traineeData[u.id]?.days > 0);
+    return registeredUsers.filter(u => (traineeData[u.id] || { days: 1 }).days > 0);
   }, [registeredUsers, traineeData]);
 
   // Export to Word (HTML to .doc trick)
@@ -94,8 +94,8 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
             <td>${u.name.toUpperCase()}</td>
             <td>${u.department}</td>
             <td>${u.hrCode}</td>
-            <td>${traineeData[u.id].score}%</td>
-            <td>${traineeData[u.id].days}</td>
+            <td>${(traineeData[u.id] || { score: 0 }).score}%</td>
+            <td>${(traineeData[u.id] || { days: 1 }).days}</td>
           </tr>
         `).join('')}
         ${Array.from({ length: Math.max(0, 10 - activeTrainees.length) }).map((_, i) => `
@@ -165,13 +165,13 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
       department: u.department,
       attendanceDate: session.startDate,
       totalDays: session.duration || '2',
-      score: `${traineeData[u.id].score}%`,
+      score: `${(traineeData[u.id] || { score: 0 }).score}%`,
       status: 'Completed',
       raw: {
         'Course Title': session.courseTitle,
         'Instructor': 'Nader Reda',
-        'Attended Days': traineeData[u.id].days,
-        'Score': `${traineeData[u.id].score}%`
+        'Attended Days': (traineeData[u.id] || { days: 1 }).days,
+        'Score': `${(traineeData[u.id] || { score: 0 }).score}%`
       }
     }));
 
@@ -228,7 +228,8 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
                       </tr>
                     ) : (
                       registeredUsers.map(u => {
-                        const days = traineeData[u.id].days;
+                        const userTraineeData = traineeData[u.id] || { days: 1, score: 0 };
+                        const days = userTraineeData.days;
                         const isAbsent = days === 0;
                         return (
                           <tr key={u.id} className={"border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors "}>
@@ -249,7 +250,7 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
                                 min="0"
                                 max="100"
                                 className="w-full border border-gray-300 rounded px-2 py-1 text-center"
-                                value={traineeData[u.id].score}
+                                value={userTraineeData.score}
                                 disabled={isAbsent}
                                 onChange={(e) => handleDataChange(u.id, 'score', Number(e.target.value))}
                               />
@@ -292,7 +293,7 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
                   <ul className="list-disc list-inside text-sm space-y-1">
                     {activeTrainees.length > 0 ? activeTrainees.map(u => (
                       <li key={u.id} className="text-gray-700">
-                        <span className="font-bold">{u.name}</span> ({u.hrCode}) - {language === 'ar' ? '????:' : 'Days:'} {traineeData[u.id].days} - {language === 'ar' ? '??????:' : 'Score:'} {traineeData[u.id].score}%
+                        <span className="font-bold">{u.name}</span> ({u.hrCode}) - {language === 'ar' ? '????:' : 'Days:'} {(traineeData[u.id] || { days: 1 }).days} - {language === 'ar' ? '??????:' : 'Score:'} {(traineeData[u.id] || { score: 0 }).score}%
                       </li>
                     )) : (
                       <li className="text-gray-500 italic">{language === 'ar' ? '?? ???? ??????.' : 'No attendees.'}</li>
@@ -307,8 +308,8 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
                 </div>
                 <div className="max-h-40 overflow-y-auto p-3 bg-white">
                   <ul className="list-disc list-inside text-sm space-y-1">
-                    {registeredUsers.filter(u => traineeData[u.id]?.days === 0).length > 0 ? (
-                      registeredUsers.filter(u => traineeData[u.id]?.days === 0).map(u => (
+                    {registeredUsers.filter(u => (traineeData[u.id] || { days: 1 }).days === 0).length > 0 ? (
+                      registeredUsers.filter(u => (traineeData[u.id] || { days: 1 }).days === 0).map(u => (
                         <li key={u.id} className="text-gray-500 line-through">{u.name} ({u.hrCode})</li>
                       ))
                     ) : (

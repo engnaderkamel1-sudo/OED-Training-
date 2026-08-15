@@ -762,24 +762,6 @@ export const AdminDashboard: React.FC = () => {
                 <Printer size={16} />
                 {language === "ar" ? "طباعة" : "Print"}
               </button>
-              <button onClick={handleDownloadPDF} className="flex items-center gap-1 bg-[#FFC000] text-[#002D62] px-3 py-1.5 rounded hover:bg-yellow-500 transition-colors shadow-sm font-semibold text-sm">
-                <Download size={16} />
-                {language === "ar" ? "تنزيل PDF" : "Download PDF"}
-              </button>
-              <button 
-                onClick={() => setShowMonthlyReport(true)}
-                className="flex items-center gap-1 bg-[#002D62] hover:bg-blue-900 text-white px-3 py-1.5 rounded font-bold transition-colors shadow-sm text-sm"
-              >
-                <Mail size={16} />
-                {language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}
-              </button>
-              <button 
-                onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])}
-                className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded font-bold transition-colors shadow-sm text-sm"
-              >
-                <Download size={16} />
-                {language === 'ar' ? 'نسخة احتياطية' : 'Backup Data'}
-              </button>
             </>
           ) : null}
         </div>
@@ -1962,7 +1944,22 @@ export const AdminDashboard: React.FC = () => {
                       ? "Ã˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™Ë†Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â® Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â­Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â·Ã™Å "
                       : "Data Management & Backup"}
                   </h2>
-
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setShowMonthlyReport(true)}
+                      className="flex items-center gap-2 bg-[#002D62] hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"
+                    >
+                      <Mail size={18} />
+                      {language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}
+                    </button>
+                    <button 
+                      onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])}
+                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"
+                    >
+                      <Download size={18} />
+                      {language === 'ar' ? 'نسخة احتياطية' : 'Backup Data'}
+                    </button>
+                  </div>
                 </div>
                 <p className="text-gray-600 mb-6">
                   {language === "ar"
