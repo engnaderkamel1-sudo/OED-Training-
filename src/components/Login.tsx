@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { useAppContext, generateUUID } from "../context";
 import { User, Role } from "../types";
 import { Fingerprint, CheckCircle, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -154,12 +154,13 @@ export const Login: React.FC = () => {
     if (foundUser.status === "pending") {
       setError(language === "ar" ? "Ø­Ø³Ø§Ø¨Ùƒ Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø© ÙˆÙ„Ù… ÙŠØªÙ… ØªÙØ¹ÙŠÙ„Ù‡ Ø¨Ø¹Ø¯" : "Your account is pending approval");
     } else if (foundUser.status === "rejected") {
-      setError(language === "ar" ? "Ø¹Ø°Ø±Ø§Ù‹ ØªÙ… Ø±ÙØ¶ Ø·Ù„Ø¨Ùƒ. Ù„Ù…Ø²ÙŠØ¯ Ù…Ù† Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª ÙŠØ±Ø¬Ù‰ Ù…Ø±Ø§Ø³Ù„Ø© nader.reda@orascom.com" : "Your request was rejected. For more info, please email nader.reda@orascom.com");
+      setError(language === "ar" ? "Ø¹Ø°Ø±Ø§Ù‹ ØªÙ… Ø±Ù Ø¶ Ø·Ù„Ø¨Ùƒ. Ù„Ù…Ø²ÙŠØ¯ Ù…Ù† Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª ÙŠØ±Ø¬Ù‰ Ù…Ø±Ø§Ø³Ù„Ø© nader.reda@orascom.com" : "Your request was rejected. For more info, please email nader.reda@orascom.com");
     } else if (foundUser.status === "deleted") {
-      setError(language === "ar" ? "ØªÙ… Ø¥ÙŠÙ‚Ø§Ù Ù‡Ø°Ø§ Ø§Ù„Ø­Ø³Ø§Ø¨ (ØºÙŠØ± Ù…ØªØ§Ø­)." : "This account has been deactivated.");
+      setError(language === "ar" ? "ØªÙ… Ø¥ÙŠÙ‚Ø§Ù  Ù‡Ø°Ø§ Ø§Ù„Ø­Ø³Ø§Ø¨ (ØºÙŠØ± Ù…ØªØ§Ø­)." : "This account has been deactivated.");
     } else {
       setUser(foundUser);
       localStorage.setItem("savedUserId", foundUser.id);
+      // Record login event for any user
       addLoginLog({
         id: generateUUID(),
         userId: foundUser.id,

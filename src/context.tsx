@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { Language, User, Role, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement, LoginLog } from './types';
 import { translations } from './i18n';
 import { collection, onSnapshot, doc, setDoc, writeBatch, deleteDoc } from 'firebase/firestore';
@@ -117,6 +117,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setAnnouncementsState(ann);
     }, (error) => console.error("Firebase Announcements Error:", error));
 
+    const unsubLoginLogs = onSnapshot(collection(db, "loginLogs"), (snapshot) => {
+      const logs: LoginLog[] = [];
+      snapshot.forEach((d) => logs.push(d.data() as LoginLog));
+      // Sort by timestamp descending (newest first)
+      logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setLoginLogsState(logs);
+    }, (error) => console.error("Firebase LoginLogs Error:", error));
+
     try {
       const storedFileName = localStorage.getItem('oed_training_filename');
       if (storedFileName) setCleanedFileNameState(storedFileName);
@@ -129,6 +137,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       unsubSessions();
       unsubData();
       unsubAnnouncements();
+      unsubLoginLogs();
     };
   }, []);
 
@@ -373,6 +382,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       addUpcomingSession, updateUpcomingSession, deleteUpcomingSession, restoreUpcomingSession,
       cancelSession, reactivateSession, registerTrainee, unregisterTrainee,
       announcements, addAnnouncement, deleteAnnouncement,
+      loginLogs, addLoginLog,
       addAttendanceRecord,
       debugRole, setDebugRole, 
       t, 

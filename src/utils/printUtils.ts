@@ -1,4 +1,4 @@
-﻿import html2pdf from 'html2pdf.js';
+import html2pdf from 'html2pdf.js';
 import { formatScore, formatDateToStandard } from './formatters';
 
 export interface ReportRecord {
@@ -389,13 +389,10 @@ export const downloadReportPDF = async (options: ReportOptions) => {
 
   // Create temporary container element off-screen
   const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.left = '0';
-  container.style.zIndex = '-1000';
-  container.style.opacity = '0';
-  container.style.pointerEvents = 'none';
+  container.style.position = 'absolute';
+  container.style.left = '-9999px';
   container.style.top = '0';
-  container.style.width = '210mm'; // A4 width
+  container.style.width = '210mm';
   container.style.background = '#ffffff';
   container.innerHTML = htmlContent;
   document.body.appendChild(container);
@@ -409,7 +406,11 @@ export const downloadReportPDF = async (options: ReportOptions) => {
         scale: 2, 
         useCORS: true, 
         logging: false,
-        windowWidth: 1024 
+        windowWidth: 1024,
+        scrollX: 0,
+        scrollY: 0,
+        x: 0,
+        y: 0
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
     };
@@ -614,19 +615,16 @@ export const downloadTrainingRegisterPDF = async (session: import("./types").Upc
   const fileName = `Training_Register_Session_${session.sessionNumber || "New"}.pdf`;
 
   const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.left = '0';
-  container.style.zIndex = '-1000';
-  container.style.opacity = '0';
-  container.style.pointerEvents = 'none';
+  container.style.position = 'absolute';
+  container.style.left = '-9999px';
   container.style.top = '0';
-  container.style.width = '210mm'; // A4 width
+  container.style.width = '210mm';
   container.style.background = '#ffffff';
   container.innerHTML = htmlContent;
   document.body.appendChild(container);
 
   try {
-const opt = {
+    const opt = {
       margin: 10,
       filename: fileName,
       image: { type: 'jpeg', quality: 0.98 },
