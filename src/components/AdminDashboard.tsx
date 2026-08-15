@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
 import { Clock } from "lucide-react";
 import { mockCourses, mockRequests } from "../data";
@@ -85,6 +85,7 @@ export const AdminDashboard: React.FC = () => {
     records,
     setRecords,
     upcomingSessions,
+    setUpcomingSessions,
     addUpcomingSession,
     updateUpcomingSession,
     cancelSession,
