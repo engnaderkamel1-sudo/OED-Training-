@@ -2124,7 +2124,7 @@ export const AdminDashboard: React.FC = () => {
       {finalizingSession && (
         <FinalizeSessionModal
           session={finalizingSession}
-          registeredUsers={users.filter(u => (finalizingSession.registeredTraineeIds || []).includes(u.id))}
+          registeredUsers={users.filter(u => (finalizingSession.registeredUsers || []).includes(u.hrCode))}
           onClose={() => setFinalizingSession(null)}
           onFinalize={handleFinalizeSession}
         />
