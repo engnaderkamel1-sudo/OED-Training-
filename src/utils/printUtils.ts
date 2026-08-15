@@ -1,4 +1,4 @@
-﻿import html2pdf from 'html2pdf.js';
+import html2pdf from 'html2pdf.js';
 import { formatScore, formatDateToStandard } from './formatters';
 
 export interface ReportRecord {
@@ -261,7 +261,7 @@ export const generateReportHTML = (options: ReportOptions): string => {
         <div style="width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: 2px solid #e5e7eb; flex-shrink: 0;">
           <img src="${singleTrainee.profileImageUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Trainee" />
         </div>
-      ` : '}
+      ` : ''}
       <div style="display: flex; flex-wrap: wrap; gap: 16px; flex: 1;">
         <div class="trainee-field">
           <label>${isAr ? 'الاسم' : 'Name'}</label>
@@ -277,12 +277,12 @@ export const generateReportHTML = (options: ReportOptions): string => {
         </div>
       </div>
     </div>
-  ` : '}
+  ` : ''}
 
-  <table>
+  <table class="data-table">
     <thead>
       <tr>
-        ${cols.map(c => `<th>${isAr ? c.labelAr : c.labelEn}</th>`).join(')}
+        ${cols.map(c => `<th>${isAr ? c.labelAr : c.labelEn}</th>`).join('')}
       </tr>
     </thead>
     <tbody>
