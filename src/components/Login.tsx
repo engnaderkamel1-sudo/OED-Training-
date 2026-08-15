@@ -160,6 +160,14 @@ export const Login: React.FC = () => {
     } else {
       setUser(foundUser);
       localStorage.setItem("savedUserId", foundUser.id);
+      addLoginLog({
+        id: generateUUID(),
+        userId: foundUser.id,
+        name: foundUser.name,
+        hrCode: foundUser.hrCode,
+        role: foundUser.role,
+        timestamp: new Date().toISOString()
+      });
     }
     } finally {
       setIsSubmitting(false);
@@ -591,6 +599,7 @@ export const Login: React.FC = () => {
     </div>
   );
 };
+
 
 
 

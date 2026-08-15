@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useAppContext } from '../context';
 import { 
   User, 
@@ -30,40 +30,40 @@ export const Sidebar: React.FC = () => {
 
   const handleNavClick = (id: string) => {
     setCurrentView(id);
-    if (!id.startsWith('tools_')) {
+    if (id !== 'tools_parent') {
       setIsOpen(false);
     }
   };
 
   const getTraineeLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'Ã™â€žÃ™Ë†Ã˜Â­Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™Æ’Ã™â€¦' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'newCourses', label: language === 'ar' ? 'Ã˜Â§Ã™â€žÃ˜Â¯Ã™Ë†Ã˜Â±Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­Ã˜Â©' : 'Available Courses', icon: BookOpen },
-    { id: 'notifications', label: language === 'ar' ? 'Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€ Ã˜Â¨Ã™Å Ã™â€¡Ã˜Â§Ã˜Âª' : 'Notifications', icon: Bell },
-    { id: 'profile', label: language === 'ar' ? 'Ã™â€¦Ã™â€žÃ™ÂÃ™Å  Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â®Ã˜ÂµÃ™Å ' : 'My Profile', icon: UserCircle },
+    { id: 'dashboard', label: language === 'ar' ? 'Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â­ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â­Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Â¦' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'newCourses', label: language === 'ar' ? 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¯Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§ÃƒËœÃ‚Â­ÃƒËœÃ‚Â©' : 'Available Courses', icon: BookOpen },
+    { id: 'notifications', label: language === 'ar' ? 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª' : 'Notifications', icon: Bell },
+    { id: 'profile', label: language === 'ar' ? 'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´ÃƒËœÃ‚Â®ÃƒËœÃ‚ÂµÃƒâ„¢Ã…Â ' : 'My Profile', icon: UserCircle },
   ];
 
   const getManagerLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'Ã™â€žÃ™Ë†Ã˜Â­Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™Æ’Ã™â€¦' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'userManagement', label: language === 'ar' ? 'Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦Ã™Å Ã™â€ ' : 'User Requests', icon: Users },
-    { id: 'profile', label: language === 'ar' ? 'Ã™â€¦Ã™â€žÃ™Â Ã™Å  Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â®Ã˜ÂµÃ™Å ' : 'My Profile', icon: UserCircle },
+    { id: 'dashboard', label: language === 'ar' ? 'Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â­ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â­Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Â¦' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'userManagement', label: language === 'ar' ? 'ÃƒËœÃ‚Â·Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒËœÃ‚Â®ÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â ' : 'User Requests', icon: Users },
+    { id: 'profile', label: language === 'ar' ? 'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ Ãƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´ÃƒËœÃ‚Â®ÃƒËœÃ‚ÂµÃƒâ„¢Ã…Â ' : 'My Profile', icon: UserCircle },
   ];
 
   const getAdminLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'userManagement', label: language === 'ar' ? 'Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ†' : 'User Requests', icon: Users },
-    { id: 'analytics', label: language === 'ar' ? 'Ø§Ù„ØªØ­Ù„ÙŠÙ„Ø§Øª' : 'Analytics', icon: BarChart },
+    { id: 'dashboard', label: language === 'ar' ? 'Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'userManagement', label: language === 'ar' ? 'Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦Ã™Å Ã™â€ ' : 'User Requests', icon: Users },
+    { id: 'analytics', label: language === 'ar' ? 'Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™â€žÃ™Å Ã™â€žÃ˜Â§Ã˜Âª' : 'Analytics', icon: BarChart },
     { 
       id: 'tools_parent', 
-      label: language === 'ar' ? 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ØªØ¯Ø±ÙŠØ¨' : 'Training Management', 
+      label: language === 'ar' ? 'Ã˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¯Ã˜Â±Ã™Å Ã˜Â¨' : 'Training Management', 
       icon: Database,
       subLinks: [
-        { id: 'tools_create', label: language === 'ar' ? 'Ø¥Ù†Ø´Ø§Ø¡ Ø¯ÙˆØ±Ø©' : 'Create Session', icon: PlusCircle },
-        { id: 'tools_manage', label: language === 'ar' ? 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø¯ÙˆØ±Ø§Øª' : 'Manage Sessions', icon: CalendarDays },
-        { id: 'tools_reports', label: language === 'ar' ? 'Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ± ÙˆØ§Ù„Ù…Ø²Ø§Ù…Ù†Ø©' : 'Reports & Sync', icon: Settings },
-        { id: 'tools_logs', label: language === 'ar' ? 'Ø³Ø¬Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„' : 'Login History', icon: History },
+        { id: 'tools_create', label: language === 'ar' ? 'Ã˜Â¥Ã™â€ Ã˜Â´Ã˜Â§Ã˜Â¡ Ã˜Â¯Ã™Ë†Ã˜Â±Ã˜Â©' : 'Create Session', icon: PlusCircle },
+        { id: 'tools_manage', label: language === 'ar' ? 'Ã˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¯Ã™Ë†Ã˜Â±Ã˜Â§Ã˜Âª' : 'Manage Sessions', icon: CalendarDays },
+        { id: 'tools_reports', label: language === 'ar' ? 'Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â± Ã™Ë†Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â²Ã˜Â§Ã™â€¦Ã™â€ Ã˜Â©' : 'Reports & Sync', icon: Settings },
+        { id: 'tools_logs', label: language === 'ar' ? 'Ã˜Â³Ã˜Â¬Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž' : 'Login History', icon: History },
       ]
     },
-    { id: 'profile', label: language === 'ar' ? 'Ù…Ù„ÙÙŠ Ø§Ù„Ø´Ø®ØµÙŠ' : 'My Profile', icon: UserCircle },
+    { id: 'profile', label: language === 'ar' ? 'Ã™â€¦Ã™â€žÃ™ÂÃ™Å  Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â®Ã˜ÂµÃ™Å ' : 'My Profile', icon: UserCircle },
   ];
 
   let links: any[] = [];
@@ -102,7 +102,7 @@ export const Sidebar: React.FC = () => {
           </div>
 
           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
-            {language === 'ar' ? 'Ã˜Â§Ã™â€žÃ™â€šÃ˜Â§Ã˜Â¦Ã™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â¦Ã™Å Ã˜Â³Ã™Å Ã˜Â©' : 'Main Menu'}
+            {language === 'ar' ? 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¦Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¦Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â³Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©' : 'Main Menu'}
           </div>
 
           {links.map((link) => {
@@ -179,5 +179,6 @@ export const Sidebar: React.FC = () => {
     </>
   );
 };
+
 
 

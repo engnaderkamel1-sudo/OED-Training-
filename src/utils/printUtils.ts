@@ -1,4 +1,4 @@
-import html2pdf from 'html2pdf.js';
+﻿import html2pdf from 'html2pdf.js';
 import { formatScore, formatDateToStandard } from './formatters';
 
 export interface ReportRecord {
@@ -43,15 +43,15 @@ export const generateReportHTML = (options: ReportOptions): string => {
   const currentDate = formatDateToStandard(new Date());
 
   const defaultCols = [
-    { key: 'hrCode', labelAr: 'الرقم الوظيفي', labelEn: 'HR Code' },
-    { key: 'name', labelAr: 'الاسم', labelEn: 'Name' },
-    { key: 'role', labelAr: 'المسمى الوظيفي', labelEn: 'Role' },
-    { key: 'department', labelAr: 'القسم', labelEn: 'Department' },
-    { key: 'courseName', labelAr: 'اسم الدورة', labelEn: 'Course Name' },
-    { key: 'duration', labelAr: 'مدة الدورة', labelEn: 'Duration' },
-    { key: 'attendedDays', labelAr: 'أيام الحضور', labelEn: 'Attended Days' },
-    { key: 'score', labelAr: 'النتيجة', labelEn: 'Score' },
-    { key: 'date', labelAr: 'تاريخ الحضور', labelEn: 'Date' },
+    { key: 'hrCode', labelAr: 'Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ÙˆØ¸ÙŠÙÙŠ', labelEn: 'HR Code' },
+    { key: 'name', labelAr: 'Ø§Ù„Ø§Ø³Ù…', labelEn: 'Name' },
+    { key: 'role', labelAr: 'Ø§Ù„Ù…Ø³Ù…Ù‰ Ø§Ù„ÙˆØ¸ÙŠÙÙŠ', labelEn: 'Role' },
+    { key: 'department', labelAr: 'Ø§Ù„Ù‚Ø³Ù…', labelEn: 'Department' },
+    { key: 'courseName', labelAr: 'Ø§Ø³Ù… Ø§Ù„Ø¯ÙˆØ±Ø©', labelEn: 'Course Name' },
+    { key: 'duration', labelAr: 'Ù…Ø¯Ø© Ø§Ù„Ø¯ÙˆØ±Ø©', labelEn: 'Duration' },
+    { key: 'attendedDays', labelAr: 'Ø£ÙŠØ§Ù… Ø§Ù„Ø­Ø¶ÙˆØ±', labelEn: 'Attended Days' },
+    { key: 'score', labelAr: 'Ø§Ù„Ù†ØªÙŠØ¬Ø©', labelEn: 'Score' },
+    { key: 'date', labelAr: 'ØªØ§Ø±ÙŠØ® Ø§Ù„Ø­Ø¶ÙˆØ±', labelEn: 'Date' },
   ];
 
   const cols = options.columns || (singleTrainee 
@@ -248,12 +248,12 @@ export const generateReportHTML = (options: ReportOptions): string => {
     </div>
     <div class="dept-title">
       <h2>OED - Technical Training Department</h2>
-      <p>${isAr ? 'إدارة المعدات' : 'Equipment Department'}</p>
+      <p>${isAr ? 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø¹Ø¯Ø§Øª' : 'Equipment Department'}</p>
     </div>
   </div>
 
   <div class="doc-title">${title}</div>
-  <div class="doc-date">${isAr ? 'تم الإنشاء في:' : 'Generated on:'} ${currentDate}</div>
+  <div class="doc-date">${isAr ? 'ØªÙ… Ø§Ù„Ø¥Ù†Ø´Ø§Ø¡ ÙÙŠ:' : 'Generated on:'} ${currentDate}</div>
 
   ${singleTrainee ? `
     <div class="trainee-card">
@@ -264,15 +264,15 @@ export const generateReportHTML = (options: ReportOptions): string => {
       ` : ''}
       <div style="display: flex; flex-wrap: wrap; gap: 16px; flex: 1;">
         <div class="trainee-field">
-          <label>${isAr ? 'الاسم' : 'Name'}</label>
+          <label>${isAr ? 'Ø§Ù„Ø§Ø³Ù…' : 'Name'}</label>
           <span>${singleTrainee.name}</span>
         </div>
         <div class="trainee-field">
-          <label>${isAr ? 'الرقم الوظيفي' : 'HR Code'}</label>
+          <label>${isAr ? 'Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ÙˆØ¸ÙŠÙÙŠ' : 'HR Code'}</label>
           <span style="color: #1f2937">${singleTrainee.hrCode}</span>
         </div>
         <div class="trainee-field">
-          <label>${isAr ? 'القسم' : 'Department'}</label>
+          <label>${isAr ? 'Ø§Ù„Ù‚Ø³Ù…' : 'Department'}</label>
           <span style="color: #1f2937; font-weight: 500">${singleTrainee.department}</span>
         </div>
       </div>
@@ -292,7 +292,7 @@ export const generateReportHTML = (options: ReportOptions): string => {
 
   <div class="footer">
     <div class="footer-auth">
-      <p class="auth-title">${isAr ? 'اعتماد مدير التدريب الفني' : 'Authorized by Technical Training Manager'}</p>
+      <p class="auth-title">${isAr ? 'Ø§Ø¹ØªÙ…Ø§Ø¯ Ù…Ø¯ÙŠØ± Ø§Ù„ØªØ¯Ø±ÙŠØ¨ Ø§Ù„ÙÙ†ÙŠ' : 'Authorized by Technical Training Manager'}</p>
       <p class="auth-name">Nader Kamel</p>
     </div>
     <div class="footer-sys">
@@ -385,12 +385,15 @@ const fallbackIframePrint = (htmlContent: string) => {
  */
 export const downloadReportPDF = async (options: ReportOptions) => {
   const htmlContent = generateReportHTML(options);
-  const fileName = options.fileName || (options.language === 'ar' ? 'ØªÙ‚Ø±ÙŠØ±_Ø§Ù„ØªØ¯Ø±ÙŠØ¨.pdf' : 'Training_Report.pdf');
+  const fileName = options.fileName || (options.language === 'ar' ? 'Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â±_Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¯Ã˜Â±Ã™Å Ã˜Â¨.pdf' : 'Training_Report.pdf');
 
   // Create temporary container element off-screen
   const container = document.createElement('div');
   container.style.position = 'fixed';
-  container.style.left = '-9999px';
+  container.style.left = '0';
+  container.style.zIndex = '-1000';
+  container.style.opacity = '0';
+  container.style.pointerEvents = 'none';
   container.style.top = '0';
   container.style.width = '210mm'; // A4 width
   container.style.background = '#ffffff';
@@ -612,7 +615,10 @@ export const downloadTrainingRegisterPDF = async (session: import("./types").Upc
 
   const container = document.createElement('div');
   container.style.position = 'fixed';
-  container.style.left = '-9999px';
+  container.style.left = '0';
+  container.style.zIndex = '-1000';
+  container.style.opacity = '0';
+  container.style.pointerEvents = 'none';
   container.style.top = '0';
   container.style.width = '210mm'; // A4 width
   container.style.background = '#ffffff';
@@ -620,8 +626,7 @@ export const downloadTrainingRegisterPDF = async (session: import("./types").Upc
   document.body.appendChild(container);
 
   try {
-    const html2pdf = (await import('html2pdf.js')).default;
-    const opt = {
+const opt = {
       margin: 10,
       filename: fileName,
       image: { type: 'jpeg', quality: 0.98 },
@@ -643,3 +648,5 @@ export const downloadTrainingRegisterPDF = async (session: import("./types").Upc
     }
   }
 };
+
+
