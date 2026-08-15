@@ -18,6 +18,7 @@ import {
   Printer,
   X,
   Download,
+  Mail,
 } from "lucide-react";
 import {
   BarChart,
