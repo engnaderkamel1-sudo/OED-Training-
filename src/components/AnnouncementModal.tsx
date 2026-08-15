@@ -1,36 +1,42 @@
 import React, { useState } from 'react';
-import { X, Send, AlertTriangle, Megaphone, Globe } from 'lucide-react';
-import { useAppContext, generateUUID } from '../context';
-import { UpcomingSession } from '../types';
+import { Megaphone, Globe, AlertTriangle, Send, X } from 'lucide-react';
+import { useAppContext } from '../context';
+import { TrainingSession } from '../types';
 
 interface AnnouncementModalProps {
-  session?: UpcomingSession;
+  session?: TrainingSession | null;
   onClose: () => void;
+  isGlobal?: boolean;
 }
 
-export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, onClose }) => {
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
+export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, onClose, isGlobal = false }) => {
   const { language, addAnnouncement, user } = useAppContext();
-  const isGlobal = !session;
-  
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [step, setStep] = useState<'compose' | 'confirm'>('compose');
 
   const templates = [
     {
-      label: language === 'ar' ? 'تذكير بموعد الدورة' : 'Session Reminder',
-      title: language === 'ar' ? 'تذكير: موعد الدورة يقترب' : 'Reminder: Upcoming Session',
+      label: language === 'ar' ? 'تنبيه بموعد الدورة' : 'Session Reminder',
+      title: language === 'ar' ? 'تنبيه: اقترب موعد الدورة' : 'Reminder: Upcoming Session',
       message: language === 'ar' ? 'نود تذكيركم بموعد الدورة القادمة. يرجى التأكد من الحضور في الموعد المحدد.' : 'This is a reminder for your upcoming session. Please ensure you attend on time.'
     },
     {
       label: language === 'ar' ? 'تأجيل المحاضرة' : 'Session Postponed',
       title: language === 'ar' ? 'تأجيل المحاضرة' : 'Lecture Postponed',
-      message: language === 'ar' ? 'نعتذر، تم تأجيل محاضرة اليوم لظروف طارئة وسيتم تحديد موعد بديل لاحقاً.' : 'We apologize, today\'s lecture has been postponed due to an emergency. A new date will be scheduled.'
+      message: language === 'ar' ? 'نعتذر منكم، تم تأجيل المحاضرة اليوم لظروف طارئة وسيتم تحديد موعد جديد لاحقاً.' : 'We apologize, today\'s lecture has been postponed due to an emergency. A new date will be scheduled.'
     },
     {
       label: language === 'ar' ? 'مراجعة بيانات الحساب' : 'Review Account Data',
       title: language === 'ar' ? 'تحديث هام: مراجعة البيانات' : 'Important: Review Data',
-      message: language === 'ar' ? 'نرجو منكم مراجعة بيانات الحساب والتأكد من صحتها لتجنب أي مشاكل.' : 'Please review your account data to ensure it is correct and up to date.'
+      message: language === 'ar' ? 'نرجو منكم مراجعة بيانات الحساب الخاص بكم والتأكد من صحتها.' : 'Please review your account data to ensure it is correct and up to date.'
     }
   ];
 
@@ -48,7 +54,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, o
     const newAnnouncement = {
       id: generateUUID(),
       sessionId: session?.id,
-      title: title || (language === 'ar' ? 'تنبيه' : 'Announcement'),
+      title: title || (language === 'ar' ? 'إعلان' : 'Announcement'),
       courseName: session?.courseTitle,
       message,
       date: new Date().toISOString(),
@@ -69,8 +75,8 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, o
             {isGlobal ? <Globe className="text-red-600" size={20} /> : <Megaphone className="text-blue-600" size={20} />}
             <h2 className={`text-lg font-bold ${isGlobal ? 'text-red-900' : 'text-blue-900'}`}>
               {isGlobal 
-                ? (language === 'ar' ? 'إرسال تنبيه عام للجميع' : 'Send Global Broadcast') 
-                : (language === 'ar' ? `تنبيه: ${session.courseTitle}` : `Announcement: ${session.courseTitle}`)}
+                ? (language === 'ar' ? 'إرسال إعلان عام للجميع' : 'Send Global Broadcast') 
+                : (language === 'ar' ? `إعلان: ${session?.courseTitle}` : `Announcement: ${session?.courseTitle}`)}
             </h2>
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition-colors">
@@ -83,7 +89,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, o
             {isGlobal && (
               <div className="bg-red-100 border border-red-200 text-red-800 px-3 py-2 rounded text-sm flex items-start gap-2">
                 <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-                <p>{language === 'ar' ? 'هذا التنبيه سيصل لجميع المستخدمين في النظام.' : 'This message will reach ALL users in the system.'}</p>
+                <p>{language === 'ar' ? 'هذا الإعلان سيصل لجميع المستخدمين في النظام.' : 'This message will reach ALL users in the system.'}</p>
               </div>
             )}
 
@@ -106,13 +112,13 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, o
 
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">
-                {language === 'ar' ? 'عنوان التنبيه' : 'Announcement Title'}
+                {language === 'ar' ? 'عنوان الإعلان' : 'Announcement Title'}
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder={language === 'ar' ? 'مثال: تحديث هام...' : 'e.g. Important Notice...'}
+                placeholder={language === 'ar' ? 'مثال: إشعار هام...' : 'e.g. Important Notice...'}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-shadow"
               />
             </div>
@@ -137,11 +143,11 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, o
               <AlertTriangle size={32} />
             </div>
             <h3 className="text-xl font-bold text-gray-900">
-              {language === 'ar' ? 'تأكيد الإرسال للجميع' : 'Confirm Global Broadcast'}
+              {language === 'ar' ? 'تأكيد إرسال الإعلان العام' : 'Confirm Global Broadcast'}
             </h3>
             <p className="text-gray-600 text-sm">
               {language === 'ar' 
-                ? 'أنت على وشك إرسال هذا التنبيه لجميع الموظفين والمتدربين على النظام. هذه العملية ستظهر التنبيه فوراً في لوحة التحكم الخاصة بهم.'
+                ? 'أنت على وشك إرسال هذا الإعلان لجميع الموظفين والمتدربين على النظام. سيظهر هذا الإعلان فوراً في لوحات التحكم الخاصة بهم.'
                 : 'You are about to send this announcement to ALL employees and trainees on the system. This will immediately appear on their dashboard.'}
             </p>
             <div className="bg-gray-50 border border-gray-200 rounded p-3 w-full text-left mt-2">
@@ -156,7 +162,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, o
             onClick={step === 'confirm' ? () => setStep('compose') : onClose} 
             className="px-4 py-2 text-sm font-bold text-gray-600 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
           >
-            {step === 'confirm' ? (language === 'ar' ? 'تراجع للتعديل' : 'Back to Edit') : (language === 'ar' ? 'إلغاء' : 'Cancel')}
+            {step === 'confirm' ? (language === 'ar' ? 'العودة للتعديل' : 'Back to Edit') : (language === 'ar' ? 'إلغاء' : 'Cancel')}
           </button>
           <button 
             onClick={handleSend}
@@ -166,7 +172,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, o
             }`}
           >
             {isGlobal && step === 'compose' ? (
-              language === 'ar' ? 'استمرار للتأكيد' : 'Continue to Confirm'
+              language === 'ar' ? 'المتابعة للتأكيد' : 'Continue to Confirm'
             ) : (
               <>
                 <Send size={16} />

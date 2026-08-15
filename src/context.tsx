@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { Language, User, Role, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement } from './types';
 import { translations } from './i18n';
 import { collection, onSnapshot, doc, setDoc, writeBatch, deleteDoc } from 'firebase/firestore';
@@ -312,11 +312,40 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addAnnouncement = async (announcement: SystemAnnouncement) => {
-    await setDoc(doc(db, "announcements", announcement.id), announcement);
+    const cleanAnn = Object.fromEntries(Object.entries(announcement).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, "announcements", announcement.id), cleanAnn);
   };
 
   const deleteAnnouncement = async (id: string) => {
     await deleteDoc(doc(db, "announcements", id));
+  };
+
+  const addAttendanceRecord = async (sessionId: string, hrCode: string) => {
+    const session = upcomingSessions.find(s => s.id === sessionId);
+    if (!session) return;
+    const trainee = localUsers.find(u => u.hrCode === hrCode);
+    if (!trainee) return;
+    
+    // Create CleanedRecord
+    const recordId = generateUUID();
+    const newRecord: CleanedRecord = {
+      id: recordId,
+      courseName: session.courseTitle,
+      department: trainee.department,
+      role: trainee.jobRole || trainee.role || "trainee",
+      date: session.startDate,
+      hrCode: trainee.hrCode,
+      name: trainee.name,
+      score: "N/A", // Default for attendance
+      attendedDays: 1, // Marked as attended
+      duration: "1 day", // Rough estimate, printUtils handles exact duration
+      raw: {
+        "Attended Days": 1,
+        "Score": "N/A"
+      }
+    };
+    
+    await setDoc(doc(db, "cleanedData", recordId), newRecord);
   };
 
   return (
@@ -333,6 +362,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       addUpcomingSession, updateUpcomingSession, deleteUpcomingSession, restoreUpcomingSession,
       cancelSession, reactivateSession, registerTrainee, unregisterTrainee,
       announcements, addAnnouncement, deleteAnnouncement,
+      addAttendanceRecord,
       debugRole, setDebugRole, 
       t, 
       isLoading 
@@ -349,3 +379,5 @@ export const useAppContext = () => {
   if (!context) throw new Error('useAppContext must be used within an AppProvider');
   return context;
 };
+
+

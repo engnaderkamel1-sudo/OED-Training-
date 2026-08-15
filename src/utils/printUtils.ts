@@ -439,3 +439,207 @@ export const downloadReportPDF = async (options: ReportOptions) => {
 
 
 
+export const downloadTrainingRegisterPDF = async (session: import("./types").UpcomingSession, allUsers: import("./types").User[], allRecords: import("./types").TrainingRecord[]) => {
+  const isAr = false; // The form image is in English
+  
+  // Find registered users
+  const attendees = allUsers.filter(u => (session.registeredUsers || []).includes(u.hrCode));
+  
+  // We need to map them to records if available
+  const traineeData = attendees.map(u => {
+    // find record
+    const rec = allRecords.find(r => r.userId === u.hrCode && r.courseId === session.courseTitle && r.attendanceDate === session.startDate);
+    return {
+      name: u.name,
+      department: u.department,
+      id: u.hrCode,
+      score: rec ? (rec.score !== "N/A" ? rec.score : "") : "",
+      days: rec ? rec.daysAttended : ""
+    };
+  });
+
+  // Calculate duration in days safely
+  const start = new Date(session.startDate);
+  const end = new Date(session.endDate);
+  let durationDays = 1;
+  if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    durationDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  }
+
+  // Generate 20 rows
+  let rowsHTML = "";
+  for (let i = 0; i < 20; i++) {
+    const t = traineeData[i];
+    if (t) {
+      rowsHTML += `
+        <tr>
+          <td style="text-align: center;">${i + 1}</td>
+          <td>${t.name}</td>
+          <td>${t.department}</td>
+          <td style="text-align: center;">${t.id}</td>
+          <td style="text-align: center;">${t.score}</td>
+          <td style="text-align: center;">${t.days}</td>
+        </tr>
+      `;
+    } else {
+      rowsHTML += `
+        <tr>
+          <td style="text-align: center;">${i + 1}</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      `;
+    }
+  }
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en" dir="ltr">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          color: #000;
+          margin: 0;
+          padding: 20px;
+        }
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 20px;
+        }
+        .header h1 {
+          color: #8c8c8c;
+          font-size: 28px;
+          margin: 0;
+          font-weight: bold;
+        }
+        .header img {
+          width: 250px;
+          object-fit: contain;
+        }
+        .info-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 20px;
+          border: 2px solid #000;
+        }
+        .info-table th, .info-table td {
+          border: 1px solid #000;
+          padding: 8px;
+          font-size: 12px;
+          font-weight: bold;
+          text-align: center;
+        }
+        .info-table th {
+          background-color: #f0f0f0; /* Optional: light gray if needed */
+        }
+        .main-table {
+          width: 100%;
+          border-collapse: collapse;
+          border: 2px solid #000;
+        }
+        .main-table th {
+          border: 1px solid #000;
+          padding: 8px;
+          font-size: 12px;
+          font-weight: bold;
+          text-align: center;
+          background-color: #e6f2ff; /* Very light blue header */
+        }
+        .main-table td {
+          border: 1px solid #000;
+          padding: 8px;
+          font-size: 11px;
+          height: 20px; /* Force minimum height for empty rows */
+        }
+        .main-table tr:nth-child(even) {
+          background-color: #e6f2ff; /* Alternating light blue */
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>Training Register</h1>
+        <img src="/orascom_logo.jpg" alt="Orascom Construction" />
+      </div>
+
+      <table class="info-table">
+        <tr>
+          <td>Course Title</td>
+          <td style="font-weight: normal;">${session.courseTitle}</td>
+          <td>Instructor</td>
+          <td style="font-weight: normal;">Nader Reda</td>
+          <td>Number Of<br/>Participants</td>
+          <td style="font-weight: normal;">${attendees.length}</td>
+        </tr>
+        <tr>
+          <td>Start Date</td>
+          <td style="font-weight: normal;">${new Date(session.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+          <td>End Date</td>
+          <td style="font-weight: normal;">${new Date(session.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+          <td>Duration<br/>(Days)</td>
+          <td style="font-weight: normal;">${durationDays}</td>
+        </tr>
+      </table>
+
+      <table class="main-table">
+        <thead>
+          <tr>
+            <th style="width: 30px;">#</th>
+            <th>Participant Name</th>
+            <th>Department</th>
+            <th>ID</th>
+            <th>Post Test %</th>
+            <th>Attendance Days</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHTML}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const fileName = `Training_Register_Session_${session.sessionNumber || "New"}.pdf`;
+
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.left = '-9999px';
+  container.style.top = '0';
+  container.style.width = '210mm'; // A4 width
+  container.style.background = '#ffffff';
+  container.innerHTML = htmlContent;
+  document.body.appendChild(container);
+
+  try {
+    const html2pdf = (await import('html2pdf.js')).default;
+    const opt = {
+      margin: 10,
+      filename: fileName,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false,
+        windowWidth: 1024 
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    await html2pdf().set(opt).from(container).save();
+  } catch (err) {
+    console.error('PDF export error:', err);
+    alert('Failed to generate PDF. Check console.');
+  } finally {
+    if (document.body.contains(container)) {
+      document.body.removeChild(container);
+    }
+  }
+};

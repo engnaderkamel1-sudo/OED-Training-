@@ -1,4 +1,4 @@
-export type Role = "trainee" | "manager" | "admin" | "supervisor" | null;
+﻿export type Role = "trainee" | "manager" | "admin" | "supervisor" | null;
 export type Language = "ar" | "en";
 
 export interface User {
@@ -75,6 +75,8 @@ export interface UpcomingSession {
   isDeleted?: boolean;
   status?: "Active" | "Cancelled";
   reminderLog?: ReminderLogItem[];
+  feedbackLink?: string;
+  feedbackEnabled?: boolean;
 }
 
 export interface CleanedRecord {
@@ -102,3 +104,4 @@ export interface SystemAnnouncement {
   author: string;
   isGlobal: boolean; // True for system-wide announcements
 }
+

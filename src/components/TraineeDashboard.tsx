@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context';
 import { mockCourses } from '../data';
 import { ExternalLink, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag } from 'lucide-react';
 import { DataField } from './DataField';
 import { SessionCard } from './SessionCard';
+import { QRScannerModal } from './QRScannerModal';
 import { UpcomingSession } from '../types';
 
 // Helper functions that were accidentally removed
@@ -106,7 +107,7 @@ export const TraineeDashboard: React.FC = () => {
           list.push({
             id: ann.id,
             sessionId: ann.sessionId || 'global',
-            courseTitle: ann.courseName || (language === 'ar' ? 'عام' : 'Global'),
+            courseTitle: ann.courseName || (language === 'ar' ? 'Ø¹Ø§Ù…' : 'Global'),
             startDate: '', // Not strictly needed for UI of announcement
             type: ann.isGlobal ? 'Global' : 'Announcement',
             timestamp: ann.date,
@@ -188,7 +189,7 @@ export const TraineeDashboard: React.FC = () => {
     }
 
     const toastMsg = language === 'ar'
-      ? `تم تسجيل طلبك بنجاح في كورس [${registeringSession.courseTitle}]`
+      ? `ØªÙ… ØªØ³Ø¬ÙŠÙ„ Ø·Ù„Ø¨Ùƒ Ø¨Ù†Ø¬Ø§Ø­ ÙÙŠ ÙƒÙˆØ±Ø³ [${registeringSession.courseTitle}]`
       : `You have successfully registered for [${registeringSession.courseTitle}].`;
 
     setActionToast({ message: toastMsg, type: 'success' });
@@ -211,7 +212,7 @@ export const TraineeDashboard: React.FC = () => {
 
       if (session) {
         const toastMsg = language === 'ar'
-          ? `تم إلغاء تسجيلك بنجاح من دورة [${session.courseTitle}]`
+          ? `ØªÙ… Ø¥Ù„ØºØ§Ø¡ ØªØ³Ø¬ÙŠÙ„Ùƒ Ø¨Ù†Ø¬Ø§Ø­ Ù…Ù† Ø¯ÙˆØ±Ø© [${session.courseTitle}]`
           : `You have successfully unregistered from [${session.courseTitle}].`;
 
         setActionToast({ message: toastMsg, type: 'info' });
@@ -229,7 +230,7 @@ export const TraineeDashboard: React.FC = () => {
     setRegisteredCourseIds(prev => prev.filter(id => id !== session.id));
     
     const toastMsg = language === 'ar'
-      ? `تم إلغاء تسجيلك بنجاح من دورة [${session.courseTitle}]`
+      ? `ØªÙ… Ø¥Ù„ØºØ§Ø¡ ØªØ³Ø¬ÙŠÙ„Ùƒ Ø¨Ù†Ø¬Ø§Ø­ Ù…Ù† Ø¯ÙˆØ±Ø© [${session.courseTitle}]`
       : `You have successfully unregistered from [${session.courseTitle}].`;
     setActionToast({ message: toastMsg, type: 'info' });
     setTimeout(() => setActionToast(null), 4000);
@@ -242,6 +243,18 @@ export const TraineeDashboard: React.FC = () => {
       setRequestedTopic('');
       setTimeout(() => setRequestSent(false), 3000);
     }
+  };
+
+  const handleScanSuccess = async (scannedSessionId: string) => {
+    if (scannedSessionId !== scanningSessionId) {
+      alert(language === "ar" ? "????? ??????? ?? ????? ??? ??????!" : "Scanned code does not match this session!");
+      return;
+    }
+    if (user) {
+      await addAttendanceRecord(scannedSessionId, user.hrCode);
+      alert(language === "ar" ? "?? ????? ????? ?????!" : "Attendance recorded successfully!");
+    }
+    setScanningSessionId(null);
   };
 
   return (
@@ -272,7 +285,19 @@ export const TraineeDashboard: React.FC = () => {
                 const course = mockCourses.find(c => c.id === r.courseId);
                 const totalDaysStr = r.raw?.['Course Duration'] || r.totalDays || course?.duration || '1 Day';
                 const attendedDaysStr = r.raw?.['Attended Days'] || r.daysAttended || totalDaysStr;
-                return (
+                const handleScanSuccess = async (scannedSessionId: string) => {
+    if (scannedSessionId !== scanningSessionId) {
+      alert(language === "ar" ? "????? ??????? ?? ????? ??? ??????!" : "Scanned code does not match this session!");
+      return;
+    }
+    if (user) {
+      await addAttendanceRecord(scannedSessionId, user.hrCode);
+      alert(language === "ar" ? "?? ????? ????? ?????!" : "Attendance recorded successfully!");
+    }
+    setScanningSessionId(null);
+  };
+
+  return (
                   <li key={r.id} className="text-sm flex flex-col bg-gray-50 p-3 rounded border border-gray-100">
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-bold text-[#002D62] truncate mr-2" title={course?.title || r.courseName}>
@@ -305,7 +330,7 @@ export const TraineeDashboard: React.FC = () => {
             <span className="font-semibold text-sm md:text-base">{actionToast.message}</span>
           </div>
           <button onClick={() => setActionToast(null)} className="font-bold text-sm hover:opacity-75">
-            ✕
+            âœ•
           </button>
         </div>
       )}
@@ -326,7 +351,7 @@ export const TraineeDashboard: React.FC = () => {
               <h2 className="text-xl font-bold text-gray-800">{t('notificationCenter')}</h2>
               {unreadCount > 0 && (
                 <span className="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-red-200">
-                  {unreadCount} {language === 'ar' ? 'غير مقروء' : 'unread'}
+                  {unreadCount} {language === 'ar' ? 'ØºÙŠØ± Ù…Ù‚Ø±ÙˆØ¡' : 'unread'}
                 </span>
               )}
             </div>
@@ -338,11 +363,11 @@ export const TraineeDashboard: React.FC = () => {
                 className="bg-blue-50 text-[#002D62] hover:bg-blue-100 border border-blue-200 px-3 py-1 rounded text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
               >
                 <CheckCircle size={13} className="text-[#002D62]" />
-                <span>{language === 'ar' ? 'تحديد الكل كمقروء' : 'Mark All as Read'}</span>
+                <span>{language === 'ar' ? 'ØªØ­Ø¯ÙŠØ¯ Ø§Ù„ÙƒÙ„ ÙƒÙ…Ù‚Ø±ÙˆØ¡' : 'Mark All as Read'}</span>
               </button>
             )}
             <p className="text-xs text-gray-500 hidden sm:block">
-              {language === 'ar' ? 'جميع تنبيهات وتذكيرات الجلسات التدريبية الموجهة لك' : 'All training session reminder alerts sent by administration'}
+              {language === 'ar' ? 'Ø¬Ù…ÙŠØ¹ ØªÙ†Ø¨ÙŠÙ‡Ø§Øª ÙˆØªØ°ÙƒÙŠØ±Ø§Øª Ø§Ù„Ø¬Ù„Ø³Ø§Øª Ø§Ù„ØªØ¯Ø±ÙŠØ¨ÙŠØ© Ø§Ù„Ù…ÙˆØ¬Ù‡Ø© Ù„Ùƒ' : 'All training session reminder alerts sent by administration'}
             </p>
           </div>
         </div>
@@ -358,7 +383,19 @@ export const TraineeDashboard: React.FC = () => {
               const isFinal = notif.type === 'Final';
               const isRead = readNotifIds.includes(notif.id);
 
-              return (
+              const handleScanSuccess = async (scannedSessionId: string) => {
+    if (scannedSessionId !== scanningSessionId) {
+      alert(language === "ar" ? "????? ??????? ?? ????? ??? ??????!" : "Scanned code does not match this session!");
+      return;
+    }
+    if (user) {
+      await addAttendanceRecord(scannedSessionId, user.hrCode);
+      alert(language === "ar" ? "?? ????? ????? ?????!" : "Attendance recorded successfully!");
+    }
+    setScanningSessionId(null);
+  };
+
+  return (
                 <div 
                   key={notif.id}
                   onClick={() => markNotifAsRead(notif.id)}
@@ -384,15 +421,15 @@ export const TraineeDashboard: React.FC = () => {
                                 ? 'bg-purple-200 text-purple-950 border-purple-400'
                                 : 'bg-blue-200 text-blue-950 border-blue-300'
                         }`}>
-                          {notif.type === 'Global' ? '🌍 ' : notif.type === 'Announcement' ? '📢 ' : ''}
+                          {notif.type === 'Global' ? 'ðŸŒ ' : notif.type === 'Announcement' ? 'ðŸ“¢ ' : ''}
                           {language === 'ar' 
-                            ? (isFinal ? 'تذكير نهائي' : notif.type === 'Global' ? 'تنبيه عام' : notif.type === 'Announcement' ? 'تنبيه خاص' : 'تذكير بالدورة') 
+                            ? (isFinal ? 'ØªØ°ÙƒÙŠØ± Ù†Ù‡Ø§Ø¦ÙŠ' : notif.type === 'Global' ? 'ØªÙ†Ø¨ÙŠÙ‡ Ø¹Ø§Ù…' : notif.type === 'Announcement' ? 'ØªÙ†Ø¨ÙŠÙ‡ Ø®Ø§Øµ' : 'ØªØ°ÙƒÙŠØ± Ø¨Ø§Ù„Ø¯ÙˆØ±Ø©') 
                             : (isFinal ? 'FINAL REMINDER' : notif.type === 'Global' ? 'GLOBAL BROADCAST' : notif.type === 'Announcement' ? 'ANNOUNCEMENT' : 'UPCOMING SESSION')}
                         </span>
                         {!isRead && (
                           <span className="text-[10px] bg-red-600 text-white font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-sm">
                             <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-                            <span>{language === 'ar' ? 'جديد' : 'NEW'}</span>
+                            <span>{language === 'ar' ? 'Ø¬Ø¯ÙŠØ¯' : 'NEW'}</span>
                           </span>
                         )}
                       </div>
@@ -407,7 +444,7 @@ export const TraineeDashboard: React.FC = () => {
                         {notif.title && <div className="font-bold mb-1 text-[#002D62]">{notif.title}</div>}
                         <div className="whitespace-pre-wrap">{notif.message}</div>
                         <div className="text-[10px] text-gray-500 mt-2 font-bold opacity-70">
-                          {language === 'ar' ? 'بواسطة:' : 'By:'} {notif.author}
+                          {language === 'ar' ? 'Ø¨ÙˆØ§Ø³Ø·Ø©:' : 'By:'} {notif.author}
                         </div>
                       </div>
                     ) : (
@@ -419,7 +456,7 @@ export const TraineeDashboard: React.FC = () => {
                         <div className="text-xs text-gray-600 space-y-0.5">
                           <p className="flex items-center gap-1 font-medium">
                             <Calendar size={13} className="text-gray-500 shrink-0" />
-                            <span>{formatDateToStandard(notif.startDate)} {notif.endDate ? ` - ${formatDateToStandard(notif.endDate)}` : ''} {notif.startTime ? `• ${notif.startTime}` : ''}</span>
+                            <span>{formatDateToStandard(notif.startDate)} {notif.endDate ? ` - ${formatDateToStandard(notif.endDate)}` : ''} {notif.startTime ? `â€¢ ${notif.startTime}` : ''}</span>
                           </p>
                           {notif.location && (
                             <p className="flex items-center gap-1">
@@ -446,7 +483,7 @@ export const TraineeDashboard: React.FC = () => {
                         className="text-[11px] bg-white/80 hover:bg-white text-gray-700 px-2.5 py-1 rounded border border-gray-300 font-semibold transition-colors flex items-center gap-1"
                       >
                         <CheckCircle size={12} className="text-emerald-600" />
-                        <span>{language === 'ar' ? 'تعليم كمقروء' : 'Mark as read'}</span>
+                        <span>{language === 'ar' ? 'ØªØ¹Ù„ÙŠÙ… ÙƒÙ…Ù‚Ø±ÙˆØ¡' : 'Mark as read'}</span>
                       </button>
                     </div>
                   )}
@@ -541,7 +578,7 @@ export const TraineeDashboard: React.FC = () => {
                 {[1, 2, 3].map((num, i) => (
                   <div key={num}>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {language === 'ar' ? `مدير ${num}` : `Manager ${num}`} {i === 0 && <span className="text-red-500">*</span>}
+                      {language === 'ar' ? `Ù…Ø¯ÙŠØ± ${num}` : `Manager ${num}`} {i === 0 && <span className="text-red-500">*</span>}
                     </label>
                     <input
                       type="email"
@@ -580,3 +617,4 @@ export const TraineeDashboard: React.FC = () => {
     </div>
   );
 };
+
