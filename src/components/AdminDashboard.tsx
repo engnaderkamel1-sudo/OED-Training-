@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession } from "../types";
@@ -130,10 +130,8 @@ export const AdminDashboard: React.FC = () => {
   const [sessionNumber, setSessionNumber] = useState("");
   const [location, setLocation] = useState("");
   const [startTime, setStartTime] = useState("");
-  const [targetParticipants,
-        feedbackLink: feedbackLink.trim() || undefined,
-        feedbackEnabled: false, setTargetParticipants] = useState("");
-    const [feedbackLink, setFeedbackLink] = useState("");
+  const [targetParticipants, setTargetParticipants] = useState("");
+  const [feedbackLink, setFeedbackLink] = useState("");
   const [resourceLink, setResourceLink] = useState("");
   const [selectedCourseForResource, setSelectedCourseForResource] = useState(
     mockCourses[0]?.id || "",
