@@ -486,8 +486,9 @@ export const AdminDashboard: React.FC = () => {
       singleTrainee: singleTrainee
         ? {
             name: singleTrainee.name,
-            hrCode: singleTrainee.hrCode,
-            department: singleTrainee.department,
+              hrCode: singleTrainee.hrCode,
+              department: singleTrainee.department,
+              profileImageUrl: singleTrainee.profileImageUrl,
           }
         : null,
       fileName: isSingleTraineeFiltered
@@ -2156,6 +2157,7 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
+
 
 
 

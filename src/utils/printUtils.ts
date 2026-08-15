@@ -1,4 +1,4 @@
-import html2pdf from 'html2pdf.js';
+﻿import html2pdf from 'html2pdf.js';
 import { formatScore, formatDateToStandard } from './formatters';
 
 export interface ReportRecord {
@@ -23,6 +23,7 @@ export interface SingleTraineeInfo {
   name: string;
   hrCode: string;
   department: string;
+  profileImageUrl?: string;
 }
 
 export interface ReportOptions {
@@ -242,8 +243,8 @@ export const generateReportHTML = (options: ReportOptions): string => {
 </head>
 <body>
   <div class="header">
-    <div class="logo-box">
-      OED<br/>Logo
+    <div class="logo-box" style="border: none; background: transparent; padding: 0;">
+      <img src="/orascom_logo.jpg" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="OED Logo" />
     </div>
     <div class="dept-title">
       <h2>OED - Technical Training Department</h2>
@@ -256,25 +257,32 @@ export const generateReportHTML = (options: ReportOptions): string => {
 
   ${singleTrainee ? `
     <div class="trainee-card">
-      <div class="trainee-field">
-        <label>${isAr ? 'الاسم' : 'Name'}</label>
-        <span>${singleTrainee.name}</span>
-      </div>
-      <div class="trainee-field">
-        <label>${isAr ? 'الرقم الوظيفي' : 'HR Code'}</label>
-        <span style="color: #1f2937">${singleTrainee.hrCode}</span>
-      </div>
-      <div class="trainee-field">
-        <label>${isAr ? 'القسم' : 'Department'}</label>
-        <span style="color: #1f2937; font-weight: 500">${singleTrainee.department}</span>
+      ${singleTrainee.profileImageUrl ? `
+        <div style="width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: 2px solid #e5e7eb; flex-shrink: 0;">
+          <img src="${singleTrainee.profileImageUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Trainee" />
+        </div>
+      ` : '}
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; flex: 1;">
+        <div class="trainee-field">
+          <label>${isAr ? 'الاسم' : 'Name'}</label>
+          <span>${singleTrainee.name}</span>
+        </div>
+        <div class="trainee-field">
+          <label>${isAr ? 'الرقم الوظيفي' : 'HR Code'}</label>
+          <span style="color: #1f2937">${singleTrainee.hrCode}</span>
+        </div>
+        <div class="trainee-field">
+          <label>${isAr ? 'القسم' : 'Department'}</label>
+          <span style="color: #1f2937; font-weight: 500">${singleTrainee.department}</span>
+        </div>
       </div>
     </div>
-  ` : ''}
+  ` : '}
 
   <table>
     <thead>
       <tr>
-        ${cols.map(c => `<th>${isAr ? c.labelAr : c.labelEn}</th>`).join('')}
+        ${cols.map(c => `<th>${isAr ? c.labelAr : c.labelEn}</th>`).join(')}
       </tr>
     </thead>
     <tbody>
@@ -288,7 +296,7 @@ export const generateReportHTML = (options: ReportOptions): string => {
       <p class="auth-name">Nader Kamel</p>
     </div>
     <div class="footer-sys">
-      OED Training Management System
+      OED Technical Training Management System
     </div>
   </div>
 </body>
@@ -377,7 +385,7 @@ const fallbackIframePrint = (htmlContent: string) => {
  */
 export const downloadReportPDF = async (options: ReportOptions) => {
   const htmlContent = generateReportHTML(options);
-  const fileName = options.fileName || (options.language === 'ar' ? 'تقرير_التدريب.pdf' : 'Training_Report.pdf');
+  const fileName = options.fileName || (options.language === 'ar' ? 'ØªÙ‚Ø±ÙŠØ±_Ø§Ù„ØªØ¯Ø±ÙŠØ¨.pdf' : 'Training_Report.pdf');
 
   // Create temporary container element off-screen
   const container = document.createElement('div');
@@ -428,3 +436,6 @@ export const downloadReportPDF = async (options: ReportOptions) => {
     }
   }
 };
+
+
+
