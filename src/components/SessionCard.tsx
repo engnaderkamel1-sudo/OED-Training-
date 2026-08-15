@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useAppContext } from '../context';
 import { UpcomingSession } from '../types';
 import { 
@@ -56,6 +56,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   
   // -- State Derived from Context --
   const isCancelled = session.status === 'Cancelled' || !!session.isDeleted;
+  const isCompleted = session.status === 'Completed';
   const userCode = user?.hrCode || 'trainee';
   const isRegistered = session.registeredUsers?.includes(userCode) || registeredCourseIds.includes(session.id);
   const isUnregistered = session.unregisteredUsers?.includes(userCode);
@@ -118,6 +119,9 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   } else if (!isAdminView && isUnregistered) {
     // Trainee Unregistered State
     cardClasses += "bg-orange-50/40 border-amber-200 opacity-50";
+  } else if (isCompleted) {
+    // Completed/Finalized State
+    cardClasses += "bg-emerald-50/50 border-emerald-300";
   } else {
     // Default Active State
     cardClasses += "bg-white border-gray-200 hover:border-[#002D62]/30 hover:shadow-md";
@@ -144,6 +148,12 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold border border-red-200 shadow-sm flex items-center gap-1">
                 <Ban size={12} />
                 {t('cancelled')}
+              </span>
+            )}
+            {isCompleted && (
+              <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-bold border border-emerald-200 shadow-sm flex items-center gap-1">
+                <CheckCircle size={12} />
+                {language === 'ar' ? 'مكتملة' : 'Completed'}
               </span>
             )}
           </div>
@@ -293,15 +303,15 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   title={language === 'ar' ? 'Ø·Ø¨Ø§Ø¹Ø© Ø§Ù„ÙƒØ´Ù' : 'Print Register'}
                 >
                   <FileText size={14} />
-                  <span>{language === 'ar' ? 'Ø·Ø¨Ø§Ø¹Ø© Ø§Ù„ÙƒØ´Ù' : 'Print Register'}</span>
+                  <span>{language === 'ar' ? 'Ø·Ø¨Ø§Ø¹Ø© Ø§Ù„ÙƒØ´Ù ' : 'Print Register'}</span>
                 </button>
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onFinalizeRequest) onFinalizeRequest(session); }}
-                  className="cursor-pointer bg-[#002D62] hover:bg-blue-900 text-white text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-bold shadow-sm"
+                  className={`cursor-pointer text-white text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-bold shadow-sm ${isCompleted ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-[#002D62] hover:bg-blue-900'}`}
                 >
                   <CheckCircle size={14} />
-                  <span>{language === 'ar' ? 'Ã˜Â¥Ã™â€ Ã™â€¡Ã˜Â§Ã˜Â¡ Ã™Ë†Ã˜Â­Ã˜Â¶Ã™Ë†Ã˜Â±' : 'Finalize & Grade'}</span>
+                  <span>{isCompleted ? (language === 'ar' ? 'تم التسجيل ✓' : 'Finalized ✓') : (language === 'ar' ? 'إنهاء وحضور' : 'Finalize & Grade')}</span>
                 </button>
                 <button 
                   type="button"
