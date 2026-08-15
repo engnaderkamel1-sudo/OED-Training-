@@ -1,0 +1,262 @@
+﻿
+>         {currentView === "tools" && (
+            <div className="space-y-12">
+              {/* Session Announcements Section */}
+              <div>
+                <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 
+rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
+                  {t('sessionAnnouncements')}
+                </h2>
+                <div className="space-y-6">
+              {reminderToast && (
+                <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm 
+bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded shadow-sm text-emerald-800 flex items-center justify-between 
+transition-all animate-fadeIn">
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-5 w-5 text-emerald-600 animate-bounce" />
+                    <span className="font-semibold text-sm md:text-base">
+                      {reminderToast}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setReminderToast(null)}
+                    className="text-emerald-600 hover:text-emerald-900 font-bold text-sm"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                  <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                    {editingSessionId ? t("editSession") : t("createNewSession")}
+                  </h2>
+                  <form onSubmit={handleCreateSession} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {t("courseName")}
+                        </label>
+                        <select
+                          required
+                          value={selectedCourseId}
+                          onChange={(e) => setSelectedCourseId(e.target.value)}
+                          className="w-full border rounded px-3 py-2 focus:ring-[#002D62] bg-white"
+                        >
+                          <option value="">{t("selectCourse")}</option>
+                          {dynamicCourses.map((c) => (
+                            <option key={c.id} value={c.title}>
+                              {c.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {t("startDate")}
+                        </label>
+                        <input
+                          type="date"
+                          required
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          className="w-full border rounded px-3 py-2 focus:ring-[#002D62]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {t("endDate")}
+                        </label>
+                        <input
+                          type="date"
+                          required
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          className="w-full border rounded px-3 py-2 focus:ring-[#002D62]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {t("sessionNumber")}
+                        </label>
+                        <select
+                          required
+                          value={sessionNumber}
+                          onChange={(e) => setSessionNumber(e.target.value)}
+                          className="w-full border rounded px-3 py-2 focus:ring-[#002D62] bg-white"
+                        >
+                          <option value="">{t("selectSession")}</option>
+                          <option value="sessionOne">{t("sessionOne")}</option>
+                          <option value="sessionTwo">{t("sessionTwo")}</option>
+                            <option value="sessionThree">{t("sessionThree")}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {t("startTime")}
+                        </label>
+                        <input
+                          type="time"
+                          required
+                          value={startTime}
+                          onChange={(e) => setStartTime(e.target.value)}
+                          className="w-full border rounded px-3 py-2 focus:ring-[#002D62]"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {t("location")}
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={location}
+                          onChange={(e) => setLocation(e.target.value)}
+                          placeholder="e.g. Training Room - Central Workshop"
+                          className="w-full border rounded px-3 py-2 focus:ring-[#002D62]"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {t("targetParticipants")}
+                        </label>
+                        <select
+                          required
+                          value={targetParticipants}
+                          onChange={(e) => setTargetParticipants(e.target.value)}
+                          className="w-full border rounded px-3 py-2 focus:ring-[#002D62] bg-white"
+                        >
+                          <option value="">{t("selectTarget")}</option>
+                          <option value="engineers">{t("engineers")}</option>
+                          <option value="technicians">{t("technicians")}</option>
+                          <option value="mixed">{t("mixed")}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-6">
+                      <button
+                        type="submit"
+                        className="flex-1 bg-[#FFC000] text-[#002D62] font-bold py-3 px-6 rounded hover:bg-yellow-500 
+transition-colors"
+                      >
+                        {editingSessionId ? t("updateSession") : t("publishPush")}
+                      </button>
+                      {editingSessionId && (
+                        <button
+                          type="button"
+                          onClick={handleCancelEdit}
+                          className="bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded hover:bg-gray-300 
+transition-colors"
+                        >
+                          {t("cancelEdit")}
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                    {t("manageUpcoming")}
+                  </h2>
+                  {upcomingSessions.length === 0 ? (
+                    <div className="text-center py-12 px-4 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
+                      <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                      <p className="text-gray-600 font-medium">
+                        {t("noUpcomingSessions")}
+                      </p>
+                    </div>
+                  ) : (
+                    <ul className="space-y-4">
+                      {upcomingSessions.map((session, index) => (
+                        <li key={session.id || index}>
+                          <SessionCard
+                            session={session}
+                            isAdminView={true}
+                            onEdit={handleStartEdit}
+                            onSendReminder={handleSendReminder}
+                            onFinalizeRequest={setFinalizingSession}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+              
+          {/* Training Needs Analysis Section */}
+              <div className="border-t border-gray-200 pt-8 mt-8">
+                <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 
+rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
+                  {t("tna")}
+                </h2>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={tnaData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip cursor={{ fill: "#f3f4f6" }} />
+                    <Bar
+                      dataKey="count"
+                      fill="#FFC000"
+                      radius={[4, 4, 0, 0]}
+                      name={t("requests")}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+  
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-gray-200 pt-8 mt-8">
+                {/* Resource Sharing Section */}
+                <div className="max-w-md">
+                  <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 
+rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
+                    {t("resourceSharing")}
+                  </h2>
+                  <form onSubmit={handleShareResource} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {t("courseName")}
+                      </label>
+                      <select
+                        value={selectedCourseForResource}
+                        onChange={(e) => setSelectedCourseForResource(e.target.value)}
+                        className="w-full border rounded px-3 py-2 focus:ring-[#002D62] font-sans"
+                        dir="ltr"
+                      >
+                        {dynamicCourses.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {t("googleDriveLink")}
+                      </label>
+                      <input
+                        type="url"
+                        required
+                        value={resourceLink}
+                        onChange={(e) => setResourceLink(e.target.value)}
+                        placeholder="https://drive.google.com/..."
+                        className="w-full border rounded px-3 py-2 focus:ring-[#002D62]"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="bg-[#002D62] text-white font-bold py-2 px-6 rounded hover:bg-blue-900 flex 
+items-center"
+                    >
+                      <Share2 size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />{" "}
+                      {t("share")}
+                    </button>
+                  </form>
+
+

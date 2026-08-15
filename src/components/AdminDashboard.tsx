@@ -750,10 +750,38 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 print:p-0">
-      <div className="flex justify-between items-center border-b-2 border-[#FFC000] pb-2 mb-6 print:hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 border-[#FFC000] pb-4 mb-6 gap-4 print:hidden">
         <h1 className="text-2xl md:text-3xl font-bold text-[#002D62]">
           {t("adminView")}
         </h1>
+        <div className="flex flex-wrap items-center gap-2">
+          {user?.role === 'admin' || user?.role === 'supervisor' ? (
+            <>
+              <button onClick={handlePrint} className="flex items-center gap-1 bg-[#002D62] text-white px-3 py-1.5 rounded hover:bg-blue-900 transition-colors shadow-sm text-sm">
+                <Printer size={16} />
+                {language === "ar" ? "طباعة" : "Print"}
+              </button>
+              <button onClick={handleDownloadPDF} className="flex items-center gap-1 bg-[#FFC000] text-[#002D62] px-3 py-1.5 rounded hover:bg-yellow-500 transition-colors shadow-sm font-semibold text-sm">
+                <Download size={16} />
+                {language === "ar" ? "تنزيل PDF" : "Download PDF"}
+              </button>
+              <button 
+                onClick={() => setShowMonthlyReport(true)}
+                className="flex items-center gap-1 bg-[#002D62] hover:bg-blue-900 text-white px-3 py-1.5 rounded font-bold transition-colors shadow-sm text-sm"
+              >
+                <Mail size={16} />
+                {language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}
+              </button>
+              <button 
+                onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])}
+                className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded font-bold transition-colors shadow-sm text-sm"
+              >
+                <Download size={16} />
+                {language === 'ar' ? 'نسخة احتياطية' : 'Backup Data'}
+              </button>
+            </>
+          ) : null}
+        </div>
       </div>
       {/* Content Area */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 min-h-[400px]">
@@ -1140,16 +1168,7 @@ export const AdminDashboard: React.FC = () => {
                 <h2 className="text-2xl font-bold text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
                   {t("globalRecords")}
                 </h2>
-                <div className="flex gap-2 print:hidden">
-                  <button onClick={handlePrint} className="flex items-center gap-1 bg-[#002D62] text-white px-3 py-1.5 rounded hover:bg-blue-900 transition-colors shadow-sm text-sm">
-                    <Printer size={16} />
-                    {language === "ar" ? "ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©" : "Print"}
-                  </button>
-                  <button onClick={handleDownloadPDF} className="flex items-center gap-1 bg-[#FFC000] text-[#002D62] px-3 py-1.5 rounded hover:bg-yellow-500 transition-colors shadow-sm font-semibold text-sm">
-                    <Download size={16} />
-                    {language === "ar" ? "ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â²ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ PDF" : "Download PDF"}
-                  </button>
-                </div>
+
               </div>
             {/* Dynamic KPI Summary Bar (Web View) */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 print:hidden">
@@ -1166,7 +1185,7 @@ export const AdminDashboard: React.FC = () => {
                 <Calendar className="text-[#FFC000] mb-2" size={24} />
                 <span className="text-xs text-gray-500 font-semibold mb-1">
                   {language === "ar"
-                    ? "ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â  ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª"
+                    ? "إجمالي الجلسات"
                     : "Total Sessions"}
                 </span>
                 <span className="text-xl font-bold text-[#002D62]">
@@ -1301,7 +1320,7 @@ export const AdminDashboard: React.FC = () => {
                     <tr className="bg-gray-50 border-b border-gray-200">
                       <th className="p-3">
                         <div className="font-semibold text-gray-700 mb-2">
-                          {language === "ar" ? "ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â " : "HR Code"}
+                          {language === "ar" ? "الكود الوظيفي" : "HR Code"}
                         </div>
                         <div className="relative">
                           <input
@@ -1555,16 +1574,7 @@ export const AdminDashboard: React.FC = () => {
               <h2 className="text-xl font-semibold text-gray-800 border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
                 {t("analytics")}
               </h2>
-              <div className="flex gap-2 print:hidden">
-                <button onClick={handlePrint} className="flex items-center gap-1 bg-[#002D62] text-white px-3 py-1.5 rounded hover:bg-blue-900 transition-colors shadow-sm text-sm">
-                  <Printer size={16} />
-                  {language === "ar" ? "ÃƒËœÃ‚Â·ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â©" : "Print"}
-                </button>
-                <button onClick={handleDownloadPDF} className="flex items-center gap-1 bg-[#FFC000] text-[#002D62] px-3 py-1.5 rounded hover:bg-yellow-500 transition-colors shadow-sm font-semibold text-sm">
-                  <Download size={16} />
-                  {language === "ar" ? "ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚Â²Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾ PDF" : "Download PDF"}
-                </button>
-              </div>
+
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col items-center justify-center">
@@ -1591,14 +1601,7 @@ export const AdminDashboard: React.FC = () => {
                   {totalDistinctCourses}
                 </span>
               </div>
-              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col items-center justify-center">
-                <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">
-                  {language === "ar" ? "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¬Ù„Ø³Ø§Øª" : "Total Sessions"}
-                </span>
-                <span className="text-3xl font-bold text-blue-500">
-                  {upcomingSessions.filter(s => !s.isDeleted).length}
-                </span>
-              </div>
+
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* All Courses by Attendance */}
@@ -1687,6 +1690,18 @@ export const AdminDashboard: React.FC = () => {
         {/* Admin Tools Tab */}
         {currentView === "tools" && (
           <div className="space-y-12">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col items-center justify-center">
+                <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">
+                  {language === "ar" ? "إجمالي الجلسات" : "Total Sessions"}
+                </span>
+                <span className="text-3xl font-bold text-blue-500">
+                  {upcomingSessions.filter(s => !s.isDeleted).length}
+                </span>
+              </div>
+            </div>
+
             {/* Session Announcements Section */}
             <div>
               <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
@@ -1947,21 +1962,7 @@ export const AdminDashboard: React.FC = () => {
                       : "Data Management & Backup"}
                   </h2>
                                     <div className="flex gap-2">
-                    <button 
-                      onClick={() => setShowMonthlyReport(true)}
-                      className="flex items-center gap-2 bg-[#002D62] hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"
-                    >
-                      <Mail size={18} />
-                      {language === 'ar' ? 'ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â± ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â­ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â« ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ' : 'Monthly Update Report'}
-                    </button>
-                    <button 
-                      onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])}
-                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"
-                    >
-                      <Download size={18} />
-                      {language === 'ar' ? 'ÃƒËœÃ‚ÂªÃƒËœÃ‚Â­Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾ Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚Â³ÃƒËœÃ‚Â®ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§ÃƒËœÃ‚Â­ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â ÃƒËœÃ‚Â§ÃƒËœÃ‚Â·Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©' : 'Download Backup'}
-                    </button>
-                  </div>
+
                 </div>
                 <p className="text-gray-600 mb-6">
                   {language === "ar"

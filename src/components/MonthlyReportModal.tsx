@@ -61,10 +61,10 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
     setSelectedCourseIds(newSet);
   };
 
-  const handleGenerateEML = () => {
+  const handleCopyToClipboard = async () => {
     const activeCourses = aggregatedCourses.filter(c => selectedCourseIds.has(c.id));
     if (activeCourses.length === 0) {
-      alert(language === 'ar' ? '???? ????? ???? ????? ??? ?????.' : 'Please select at least one course.');
+      alert(language === 'ar' ? 'يرجى اختيار دورة واحدة على الأقل.' : 'Please select at least one course.');
       return;
     }
 
@@ -72,8 +72,6 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
     const totalSessions = activeCourses.length;
     const totalParticipants = activeCourses.reduce((acc, curr) => acc + curr.count, 0);
 
-    const emailSubject = "RE: Technical Training Monthly Update - " + monthName + " " + selectedYear;
-    
     // Build HTML Table for the email body
     const tableRows = activeCourses.map((c, i) => `
       <tr>
@@ -116,16 +114,15 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
       </html>
     `;
 
-    const emlContent = `To: Yasser.Elsaied@orascom.com\nCc: Rami.Samir@orascom.com\nSubject: ${emailSubject}\nX-Unsent: 1\nContent-Type: text/html; charset=utf-8\n\n${htmlBody}`;
-
-    const blob = new Blob(['\ufeff', emlContent], { type: 'message/rfc822' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = "Monthly_Update_" + monthName + "_" + selectedYear + ".eml";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const blob = new Blob([htmlBody], { type: 'text/html' });
+      const clipboardItem = new ClipboardItem({ 'text/html': blob });
+      await navigator.clipboard.write([clipboardItem]);
+      alert(language === 'ar' ? 'تم نسخ التقرير! يمكنك الآن لصقه في بريدك الإلكتروني.' : 'Report copied! You can now paste it into your email.');
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      alert(language === 'ar' ? 'فشل في نسخ التقرير.' : 'Failed to copy report.');
+    }
   };
 
   const monthsEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -234,16 +231,16 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
             {language === 'ar' ? 'إلغاء' : 'Cancel'}
           </button>
           <button 
-            onClick={handleGenerateEML}
+            onClick={handleCopyToClipboard}
             disabled={selectedCourseIds.size === 0}
             className="bg-[#002D62] text-white px-6 py-2 rounded font-bold flex items-center gap-2 hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
           >
             <Mail size={18} />
-            {language === 'ar' ? 'توليد إيميل (.eml)' : 'Generate Email (.eml)'}
+            {language === 'ar' ? 'نسخ التقرير للإيميل' : 'Copy Report to Email'}
           </button>
         </div>
       </div>
     </div>
   );
-};
 
+};
