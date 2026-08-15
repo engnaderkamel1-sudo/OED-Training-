@@ -1894,9 +1894,11 @@ export const AdminDashboard: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
+        )}
             
         {/* Training Needs Analysis Section */}
+        {["tools", "tools_reports"].includes(currentView) && (
+          <>
             <div className="border-t border-gray-200 pt-8 mt-8">
               <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
                 {t("tna")}
@@ -2191,6 +2193,8 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
+
+
 
 
 
