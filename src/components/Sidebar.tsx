@@ -36,35 +36,34 @@ export const Sidebar: React.FC = () => {
   };
 
   const getTraineeLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'newCourses', label: language === 'ar' ? 'Ø§Ù„Ø¯ÙˆØ±Ø§Øª Ø§Ù„Ù…ØªØ§Ø­Ø©' : 'Available Courses', icon: BookOpen },
-    { id: 'notifications', label: language === 'ar' ? 'Ø§Ù„ØªÙ†Ø¨ÙŠÙ‡Ø§Øª' : 'Notifications', icon: Bell },
-    { id: 'profile', label: language === 'ar' ? 'Ù…Ù„ÙÙŠ Ø§Ù„Ø´Ø®ØµÙŠ' : 'My Profile', icon: UserCircle },
+    { id: 'dashboard', label: language === 'ar' ? 'Ã™â€žÃ™Ë†Ã˜Â­Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™Æ’Ã™â€¦' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'newCourses', label: language === 'ar' ? 'Ã˜Â§Ã™â€žÃ˜Â¯Ã™Ë†Ã˜Â±Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂªÃ˜Â§Ã˜Â­Ã˜Â©' : 'Available Courses', icon: BookOpen },
+    { id: 'notifications', label: language === 'ar' ? 'Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€ Ã˜Â¨Ã™Å Ã™â€¡Ã˜Â§Ã˜Âª' : 'Notifications', icon: Bell },
+    { id: 'profile', label: language === 'ar' ? 'Ã™â€¦Ã™â€žÃ™ÂÃ™Å  Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â®Ã˜ÂµÃ™Å ' : 'My Profile', icon: UserCircle },
   ];
 
   const getManagerLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'userManagement', label: language === 'ar' ? 'Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ†' : 'User Requests', icon: Users },
-    { id: 'profile', label: language === 'ar' ? 'Ù…Ù„ÙÙŠ Ø§Ù„Ø´Ø®ØµÙŠ' : 'My Profile', icon: UserCircle },
+    { id: 'dashboard', label: language === 'ar' ? 'Ã™â€žÃ™Ë†Ã˜Â­Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™Æ’Ã™â€¦' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'userManagement', label: language === 'ar' ? 'Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦Ã™Å Ã™â€ ' : 'User Requests', icon: Users },
+    { id: 'profile', label: language === 'ar' ? 'Ã™â€¦Ã™â€žÃ™Â Ã™Å  Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â®Ã˜ÂµÃ™Å ' : 'My Profile', icon: UserCircle },
   ];
 
   const getAdminLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…' : 'Dashboard', icon: LayoutDashboard },
     { id: 'dashboard', label: language === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'userManagement', label: language === 'ar' ? 'طلبات المستخدمين' : 'User Requests', icon: Users },
-    { id: 'analytics', label: language === 'ar' ? 'التحليلات' : 'Analytics', icon: BarChart },
+    { id: 'userManagement', label: language === 'ar' ? 'Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ†' : 'User Requests', icon: Users },
+    { id: 'analytics', label: language === 'ar' ? 'Ø§Ù„ØªØ­Ù„ÙŠÙ„Ø§Øª' : 'Analytics', icon: BarChart },
     { 
       id: 'tools_parent', 
-      label: language === 'ar' ? 'إدارة التدريب' : 'Training Management', 
+      label: language === 'ar' ? 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ØªØ¯Ø±ÙŠØ¨' : 'Training Management', 
       icon: Database,
       subLinks: [
-        { id: 'tools_create', label: language === 'ar' ? 'إنشاء دورة' : 'Create Session', icon: PlusCircle },
-        { id: 'tools_manage', label: language === 'ar' ? 'إدارة الدورات' : 'Manage Sessions', icon: CalendarDays },
-        { id: 'tools_reports', label: language === 'ar' ? 'التقارير والمزامنة' : 'Reports & Sync', icon: Settings },
-        { id: 'tools_logs', label: language === 'ar' ? 'سجل الدخول' : 'Login History', icon: History },
+        { id: 'tools_create', label: language === 'ar' ? 'Ø¥Ù†Ø´Ø§Ø¡ Ø¯ÙˆØ±Ø©' : 'Create Session', icon: PlusCircle },
+        { id: 'tools_manage', label: language === 'ar' ? 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø¯ÙˆØ±Ø§Øª' : 'Manage Sessions', icon: CalendarDays },
+        { id: 'tools_reports', label: language === 'ar' ? 'Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ± ÙˆØ§Ù„Ù…Ø²Ø§Ù…Ù†Ø©' : 'Reports & Sync', icon: Settings },
+        { id: 'tools_logs', label: language === 'ar' ? 'Ø³Ø¬Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„' : 'Login History', icon: History },
       ]
     },
-    { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
+    { id: 'profile', label: language === 'ar' ? 'Ù…Ù„ÙÙŠ Ø§Ù„Ø´Ø®ØµÙŠ' : 'My Profile', icon: UserCircle },
   ];
 
   let links: any[] = [];
@@ -103,7 +102,7 @@ export const Sidebar: React.FC = () => {
           </div>
 
           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
-            {language === 'ar' ? 'Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©' : 'Main Menu'}
+            {language === 'ar' ? 'Ã˜Â§Ã™â€žÃ™â€šÃ˜Â§Ã˜Â¦Ã™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â¦Ã™Å Ã˜Â³Ã™Å Ã˜Â©' : 'Main Menu'}
           </div>
 
           {links.map((link) => {
@@ -180,4 +179,5 @@ export const Sidebar: React.FC = () => {
     </>
   );
 };
+
 
