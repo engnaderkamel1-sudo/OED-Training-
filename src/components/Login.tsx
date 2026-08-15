@@ -1,12 +1,11 @@
-import React, { useState } from "react";
-import { useAppContext } from "../context";
+﻿import React, { useState } from "react";
+import { useAppContext, generateUUID } from "../context";
 import { User, Role } from "../types";
 import { Fingerprint, CheckCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { auth } from "../firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 export const Login: React.FC = () => {
-  const { t, language, setUser, users, setUsers, uniqueDepartments } =
-    useAppContext();
+  const { t, language, setUser, users, setUsers, uniqueDepartments, addLoginLog } = useAppContext();
   const [step, setStep] = useState<1 | 2>(1);
   const [isRegistering, setIsRegistering] = useState(false);
   const [hrCode, setHrCode] = useState("");
@@ -112,6 +111,14 @@ export const Login: React.FC = () => {
         } as User);
       setUser(adminUser);
       localStorage.setItem("savedUserId", adminUser.id);
+      addLoginLog({
+        id: generateUUID(),
+        userId: adminUser.id,
+        name: adminUser.name,
+        hrCode: adminUser.hrCode,
+        role: adminUser.role,
+        timestamp: new Date().toISOString()
+      });
       return;
     }
 
@@ -122,14 +129,14 @@ export const Login: React.FC = () => {
         await signInWithEmailAndPassword(auth, foundUser.email, password);
       } catch (err) {
         if (foundUser.password !== password) {
-          setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
+          setError(language === "ar" ? "Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¯Ø®ÙˆÙ„ ØºÙŠØ± ØµØ­ÙŠØ­Ø©" : "Invalid credentials");
           return;
         }
       }
     } else if (foundUser) {
       // Legacy user without email
       if (foundUser.password !== password && password !== "123456") {
-        setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
+        setError(language === "ar" ? "Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¯Ø®ÙˆÙ„ ØºÙŠØ± ØµØ­ÙŠØ­Ø©" : "Invalid credentials");
         return;
       }
     } else {
@@ -139,17 +146,17 @@ export const Login: React.FC = () => {
       } else if (loginInput === "sup1001" && password === "123456") {
         foundUser = { id: "s1", hrCode: "SUP1001", name: "Omar Supervisor", department: "Heavy Machinery", role: "supervisor", phone: "01000000002", status: "approved", password: "123456" };
       } else {
-        setError(language === "ar" ? "الحساب غير موجود" : "Account not found");
+        setError(language === "ar" ? "Ø§Ù„Ø­Ø³Ø§Ø¨ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯" : "Account not found");
         return;
       }
     }
 
     if (foundUser.status === "pending") {
-      setError(language === "ar" ? "حسابك قيد المراجعة ولم يتم تفعيله بعد" : "Your account is pending approval");
+      setError(language === "ar" ? "Ø­Ø³Ø§Ø¨Ùƒ Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø© ÙˆÙ„Ù… ÙŠØªÙ… ØªÙØ¹ÙŠÙ„Ù‡ Ø¨Ø¹Ø¯" : "Your account is pending approval");
     } else if (foundUser.status === "rejected") {
-      setError(language === "ar" ? "عذراً تم رفض طلبك. لمزيد من المعلومات يرجى مراسلة nader.reda@orascom.com" : "Your request was rejected. For more info, please email nader.reda@orascom.com");
+      setError(language === "ar" ? "Ø¹Ø°Ø±Ø§Ù‹ ØªÙ… Ø±ÙØ¶ Ø·Ù„Ø¨Ùƒ. Ù„Ù…Ø²ÙŠØ¯ Ù…Ù† Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª ÙŠØ±Ø¬Ù‰ Ù…Ø±Ø§Ø³Ù„Ø© nader.reda@orascom.com" : "Your request was rejected. For more info, please email nader.reda@orascom.com");
     } else if (foundUser.status === "deleted") {
-      setError(language === "ar" ? "تم إيقاف هذا الحساب (غير متاح)." : "This account has been deactivated.");
+      setError(language === "ar" ? "ØªÙ… Ø¥ÙŠÙ‚Ø§Ù Ù‡Ø°Ø§ Ø§Ù„Ø­Ø³Ø§Ø¨ (ØºÙŠØ± Ù…ØªØ§Ø­)." : "This account has been deactivated.");
     } else {
       setUser(foundUser);
       localStorage.setItem("savedUserId", foundUser.id);
@@ -173,33 +180,33 @@ export const Login: React.FC = () => {
     const cleanHrCode = hrCode.trim();
     const fullEmail = email.trim().toLowerCase() + "@orascom.com";
     if (!cleanHrCode || !password || !name || !department || !email.trim()) {
-      setError(language === "ar" ? "الرجاء ملء جميع الحقول المطلوبة بما فيها البريد الإلكتروني" : "Please fill all required fields including email");
+      setError(language === "ar" ? "Ø§Ù„Ø±Ø¬Ø§Ø¡ Ù…Ù„Ø¡ Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø­Ù‚ÙˆÙ„ Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø© Ø¨Ù…Ø§ ÙÙŠÙ‡Ø§ Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ" : "Please fill all required fields including email");
       return;
     }
     
     // Data Validation
     if (phone.length !== 11 || !/^01(0|1|2|5)/.test(phone)) {
-      setError(language === "ar" ? "رقم الهاتف غير صحيح، يجب أن يتكون من 11 رقماً ويبدأ بـ 01" : "Phone must be 11 digits and start with 01 (e.g. 010xxxxxxxx)");
+      setError(language === "ar" ? "Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ ØºÙŠØ± ØµØ­ÙŠØ­ØŒ ÙŠØ¬Ø¨ Ø£Ù† ÙŠØªÙƒÙˆÙ† Ù…Ù† 11 Ø±Ù‚Ù…Ø§Ù‹ ÙˆÙŠØ¨Ø¯Ø£ Ø¨Ù€ 01" : "Phone must be 11 digits and start with 01 (e.g. 010xxxxxxxx)");
       return;
     }
     if (password.length < 6) {
-      setError(language === "ar" ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
+      setError(language === "ar" ? "ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ÙŠØ¬Ø¨ Ø£Ù† ØªÙƒÙˆÙ† 6 Ø£Ø­Ø±Ù Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„" : "Password must be at least 6 characters");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError(language === "ar" ? "كلمة المرور غير متطابقة" : "Passwords do not match");
+      setError(language === "ar" ? "ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± Ù…ØªØ·Ø§Ø¨Ù‚Ø©" : "Passwords do not match");
       return;
     }
         const existingHrCode = users.find((u) => u.hrCode.toLowerCase() === cleanHrCode.toLowerCase());
       if (existingHrCode && !existingHrCode.id.startsWith("derived_")) {
-        setError(language === "ar" ? "الكود الوظيفي مسجل بالفعل كحساب حقيقي" : "HR Code already exists as a registered account");
+        setError(language === "ar" ? "Ø§Ù„ÙƒÙˆØ¯ Ø§Ù„ÙˆØ¸ÙŠÙÙŠ Ù…Ø³Ø¬Ù„ Ø¨Ø§Ù„ÙØ¹Ù„ ÙƒØ­Ø³Ø§Ø¨ Ø­Ù‚ÙŠÙ‚ÙŠ" : "HR Code already exists as a registered account");
         return;
       }
       
       const existingEmail = users.find((u) => u.email?.toLowerCase() === fullEmail);
       if (existingEmail && !existingEmail.id.startsWith("derived_")) {
-        setError(language === "ar" ? "البريد الإلكتروني مسجل بالفعل" : "Email already exists");
+        setError(language === "ar" ? "Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ Ù…Ø³Ø¬Ù„ Ø¨Ø§Ù„ÙØ¹Ù„" : "Email already exists");
         return;
       }
 
@@ -208,7 +215,7 @@ export const Login: React.FC = () => {
       await auth.signOut();
     } catch (err: any) {
       console.error(err);
-      setError(language === "ar" ? `حدث خطأ من السيرفر: ${err.message}` : `Server error: ${err.message}`);
+      setError(language === "ar" ? `Ø­Ø¯Ø« Ø®Ø·Ø£ Ù…Ù† Ø§Ù„Ø³ÙŠØ±ÙØ±: ${err.message}` : `Server error: ${err.message}`);
       return;
     }
 
@@ -228,7 +235,7 @@ export const Login: React.FC = () => {
       profileImageUrl: profileImage,
     };
     setUsers([...users, newUser]);
-    setSuccessMsg(language === "ar" ? "تم إرسال طلب تسجيلك بنجاح وفي انتظار الموافقة قريباً" : "Registration request sent and pending approval");
+    setSuccessMsg(language === "ar" ? "ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø·Ù„Ø¨ ØªØ³Ø¬ÙŠÙ„Ùƒ Ø¨Ù†Ø¬Ø§Ø­ ÙˆÙÙŠ Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ù…ÙˆØ§ÙÙ‚Ø© Ù‚Ø±ÙŠØ¨Ø§Ù‹" : "Registration request sent and pending approval");
     setIsRegistering(false);
     setPassword("");
     setConfirmPassword("");
@@ -251,7 +258,7 @@ export const Login: React.FC = () => {
           <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {language === "ar" ? "البريد الإلكتروني أو الرقم الوظيفي" : "Email or HR Code"}
+                  {language === "ar" ? "Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ Ø£Ùˆ Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ÙˆØ¸ÙŠÙÙŠ" : "Email or HR Code"}
                 </label>
                 <input
                   type="text"
@@ -264,7 +271,7 @@ export const Login: React.FC = () => {
               </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ar" ? "الرقم السري" : "Password"}
+                {language === "ar" ? "Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø³Ø±ÙŠ" : "Password"}
               </label>
               <div className="relative">
                 <input
@@ -325,7 +332,7 @@ export const Login: React.FC = () => {
                   <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <div className="text-center p-2">
-                    <span className="text-xs text-gray-500">{language === "ar" ? "أضف صورة" : "Add Photo"}</span>
+                    <span className="text-xs text-gray-500">{language === "ar" ? "Ø£Ø¶Ù ØµÙˆØ±Ø©" : "Add Photo"}</span>
                   </div>
                 )}
                 <input
@@ -351,7 +358,7 @@ export const Login: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ar" ? "الرقم الوظيفي (HR Code)" : "HR Code"}
+                {language === "ar" ? "Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ÙˆØ¸ÙŠÙÙŠ (HR Code)" : "HR Code"}
               </label>
               <input
                 type="text"
@@ -364,7 +371,7 @@ export const Login: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ar" ? "الرقم السري" : "Password"}
+                {language === "ar" ? "Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø³Ø±ÙŠ" : "Password"}
               </label>
               <div className="relative">
                 <input
@@ -386,7 +393,7 @@ export const Login: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ar" ? "تأكيد الرقم السري" : "Confirm Password"}
+                {language === "ar" ? "ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø³Ø±ÙŠ" : "Confirm Password"}
               </label>
               <div className="relative">
                 <input
@@ -425,11 +432,11 @@ export const Login: React.FC = () => {
 
             {accessRole === "trainee" && (
               <div className="space-y-4 border border-blue-100 bg-blue-50/50 p-4 rounded-lg mt-4 animate-fadeIn">
-                <h4 className="text-sm font-bold text-[#002D62] mb-2">{language === "ar" ? "بريد المديرين (لإرسال التقارير)" : "Manager Emails (For Reports)"}</h4>
+                <h4 className="text-sm font-bold text-[#002D62] mb-2">{language === "ar" ? "Ø¨Ø±ÙŠØ¯ Ø§Ù„Ù…Ø¯ÙŠØ±ÙŠÙ† (Ù„Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±)" : "Manager Emails (For Reports)"}</h4>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{language === "ar" ? "مدير 1 (إلزامي)" : "Manager 1 (Required)"}</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{language === "ar" ? "Ù…Ø¯ÙŠØ± 1 (Ø¥Ù„Ø²Ø§Ù…ÙŠ)" : "Manager 1 (Required)"}</label>
                     <input
                       type="email"
                       value={managerEmail1}
@@ -440,7 +447,7 @@ export const Login: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{language === "ar" ? "مدير 2 (اختياري)" : "Manager 2 (Optional)"}</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{language === "ar" ? "Ù…Ø¯ÙŠØ± 2 (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)" : "Manager 2 (Optional)"}</label>
                     <input
                       type="email"
                       value={managerEmail2}
@@ -450,7 +457,7 @@ export const Login: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{language === "ar" ? "مدير 3 (اختياري)" : "Manager 3 (Optional)"}</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{language === "ar" ? "Ù…Ø¯ÙŠØ± 3 (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)" : "Manager 3 (Optional)"}</label>
                     <input
                       type="email"
                       value={managerEmail3}
@@ -465,7 +472,7 @@ export const Login: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ar" ? "البريد الإلكتروني" : "Email"}
+                {language === "ar" ? "Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ" : "Email"}
               </label>
               <div className="flex border rounded overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62]" dir="ltr">
                 <input
@@ -504,7 +511,7 @@ export const Login: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {language === "ar" ? "المسمى الوظيفي" : "Job Role"}
+                  {language === "ar" ? "Ø§Ù„Ù…Ø³Ù…Ù‰ Ø§Ù„ÙˆØ¸ÙŠÙÙŠ" : "Job Role"}
                 </label>
                 <select
                   value={jobRole}
@@ -513,22 +520,22 @@ export const Login: React.FC = () => {
                   dir={language === "ar" ? "rtl" : "ltr"}
                 >
                   <option value="Engineer">
-                    {language === "ar" ? "مهندس" : "Engineer"}
+                    {language === "ar" ? "Ù…Ù‡Ù†Ø¯Ø³" : "Engineer"}
                   </option>
                   <option value="Technician">
-                    {language === "ar" ? "فني" : "Technician"}
+                    {language === "ar" ? "ÙÙ†ÙŠ" : "Technician"}
                   </option>
                   <option value="Operator">
-                    {language === "ar" ? "مشغل" : "Operator"}
+                    {language === "ar" ? "Ù…Ø´ØºÙ„" : "Operator"}
                   </option>
                   <option value="Manager">
-                    {language === "ar" ? "مدير" : "Manager"}
+                    {language === "ar" ? "Ù…Ø¯ÙŠØ±" : "Manager"}
                   </option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {language === "ar" ? "صلاحية الوصول" : "Access Role"}
+                  {language === "ar" ? "ØµÙ„Ø§Ø­ÙŠØ© Ø§Ù„ÙˆØµÙˆÙ„" : "Access Role"}
                 </label>
                 <select
                   value={accessRole}
@@ -537,13 +544,13 @@ export const Login: React.FC = () => {
                   dir={language === "ar" ? "rtl" : "ltr"}
                 >
                   <option value="trainee">
-                    {language === "ar" ? "متدرب" : "Trainee"}
+                    {language === "ar" ? "Ù…ØªØ¯Ø±Ø¨" : "Trainee"}
                   </option>
                   <option value="manager">
-                    {language === "ar" ? "مدير" : "Manager"}
+                    {language === "ar" ? "Ù…Ø¯ÙŠØ±" : "Manager"}
                   </option>
                   <option value="admin">
-                    {language === "ar" ? "مشرف" : "Admin"}
+                    {language === "ar" ? "Ù…Ø´Ø±Ù" : "Admin"}
                   </option>
                 </select>
               </div>
@@ -584,4 +591,6 @@ export const Login: React.FC = () => {
     </div>
   );
 };
+
+
 

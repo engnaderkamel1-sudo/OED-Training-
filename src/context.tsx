@@ -1,5 +1,5 @@
 ﻿import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { Language, User, Role, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement } from './types';
+import { Language, User, Role, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement, LoginLog } from './types';
 import { translations } from './i18n';
 import { collection, onSnapshot, doc, setDoc, writeBatch, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
@@ -40,6 +40,8 @@ interface AppContextType {
   announcements: SystemAnnouncement[];
   addAnnouncement: (announcement: SystemAnnouncement) => void;
   deleteAnnouncement: (id: string) => void;
+  loginLogs: LoginLog[];
+  addLoginLog: (log: LoginLog) => void;
   debugRole: Role;
   setDebugRole: (role: Role) => void;
   t: (key: keyof typeof translations['en']) => string;
@@ -81,6 +83,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Announcements State
   const [announcements, setAnnouncementsState] = useState<SystemAnnouncement[]>([]);
+  const [loginLogs, setLoginLogsState] = useState<LoginLog[]>([]);
 
   const [debugRole, setDebugRole] = useState<Role>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -318,7 +321,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const deleteAnnouncement = async (id: string) => {
     await deleteDoc(doc(db, "announcements", id));
-  };
+  }
+
+  const addLoginLog = async (log: LoginLog) => {
+    try {
+      await setDoc(doc(db, "loginLogs", log.id), log);
+    } catch (error) {
+      console.error("Error adding login log:", error);
+    }
+  };;
 
   const addAttendanceRecord = async (sessionId: string, hrCode: string) => {
     const session = upcomingSessions.find(s => s.id === sessionId);
@@ -379,5 +390,6 @@ export const useAppContext = () => {
   if (!context) throw new Error('useAppContext must be used within an AppProvider');
   return context;
 };
+
 
 

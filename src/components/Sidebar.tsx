@@ -17,7 +17,7 @@ import {
   PlusCircle,
   CalendarDays,
   Settings
-} from 'lucide-react';
+, History } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
   const { user, language, t, currentView, setCurrentView } = useAppContext();
@@ -36,19 +36,20 @@ export const Sidebar: React.FC = () => {
   };
 
   const getTraineeLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'newCourses', label: language === 'ar' ? 'الدورات المتاحة' : 'Available Courses', icon: BookOpen },
-    { id: 'notifications', label: language === 'ar' ? 'التنبيهات' : 'Notifications', icon: Bell },
-    { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
+    { id: 'dashboard', label: language === 'ar' ? 'Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'newCourses', label: language === 'ar' ? 'Ø§Ù„Ø¯ÙˆØ±Ø§Øª Ø§Ù„Ù…ØªØ§Ø­Ø©' : 'Available Courses', icon: BookOpen },
+    { id: 'notifications', label: language === 'ar' ? 'Ø§Ù„ØªÙ†Ø¨ÙŠÙ‡Ø§Øª' : 'Notifications', icon: Bell },
+    { id: 'profile', label: language === 'ar' ? 'Ù…Ù„ÙÙŠ Ø§Ù„Ø´Ø®ØµÙŠ' : 'My Profile', icon: UserCircle },
   ];
 
   const getManagerLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'userManagement', label: language === 'ar' ? 'طلبات المستخدمين' : 'User Requests', icon: Users },
-    { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
+    { id: 'dashboard', label: language === 'ar' ? 'Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'userManagement', label: language === 'ar' ? 'Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ†' : 'User Requests', icon: Users },
+    { id: 'profile', label: language === 'ar' ? 'Ù…Ù„ÙÙŠ Ø§Ù„Ø´Ø®ØµÙŠ' : 'My Profile', icon: UserCircle },
   ];
 
   const getAdminLinks = () => [
+    { id: 'dashboard', label: language === 'ar' ? 'Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…' : 'Dashboard', icon: LayoutDashboard },
     { id: 'dashboard', label: language === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard },
     { id: 'userManagement', label: language === 'ar' ? 'طلبات المستخدمين' : 'User Requests', icon: Users },
     { id: 'analytics', label: language === 'ar' ? 'التحليلات' : 'Analytics', icon: BarChart },
@@ -60,6 +61,7 @@ export const Sidebar: React.FC = () => {
         { id: 'tools_create', label: language === 'ar' ? 'إنشاء دورة' : 'Create Session', icon: PlusCircle },
         { id: 'tools_manage', label: language === 'ar' ? 'إدارة الدورات' : 'Manage Sessions', icon: CalendarDays },
         { id: 'tools_reports', label: language === 'ar' ? 'التقارير والمزامنة' : 'Reports & Sync', icon: Settings },
+        { id: 'tools_logs', label: language === 'ar' ? 'سجل الدخول' : 'Login History', icon: History },
       ]
     },
     { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
@@ -101,7 +103,7 @@ export const Sidebar: React.FC = () => {
           </div>
 
           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
-            {language === 'ar' ? 'القائمة الرئيسية' : 'Main Menu'}
+            {language === 'ar' ? 'Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©' : 'Main Menu'}
           </div>
 
           {links.map((link) => {
@@ -178,3 +180,4 @@ export const Sidebar: React.FC = () => {
     </>
   );
 };
+

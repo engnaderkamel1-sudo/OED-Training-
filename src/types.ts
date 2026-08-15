@@ -1,4 +1,4 @@
-﻿export type Role = "trainee" | "manager" | "admin" | "supervisor" | null;
+export type Role = "trainee" | "manager" | "admin" | "supervisor" | null;
 export type Language = "ar" | "en";
 
 export interface User {
@@ -103,5 +103,14 @@ export interface SystemAnnouncement {
   date: string;
   author: string;
   isGlobal: boolean; // True for system-wide announcements
+}
+
+export interface LoginLog {
+  id: string;
+  userId: string;
+  name: string;
+  hrCode: string;
+  role: Role;
+  timestamp: string;
 }
 
