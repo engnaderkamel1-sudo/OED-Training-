@@ -1961,7 +1961,6 @@ export const AdminDashboard: React.FC = () => {
                       ? "Ã˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™Ë†Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â® Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â­Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â·Ã™Å "
                       : "Data Management & Backup"}
                   </h2>
-                                    <div className="flex gap-2">
 
                 </div>
                 <p className="text-gray-600 mb-6">
