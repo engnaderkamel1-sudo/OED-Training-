@@ -1543,7 +1543,7 @@ export const AdminDashboard: React.FC = () => {
                       return (
                         <tr
                           key={r.id}
-                          className={`border-b last:border-0 hover:bg-gray-50 transition-colors ${user?.status === "deleted" ? "bg-red-50 text-red-700" : ""}`}
+                          className="border-b last:border-0 hover:bg-gray-50 transition-colors"
                         >
                           <td className="p-3 font-medium text-gray-800">
                             <DataField>{user?.hrCode || r.hrCode}</DataField>
