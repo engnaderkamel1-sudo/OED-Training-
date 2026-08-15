@@ -92,3 +92,13 @@ export interface CleanedRecord {
 }
 
 
+export interface SystemAnnouncement {
+  id: string;
+  sessionId?: string; // Optional: If provided, it's for a specific course. If null, it's a global broadcast.
+  title?: string;
+  courseName?: string;
+  message: string;
+  date: string;
+  author: string;
+  isGlobal: boolean; // True for system-wide announcements
+}

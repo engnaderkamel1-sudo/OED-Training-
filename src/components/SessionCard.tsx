@@ -4,7 +4,7 @@ import { UpcomingSession } from '../types';
 import { 
   Calendar, Clock, MapPin, Users, Ban, 
   RotateCcw, Edit2, Bell, AlertTriangle, 
-  CheckCircle, XCircle 
+  CheckCircle, XCircle, Megaphone
 } from 'lucide-react';
 import { DataField } from './DataField';
 
@@ -13,6 +13,7 @@ interface SessionCardProps {
   isAdminView?: boolean;
   onEdit?: (session: UpcomingSession) => void;
   onSendReminder?: (sessionId: string, type: 'Standard' | 'Final') => void;
+  onAnnounceRequest?: (session: UpcomingSession) => void;
   onFinalizeRequest?: (session: UpcomingSession) => void;
   registeredCourseIds?: string[];
   onRegister?: (session: UpcomingSession) => void;
@@ -24,6 +25,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   isAdminView = false,
   onEdit,
   onSendReminder,
+  onAnnounceRequest,
   onFinalizeRequest,
   registeredCourseIds = [],
   onRegister,
@@ -239,6 +241,14 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   title={t('finalReminder')}
                 >
                   <AlertTriangle size={13} />
+                </button>
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onAnnounceRequest) onAnnounceRequest(session); }}
+                  className="cursor-pointer bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-medium"
+                  title={language === 'ar' ? 'إرسال تنبيه للمجموعة' : 'Announce to Group'}
+                >
+                  <Megaphone size={13} />
                 </button>
                 <button 
                   type="button"

@@ -19,6 +19,7 @@ import {
   X,
   Download,
   Mail,
+  Globe,
 } from "lucide-react";
 import {
   BarChart,
@@ -38,6 +39,8 @@ import {
 import { DataField } from "./DataField";
 import { SessionCard } from "./SessionCard";
 import { FinalizeSessionModal } from "./FinalizeSessionModal";
+import { AnnouncementModal } from "./AnnouncementModal";
+import { AnnouncementManagerModal } from "./AnnouncementManagerModal";
 import { MonthlyReportModal } from "./MonthlyReportModal";
 import { AnalyticsDashboardTab } from "./AnalyticsDashboardTab";
 import { importFromOneDrive } from "../utils/dataSync";
@@ -157,7 +160,10 @@ export const AdminDashboard: React.FC = () => {
   // Sync State
   const [syncLink, setSyncLink] = useState("");
   const [syncFile, setSyncFile] = useState<File | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [showGlobalAnnouncement, setShowGlobalAnnouncement] = useState(false);
+  const [showAnnouncementManager, setShowAnnouncementManager] = useState(false);
+  const [announcingSession, setAnnouncingSession] = useState<UpcomingSession | null>(null);
   const [syncProgress, setSyncProgress] = useState(0);
   const [syncSuccess, setSyncSuccess] = useState(false);
   const pendingUsers = users.filter((u) => u.status === "pending");
@@ -1853,6 +1859,7 @@ export const AdminDashboard: React.FC = () => {
                           isAdminView={true}
                           onEdit={handleStartEdit}
                           onSendReminder={handleSendReminder}
+                          onAnnounceRequest={setAnnouncingSession}
                           onFinalizeRequest={setFinalizingSession}
                         />
                       </li>
@@ -1944,7 +1951,25 @@ export const AdminDashboard: React.FC = () => {
                       ? "Ã˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã™Ë†Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â® Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â­Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â·Ã™Å "
                       : "Data Management & Backup"}
                   </h2>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    {user?.role === 'admin' && (
+                      <>
+                        <button 
+                          onClick={() => setShowGlobalAnnouncement(true)}
+                          className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"
+                        >
+                          <Globe size={18} />
+                          {language === 'ar' ? 'تنبيه عام لجميع المستخدمين' : 'Global Broadcast'}
+                        </button>
+                        <button 
+                          onClick={() => setShowAnnouncementManager(true)}
+                          className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"
+                        >
+                          <Megaphone size={18} />
+                          {language === 'ar' ? 'إدارة التنبيهات' : 'Manage Announcements'}
+                        </button>
+                      </>
+                    )}
                     <button 
                       onClick={() => setShowMonthlyReport(true)}
                       className="flex items-center gap-2 bg-[#002D62] hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"
@@ -2101,6 +2126,22 @@ export const AdminDashboard: React.FC = () => {
           registeredUsers={users.filter(u => (finalizingSession.registeredTraineeIds || []).includes(u.id))}
           onClose={() => setFinalizingSession(null)}
           onFinalize={handleFinalizeSession}
+        />
+      )}
+      {showGlobalAnnouncement && (
+        <AnnouncementModal
+          onClose={() => setShowGlobalAnnouncement(false)}
+        />
+      )}
+      {announcingSession && (
+        <AnnouncementModal
+          session={announcingSession}
+          onClose={() => setAnnouncingSession(null)}
+        />
+      )}
+      {showAnnouncementManager && (
+        <AnnouncementManagerModal
+          onClose={() => setShowAnnouncementManager(false)}
         />
       )}
       {showMonthlyReport && (

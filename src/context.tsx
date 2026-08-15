@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { Language, User, Role, TrainingRecord, CleanedRecord, UpcomingSession } from './types';
+import { Language, User, Role, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement } from './types';
 import { translations } from './i18n';
-import { collection, onSnapshot, doc, setDoc, writeBatch } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, writeBatch, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
 export const generateUUID = (): string => {
@@ -37,6 +37,9 @@ interface AppContextType {
   restoreUpcomingSession: (id: string) => void;
   registerTrainee: (sessionId: string, userCode: string) => void;
   unregisterTrainee: (sessionId: string, userCode: string) => void;
+  announcements: SystemAnnouncement[];
+  addAnnouncement: (announcement: SystemAnnouncement) => void;
+  deleteAnnouncement: (id: string) => void;
   debugRole: Role;
   setDebugRole: (role: Role) => void;
   t: (key: keyof typeof translations['en']) => string;
@@ -76,6 +79,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Upcoming Sessions State
   const [upcomingSessions, setUpcomingSessionsState] = useState<UpcomingSession[]>([]);
 
+  // Announcements State
+  const [announcements, setAnnouncementsState] = useState<SystemAnnouncement[]>([]);
+
   const [debugRole, setDebugRole] = useState<Role>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -100,6 +106,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setCleanedDataState(data);
     }, (error) => console.error("Firebase CleanedData Error:", error));
 
+    const unsubAnnouncements = onSnapshot(collection(db, "announcements"), (snapshot) => {
+      const ann: SystemAnnouncement[] = [];
+      snapshot.forEach((d) => ann.push(d.data() as SystemAnnouncement));
+      // Sort by date descending
+      ann.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setAnnouncementsState(ann);
+    }, (error) => console.error("Firebase Announcements Error:", error));
+
     try {
       const storedFileName = localStorage.getItem('oed_training_filename');
       if (storedFileName) setCleanedFileNameState(storedFileName);
@@ -111,6 +125,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       unsubUsers();
       unsubSessions();
       unsubData();
+      unsubAnnouncements();
     };
   }, []);
 
@@ -293,6 +308,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     batch.commit().catch(console.error);
   };
 
+  const addAnnouncement = async (announcement: SystemAnnouncement) => {
+    await setDoc(doc(db, "announcements", announcement.id), announcement);
+  };
+
+  const deleteAnnouncement = async (id: string) => {
+    await deleteDoc(doc(db, "announcements", id));
+  };
+
   return (
     <AppContext.Provider value={{ 
       language, setLanguage, 
@@ -306,6 +329,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       upcomingSessions, setUpcomingSessions,
       addUpcomingSession, updateUpcomingSession, deleteUpcomingSession, restoreUpcomingSession,
       cancelSession, reactivateSession, registerTrainee, unregisterTrainee,
+      announcements, addAnnouncement, deleteAnnouncement,
       debugRole, setDebugRole, 
       t, 
       isLoading 

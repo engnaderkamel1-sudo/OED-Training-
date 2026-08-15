@@ -29,7 +29,7 @@ const formatDateToStandard = (dateStr: any): string => {
 };
 
 export const TraineeDashboard: React.FC = () => {
-  const { t, user, records, language, upcomingSessions, registerTrainee, unregisterTrainee, currentView, users, setUsers } = useAppContext();
+  const { t, user, records, language, upcomingSessions, registerTrainee, unregisterTrainee, currentView, users, setUsers, announcements } = useAppContext();
   const [requestedTopic, setRequestedTopic] = useState('');
   const [requestSent, setRequestSent] = useState(false);
   const [registeringSession, setRegisteringSession] = useState<UpcomingSession | null>(null);
@@ -72,8 +72,11 @@ export const TraineeDashboard: React.FC = () => {
       startTime?: string;
       location?: string;
       targetParticipants?: string;
-      type: 'Standard' | 'Final';
+      type: 'Standard' | 'Final' | 'Announcement' | 'Global';
       timestamp: string;
+      title?: string;
+      message?: string;
+      author?: string;
     }> = [];
 
     activeUpcomingSessions.forEach(session => {
@@ -94,6 +97,27 @@ export const TraineeDashboard: React.FC = () => {
         });
       }
     });
+
+    // Add Announcements
+    if (announcements && announcements.length > 0) {
+      announcements.forEach(ann => {
+        // Only include if it's Global OR the trainee is registered in the session
+        if (ann.isGlobal || activeUpcomingSessions.some(s => s.id === ann.sessionId && (s.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(s.id)))) {
+          list.push({
+            id: ann.id,
+            sessionId: ann.sessionId || 'global',
+            courseTitle: ann.courseName || (language === 'ar' ? 'عام' : 'Global'),
+            startDate: '', // Not strictly needed for UI of announcement
+            type: ann.isGlobal ? 'Global' : 'Announcement',
+            timestamp: ann.date,
+            title: ann.title,
+            message: ann.message,
+            author: ann.author
+          });
+        }
+      });
+    }
+
     // Filter notifications sent before user registered
     const userCreatedAt = user?.createdAt ? new Date(user.createdAt).getTime() : 0;
     
@@ -354,10 +378,16 @@ export const TraineeDashboard: React.FC = () => {
                         <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded border uppercase tracking-wider flex items-center gap-1 ${
                           isFinal 
                             ? 'bg-amber-200 text-amber-950 border-amber-400' 
-                            : 'bg-blue-200 text-blue-950 border-blue-300'
+                            : notif.type === 'Global' 
+                              ? 'bg-red-200 text-red-950 border-red-400'
+                              : notif.type === 'Announcement'
+                                ? 'bg-purple-200 text-purple-950 border-purple-400'
+                                : 'bg-blue-200 text-blue-950 border-blue-300'
                         }`}>
-                          {isFinal ? <AlertTriangle size={12} className="text-amber-800 shrink-0" /> : <Bell size={12} className="text-blue-800 shrink-0" />}
-                          <span>{isFinal ? t('finalReminder') : t('standardReminder')}</span>
+                          {notif.type === 'Global' ? '🌍 ' : notif.type === 'Announcement' ? '📢 ' : ''}
+                          {language === 'ar' 
+                            ? (isFinal ? 'تذكير نهائي' : notif.type === 'Global' ? 'تنبيه عام' : notif.type === 'Announcement' ? 'تنبيه خاص' : 'تذكير بالدورة') 
+                            : (isFinal ? 'FINAL REMINDER' : notif.type === 'Global' ? 'GLOBAL BROADCAST' : notif.type === 'Announcement' ? 'ANNOUNCEMENT' : 'UPCOMING SESSION')}
                         </span>
                         {!isRead && (
                           <span className="text-[10px] bg-red-600 text-white font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-sm">
@@ -372,28 +402,40 @@ export const TraineeDashboard: React.FC = () => {
                       </span>
                     </div>
 
-                    <h4 className="font-bold text-base text-[#002D62] pt-1">
-                      <DataField>{notif.courseTitle}</DataField>
-                    </h4>
+                    {notif.type === 'Announcement' || notif.type === 'Global' ? (
+                      <div className="mt-2 bg-white/60 p-3 rounded text-sm text-gray-800 border border-gray-100">
+                        {notif.title && <div className="font-bold mb-1 text-[#002D62]">{notif.title}</div>}
+                        <div className="whitespace-pre-wrap">{notif.message}</div>
+                        <div className="text-[10px] text-gray-500 mt-2 font-bold opacity-70">
+                          {language === 'ar' ? 'بواسطة:' : 'By:'} {notif.author}
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <h4 className="font-bold text-base text-[#002D62] pt-1">
+                          <DataField>{notif.courseTitle}</DataField>
+                        </h4>
 
-                    <div className="text-xs text-gray-600 space-y-0.5">
-                      <p className="flex items-center gap-1 font-medium">
-                        <Calendar size={13} className="text-gray-500 shrink-0" />
-                        <span>{formatDateToStandard(notif.startDate)} {notif.endDate ? ` - ${formatDateToStandard(notif.endDate)}` : ''} {notif.startTime ? `• ${notif.startTime}` : ''}</span>
-                      </p>
-                      {notif.location && (
-                        <p className="flex items-center gap-1">
-                          <MapPin size={13} className="text-gray-500 shrink-0" />
-                          <span>{t('location')}: <span className="font-semibold text-gray-700">{notif.location}</span></span>
-                        </p>
-                      )}
-                      {notif.targetParticipants && (
-                        <p className="flex items-center gap-1 text-[11px] text-gray-500">
-                          <Tag size={12} className="shrink-0" />
-                          <span>{t('targetParticipants')}: {notif.targetParticipants === 'engineers' ? t('engineers') : notif.targetParticipants === 'technicians' ? t('technicians') : t('mixed')}</span>
-                        </p>
-                      )}
-                    </div>
+                        <div className="text-xs text-gray-600 space-y-0.5">
+                          <p className="flex items-center gap-1 font-medium">
+                            <Calendar size={13} className="text-gray-500 shrink-0" />
+                            <span>{formatDateToStandard(notif.startDate)} {notif.endDate ? ` - ${formatDateToStandard(notif.endDate)}` : ''} {notif.startTime ? `• ${notif.startTime}` : ''}</span>
+                          </p>
+                          {notif.location && (
+                            <p className="flex items-center gap-1">
+                              <MapPin size={13} className="text-gray-500 shrink-0" />
+                              <span>{t('location')}: <span className="font-semibold text-gray-700">{notif.location}</span></span>
+                            </p>
+                          )}
+                          {notif.targetParticipants && (
+                            <p className="flex items-center gap-1 text-[11px] text-gray-500">
+                              <Tag size={12} className="shrink-0" />
+                              <span>{t('targetParticipants')}: {notif.targetParticipants === 'engineers' ? t('engineers') : notif.targetParticipants === 'technicians' ? t('technicians') : t('mixed')}</span>
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {!isRead && (
