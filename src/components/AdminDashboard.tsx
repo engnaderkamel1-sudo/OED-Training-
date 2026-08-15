@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { Clock } from "lucide-react";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession } from "../types";
@@ -156,16 +158,35 @@ export const AdminDashboard: React.FC = () => {
     {},
   );
   
-  const handleFinalizeSession = (newRecords: TrainingRecord[]) => {
+  const handleFinalizeSession = async (newRecords: TrainingRecord[]) => {
     try {
-      setRecords([...records, ...newRecords]);
+      // Save each record to Firebase cleanedData collection
+      for (const rec of newRecords) {
+        const cleanedRecord = {
+          id: rec.id,
+          courseName: rec.courseName,
+          department: rec.department || '',
+          role: rec.raw?.['Role'] || 'trainee',
+          date: rec.attendanceDate,
+          hrCode: rec.hrCode || '',
+          name: rec.traineeName || '',
+          score: rec.score || 'N/A',
+          attendedDays: rec.raw?.['Attended Days'] || 1,
+          duration: rec.totalDays || '1',
+          raw: rec.raw || {}
+        };
+        await setDoc(doc(db, "cleanedData", rec.id), cleanedRecord);
+      }
+      
+      // Update session status to Completed in Firebase
       if (finalizingSession) {
-        setUpcomingSessions(upcomingSessions.map(s => 
-          s.id === finalizingSession.id ? { ...s, status: 'Completed' } as UpcomingSession : s
-        ));
+        updateUpcomingSession({
+          ...finalizingSession,
+          status: 'Completed'
+        } as UpcomingSession);
       }
       setFinalizingSession(null);
-      alert(language === 'ar' ? 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¸ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­!' : 'Attendance and scores saved successfully!');
+      alert(language === 'ar' ? 'تم حفظ الحضور والدرجات بنجاح!' : 'Attendance and scores saved successfully!');
     } catch (e: any) {
       alert("Error finalizing session: " + e.message);
       console.error(e);
