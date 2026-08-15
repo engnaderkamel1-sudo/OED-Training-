@@ -1688,7 +1688,8 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
           </div>
-          {["tools_logs"].includes(currentView) && (
+        )}
+        {["tools_logs"].includes(currentView) && (
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0 flex items-center gap-2">
                 <Clock className="text-[#FFC000]" size={24} />
@@ -1724,7 +1725,6 @@ export const AdminDashboard: React.FC = () => {
               )}
             </div>
           )}
-        )}
         {/* Admin Tools Tab */}
         {["tools", "tools_manage", "tools_create", "tools_reports", "tools_logs"].includes(currentView) && (
           <div className="space-y-12">
@@ -1931,7 +1931,8 @@ export const AdminDashboard: React.FC = () => {
               )}
             </div>
           </div>
-          {["tools_logs"].includes(currentView) && (
+        )}
+        {["tools_logs"].includes(currentView) && (
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0 flex items-center gap-2">
                 <Clock className="text-[#FFC000]" size={24} />
@@ -1967,7 +1968,6 @@ export const AdminDashboard: React.FC = () => {
               )}
             </div>
           )}
-        )}
             
         {/* Training Needs Analysis Section */}
         {["tools", "tools_reports"].includes(currentView) && (
@@ -2148,7 +2148,8 @@ export const AdminDashboard: React.FC = () => {
                       ></div>
                     </div>
           </div>
-          {["tools_logs"].includes(currentView) && (
+        )}
+        {["tools_logs"].includes(currentView) && (
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0 flex items-center gap-2">
                 <Clock className="text-[#FFC000]" size={24} />
@@ -2184,7 +2185,6 @@ export const AdminDashboard: React.FC = () => {
               )}
             </div>
           )}
-        )}
                 <button
                   onClick={handleSyncData}
                   disabled={!syncLink.trim() || isSyncing}
@@ -2303,6 +2303,7 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
+
 
 
 
