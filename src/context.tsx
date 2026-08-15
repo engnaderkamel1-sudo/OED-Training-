@@ -144,7 +144,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const batch = writeBatch(db);
     updated.forEach(session => {
       const ref = doc(db, "sessions", session.id);
-      batch.set(ref, session);
+      const cleanSession = Object.fromEntries(Object.entries(session).filter(([_, v]) => v !== undefined));
+      batch.set(ref, cleanSession);
     });
     batch.commit().catch(console.error);
   };
@@ -209,11 +210,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       registeredUsers: session.registeredUsers || [],
       unregisteredUsers: session.unregisteredUsers || []
     };
-    await setDoc(doc(db, "sessions", sessionWithId.id), sessionWithId);
+    const cleanSession = Object.fromEntries(Object.entries(sessionWithId).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, "sessions", sessionWithId.id), cleanSession);
   };
 
   const updateUpcomingSession = async (updatedSession: UpcomingSession) => {
-    await setDoc(doc(db, "sessions", updatedSession.id), updatedSession);
+    const cleanSession = Object.fromEntries(Object.entries(updatedSession).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, "sessions", updatedSession.id), cleanSession);
   };
 
   const deleteUpcomingSession = (id: string) => {

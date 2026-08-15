@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import { UpcomingSession, User, TrainingRecord } from '../types';
 import { useAppContext } from '../context';
 import { X, Save, FileText, Mail, CheckCircle, Ban } from 'lucide-react';
@@ -135,7 +135,7 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
   // Generate Email Draft
   const draftEmail = () => {
     if (activeTrainees.length === 0) {
-      alert(language === 'ar' ? 'لا يوجد متدربين حاضرين لإرسال إيميل لهم' : 'No active trainees to email.');
+      alert(language === 'ar' ? 'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ù…ØªØ¯Ø±Ø¨ÙŠÙ† Ø­Ø§Ø¶Ø±ÙŠÙ† Ù„Ø¥Ø±Ø³Ø§Ù„ Ø¥ÙŠÙ…ÙŠÙ„ Ù„Ù‡Ù…' : 'No active trainees to email.');
       return;
     }
 
@@ -196,14 +196,14 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
               <div className="mb-6 bg-blue-50 p-4 rounded border border-blue-100 flex justify-between items-center flex-wrap gap-4">
                 <div>
                   <h3 className="font-bold text-blue-900">{session.courseTitle}</h3>
-                  <p className="text-sm text-blue-700">{session.startDate} - {registeredUsers.length} {language === 'ar' ? '??????' : 'Registered'}</p>
+                  <p className="text-sm text-blue-700">{session.startDate} - {registeredUsers.length} {language === 'ar' ? 'Absent' : 'Registered'}</p>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={exportToWord} className="bg-white border border-blue-300 text-blue-800 px-3 py-1.5 rounded text-sm font-bold hover:bg-blue-100 transition-colors flex items-center gap-2 shadow-sm">
-                    <FileText size={16} /> {language === 'ar' ? '????? ????' : 'Word Report'}
+                    <FileText size={16} /> {language === 'ar' ? 'Name ????' : 'Word Report'}
                   </button>
                   <button onClick={draftEmail} className="bg-white border border-blue-300 text-blue-800 px-3 py-1.5 rounded text-sm font-bold hover:bg-blue-100 transition-colors flex items-center gap-2 shadow-sm">
-                    <Mail size={16} /> {language === 'ar' ? '????? ?????' : 'Draft Email'}
+                    <Mail size={16} /> {language === 'ar' ? 'Name Name' : 'Draft Email'}
                   </button>
                 </div>
               </div>
@@ -212,18 +212,18 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
                 <table className="w-full text-left text-sm whitespace-nowrap">
                   <thead className="bg-gray-100 border-b border-gray-200">
                     <tr>
-                      <th className="p-3 font-semibold text-gray-700">{language === 'ar' ? '?????' : 'Name'}</th>
-                      <th className="p-3 font-semibold text-gray-700">{language === 'ar' ? '???????' : 'Department'}</th>
-                      <th className="p-3 font-semibold text-gray-700 w-32">{language === 'ar' ? '???? ??????' : 'Attended Days'}</th>
-                      <th className="p-3 font-semibold text-gray-700 w-32">{language === 'ar' ? '?????? %' : 'Score %'}</th>
-                      <th className="p-3 font-semibold text-gray-700 w-24 text-center">{language === 'ar' ? '??????' : 'Status'}</th>
+                      <th className="p-3 font-semibold text-gray-700">{language === 'ar' ? 'Name' : 'Name'}</th>
+                      <th className="p-3 font-semibold text-gray-700">{language === 'ar' ? 'Absent?' : 'Department'}</th>
+                      <th className="p-3 font-semibold text-gray-700 w-32">{language === 'ar' ? '???? Absent' : 'Attended Days'}</th>
+                      <th className="p-3 font-semibold text-gray-700 w-32">{language === 'ar' ? 'Absent %' : 'Score %'}</th>
+                      <th className="p-3 font-semibold text-gray-700 w-24 text-center">{language === 'ar' ? 'Absent' : 'Status'}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {registeredUsers.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="p-4 text-center text-gray-500 italic">
-                          {language === 'ar' ? '?? ???? ??????? ??????' : 'No registered trainees.'}
+                          {language === 'ar' ? '?? ???? Absent? Absent' : 'No registered trainees.'}
                         </td>
                       </tr>
                     ) : (
@@ -257,9 +257,9 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
                             </td>
                             <td className="p-3 text-center">
                               {isAbsent ? (
-                                <span className="inline-flex items-center text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded gap-1"><Ban size={12}/> ????</span>
+                                <span className="inline-flex items-center text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded gap-1"><Ban size={12}/> {language === 'ar' ? 'غائب' : 'Absent'}</span>
                               ) : (
-                                <span className="inline-flex items-center text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded gap-1"><CheckCircle size={12}/> ????</span>
+                                <span className="inline-flex items-center text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded gap-1"><CheckCircle size={12}/> {language === 'ar' ? 'حاضر' : 'Attended'}</span>
                               )}
                             </td>
                           </tr>
@@ -271,32 +271,32 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
               </div>
               
               <div className="mt-4 text-xs text-gray-500 italic">
-                * {language === 'ar' ? '????????? ????? ???? ?????? ??? ???? ???????? ???? ??? ??? ??????? ???????? ?? ????? ????????.' : 'Trainees with 0 attended days will be considered absent and excluded from reports, emails, and database.'}
+                * {language === 'ar' ? 'المتدربون الذين لديهم 0 أيام حضور سيعتبرون غائبين وسيتم استبعادهم من التقارير.' : 'Trainees with 0 attended days will be considered absent and excluded from reports, emails, and database.'}
               </div>
             </>
           ) : (
             <div className="space-y-6">
               <div className="bg-blue-50 border border-blue-200 rounded p-4">
                 <h3 className="font-bold text-blue-900 mb-2">
-                  {language === 'ar' ? '????? ???????? ??? ????? ???????' : 'Confirm Data Before Final Save'}
+                  {language === 'ar' ? 'تأكيد البيانات قبل الحفظ النهائي' : 'Confirm Data Before Final Save'}
                 </h3>
                 <p className="text-sm text-blue-800">
-                  {language === 'ar' ? `سيتم إضافة ${activeTrainees.length} متدربين إلى قاعدة البيانات بنجاح واستبعاد الغائبين.` : `${activeTrainees.length} trainees will be successfully added to the database. Absentees are excluded.`}
+                  {language === 'ar' ? `Ø³ÙŠØªÙ… Ø¥Ø¶Ø§ÙØ© ${activeTrainees.length} Ù…ØªØ¯Ø±Ø¨ÙŠÙ† Ø¥Ù„Ù‰ Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø¨Ù†Ø¬Ø§Ø­ ÙˆØ§Ø³ØªØ¨Ø¹Ø§Ø¯ Ø§Ù„ØºØ§Ø¦Ø¨ÙŠÙ†.` : `${activeTrainees.length} trainees will be successfully added to the database. Absentees are excluded.`}
                 </p>
               </div>
 
               <div className="border border-green-200 rounded">
                 <div className="bg-green-50 p-3 border-b border-green-200 font-bold text-green-900">
-                  {language === 'ar' ? '????????? ????? ???? ????? (??????):' : 'Trainees to be saved (Attended):'}
+                  {language === 'ar' ? 'المتدربون الذين سيتم حفظهم (حاضر):' : 'Trainees to be saved (Attended):'}
                 </div>
                 <div className="max-h-60 overflow-y-auto p-3 bg-white">
                   <ul className="list-disc list-inside text-sm space-y-1">
                     {activeTrainees.length > 0 ? activeTrainees.map(u => (
                       <li key={u.id} className="text-gray-700">
-                        <span className="font-bold">{u.name}</span> ({u.hrCode}) - {language === 'ar' ? '????:' : 'Days:'} {(traineeData[u.id] || { days: 1 }).days} - {language === 'ar' ? '??????:' : 'Score:'} {(traineeData[u.id] || { score: 0 }).score}%
+                        <span className="font-bold">{u.name}</span> ({u.hrCode}) - {language === 'ar' ? 'أيام:' : 'Days:'} {(traineeData[u.id] || { days: 1 }).days} - {language === 'ar' ? 'Absent:' : 'Score:'} {(traineeData[u.id] || { score: 0 }).score}%
                       </li>
                     )) : (
-                      <li className="text-gray-500 italic">{language === 'ar' ? '?? ???? ??????.' : 'No attendees.'}</li>
+                      <li className="text-gray-500 italic">{language === 'ar' ? 'لا يوجد حاضرين.' : 'No attendees.'}</li>
                     )}
                   </ul>
                 </div>
@@ -304,7 +304,7 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
 
               <div className="border border-red-200 rounded">
                 <div className="bg-red-50 p-3 border-b border-red-200 font-bold text-red-900">
-                  {language === 'ar' ? '????????? ????? ???? ????????? (????):' : 'Trainees to be excluded (Absent):'}
+                  {language === 'ar' ? 'المتدربون الذين سيتم استبعادهم (غائب):' : 'Trainees to be excluded (Absent):'}
                 </div>
                 <div className="max-h-40 overflow-y-auto p-3 bg-white">
                   <ul className="list-disc list-inside text-sm space-y-1">
@@ -313,7 +313,7 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
                         <li key={u.id} className="text-gray-500 line-through">{u.name} ({u.hrCode})</li>
                       ))
                     ) : (
-                      <li className="text-gray-500 italic">{language === 'ar' ? '?? ???? ????.' : 'No absentees.'}</li>
+                      <li className="text-gray-500 italic">{language === 'ar' ? 'لا يوجد غائبين.' : 'No absentees.'}</li>
                     )}
                   </ul>
                 </div>
@@ -326,27 +326,27 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
           {!isConfirming ? (
             <>
               <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded font-bold text-gray-700 hover:bg-gray-100 transition-colors">
-                {language === 'ar' ? '?????' : 'Cancel'}
+                {language === 'ar' ? 'Name' : 'Cancel'}
               </button>
               <button 
                 onClick={handleFinalize} 
                 disabled={registeredUsers.length === 0}
                 className="bg-[#FFC000] text-[#002D62] px-6 py-2 rounded font-bold flex items-center gap-2 hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
               >
-                {language === 'ar' ? '?????? ??????' : 'Review & Confirm'}
+                {language === 'ar' ? 'Absent Absent' : 'Review & Confirm'}
               </button>
             </>
           ) : (
             <>
               <button onClick={() => setIsConfirming(false)} className="px-4 py-2 border border-gray-300 rounded font-bold text-gray-700 hover:bg-gray-100 transition-colors">
-                {language === 'ar' ? '???? ???????' : 'Back to Edit'}
+                {language === 'ar' ? '???? Absent?' : 'Back to Edit'}
               </button>
               <button 
                 onClick={handleConfirmSave} 
                 className="bg-emerald-600 text-white px-6 py-2 rounded font-bold flex items-center gap-2 hover:bg-emerald-700 transition-colors shadow-md"
               >
                 <Save size={18} />
-                {language === 'ar' ? '????? ????? ???????' : 'Confirm Final Save'}
+                {language === 'ar' ? 'Name Name Absent?' : 'Confirm Final Save'}
               </button>
             </>
           )}
