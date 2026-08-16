@@ -108,6 +108,7 @@ export interface SystemAnnouncement {
   date: string;
   author: string;
   isGlobal: boolean; // True for system-wide announcements
+  targetAudience?: string; // 'engineers' | 'technicians' | 'mixed' | 'all'
 }
 
 export interface LoginLog {

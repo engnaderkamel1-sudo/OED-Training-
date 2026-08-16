@@ -80,35 +80,55 @@ export const TraineeDashboard: React.FC = () => {
       author?: string;
     }> = [];
 
+    // Helper to check if current trainee matches target audience
+    const userRoleInfo = `${user?.jobRole || ""} ${user?.role || ""} ${user?.department || ""}`.toLowerCase();
+    const isTargetMatch = (target?: string) => {
+      if (!target || target === "mixed" || target === "all" || target === "Ø§Ù„Ø¬Ù…ÙŠØ¹") return true;
+      if (target === "engineers" || target === "engineer" || target === "Ù…Ù‡Ù†Ø¯Ø³ÙŠÙ†" || target === "Ù…Ù‡Ù†Ø¯Ø³") {
+        return userRoleInfo.includes("engineer") || userRoleInfo.includes("Ù…Ù‡Ù†Ø¯Ø³") || userRoleInfo.includes("eng");
+      }
+      if (target === "technicians" || target === "technician" || target === "ÙÙ†ÙŠÙŠÙ†" || target === "ÙÙ†ÙŠ") {
+        return userRoleInfo.includes("technician") || userRoleInfo.includes("ÙÙ†ÙŠ") || userRoleInfo.includes("tech");
+      }
+      return true;
+    };
+
     activeUpcomingSessions.forEach(session => {
-      if (session.reminderLog && session.reminderLog.length > 0) {
-        session.reminderLog.forEach(log => {
-          list.push({
-            id: log.id || `${session.id}_${log.timestamp}`,
-            sessionId: session.id,
-            courseTitle: session.courseTitle,
-            startDate: session.startDate,
-            endDate: session.endDate,
-            startTime: session.startTime,
-            location: session.location,
-            targetParticipants: session.targetParticipants,
-            type: log.type,
-            timestamp: log.timestamp
+      // Only include reminders if user is in target audience OR already registered in this session
+      const isRegistered = session.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(session.id);
+      if (isRegistered || isTargetMatch(session.targetParticipants)) {
+        if (session.reminderLog && session.reminderLog.length > 0) {
+          session.reminderLog.forEach(log => {
+            list.push({
+              id: log.id || `${session.id}_${log.timestamp}`,
+              sessionId: session.id,
+              courseTitle: session.courseTitle,
+              startDate: session.startDate,
+              endDate: session.endDate,
+              startTime: session.startTime,
+              location: session.location,
+              targetParticipants: session.targetParticipants,
+              type: log.type,
+              timestamp: log.timestamp
+            });
           });
-        });
+        }
       }
     });
 
-    // Add Announcements
+    // Add Announcements targeted for this user
     if (announcements && announcements.length > 0) {
       announcements.forEach(ann => {
-        // Only include if it's Global OR the trainee is registered in the session
-        if (ann.isGlobal || activeUpcomingSessions.some(s => s.id === ann.sessionId && (s.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(s.id)))) {
+        const matchingSession = activeUpcomingSessions.find(s => s.id === ann.sessionId);
+        const target = ann.targetAudience || matchingSession?.targetParticipants;
+        const isRegistered = matchingSession && (matchingSession.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(matchingSession.id));
+
+        if (ann.isGlobal || isRegistered || isTargetMatch(target)) {
           list.push({
             id: ann.id,
             sessionId: ann.sessionId || 'global',
             courseTitle: ann.courseName || (language === 'ar' ? 'Ø¹Ø§Ù…' : 'Global'),
-            startDate: '', // Not strictly needed for UI of announcement
+            startDate: '',
             type: ann.isGlobal ? 'Global' : 'Announcement',
             timestamp: ann.date,
             title: ann.title,
