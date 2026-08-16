@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useAppContext, generateUUID } from "../context";
 import { User, Role } from "../types";
-import { Fingerprint, CheckCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Fingerprint, CheckCircle, Eye, EyeOff, Loader2, KeyRound } from "lucide-react";
 import { auth } from "../firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { ForgotPasswordModal } from "./ForgotPasswordModal";
 export const Login: React.FC = () => {
   const { t, language, setUser, users, setUsers, uniqueDepartments, addLoginLog } = useAppContext();
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [isRegistering, setIsRegistering] = useState(false);
   const [hrCode, setHrCode] = useState("");
@@ -317,7 +319,7 @@ export const Login: React.FC = () => {
             >
               {isSubmitting ? <Loader2 size={20} className="animate-spin mx-auto" /> : t("login")}
             </button>
-            <div className="text-center mt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-2 text-xs">
               <button
                 type="button"
                 onClick={() => {
@@ -327,9 +329,17 @@ export const Login: React.FC = () => {
                   setPassword("");
                   setHrCode("");
                 }}
-                className="text-sm text-[#002D62] hover:underline"
+                className="text-[#002D62] font-semibold hover:underline"
               >
                 {t("register")}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-gray-500 hover:text-[#002D62] hover:underline transition-colors"
+              >
+                {language === "ar" ? "نسيت اسم المستخدم / كلمة المرور؟" : "Forgot Username / Password?"}
               </button>
             </div>
           </form>
@@ -597,6 +607,10 @@ export const Login: React.FC = () => {
           </form>
         )}
       </div>
+
+      {showForgotPassword && (
+        <ForgotPasswordModal onClose={() => setShowForgotPassword(false)} />
+      )}
     </div>
   );
 };

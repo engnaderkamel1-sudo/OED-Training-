@@ -61,6 +61,54 @@ const AppContent: React.FC = () => {
     }
   }, []);
 
+  React.useEffect(() => {
+    if (!user) return;
+
+    const INACTIVITY_TIMEOUT = 3 * 60 * 1000; // 3 minutes
+    let timeoutId: NodeJS.Timeout;
+    let lastActiveTime = Date.now();
+
+    const handleLogoutDueToInactivity = () => {
+      setUser(null);
+      alert(t('language') === 'ar' || navigator.language.startsWith('ar') 
+        ? 'تم تسجيل الخروج تلقائياً لعدم النشاط لمدة 3 دقائق لحماية حسابك.' 
+        : 'You have been automatically logged out due to 3 minutes of inactivity.');
+    };
+
+    const resetTimer = () => {
+      lastActiveTime = Date.now();
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleLogoutDueToInactivity, INACTIVITY_TIMEOUT);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        lastActiveTime = Date.now();
+      } else {
+        // App became visible again: check if 3 minutes have passed
+        if (Date.now() - lastActiveTime >= INACTIVITY_TIMEOUT) {
+          handleLogoutDueToInactivity();
+        } else {
+          resetTimer();
+        }
+      }
+    };
+
+    // Events to monitor user activity
+    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    activityEvents.forEach(evt => window.addEventListener(evt, resetTimer, { passive: true }));
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Start initial timer
+    resetTimer();
+
+    return () => {
+      clearTimeout(timeoutId);
+      activityEvents.forEach(evt => window.removeEventListener(evt, resetTimer));
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user]);
+
   // Determine active role
   const activeRole = user?.role;
 

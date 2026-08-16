@@ -17,7 +17,7 @@ import {
   PlusCircle,
   CalendarDays,
   Settings
-, History } from 'lucide-react';
+, History, Activity } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
   const { user, language, t, currentView, setCurrentView } = useAppContext();
@@ -59,8 +59,9 @@ export const Sidebar: React.FC = () => {
       subLinks: [
         { id: 'tools_create', label: language === 'ar' ? 'Ã˜Â¥Ã™â€ Ã˜Â´Ã˜Â§Ã˜Â¡ Ã˜Â¯Ã™Ë†Ã˜Â±Ã˜Â©' : 'Create Session', icon: PlusCircle },
         { id: 'tools_manage', label: language === 'ar' ? 'Ã˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¯Ã™Ë†Ã˜Â±Ã˜Â§Ã˜Âª' : 'Manage Sessions', icon: CalendarDays },
-        { id: 'tools_reports', label: language === 'ar' ? 'Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â§Ã˜Â±Ã™Å Ã˜Â± Ã™Ë†Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â²Ã˜Â§Ã™â€¦Ã™â€ Ã˜Â©' : 'Reports & Sync', icon: Settings },
-        { id: 'tools_logs', label: language === 'ar' ? 'Ã˜Â³Ã˜Â¬Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž' : 'Login History', icon: History },
+        { id: 'tools_reports', label: language === 'ar' ? 'التقارير والمزامنة' : 'Reports & Sync', icon: Settings },
+        { id: 'tools_logs', label: language === 'ar' ? 'سجل الدخول' : 'Login History', icon: History },
+        { id: 'tools_usage', label: language === 'ar' ? 'استهلاك قاعدة البيانات' : 'Firebase Quota', icon: Activity },
       ]
     },
     { id: 'profile', label: language === 'ar' ? 'Ã™â€¦Ã™â€žÃ™ÂÃ™Å  Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â®Ã˜ÂµÃ™Å ' : 'My Profile', icon: UserCircle },
