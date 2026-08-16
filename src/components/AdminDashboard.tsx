@@ -1,4 +1,4 @@
-import { FirebaseUsageModal } from './FirebaseUsageModal';
+﻿import { FirebaseUsageModal } from './FirebaseUsageModal';
 import { EditRecordModal } from './EditRecordModal';
 import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
@@ -792,7 +792,7 @@ export const AdminDashboard: React.FC = () => {
       if (!hr.includes(q)) return false;
     }
 
-    // 2. Trainee Name Filter (Token-based, trimmed, normalized)
+    // 2. Trainee Name Filter (Prefix & Word-boundary Smart Match)
     if (searchTrainee && searchTrainee.trim()) {
       const q = searchTrainee.trim().toLowerCase();
       const rawName = (
@@ -815,9 +815,22 @@ export const AdminDashboard: React.FC = () => {
       const cleanQ = normalizeText(q);
       const cleanName = normalizeText(rawName);
 
-      // Split into words - all entered words must exist in trainee name
-      const tokens = cleanQ.split(" ").filter(Boolean);
-      const allTokensMatch = tokens.every((token) => cleanName.includes(token));
+      // Split query into tokens and candidate name into words
+      const queryTokens = cleanQ.split(" ").filter(Boolean);
+      const nameWords = cleanName.split(" ").filter(Boolean);
+
+      // Every search token must match either:
+      // - The beginning of a word in the trainee's name (e.g. "Aa" matches word "Aa" or "Aamer", not "Masaad" or "Refaat")
+      // - OR if the token is longer than 3 characters, substring match is also permitted for convenience
+      const allTokensMatch = queryTokens.every((token) => {
+        const startsWithAnyWord = nameWords.some((w) => w.startsWith(token));
+        if (startsWithAnyWord) return true;
+        if (token.length >= 4) {
+          return cleanName.includes(token);
+        }
+        return false;
+      });
+
       if (!allTokensMatch) return false;
     }
 
