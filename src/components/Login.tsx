@@ -260,11 +260,21 @@ export const Login: React.FC = () => {
     }
   };
   return (
-    <div className="flex justify-center items-center h-[calc(100vh-6rem)]">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full border-t-4 border-[#FFC000]">
-        <h2 className="text-2xl font-bold text-center text-[#002D62] mb-6">
-          {isRegistering ? t("createAccount") : t("login")}
-        </h2>
+    <div className="flex justify-center items-center min-h-[calc(100vh-6rem)] py-8 px-4">
+      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border-t-4 border-[#FFC000]">
+        <div className="flex flex-col items-center justify-center mb-6">
+          <img 
+            src="/oed-ttms-logo-v2.png" 
+            alt="OED-TTMS Logo" 
+            className="w-20 h-20 object-contain rounded-2xl shadow-md mb-3 border border-gray-100" 
+          />
+          <h2 className="text-2xl font-black text-center text-[#002D62]">
+            {isRegistering ? t("createAccount") : t("login")}
+          </h2>
+          <p className="text-xs text-gray-500 font-semibold text-center mt-1">
+            {language === "ar" ? "منظومة إدارة التدريب الفني - قطاع المعدات" : "Technical Training Management System - OED"}
+          </p>
+        </div>
         {!isRegistering ? (
           <form onSubmit={handleLogin} className="space-y-4">
               <div>

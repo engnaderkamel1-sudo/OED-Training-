@@ -101,8 +101,12 @@ export const Sidebar: React.FC = () => {
         `}
       >
         <div className="p-4 flex flex-col gap-2 pb-24">
-          <div className="pb-4 mb-4 border-b border-gray-100 flex items-center justify-center">
-            <img src="/orascom_logo.png" alt="Logo" className="h-8 object-contain" />
+          <div className="pb-4 mb-3 border-b border-gray-100 flex flex-col items-center justify-center gap-2">
+            <img src="/oed-ttms-logo-v2.png" alt="OED-TTMS Logo" className="w-14 h-14 rounded-xl shadow-xs border border-gray-100 object-contain" />
+            <div className="text-center">
+              <div className="font-bold text-xs text-[#002D62] tracking-wide uppercase">Orascom Equipment Dept.</div>
+              <div className="text-[10px] text-[#FFC000] font-bold">TTMS System</div>
+            </div>
           </div>
 
           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
