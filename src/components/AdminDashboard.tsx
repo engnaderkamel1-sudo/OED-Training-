@@ -156,6 +156,7 @@ export const AdminDashboard: React.FC = () => {
   // Records Filtering State
   const [showUsageModal, setShowUsageModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any | null>(null);
+  const [exactMatchFilter, setExactMatchFilter] = useState(false);
   const [searchHrCode, setSearchHrCode] = useState("");
   const [searchTrainee, setSearchTrainee] = useState("");
   const [searchDepartment, setSearchDepartment] = useState("");
@@ -789,10 +790,17 @@ export const AdminDashboard: React.FC = () => {
     if (searchHrCode && searchHrCode.trim()) {
       const q = searchHrCode.trim().toLowerCase();
       const hr = (user?.hrCode || r.hrCode || r.userId || "").toLowerCase();
-      if (!hr.includes(q)) return false;
+      const cleanHr = hr.replace(/^hr/i, "");
+      const cleanQ = q.replace(/^hr/i, "");
+
+      if (exactMatchFilter) {
+        if (hr !== q && cleanHr !== cleanQ && hr !== `hr${cleanQ}`) return false;
+      } else {
+        if (!hr.startsWith(q) && !cleanHr.startsWith(cleanQ) && !hr.includes(q)) return false;
+      }
     }
 
-    // 2. Trainee Name Filter (Smart Sequential & First-Name Priority Match)
+    // 2. Trainee Name Filter (Smart Sequential, Exact Match & First-Name Priority)
     if (searchTrainee && searchTrainee.trim()) {
       const q = searchTrainee.trim().toLowerCase();
       const rawName = (
@@ -815,24 +823,42 @@ export const AdminDashboard: React.FC = () => {
       const cleanQ = normalizeText(q);
       const cleanName = normalizeText(rawName);
 
-      // Exact match
-      if (cleanName === cleanQ) {
-        // match
-      } else if (cleanQ.length <= 2) {
-        // For short queries (1 or 2 letters like "Aa", "Al", "Mo"), only match from the start of the first name
-        if (!cleanName.startsWith(cleanQ)) return false;
+      if (exactMatchFilter) {
+        // Strict exact full match
+        if (cleanName !== cleanQ) return false;
       } else {
-        // For 3+ chars queries (e.g. "Sherif", "Ahmed Ali")
-        const queryTokens = cleanQ.split(" ").filter(Boolean);
-        const nameWords = cleanName.split(" ").filter(Boolean);
+        // Exact match
+        if (cleanName === cleanQ) {
+          // match
+        } else if (cleanQ.length <= 2) {
+          // For short queries (1 or 2 letters like "Aa", "Al", "Mo"), only match from the start of the first name
+          if (!cleanName.startsWith(cleanQ)) return false;
+        } else {
+          const queryTokens = cleanQ.split(" ").filter(Boolean);
+          const nameWords = cleanName.split(" ").filter(Boolean);
 
-        const allTokensMatch = queryTokens.every((token) => {
-          return nameWords.some((w) => w.startsWith(token) || (token.length >= 4 && w.includes(token)));
-        });
+          // If a single word is searched (e.g. "nader"), match only if:
+          // 1. Full name is exactly "nader"
+          // 2. First name starts with "nader"
+          // 3. Or if exact match or multi-word
+          if (queryTokens.length === 1) {
+            const singleTok = queryTokens[0];
+            const firstNameStarts = nameWords[0]?.startsWith(singleTok);
+            const exactFullName = cleanName === singleTok;
+            if (!firstNameStarts && !exactFullName) {
+              return false;
+            }
+          } else {
+            const allTokensMatch = queryTokens.every((token) => {
+              return nameWords.some((w) => w.startsWith(token) || (token.length >= 4 && w.includes(token)));
+            });
 
-        if (!allTokensMatch) return false;
+            if (!allTokensMatch) return false;
+          }
+        }
       }
     }
+
     // 3. Department Filter
     if (searchDepartment) {
       const dept = user?.department || r.department || r.raw?.["Department"];
