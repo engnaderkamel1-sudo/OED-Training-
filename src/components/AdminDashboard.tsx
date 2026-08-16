@@ -1,6 +1,6 @@
 ﻿import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Clock } from "lucide-react";
 import { mockCourses, mockRequests } from "../data";
@@ -24,6 +24,7 @@ import {
   Mail,
   Globe,
   Megaphone,
+  Trash2,
 } from "lucide-react";
 import {
   BarChart,
@@ -1601,6 +1602,26 @@ export const AdminDashboard: React.FC = () => {
                             <DataField>
                               {formatDateToStandard(r.attendanceDate)}
                             </DataField>
+                          </td>
+                          <td className="p-3 text-center">
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (window.confirm(language === "ar" ? "Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø³Ø¬Ù„ Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹ØŸ" : "Are you sure you want to permanently delete this record?")) {
+                                  try {
+                                    await deleteDoc(doc(db, "cleanedData", r.id));
+                                    setRecords(records.filter(rec => rec.id !== r.id));
+                                  } catch (err) {
+                                    console.error("Delete error:", err);
+                                    alert(language === "ar" ? "Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„Ø­Ø°Ù" : "Error deleting record");
+                                  }
+                                }
+                              }}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center"
+                              title={language === "ar" ? "Ø­Ø°Ù Ø§Ù„Ø³Ø¬Ù„" : "Delete Record"}
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           </td>
                         </tr>
                       );
