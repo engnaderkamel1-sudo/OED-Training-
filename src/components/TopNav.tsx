@@ -26,17 +26,17 @@ export const TopNav: React.FC = () => {
           {/* Mobile Branding Layout (Hidden on Desktop) */}
           <div className="flex sm:hidden flex-col flex-1 min-w-0 mr-1 rtl:ml-1 rtl:mr-0 gap-0.5 justify-center text-left" dir="ltr">
             <span className="text-[10px] text-[#FFC000] font-bold tracking-tight leading-tight truncate">Technical Training Management System (TTMS)</span>
-            <span className="font-bold text-[9px] tracking-tight uppercase leading-none truncate text-white mt-0.5">Orascom Construction</span>
+            <span className="font-bold text-[9px] tracking-tight uppercase leading-none truncate text-white mt-0.5">Orascom Equipment Department</span>
           </div>
 
           {/* Desktop Branding Layout (Hidden on Mobile) */}
           <div className="hidden sm:flex flex-row items-center gap-2 md:gap-4 flex-1 min-w-0">
             {/* Company Logo */}
             <div className="flex-shrink-0 flex items-center justify-center bg-white p-1 rounded shadow-sm">
-              <img src="/orascom_logo.jpg" alt="Orascom Construction" className="h-8 md:h-11 object-contain" />
+              <img src="/orascom_logo.png" alt="Orascom Equipment Department" className="h-8 md:h-11 object-contain" />
             </div>
             <div className="flex flex-col justify-center flex-1 min-w-0">
-              <span className="font-bold text-lg md:text-xl tracking-wide leading-tight uppercase truncate">Orascom Construction</span>
+              <span className="font-bold text-lg md:text-xl tracking-wide leading-tight uppercase truncate">Orascom Equipment Department</span>
               <span className="text-xs md:text-sm text-[#FFC000] font-semibold tracking-wider leading-tight truncate">Technical Training Management System (TTMS)</span>
             </div>
           </div>
@@ -78,7 +78,7 @@ export const TopNav: React.FC = () => {
     {/* Mobile Logo Under Navbar */}
     <div className="sm:hidden flex justify-start items-center bg-gray-50 py-1.5 px-3 shadow-sm border-b border-gray-200" dir="ltr">
       <div className="bg-white p-0.5 rounded shadow-sm inline-block">
-        <img src="/orascom_logo.jpg" alt="Orascom Construction Logo" className="h-6 object-contain" />
+        <img src="/orascom_logo.png" alt="Orascom Equipment Department Logo" className="h-6 object-contain" />
       </div>
     </div>
     </>

@@ -244,7 +244,7 @@ export const generateReportHTML = (options: ReportOptions): string => {
 <body>
   <div class="header">
     <div class="logo-box" style="border: none; background: transparent; padding: 0;">
-      <img src="/orascom_logo.jpg" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="OED Logo" />
+      <img src="/orascom_logo.png" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="OED Logo" />
     </div>
     <div class="dept-title">
       <h2>OED - Technical Training Department</h2>
@@ -571,7 +571,7 @@ export const downloadTrainingRegisterPDF = async (session: import("./types").Upc
     <body>
       <div class="header">
         <h1>Training Register</h1>
-        <img src="/orascom_logo.jpg" alt="Orascom Construction" />
+        <img src="/orascom_logo.png" alt="Orascom Equipment Department" />
       </div>
 
       <table class="info-table">

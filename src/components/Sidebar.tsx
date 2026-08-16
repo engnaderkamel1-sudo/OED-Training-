@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '../context';
 import { 
   User, 
@@ -98,7 +98,7 @@ export const Sidebar: React.FC = () => {
       >
         <div className="p-4 flex flex-col gap-2 pb-24">
           <div className="pb-4 mb-4 border-b border-gray-100 flex items-center justify-center">
-            <img src="/orascom_logo.jpg" alt="Logo" className="h-8 object-contain" />
+            <img src="/orascom_logo.png" alt="Logo" className="h-8 object-contain" />
           </div>
 
           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">

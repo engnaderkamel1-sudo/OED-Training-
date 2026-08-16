@@ -1,4 +1,5 @@
-﻿import React, { useState, useMemo, useEffect } from "react";
+﻿import { EditRecordModal } from './EditRecordModal';
+import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -25,6 +26,7 @@ import {
   Globe,
   Megaphone,
   Trash2,
+  Edit2,
 } from "lucide-react";
 import {
   BarChart,
@@ -149,6 +151,7 @@ export const AdminDashboard: React.FC = () => {
     mockCourses[0]?.id || "",
   );
   // Records Filtering State
+  const [editingRecord, setEditingRecord] = useState<any | null>(null);
   const [searchHrCode, setSearchHrCode] = useState("");
   const [searchTrainee, setSearchTrainee] = useState("");
   const [searchDepartment, setSearchDepartment] = useState("");
@@ -1622,6 +1625,16 @@ export const AdminDashboard: React.FC = () => {
                             >
                               <Trash2 size={16} />
                             </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingRecord(r);
+                              }}
+                              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center"
+                              title={language === "ar" ? "ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø³Ø¬Ù„" : "Edit Record"}
+                            >
+                              <Edit2 size={16} />
+                            </button>
                           </td>
                         </tr>
                       );
@@ -2301,6 +2314,12 @@ export const AdminDashboard: React.FC = () => {
         <AnnouncementManagerModal
           sessionId={showAnnouncementManager === "GLOBAL" ? undefined : showAnnouncementManager}
           onClose={() => setShowAnnouncementManager(null)}
+        />
+      )}
+      {editingRecord && (
+        <EditRecordModal
+          record={editingRecord}
+          onClose={() => setEditingRecord(null)}
         />
       )}
       {showMonthlyReport && (
