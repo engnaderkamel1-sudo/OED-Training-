@@ -82,6 +82,50 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 
+  const TraineeAvatarWithName = ({
+    name,
+    imageUrl,
+    hrCode
+  }: {
+    name: string;
+    imageUrl?: string;
+    hrCode?: string;
+  }) => {
+    const initial = (name || "?").trim().charAt(0).toUpperCase();
+    return (
+      <div className="flex items-center gap-2.5">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-9 h-9 rounded-full object-cover border-2 border-amber-400 shrink-0 cursor-pointer hover:scale-115 hover:shadow-lg transition-all ring-2 ring-transparent hover:ring-[#002D62]"
+            title={language === "ar" ? "Ø§Ø¶ØºØ· Ù„ØªÙƒØ¨ÙŠØ± Ø§Ù„ØµÙˆØ±Ø©" : "Click to enlarge image"}
+            onClick={(e) => {
+              e.stopPropagation();
+              setViewingImage(imageUrl);
+            }}
+          />
+        ) : (
+          <div
+            className="w-9 h-9 rounded-full bg-slate-100 text-[#002D62] border border-slate-300 flex items-center justify-center font-bold text-xs shrink-0 select-none shadow-xs"
+            title={name}
+          >
+            {initial}
+          </div>
+        )}
+        <span
+          className="font-medium text-[#002D62] hover:underline cursor-pointer"
+          onClick={() => {
+            if (hrCode) setSearchHrCode(hrCode);
+            else if (name) setSearchTrainee(name);
+          }}
+        >
+          <DataField>{name}</DataField>
+        </span>
+      </div>
+    );
+  };
+
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<User>>({});
   const {
@@ -1709,29 +1753,40 @@ export const AdminDashboard: React.FC = () => {
                   </thead>
                   <tbody>
                     {filteredRecords.map((r) => {
-                      console.log("Rendering record (Admin Web):", r);
-                      const user = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === "HR${r.userId}");
+                      const user = users.find((u) =>
+                        u.id === r.userId ||
+                        u.hrCode === r.hrCode ||
+                        u.hrCode === r.userId ||
+                        u.hrCode === `HR${r.userId}` ||
+                        u.name?.trim().toLowerCase() === (r.traineeName || r.userId || "").trim().toLowerCase()
+                      );
                       const course = dynamicCourses.find(
                         (c) => c.id === r.courseId,
                       );
                       const displayCourseTitle =
                         course?.title || r.courseName || "Unknown";
-                      // Try to find the cleaned data record for duration if not on course obj
                       const rawDuration =
                         r.raw?.["Course Duration"] || r.totalDays;
                       const cleanedDuration = rawDuration
                         ? `${rawDuration}`
                         : "";
+                      const traineeImage = user?.profileImageUrl || r.raw?.["Profile Image"] || r.raw?.["Photo"] || r.raw?.["Image"] || r.raw?.["ØµÙˆØ±Ø©"];
+                      const traineeDisplayName = r.traineeName || user?.name || r.userId;
+                      const traineeHrCode = user?.hrCode || r.hrCode || r.userId;
                       return (
                         <tr
                           key={r.id}
                           className="border-b last:border-0 hover:bg-gray-50 transition-colors"
                         >
                           <td className="p-3 font-medium text-gray-800">
-                            <DataField>{user?.hrCode || r.hrCode}</DataField>
+                            <DataField>{traineeHrCode}</DataField>
                           </td>
                           <td className="p-3 font-medium text-[#002D62]">
-                            <DataField>{r.traineeName || user?.name || r.userId}</DataField>
+                            <TraineeAvatarWithName
+                              name={traineeDisplayName}
+                              imageUrl={traineeImage}
+                              hrCode={traineeHrCode}
+                            />
                           </td>
                           <td className="p-3 text-gray-600">
                             <DataField>{r.department || user?.department}</DataField>
