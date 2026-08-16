@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { Language, User, Role, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement, LoginLog } from './types';
+import { Language, User, Role, Course, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement, LoginLog } from './types';
 import { translations } from './i18n';
 import { collection, onSnapshot, doc, setDoc, writeBatch, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
@@ -27,6 +27,10 @@ interface AppContextType {
   cleanedFileName: string;
   setCleanedFileName: (name: string) => void;
   uniqueDepartments: string[];
+  courses: Course[];
+  addCourse: (course: Course) => Promise<void>;
+  updateCourse: (course: Course) => Promise<void>;
+  deleteCourse: (id: string) => Promise<void>;
   upcomingSessions: UpcomingSession[];
   setUpcomingSessions: (sessions: UpcomingSession[] | ((prev: UpcomingSession[]) => UpcomingSession[])) => void;
   addUpcomingSession: (session: UpcomingSession) => void;
@@ -84,6 +88,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Announcements State
   const [announcements, setAnnouncementsState] = useState<SystemAnnouncement[]>([]);
   const [loginLogs, setLoginLogsState] = useState<LoginLog[]>([]);
+  const [firebaseCourses, setFirebaseCoursesState] = useState<Course[]>([]);
 
   const [debugRole, setDebugRole] = useState<Role>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -96,6 +101,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       snapshot.forEach((d) => users.push(d.data() as User));
       setLocalUsers(users);
     }, (error) => console.error("Firebase Users Error:", error));
+
+    const unsubCourses = onSnapshot(collection(db, "courses"), (snapshot) => {
+      const crs: Course[] = [];
+      snapshot.forEach((d) => crs.push(d.data() as Course));
+      setFirebaseCoursesState(crs);
+    }, (error) => console.error("Firebase Courses Error:", error));
 
     const unsubSessions = onSnapshot(collection(db, "sessions"), (snapshot) => {
       const sessions: UpcomingSession[] = [];
@@ -134,6 +145,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     return () => {
       unsubUsers();
+      unsubCourses();
       unsubSessions();
       unsubData();
       unsubAnnouncements();
@@ -365,7 +377,67 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     };
     
-    await setDoc(doc(db, "cleanedData", recordId), newRecord);
+  // Merged Courses List (Firebase saved courses + courses from cleanedData + upcomingSessions)
+  const courses = useMemo(() => {
+    const courseMap = new Map<string, Course>();
+
+    // 1. First add explicitly saved courses from Firebase
+    firebaseCourses.forEach(c => {
+      courseMap.set(c.title.trim().toLowerCase(), c);
+    });
+
+    // 2. Extract distinct courses from cleanedData
+    cleanedData.forEach(r => {
+      if (r.courseName && r.courseName.trim()) {
+        const titleKey = r.courseName.trim().toLowerCase();
+        if (!courseMap.has(titleKey)) {
+          const durationVal = r.raw?.['Course Duration'] || r.duration || '1';
+          courseMap.set(titleKey, {
+            id: `course_${generateUUID().substring(0, 8)}`,
+            title: r.courseName.trim(),
+            duration: `${durationVal} ${String(durationVal).includes('day') || String(durationVal).includes('Day') ? '' : 'Days'}`,
+            durationDays: String(durationVal).replace(/[^0-9]/g, '') || '1',
+            materialLink: '',
+            topicsCovered: [],
+            isUpcoming: false
+          });
+        }
+      }
+    });
+
+    // 3. Extract distinct courses from upcoming sessions
+    upcomingSessions.forEach(s => {
+      if (s.courseTitle && s.courseTitle.trim()) {
+        const titleKey = s.courseTitle.trim().toLowerCase();
+        if (!courseMap.has(titleKey)) {
+          courseMap.set(titleKey, {
+            id: s.courseId || `course_${s.id}`,
+            title: s.courseTitle.trim(),
+            duration: '1 Day',
+            durationDays: 1,
+            materialLink: s.feedbackLink || '',
+            topicsCovered: [],
+            isUpcoming: true
+          });
+        }
+      }
+    });
+
+    return Array.from(courseMap.values()).sort((a, b) => a.title.localeCompare(b.title));
+  }, [firebaseCourses, cleanedData, upcomingSessions]);
+
+  const addCourse = async (course: Course) => {
+    const cleanCourse = Object.fromEntries(Object.entries(course).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, "courses", course.id), cleanCourse);
+  };
+
+  const updateCourse = async (course: Course) => {
+    const cleanCourse = Object.fromEntries(Object.entries(course).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, "courses", course.id), cleanCourse, { merge: true });
+  };
+
+  const deleteCourse = async (id: string) => {
+    await deleteDoc(doc(db, "courses", id));
   };
 
   return (
@@ -378,6 +450,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       cleanedData, setCleanedData,
       cleanedFileName, setCleanedFileName,
       uniqueDepartments,
+      courses, addCourse, updateCourse, deleteCourse,
       upcomingSessions, setUpcomingSessions,
       addUpcomingSession, updateUpcomingSession, deleteUpcomingSession, restoreUpcomingSession,
       cancelSession, reactivateSession, registerTrainee, unregisterTrainee,

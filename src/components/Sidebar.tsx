@@ -36,35 +36,38 @@ export const Sidebar: React.FC = () => {
   };
 
   const getTraineeLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â­ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â­Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Â¦' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'newCourses', label: language === 'ar' ? 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¯Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§ÃƒËœÃ‚Â­ÃƒËœÃ‚Â©' : 'Available Courses', icon: BookOpen },
-    { id: 'notifications', label: language === 'ar' ? 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª' : 'Notifications', icon: Bell },
-    { id: 'profile', label: language === 'ar' ? 'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´ÃƒËœÃ‚Â®ÃƒËœÃ‚ÂµÃƒâ„¢Ã…Â ' : 'My Profile', icon: UserCircle },
+    { id: 'dashboard', label: language === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'coursesCatalog', label: language === 'ar' ? 'دليل ومكتبة الكورسات' : 'Courses Catalog', icon: BookOpen },
+    { id: 'newCourses', label: language === 'ar' ? 'الدورات المتاحة' : 'Available Courses', icon: CalendarDays },
+    { id: 'notifications', label: language === 'ar' ? 'التنبيهات' : 'Notifications', icon: Bell },
+    { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
   ];
 
   const getManagerLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â­ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â­Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Â¦' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'userManagement', label: language === 'ar' ? 'ÃƒËœÃ‚Â·Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒËœÃ‚Â®ÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â ' : 'User Requests', icon: Users },
-    { id: 'profile', label: language === 'ar' ? 'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ Ãƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´ÃƒËœÃ‚Â®ÃƒËœÃ‚ÂµÃƒâ„¢Ã…Â ' : 'My Profile', icon: UserCircle },
+    { id: 'dashboard', label: language === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'coursesCatalog', label: language === 'ar' ? 'دليل ومكتبة الكورسات' : 'Courses Catalog', icon: BookOpen },
+    { id: 'userManagement', label: language === 'ar' ? 'طلبات المستخدمين' : 'User Requests', icon: Users },
+    { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
   ];
 
   const getAdminLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'userManagement', label: language === 'ar' ? 'Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦Ã™Å Ã™â€ ' : 'User Requests', icon: Users },
-    { id: 'analytics', label: language === 'ar' ? 'Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™â€žÃ™Å Ã™â€žÃ˜Â§Ã˜Âª' : 'Analytics', icon: BarChart },
+    { id: 'dashboard', label: language === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'coursesCatalog', label: language === 'ar' ? 'دليل ومكتبة الكورسات' : 'Courses Catalog', icon: BookOpen },
+    { id: 'userManagement', label: language === 'ar' ? 'طلبات المستخدمين' : 'User Requests', icon: Users },
+    { id: 'analytics', label: language === 'ar' ? 'التحليلات' : 'Analytics', icon: BarChart },
     { 
       id: 'tools_parent', 
-      label: language === 'ar' ? 'Ã˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¯Ã˜Â±Ã™Å Ã˜Â¨' : 'Training Management', 
+      label: language === 'ar' ? 'إدارة التدريب' : 'Training Management', 
       icon: Database,
       subLinks: [
-        { id: 'tools_create', label: language === 'ar' ? 'Ã˜Â¥Ã™â€ Ã˜Â´Ã˜Â§Ã˜Â¡ Ã˜Â¯Ã™Ë†Ã˜Â±Ã˜Â©' : 'Create Session', icon: PlusCircle },
-        { id: 'tools_manage', label: language === 'ar' ? 'Ã˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¯Ã™Ë†Ã˜Â±Ã˜Â§Ã˜Âª' : 'Manage Sessions', icon: CalendarDays },
+        { id: 'tools_create', label: language === 'ar' ? 'إنشاء دورة' : 'Create Session', icon: PlusCircle },
+        { id: 'tools_manage', label: language === 'ar' ? 'إدارة الدورات' : 'Manage Sessions', icon: CalendarDays },
         { id: 'tools_reports', label: language === 'ar' ? 'التقارير والمزامنة' : 'Reports & Sync', icon: Settings },
         { id: 'tools_logs', label: language === 'ar' ? 'سجل الدخول' : 'Login History', icon: History },
         { id: 'tools_usage', label: language === 'ar' ? 'استهلاك قاعدة البيانات' : 'Firebase Quota', icon: Activity },
       ]
     },
-    { id: 'profile', label: language === 'ar' ? 'Ã™â€¦Ã™â€žÃ™ÂÃ™Å  Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â®Ã˜ÂµÃ™Å ' : 'My Profile', icon: UserCircle },
+    { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
   ];
 
   let links: any[] = [];

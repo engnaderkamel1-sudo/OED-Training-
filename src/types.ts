@@ -25,11 +25,16 @@ export interface User {
 export interface Course {
   id: string;
   title: string;
-  date: string;
-  duration: string; // e.g., "2 hours", "1 day"
-  isUpcoming: boolean;
+  date?: string;
+  duration?: string; // e.g., "2 hours", "1 day", "3 Days"
+  durationDays?: string | number;
+  isUpcoming?: boolean;
   registeredUsers?: string[];
   sharedResourceLink?: string;
+  materialLink?: string;
+  topicsCovered?: string[] | string;
+  description?: string;
+  category?: string;
 }
 
 export interface TrainingRecord {

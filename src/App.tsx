@@ -13,6 +13,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { SiteSupervisorDashboard } from './components/SiteSupervisorDashboard';
 import { Sidebar } from './components/Sidebar';
 import { ProfilePage } from './components/ProfilePage';
+import { CoursesPage } from './components/CoursesPage';
 import { Loader2 } from 'lucide-react';
 import { auth, db, messaging } from './firebase';
 import { getToken, onMessage } from 'firebase/messaging';
@@ -128,10 +129,11 @@ const AppContent: React.FC = () => {
           <div className={`flex-grow transition-opacity duration-300 ${isLoading ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
             {!activeRole && <Login />}
             {activeRole && currentView === 'profile' && <ProfilePage />}
-            {activeRole === 'trainee' && currentView !== 'profile' && <TraineeDashboard />}
-            {activeRole === 'manager' && currentView !== 'profile' && <ManagerDashboard />}
-            {activeRole === 'admin' && currentView !== 'profile' && <AdminDashboard />}
-            {activeRole === 'supervisor' && currentView !== 'profile' && <SiteSupervisorDashboard />}
+            {activeRole && currentView === 'coursesCatalog' && <CoursesPage />}
+            {activeRole === 'trainee' && currentView !== 'profile' && currentView !== 'coursesCatalog' && <TraineeDashboard />}
+            {activeRole === 'manager' && currentView !== 'profile' && currentView !== 'coursesCatalog' && <ManagerDashboard />}
+            {activeRole === 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && <AdminDashboard />}
+            {activeRole === 'supervisor' && currentView !== 'profile' && currentView !== 'coursesCatalog' && <SiteSupervisorDashboard />}
           </div>
         </main>
       </div>
