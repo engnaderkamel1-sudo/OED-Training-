@@ -792,7 +792,7 @@ export const AdminDashboard: React.FC = () => {
       if (!hr.includes(q)) return false;
     }
 
-    // 2. Trainee Name Filter (Prefix & Word-boundary Smart Match)
+    // 2. Trainee Name Filter (Smart Sequential & First-Name Priority Match)
     if (searchTrainee && searchTrainee.trim()) {
       const q = searchTrainee.trim().toLowerCase();
       const rawName = (
@@ -815,25 +815,24 @@ export const AdminDashboard: React.FC = () => {
       const cleanQ = normalizeText(q);
       const cleanName = normalizeText(rawName);
 
-      // Split query into tokens and candidate name into words
-      const queryTokens = cleanQ.split(" ").filter(Boolean);
-      const nameWords = cleanName.split(" ").filter(Boolean);
+      // Exact match
+      if (cleanName === cleanQ) {
+        // match
+      } else if (cleanQ.length <= 2) {
+        // For short queries (1 or 2 letters like "Aa", "Al", "Mo"), only match from the start of the first name
+        if (!cleanName.startsWith(cleanQ)) return false;
+      } else {
+        // For 3+ chars queries (e.g. "Sherif", "Ahmed Ali")
+        const queryTokens = cleanQ.split(" ").filter(Boolean);
+        const nameWords = cleanName.split(" ").filter(Boolean);
 
-      // Every search token must match either:
-      // - The beginning of a word in the trainee's name (e.g. "Aa" matches word "Aa" or "Aamer", not "Masaad" or "Refaat")
-      // - OR if the token is longer than 3 characters, substring match is also permitted for convenience
-      const allTokensMatch = queryTokens.every((token) => {
-        const startsWithAnyWord = nameWords.some((w) => w.startsWith(token));
-        if (startsWithAnyWord) return true;
-        if (token.length >= 4) {
-          return cleanName.includes(token);
-        }
-        return false;
-      });
+        const allTokensMatch = queryTokens.every((token) => {
+          return nameWords.some((w) => w.startsWith(token) || (token.length >= 4 && w.includes(token)));
+        });
 
-      if (!allTokensMatch) return false;
+        if (!allTokensMatch) return false;
+      }
     }
-
     // 3. Department Filter
     if (searchDepartment) {
       const dept = user?.department || r.department || r.raw?.["Department"];
