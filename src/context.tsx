@@ -377,6 +377,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     };
     
+    await setDoc(doc(db, "cleanedData", recordId), newRecord);
+  };
+
   // Merged Courses List (Firebase saved courses + courses from cleanedData + upcomingSessions)
   const courses = useMemo(() => {
     const courseMap = new Map<string, Course>();

@@ -716,21 +716,82 @@ export const AdminDashboard: React.FC = () => {
     };
     reader.readAsArrayBuffer(file);
   };
+  const hasActiveFilters = Boolean(
+    (searchHrCode && searchHrCode.trim()) ||
+    (searchTrainee && searchTrainee.trim()) ||
+    searchDepartment ||
+    selectedCourseFilter ||
+    fromDateFilter ||
+    toDateFilter
+  );
+
+  const handleClearAllFilters = () => {
+    setSearchHrCode("");
+    setSearchTrainee("");
+    setSearchDepartment("");
+    setSelectedCourseFilter("");
+    setFromDateFilter("");
+    setToDateFilter("");
+  };
+
   const filteredRecords = records.filter((r) => {
-    const user = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === "HR${r.userId}");
-    if (
-      searchHrCode &&
-      !user?.hrCode?.toLowerCase().includes(searchHrCode.toLowerCase())
-    )
-      return false;
-    if (
-      searchTrainee &&
-      !user?.name?.toLowerCase().includes(searchTrainee.toLowerCase())
-    )
-      return false;
-    if (searchDepartment && user?.department !== searchDepartment) return false;
-    if (selectedCourseFilter && r.courseId !== selectedCourseFilter)
-      return false;
+    const user = users.find(
+      (u) =>
+        u.id === r.userId ||
+        u.hrCode === r.userId ||
+        u.hrCode === `HR${r.userId}` ||
+        u.name?.toLowerCase() === r.userId?.toLowerCase()
+    );
+
+    // 1. HR Code Filter
+    if (searchHrCode && searchHrCode.trim()) {
+      const q = searchHrCode.trim().toLowerCase();
+      const hr = (user?.hrCode || r.hrCode || r.userId || "").toLowerCase();
+      if (!hr.includes(q)) return false;
+    }
+
+    // 2. Trainee Name Filter (Token-based, trimmed, normalized)
+    if (searchTrainee && searchTrainee.trim()) {
+      const q = searchTrainee.trim().toLowerCase();
+      const rawName = (
+        user?.name ||
+        r.name ||
+        r.raw?.["Trainee Name"] ||
+        r.raw?.["Name"] ||
+        r.userId ||
+        ""
+      ).toLowerCase();
+
+      const normalizeText = (text: string) =>
+        text
+          .replace(/[Ø£Ø¥Ø¢]/g, "Ø§")
+          .replace(/Ø©/g, "Ù‡")
+          .replace(/Ù‰/g, "ÙŠ")
+          .replace(/\s+/g, " ")
+          .trim();
+
+      const cleanQ = normalizeText(q);
+      const cleanName = normalizeText(rawName);
+
+      // Split into words - all entered words must exist in trainee name
+      const tokens = cleanQ.split(" ").filter(Boolean);
+      const allTokensMatch = tokens.every((token) => cleanName.includes(token));
+      if (!allTokensMatch) return false;
+    }
+
+    // 3. Department Filter
+    if (searchDepartment) {
+      const dept = user?.department || r.department || r.raw?.["Department"];
+      if (dept !== searchDepartment) return false;
+    }
+
+    // 4. Course Filter
+    if (selectedCourseFilter) {
+      const courseMatch = r.courseId === selectedCourseFilter || r.courseName === selectedCourseFilter;
+      if (!courseMatch) return false;
+    }
+
+    // 5. Date Range Filter
     if (fromDateFilter || toDateFilter) {
       const recordDateStr =
         r.attendanceDate ||
@@ -1221,6 +1282,15 @@ export const AdminDashboard: React.FC = () => {
                 <h2 className="text-2xl font-bold text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0">
                   {t("globalRecords")}
                 </h2>
+                {hasActiveFilters && (
+                  <button
+                    onClick={handleClearAllFilters}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer animate-fade-in"
+                  >
+                    <RotateCcw size={14} className="text-red-600" />
+                    <span>{language === "ar" ? "Ø¥Ù„ØºØ§Ø¡ Ø§Ù„ÙÙ„ØªØ±Ø© (Ø¥Ø¹Ø§Ø¯Ø© ØªØ¹ÙŠÙŠÙ†)" : "Reset / Clear Filters"}</span>
+                  </button>
+                )}
 
               </div>
             {/* Dynamic KPI Summary Bar (Web View) */}
