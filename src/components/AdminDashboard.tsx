@@ -145,6 +145,7 @@ export const AdminDashboard: React.FC = () => {
     cleanedData,
     loginLogs,
     currentView,
+    setCurrentView,
   } = useAppContext();
   const handleToggleFeedback = (session: UpcomingSession) => {
     updateUpcomingSession({

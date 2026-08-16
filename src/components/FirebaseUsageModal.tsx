@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context';
 import { 
   X, 
@@ -30,6 +30,15 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
     loginLogs,
     user: currentUser
   } = useAppContext();
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   // Tab State: 'daily' | 'monthly'
   const [period, setPeriod] = useState<'daily' | 'monthly'>('daily');
@@ -123,8 +132,14 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
   const writesPercentage = Math.min(100, (currentWrites / currentWritesLimit) * 100);
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-[99999] flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[99999] flex items-center justify-center p-4 cursor-pointer animate-fade-in"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Header */}
         <div className="bg-[#002D62] text-white px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -146,19 +161,23 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
             <div className="bg-blue-900/60 p-1 rounded-lg flex border border-blue-400/30 text-xs">
               <button
                 onClick={() => setPeriod('daily')}
-                className={`px-3 py-1 rounded-md font-bold transition-all ${period === 'daily' ? 'bg-[#FFC000] text-[#002D62] shadow-sm' : 'text-gray-200 hover:text-white'}`}
+                className={`px-3 py-1 rounded-md font-bold transition-all cursor-pointer ${period === 'daily' ? 'bg-[#FFC000] text-[#002D62] shadow-sm' : 'text-gray-200 hover:text-white'}`}
               >
                 {language === 'ar' ? 'يومي (Daily)' : 'Daily'}
               </button>
               <button
                 onClick={() => setPeriod('monthly')}
-                className={`px-3 py-1 rounded-md font-bold transition-all ${period === 'monthly' ? 'bg-[#FFC000] text-[#002D62] shadow-sm' : 'text-gray-200 hover:text-white'}`}
+                className={`px-3 py-1 rounded-md font-bold transition-all cursor-pointer ${period === 'monthly' ? 'bg-[#FFC000] text-[#002D62] shadow-sm' : 'text-gray-200 hover:text-white'}`}
               >
                 {language === 'ar' ? 'شهري (Monthly)' : 'Monthly'}
               </button>
             </div>
 
-            <button onClick={onClose} className="text-gray-300 hover:text-white transition-colors">
+            <button 
+              onClick={onClose} 
+              className="text-gray-300 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors cursor-pointer"
+              title={language === 'ar' ? 'إغلاق' : 'Close'}
+            >
               <X size={22} />
             </button>
           </div>
@@ -374,7 +393,7 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
         <div className="bg-gray-50 border-t px-6 py-3 flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-[#002D62] hover:bg-blue-900 text-white rounded-lg text-sm font-bold transition-colors"
+            className="px-5 py-2 bg-[#002D62] hover:bg-blue-900 text-white rounded-lg text-sm font-bold transition-colors cursor-pointer"
           >
             {language === 'ar' ? 'إغلاق' : 'Close'}
           </button>
