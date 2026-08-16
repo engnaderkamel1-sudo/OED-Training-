@@ -1,4 +1,4 @@
-﻿import { FirebaseUsageModal } from './FirebaseUsageModal';
+import { FirebaseUsageModal } from './FirebaseUsageModal';
 import { EditRecordModal } from './EditRecordModal';
 import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
@@ -2480,19 +2480,30 @@ export const AdminDashboard: React.FC = () => {
       {/* Image Viewer Modal */}
       {viewingImage && (
         <div 
-          className="fixed inset-0 z-[100] bg-black bg-opacity-80 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer animate-fade-in"
           onClick={() => setViewingImage(null)}
         >
-          <div className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center" onClick={e => e.stopPropagation()}>
+          <div 
+            className="relative bg-white/95 backdrop-blur-md p-3 rounded-2xl border border-gray-200/80 shadow-2xl max-w-sm sm:max-w-md w-full flex flex-col items-center justify-center transition-transform transform scale-100 cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button 
-              className="absolute -top-10 right-0 text-white hover:text-gray-300"
+              className="absolute -top-3 -right-3 bg-white text-gray-700 hover:text-red-600 p-1.5 rounded-full shadow-lg border border-gray-200 transition-transform hover:scale-110 cursor-pointer"
               onClick={() => setViewingImage(null)}
+              title={language === "ar" ? "إغلاق" : "Close"}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X size={20} />
             </button>
-            <img src={viewingImage} alt="Profile Full" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" />
+            <div className="w-full h-72 sm:h-84 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center border border-gray-100">
+              <img 
+                src={viewingImage} 
+                alt="Profile Full" 
+                className="w-full h-full object-cover rounded-xl shadow-inner" 
+              />
+            </div>
+            <p className="text-gray-500 text-xs mt-2.5 font-medium select-none">
+              {language === "ar" ? "اضغط في أي مكان للإغلاق" : "Click anywhere outside to close"}
+            </p>
           </div>
         </div>
       )}
