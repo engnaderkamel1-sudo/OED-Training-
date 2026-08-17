@@ -5,7 +5,7 @@ import { Fingerprint, CheckCircle, Eye, EyeOff, Loader2, KeyRound } from "lucide
 import { auth } from "../firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
-import { getLoginMeta, getLocationFromTimezone } from "../utils/loginUtils";
+import { getLoginMeta, getLocationFromIP } from "../utils/loginUtils";
 
 export const Login: React.FC = () => {
   const { t, language, setUser, users, setUsers, uniqueDepartments, addLoginLog } = useAppContext();
@@ -107,15 +107,17 @@ export const Login: React.FC = () => {
         setUser(adminUser);
         localStorage.setItem("savedUserId", adminUser.id);
         
-        // جمع البيانات الجديدة لتسجيل الدخول
+        // جمع البيانات الجديدة لتسجيل الدخول (الجزء الأول)
         const loginMeta = getLoginMeta();
-        const locationInfo = getLocationFromTimezone();
         let ipAddress = undefined;
         try {
           const res = await fetch('https://api.ipify.org?format=json');
           const data = await res.json();
           ipAddress = data.ip;
         } catch (e) {}
+
+        // استخدام الدالة الجديدة لجلب المكان من الـ IP
+        const locationInfo = ipAddress ? await getLocationFromIP(ipAddress) : { city: 'Unknown', country: 'Unknown' };
 
         addLoginLog({
           id: generateUUID(),
@@ -169,15 +171,17 @@ export const Login: React.FC = () => {
         setUser(foundUser);
         localStorage.setItem("savedUserId", foundUser.id);
 
-        // جمع البيانات الجديدة لتسجيل الدخول
+        // جمع البيانات الجديدة لتسجيل الدخول (الجزء الثاني)
         const loginMeta = getLoginMeta();
-        const locationInfo = getLocationFromTimezone();
         let ipAddress = undefined;
         try {
           const res = await fetch('https://api.ipify.org?format=json');
           const data = await res.json();
           ipAddress = data.ip;
         } catch (e) {}
+
+        // استخدام الدالة الجديدة لجلب المكان من الـ IP
+        const locationInfo = ipAddress ? await getLocationFromIP(ipAddress) : { city: 'Unknown', country: 'Unknown' };
 
         addLoginLog({
           id: generateUUID(),

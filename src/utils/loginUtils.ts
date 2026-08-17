@@ -11,21 +11,16 @@ export const getLoginMeta = (): { device: string; browser: string } => {
   return { device, browser };
 };
 
-export const getLocationFromTimezone = (): { city: string; country: string } => {
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  let city = 'Unknown';
-  let country = 'Unknown';
-
-  if (timezone === 'Africa/Cairo') {
-    city = 'Cairo';
-    country = 'Egypt';
-  } else if (timezone.startsWith('Europe/')) {
-    city = 'Europe';
-    country = 'Europe';
-  } else if (timezone.startsWith('America/')) {
-    city = 'Americas';
-    country = 'Americas';
+// --- الدالة الجديدة اللي بتجيب المكان من الـ IP ---
+export const getLocationFromIP = async (ip: string) => {
+  try {
+    const response = await fetch(`https://ipapi.co/${ip}/json/`);
+    const data = await response.json();
+    return {
+      city: data.city || 'Unknown',
+      country: data.country_name || 'Unknown'
+    };
+  } catch (error) {
+    return { city: 'Unknown', country: 'Unknown' };
   }
-
-  return { city, country };
 };
