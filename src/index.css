@@ -491,88 +491,43 @@ button:active:not(:disabled) {
 }
 
 /* ============================================
-   ★★★ MOBILE FIX - DARK MODE TABLES ★★★
+   ★★★ MOBILE ONLY FIX - LIGHT MODE TABLES ★★★
    ============================================ */
 
-/* --- تحسين الجداول على الموبايل في الدارك مود --- */
+/* --- تحسين الجداول على الموبايل (شاشات أقل من 768px) --- */
 @media (max-width: 768px) {
-  [data-theme="dark"] table td,
-  [data-theme="dark"] table th,
-  [data-theme="dark"] .table-cell,
-  [data-theme="dark"] td span,
-  [data-theme="dark"] td div,
-  [data-theme="dark"] .text-gray-900,
-  [data-theme="dark"] .text-gray-800,
-  [data-theme="dark"] .text-gray-700,
-  [data-theme="dark"] .text-gray-600,
-  [data-theme="dark"] .text-gray-500 {
-    color: #f0f4ff !important;
+  /* --- 1. إجبار النصوص في الجداول على اللون الداكن --- */
+  table td:not(.text-white):not(.bg-\[\#002D62\] *),
+  table th:not(.text-white):not(.bg-\[\#002D62\] *),
+  .table-cell,
+  td span,
+  td div {
+    color: #0d1b2a !important;
   }
 
-  /* --- تحسين خلفية الجدول في الموبايل --- */
-  [data-theme="dark"] table {
-    background-color: #1a2744 !important;
+  /* --- 2. إجبار خلفيات الجداول على الأبيض النظيف --- */
+  table,
+  table tbody,
+  table tr,
+  table td {
+    background-color: #ffffff !important;
   }
 
-  [data-theme="dark"] table tbody tr {
-    background-color: #1a2744 !important;
+  /* --- 3. الحفاظ على صفوف الجدول المتبادلة --- */
+  table tbody tr:nth-child(even) td {
+    background-color: #f8f9fc !important;
   }
 
-  [data-theme="dark"] table tbody tr:nth-child(even) {
-    background-color: #15203a !important;
+  /* --- 4. تحديد النصوص التي يجب أن تبقى بيضاء (مثل الأزرار والأسماء الخاصة) --- */
+  .bg-\[\#002D62\] *,
+  .bg-\[\#002D62\] {
+    color: #ffffff !important;
   }
 
-  /* --- تحسين النصوص في بطاقات الجدول --- */
-  [data-theme="dark"] .card,
-  [data-theme="dark"] .border,
-  [data-theme="dark"] .rounded-lg,
-  [data-theme="dark"] .rounded-xl {
-    background-color: #1a2744 !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-  }
-
-  [data-theme="dark"] .card *,
-  [data-theme="dark"] .border *,
-  [data-theme="dark"] .rounded-lg *,
-  [data-theme="dark"] .rounded-xl * {
-    color: #f0f4ff !important;
-  }
-
-  /* --- تحسين ألوان الـ HR Code والاسم في الجدول --- */
-  [data-theme="dark"] .font-medium,
-  [data-theme="dark"] .font-bold,
-  [data-theme="dark"] .font-semibold {
-    color: #f0f4ff !important;
-  }
-
-  /* --- تحسين الأزرار والروابط في الموبايل --- */
-  [data-theme="dark"] button,
-  [data-theme="dark"] a,
-  [data-theme="dark"] .btn,
-  [data-theme="dark"] .text-\[\#002D62\] {
-    color: #7eb8ff !important;
-  }
-
-  /* --- تحسين لون الخلفية للجدول ككل --- */
-  [data-theme="dark"] .overflow-x-auto,
-  [data-theme="dark"] .overflow-x-auto > div {
-    background-color: #0f1a30 !important;
-  }
-
-  /* --- تحسين التحديد (Selection) في الموبايل --- */
-  [data-theme="dark"] ::selection {
-    background-color: rgba(255, 192, 0, 0.3);
-    color: #ffffff;
-  }
-
-  /* ★★★ تحسين إضافي للنصوص في الموبايل ★★★ */
-  [data-theme="dark"] .p-3,
-  [data-theme="dark"] .px-3,
-  [data-theme="dark"] .py-2,
-  [data-theme="dark"] .p-2,
-  [data-theme="dark"] .px-2,
-  [data-theme="dark"] .py-1 {
-    color: #f0f4ff !important;
+  /* --- 5. (اختياري) تحسين العرض في حالة الجداول الضيقة جداً --- */
+  .overflow-x-auto {
+    background-color: #ffffff !important;
+    border-radius: 8px;
   }
 }
 
@@ -589,68 +544,5 @@ button:active:not(:disabled) {
   [data-theme="dark"] body { 
     background: white !important; 
     color: black !important; 
-  }
-}
-/* ============================================
-   ★★★ MOBILE FIX - LIGHT MODE TABLES ★★★
-   ============================================ */
-
-/* --- تحسين الجداول على الموبايل في الوضع الفاتح --- */
-@media (max-width: 768px) {
-  table td,
-  table th,
-  .table-cell,
-  td span,
-  td div,
-  .text-gray-900,
-  .text-gray-800,
-  .text-gray-700,
-  .text-gray-600,
-  .text-gray-500 {
-    color: #0d1b2a !important;  /* لون غامق واضح */
-  }
-
-  /* --- تحسين خلفية الجدول في الموبايل --- */
-  table {
-    background-color: #ffffff !important;
-  }
-
-  table tbody tr {
-    background-color: #ffffff !important;
-  }
-
-  table tbody tr:nth-child(even) {
-    background-color: #f8f9fc !important;
-  }
-
-  /* --- تحسين ألوان الـ HR Code والاسم في الجدول --- */
-  .font-medium,
-  .font-bold,
-  .font-semibold {
-    color: #0d1b2a !important;
-  }
-
-  /* --- تحسين الأزرار والروابط في الموبايل --- */
-  button,
-  a,
-  .btn,
-  .text-\[\#002D62\] {
-    color: #002D62 !important;
-  }
-
-  /* --- تحسين لون الخلفية للجدول ككل --- */
-  .overflow-x-auto,
-  .overflow-x-auto > div {
-    background-color: #ffffff !important;
-  }
-
-  /* ★★★ تحسين إضافي للنصوص في الموبايل ★★★ */
-  .p-3,
-  .px-3,
-  .py-2,
-  .p-2,
-  .px-2,
-  .py-1 {
-    color: #0d1b2a !important;
   }
 }
