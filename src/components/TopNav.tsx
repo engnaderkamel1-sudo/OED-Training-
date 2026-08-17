@@ -3,13 +3,16 @@ import { useAppContext } from '../context';
 import { LogOut, Globe, Bell } from 'lucide-react';
 
 export const TopNav: React.FC = () => {
-  const { language, setLanguage, user, setUser, users, setUsers, t } = useAppContext();
+  const { language, setLanguage, user, setUser, users, setUsers, t, setCurrentView } = useAppContext();
 
   const toggleLanguage = () => {
     setLanguage(language === 'ar' ? 'en' : 'ar');
   };
 
   const handleClearNotifications = () => {
+    if (setCurrentView) {
+      setCurrentView('notifications');
+    }
     if (user && user.hasUnreadNotifications) {
       const updatedUser = { ...user, hasUnreadNotifications: false };
       setUser(updatedUser);
