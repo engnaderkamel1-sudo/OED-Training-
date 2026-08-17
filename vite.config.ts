@@ -12,7 +12,7 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon-192x192.png', 'icon-512x512.png', 'oed-ttms-logo-v2.png', 'orascom_logo.jpg'],
+        includeAssets: ['app-icon.jpg'], // تم تغيير اسم الصورة هنا
         manifest: {
           name: 'OED TTMS (Technical Training Management System)',
           short_name: 'OED-TTMS',
@@ -22,15 +22,15 @@ export default defineConfig(() => {
           display: 'standalone',
           icons: [
             {
-              src: 'icon-192x192.png',
+              src: 'app-icon.jpg', // هنا خلينا السيستم يقرا صورتك الجديدة
               sizes: '192x192',
-              type: 'image/png',
+              type: 'image/jpeg', // اتغيرت لـ jpeg
               purpose: 'any maskable'
             },
             {
-              src: 'icon-512x512.png',
+              src: 'app-icon.jpg', // نفس الصورة للمقاس الأكبر
               sizes: '512x512',
-              type: 'image/png',
+              type: 'image/jpeg', // اتغيرت لـ jpeg
               purpose: 'any maskable'
             }
           ]
@@ -46,10 +46,7 @@ export default defineConfig(() => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
   };
