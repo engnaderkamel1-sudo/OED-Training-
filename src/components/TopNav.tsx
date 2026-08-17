@@ -63,7 +63,7 @@ export const TopNav: React.FC = () => {
                 OED-TTMS
               </h1>
               <p className="text-[10px] text-[#FFC000] font-medium -mt-0.5">
-                {language === 'ar' ? 'نظام إدارة التدريب الفني' : 'Technical Training Management'}
+                Technical Training Management
               </p>
             </div>
           </div>
@@ -72,14 +72,13 @@ export const TopNav: React.FC = () => {
           {user && (
             <div className="text-center flex-1 min-w-0 px-1">
               <p className="text-xs sm:text-sm font-medium text-white/90 truncate">
-                {language === 'ar' ? 'مرحباً' : 'Hi,'}{' '}
-                <span className="text-[#FFC000]">{user.name.split(' ')[0]}</span>
+                Hi, <span className="text-[#FFC000]">{user.name.split(' ')[0]}</span>
               </p>
               <p className="text-[9px] sm:text-[10px] text-white/55 truncate">
-                {user.role === 'admin'      ? (language === 'ar' ? 'مدير النظام' : 'Admin View')      :
-                 user.role === 'manager'    ? (language === 'ar' ? 'مدير' : 'Manager View')            :
-                 user.role === 'supervisor' ? (language === 'ar' ? 'مشرف موقع' : 'Supervisor View')   :
-                                              (language === 'ar' ? 'متدرب' : 'Trainee View')}
+                {user.role === 'admin'      ? 'Admin View'      :
+                 user.role === 'manager'    ? 'Manager View'    :
+                 user.role === 'supervisor' ? 'Supervisor View' :
+                                              'Trainee View'}
               </p>
             </div>
           )}
@@ -98,7 +97,7 @@ export const TopNav: React.FC = () => {
                 <Sun size={18} className="text-[#FFC000]" />
               )}
               <span className="hidden sm:inline text-xs">
-                {theme === 'light' ? (language === 'ar' ? 'مظلم' : 'Dark') : (language === 'ar' ? 'فاتح' : 'Light')}
+                {theme === 'light' ? 'Dark' : 'Light'}
               </span>
             </button>
 
@@ -116,7 +115,15 @@ export const TopNav: React.FC = () => {
                       className="w-8 h-8 rounded-full object-cover border-2 border-[#FFC000]"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-[#FFC000] flex items-center justify-center text-[#002D62] font-bold text-sm">
+                    // --- هنا تم تعديل الألوان لتكون واضحة وجذابة ---
+                    <div 
+                      className="w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-[13px] shadow-sm"
+                      style={{ 
+                        backgroundColor: '#ffffff', // خلفية بيضاء
+                        color: '#002D62', // خط كحلي
+                        border: '2px solid #FFC000' // إطار ذهبي
+                      }}
+                    >
                       {getInitials(user.name)}
                     </div>
                   )}
@@ -160,9 +167,7 @@ export const TopNav: React.FC = () => {
                       }}
                     >
                       <LogOut size={18} />
-                      <span>
-                         {t('logout') || (language === 'ar' ? 'تسجيل الخروج' : 'Logout')}
-                      </span>
+                      <span>Logout</span>
                     </button>
                   </div>
                 )}
