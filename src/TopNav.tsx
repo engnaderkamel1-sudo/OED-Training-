@@ -11,16 +11,15 @@ import {
 } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
-// تم استدعاء motion لعمل الحركة
-import { motion } from 'framer-motion';
+import { motion, useAnimation } from 'framer-motion';
 
 export const TopNav: React.FC = () => {
   const { user, language, setUser, t, theme, toggleTheme } = useAppContext();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
-  // State للتحكم في حركة اللوجو
-  const [isAnimatingLogo, setIsAnimatingLogo] = useState(false);
+  // التحكم في الحركة بطريقة ناعمة من غير ما تعمل ريفريش للشريط
+  const logoControls = useAnimation();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -52,32 +51,34 @@ export const TopNav: React.FC = () => {
       .slice(0, 2);
   };
 
-  // دالة تشغيل حركة اللوجو
-  const handleLogoClick = () => {
-    if (isAnimatingLogo) return;
-    setIsAnimatingLogo(true);
-    // إرجاع الحالة بعد انتهاء الحركة (600 مللي ثانية)
-    setTimeout(() => setIsAnimatingLogo(false), 600);
+  // دالة تشغيل حركة اللوجو (تكبر، تلف، وتصغر لمكانها تاني)
+  const handleLogoClick = async () => {
+    await logoControls.start({
+      scale: [1, 1.3, 0.85, 1], // الحجم: طبيعي -> كبير -> صغير -> طبيعي
+      rotate: [0, 15, -10, 5, 0], // الدوران يمين وشمال
+      transition: { duration: 0.6, ease: "easeInOut" }
+    });
   };
 
   return (
     <nav className="bg-[#002D62] dark:bg-[#061020] text-white shadow-md sticky top-0 z-50 print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+          
           {/* Logo and Brand */}
           <div className="flex items-center gap-3">
-            {/* تم تحويل الصورة لـ motion.img وإضافة الحركة */}
-            <motion.img 
-              src="/app-icon.jpg" 
-              alt="OED-TTMS" 
-              className="h-10 w-10 object-cover rounded-xl shadow-sm border border-white/20 cursor-pointer"
-              onClick={handleLogoClick}
-              animate={isAnimatingLogo ? { 
-                scale: [1, 1.3, 0.85, 1], 
-                rotate: [0, -10, 10, -5, 0] 
-              } : { scale: 1 }}
-              transition={{ duration: 0.6, ease: "easeInOut" }}
-            />
+            {/* صندوق ثابت لمنع اللوجو من تحريك الشريط عند تكبيره */}
+            <div className="relative w-10 h-10 flex-shrink-0">
+              <motion.img 
+                src="/app-icon.jpg" 
+                alt="OED-TTMS" 
+                className="absolute inset-0 w-full h-full object-cover rounded-xl shadow-sm border border-white/20 cursor-pointer origin-center"
+                animate={logoControls}
+                onClick={handleLogoClick}
+                whileHover={{ scale: 1.05 }} // حركة بسيطة جداً عند الوقوف بالماوس
+              />
+            </div>
+            
             <div className="hidden md:block">
               <h1 className="text-sm font-bold tracking-tight text-white">
                 OED-TTMS
