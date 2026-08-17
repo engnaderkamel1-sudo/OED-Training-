@@ -75,7 +75,7 @@ export const ManagerDashboard: React.FC = () => {
               </thead>
               <tbody>
                 {deptUsers.map(u => (
-                  <tr key={u.id} className={`border-b hover:bg-gray-50 transition-colors ${u.status === "deleted" ? "bg-red-50 text-red-700" : ""}`}>
+                  <tr key={u.id} className="border-b hover:bg-gray-50 transition-colors">
                     <td className="p-3 text-sm"><DataField>{u.hrCode}</DataField></td>
                     <td className="p-3 text-sm font-medium"><DataField>{u.name}</DataField></td>
                     <td className="p-3 text-sm"><DataField>{u.phone}</DataField></td>

@@ -10,23 +10,7 @@ export const formatScore = (val: string | number | undefined | null): string => 
     }
     if (num === 0) return '0%';
   }
-  if (typeof val === 'string' && val.includes('%')) {
-    return val;
-  }
   return String(val);
-};
-
-export const parseScore = (val: string | number | undefined | null): number => {
-  if (val === undefined || val === null || val === '') return 0;
-  const num = Number(val);
-  if (!isNaN(num)) {
-    if (num <= 1 && num > 0) return num * 100;
-    return num;
-  }
-  if (typeof val === 'string' && val.includes('%')) {
-    return Number(val.replace('%', '')) || 0;
-  }
-  return 0;
 };
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
