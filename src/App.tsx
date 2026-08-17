@@ -15,7 +15,6 @@ import { Sidebar } from './components/Sidebar';
 import { ProfilePage } from './components/ProfilePage';
 import { CoursesPage } from './components/CoursesPage';
 import { SuggestionsPage } from './components/SuggestionsPage';
-// --- تم تصحيح المسار هنا عشان يقرأ من فولدر components ---
 import { ActivityLogsView } from './components/ActivityLogsView'; 
 import { Loader2 } from 'lucide-react';
 import { auth, db, messaging } from './firebase';
@@ -103,25 +102,39 @@ const AppContent: React.FC = () => {
   }, []);
 
   // ============================================
-  // ★★★ SMART SESSION TRACKER (Replaces Auto-Logout) ★★★
+  // ★★★ SMART SESSION TRACKER WITH LOCATION ★★★
   // ============================================
   React.useEffect(() => {
     if (!user) return;
 
-    // مدة الخمول: 5 دقائق
     const IDLE_TIMEOUT = 5 * 60 * 1000; 
     let timeoutId: NodeJS.Timeout;
     let isIdle = false;
 
-    // دالة لتسجيل النشاط في قاعدة البيانات بذكاء
+    // دالة جديدة لجلب اللوكيشن
+    const fetchUserLocation = async () => {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        if (data.error) return "Unknown";
+        return `${data.city}, ${data.country_name} (${data.ip})`;
+      } catch (error) {
+        console.error("Location fetch failed:", error);
+        return "Unknown";
+      }
+    };
+
     const logSessionActivity = async (actionType: string) => {
       try {
+        const locationStr = await fetchUserLocation(); // بنجيب اللوكيشن قبل ما نسجل
+
         await addDoc(collection(db, 'activity_logs'), {
           userId: user.id,
           userName: user.name,
           hrCode: user.hrCode,
           role: user.role,
-          action: actionType, // 'session_start' أو 'resume_after_idle'
+          action: actionType,
+          location: locationStr, // ضفنا حقل اللوكيشن هنا
           timestamp: serverTimestamp(),
         });
       } catch (error) {
@@ -129,27 +142,21 @@ const AppContent: React.FC = () => {
       }
     };
 
-    // تسجيل الدخول الأساسي أول مرة يفتح فيها التطبيق
     const hasLoggedInitialStart = sessionStorage.getItem('initial_session_logged');
     if (!hasLoggedInitialStart) {
       logSessionActivity('system_login');
       sessionStorage.setItem('initial_session_logged', 'true');
     }
 
-    // المستخدم دخل في حالة خمول
     const handleBecomeIdle = () => {
       isIdle = true;
-      console.log('User is idle. Awaiting next action to start new session.');
     };
 
-    // المستخدم رجع يتفاعل مع التطبيق
     const handleUserActivity = () => {
       if (isIdle) {
-        // كان خامل ورجع، نسجل إن دي جلسة جديدة
         isIdle = false;
         logSessionActivity('session_resume');
         
-        // إظهار رسالة ترحيب صغيرة (اختياري، يطمنه إن التطبيق متصل)
         import('react-hot-toast').then(({ default: toast }) => {
           toast.success(
             language === 'ar' ? 'مرحباً بعودتك!' : 'Welcome back!',
@@ -158,29 +165,25 @@ const AppContent: React.FC = () => {
         });
       }
 
-      // إعادة ضبط العداد
       clearTimeout(timeoutId);
       timeoutId = setTimeout(handleBecomeIdle, IDLE_TIMEOUT);
     };
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // التطبيق نزل في الخلفية، نعتبره خامل فوراً لتوفير الموارد
         clearTimeout(timeoutId);
         isIdle = true;
       } else {
-        // التطبيق رجع للواجهة
         handleUserActivity();
       }
     };
 
-    // مراقبة أحداث الشاشة بـ (Throttling) عشان ما نهلكش الموبايل
     const activityEvents = ['mousedown', 'keydown', 'touchstart', 'scroll'];
     let lastEventTime = 0;
     
     const throttledActivityHandler = () => {
       const now = Date.now();
-      if (now - lastEventTime > 2000) { // نفذ الأكشن كل ثانيتين كحد أقصى
+      if (now - lastEventTime > 2000) { 
         handleUserActivity();
         lastEventTime = now;
       }
@@ -189,10 +192,8 @@ const AppContent: React.FC = () => {
     activityEvents.forEach(evt => window.addEventListener(evt, throttledActivityHandler, { passive: true }));
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // بدء العداد لأول مرة
     timeoutId = setTimeout(handleBecomeIdle, IDLE_TIMEOUT);
 
-    // تنظيف
     return () => {
       clearTimeout(timeoutId);
       activityEvents.forEach(evt => window.removeEventListener(evt, throttledActivityHandler));
@@ -251,7 +252,6 @@ const AppContent: React.FC = () => {
             {activeRole && currentView === 'coursesCatalog' && <CoursesPage />}
             {activeRole && currentView === 'suggestions' && <SuggestionsPage />}
             
-            {/* --- عرض شاشة سجل النشاط الجديدة للمدير فقط --- */}
             {activeRole === 'admin' && currentView === 'activityLogs' && (
               <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
                 <ActivityLogsView />

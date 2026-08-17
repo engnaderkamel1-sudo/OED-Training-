@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Activity, RefreshCw, Loader2 } from 'lucide-react';
+import { Activity, RefreshCw, Loader2, MapPin } from 'lucide-react';
 import { useAppContext } from '../context';
 
 export const ActivityLogsView: React.FC = () => {
@@ -59,19 +59,21 @@ export const ActivityLogsView: React.FC = () => {
               <th className="px-6 py-4">{language === 'ar' ? 'المستخدم' : 'User'}</th>
               <th className="px-6 py-4">{language === 'ar' ? 'HR Code' : 'HR Code'}</th>
               <th className="px-6 py-4">{language === 'ar' ? 'الحدث / النشاط' : 'Action / Event'}</th>
+              {/* --- ضفنا عمود اللوكيشن هنا --- */}
+              <th className="px-6 py-4">{language === 'ar' ? 'الموقع الجغرافي (IP)' : 'Location (IP)'}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {loadingLogs ? (
               <tr>
-                <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                   <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#002D62]" />
                   {language === 'ar' ? 'جاري تحميل السجلات...' : 'Loading logs...'}
                 </td>
               </tr>
             ) : activityLogs.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                   {language === 'ar' ? 'لا توجد سجلات نشاط حتى الآن' : 'No activity logs found'}
                 </td>
               </tr>
@@ -95,6 +97,13 @@ export const ActivityLogsView: React.FC = () => {
                     <td className="px-6 py-3 font-bold text-[#002D62]">{log.userName || 'Unknown'}</td>
                     <td className="px-6 py-3 text-gray-600">{log.hrCode || 'N/A'}</td>
                     <td className="px-6 py-3">{actionBadge}</td>
+                    {/* --- عرض اللوكيشن في الخلية الجديدة --- */}
+                    <td className="px-6 py-3">
+                      <div className="flex items-center gap-1.5 text-gray-500 text-xs">
+                        <MapPin size={14} className={log.location && log.location !== 'Unknown' ? 'text-blue-500' : 'text-gray-400'} />
+                        {log.location || 'Unknown Location'}
+                      </div>
+                    </td>
                   </tr>
                 );
               })
