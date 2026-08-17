@@ -59,7 +59,6 @@ export const ActivityLogsView: React.FC = () => {
               <th className="px-6 py-4">{language === 'ar' ? 'المستخدم' : 'User'}</th>
               <th className="px-6 py-4">{language === 'ar' ? 'HR Code' : 'HR Code'}</th>
               <th className="px-6 py-4">{language === 'ar' ? 'الحدث / النشاط' : 'Action / Event'}</th>
-              {/* --- ضفنا عمود اللوكيشن هنا --- */}
               <th className="px-6 py-4">{language === 'ar' ? 'الموقع الجغرافي (IP)' : 'Location (IP)'}</th>
             </tr>
           </thead>
@@ -91,17 +90,24 @@ export const ActivityLogsView: React.FC = () => {
                   actionBadge = <span className="bg-green-50 text-green-600 px-2 py-1 rounded text-xs font-bold border border-green-100">{language === 'ar' ? 'عودة للنشاط' : 'Resumed Activity'}</span>;
                 }
 
+                // تنظيف وعرض اللوكيشن بشكل سليم
+                const locationText = log.location && log.location !== 'Unknown' && !log.location.includes('undefined')
+                                     ? log.location 
+                                     : 'Location Unavailable';
+                const isUnknown = locationText === 'Location Unavailable';
+
                 return (
                   <tr key={log.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-3 font-medium text-gray-500">{formattedTime}</td>
                     <td className="px-6 py-3 font-bold text-[#002D62]">{log.userName || 'Unknown'}</td>
                     <td className="px-6 py-3 text-gray-600">{log.hrCode || 'N/A'}</td>
                     <td className="px-6 py-3">{actionBadge}</td>
-                    {/* --- عرض اللوكيشن في الخلية الجديدة --- */}
                     <td className="px-6 py-3">
-                      <div className="flex items-center gap-1.5 text-gray-500 text-xs">
-                        <MapPin size={14} className={log.location && log.location !== 'Unknown' ? 'text-blue-500' : 'text-gray-400'} />
-                        {log.location || 'Unknown Location'}
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <MapPin size={14} className={!isUnknown ? 'text-blue-500' : 'text-gray-400'} />
+                        <span className={!isUnknown ? 'text-gray-700' : 'text-gray-400 italic'}>
+                          {locationText}
+                        </span>
                       </div>
                     </td>
                   </tr>

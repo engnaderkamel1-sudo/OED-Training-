@@ -111,22 +111,30 @@ const AppContent: React.FC = () => {
     let timeoutId: NodeJS.Timeout;
     let isIdle = false;
 
-    // دالة جديدة لجلب اللوكيشن
+    // --- دالة جلب اللوكيشن المحدثة باستخدام API أقوى ومحاولة بديلة ---
     const fetchUserLocation = async () => {
       try {
-        const response = await fetch('https://ipapi.co/json/');
+        const response = await fetch('https://ipinfo.io/json');
         const data = await response.json();
-        if (data.error) return "Unknown";
-        return `${data.city}, ${data.country_name} (${data.ip})`;
+        if (!data || !data.ip) return "Unknown";
+        return `${data.city || 'Unknown City'}, ${data.country || ''} (${data.ip})`;
       } catch (error) {
         console.error("Location fetch failed:", error);
-        return "Unknown";
+        
+        // محاولة بديلة لو الأول فشل (هيجيب الـ IP بس)
+        try {
+           const backupRes = await fetch('https://api.ipify.org?format=json');
+           const backupData = await backupRes.json();
+           return `IP Only: ${backupData.ip}`;
+        } catch(e) {
+           return "Unknown Location";
+        }
       }
     };
 
     const logSessionActivity = async (actionType: string) => {
       try {
-        const locationStr = await fetchUserLocation(); // بنجيب اللوكيشن قبل ما نسجل
+        const locationStr = await fetchUserLocation();
 
         await addDoc(collection(db, 'activity_logs'), {
           userId: user.id,
@@ -134,7 +142,7 @@ const AppContent: React.FC = () => {
           hrCode: user.hrCode,
           role: user.role,
           action: actionType,
-          location: locationStr, // ضفنا حقل اللوكيشن هنا
+          location: locationStr, 
           timestamp: serverTimestamp(),
         });
       } catch (error) {
