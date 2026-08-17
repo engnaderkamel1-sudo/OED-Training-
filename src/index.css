@@ -491,43 +491,48 @@ button:active:not(:disabled) {
 }
 
 /* ============================================
-   ★★★ MOBILE ONLY FIX - LIGHT MODE TABLES ★★★
+   ★★★ MOBILE FIX - REMOVE BACKGROUND BOX ★★★
    ============================================ */
 
-/* --- تحسين الجداول على الموبايل (شاشات أقل من 768px) --- */
+/* --- إزالة الخلفية الغامقة من الجداول في الموبايل --- */
 @media (max-width: 768px) {
-  /* --- 1. إجبار النصوص في الجداول على اللون الداكن --- */
-  table td:not(.text-white):not(.bg-\[\#002D62\] *),
-  table th:not(.text-white):not(.bg-\[\#002D62\] *),
+  /* إزالة الخلفية الغامقة من الصفوف */
+  table tbody tr,
+  table tbody tr:nth-child(even),
+  table tbody tr:nth-child(odd) {
+    background-color: transparent !important;
+  }
+
+  /* إزالة الخلفية من الخلايا */
+  table td,
+  table th {
+    background-color: transparent !important;
+  }
+
+  /* جعل الخلفية شفافة */
+  table,
+  table tbody {
+    background-color: transparent !important;
+  }
+
+  /* إزالة أي خلفية من الحاوية */
+  .overflow-x-auto,
+  .overflow-x-auto > div {
+    background-color: transparent !important;
+  }
+
+  /* ★★★ إجبار النصوص على الوضوح ★★★ */
+  table td,
+  table th,
   .table-cell,
   td span,
   td div {
     color: #0d1b2a !important;
   }
 
-  /* --- 2. إجبار خلفيات الجداول على الأبيض النظيف --- */
-  table,
-  table tbody,
-  table tr,
-  table td {
-    background-color: #ffffff !important;
-  }
-
-  /* --- 3. الحفاظ على صفوف الجدول المتبادلة --- */
-  table tbody tr:nth-child(even) td {
-    background-color: #f8f9fc !important;
-  }
-
-  /* --- 4. تحديد النصوص التي يجب أن تبقى بيضاء (مثل الأزرار والأسماء الخاصة) --- */
   .bg-\[\#002D62\] *,
   .bg-\[\#002D62\] {
     color: #ffffff !important;
-  }
-
-  /* --- 5. (اختياري) تحسين العرض في حالة الجداول الضيقة جداً --- */
-  .overflow-x-auto {
-    background-color: #ffffff !important;
-    border-radius: 8px;
   }
 }
 
