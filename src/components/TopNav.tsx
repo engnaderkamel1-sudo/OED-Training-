@@ -142,7 +142,7 @@ export const TopNav: React.FC = () => {
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">
                         {user.name}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-300">
+                      <p className="text-xs text-gray-600 dark:text-gray-300">
                         {user.hrCode} • {user.department}
                       </p>
                     </div>
