@@ -97,10 +97,10 @@ const AppContent: React.FC = () => {
   }, []);
 
   // ============================================
-  // ★★★ PWA AUTO-UPDATE WITH SUCCESS NOTIFICATION ★★★
+  // ★★★ SAFE SILENT AUTO-UPDATE (FIXED LOOP) ★★★
   // ============================================
   React.useEffect(() => {
-    // 1. Check if we just reloaded from an update
+    // 1. Show success message if we just updated
     const justUpdated = localStorage.getItem('oed_just_updated');
     if (justUpdated === 'true') {
       import('react-hot-toast').then(({ default: toast }) => {
@@ -113,37 +113,31 @@ const AppContent: React.FC = () => {
     }
 
     if ('serviceWorker' in navigator) {
-      // 2. Check for updates every time the app becomes visible
-      const handleVisibilityChange = () => {
-        if (document.visibilityState === 'visible') {
-          navigator.serviceWorker.ready.then((registration) => {
-            registration.update().catch(() => {});
-          });
-        }
-      };
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-
-      // 3. Listen for actual updates
       navigator.serviceWorker.ready.then(registration => {
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
+              // We only care when the new worker is installed and ready to take over
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // Set the flag before reloading
-                localStorage.setItem('oed_just_updated', 'true');
                 
-                // Unregister and reload silently
-                registration.unregister().then(() => {
+                // صمام الأمان: نمنع التحديث لو كان لسه حاصل من أقل من 5 دقايق
+                const lastReload = localStorage.getItem('oed_last_reload_time');
+                const now = Date.now();
+                const COOLDOWN_PERIOD = 5 * 60 * 1000; // 5 minutes in milliseconds
+                
+                if (!lastReload || now - parseInt(lastReload) > COOLDOWN_PERIOD) {
+                  localStorage.setItem('oed_last_reload_time', now.toString());
+                  localStorage.setItem('oed_just_updated', 'true');
+                  
+                  // ريفريش آمن
                   window.location.reload();
-                });
+                }
               }
             });
           }
         });
       });
-
-      return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
     }
   }, [language]);
 
