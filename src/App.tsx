@@ -66,23 +66,27 @@ const AppContent: React.FC = () => {
         if (payload.notification) {
           import('react-hot-toast').then(({ default: toast }) => {
             toast.custom((t) => (
-              <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
+              <div 
+                className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+                style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}
+              >
                 <div className="flex-1 w-0 p-4">
                   <div className="flex items-start">
                     <div className="ml-3 flex-1">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      <p className="text-sm font-medium">
                         {payload.notification?.title}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm opacity-80 mt-1">
                         {payload.notification?.body}
                       </p>
                     </div>
                   </div>
                 </div>
-                <div className="flex border-l border-gray-200 dark:border-gray-700">
+                <div className="flex border-l" style={{ borderColor: 'var(--border-color)' }}>
                   <button
                     onClick={() => import('react-hot-toast').then(({ default: toast }) => toast.dismiss(t.id))}
-                    className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-[#002D62] dark:text-[#FFC000] hover:text-[#001f45] dark:hover:text-[#FFD54F] focus:outline-none"
+                    className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium focus:outline-none"
+                    style={{ color: 'var(--oc-gold)' }}
                   >
                     Close
                   </button>
@@ -98,7 +102,6 @@ const AppContent: React.FC = () => {
 
   // ============================================
   // ★★★ AUTO LOGOUT AFTER 1 MINUTE INACTIVITY ★★★
-  // (Works even when app is in background)
   // ============================================
   React.useEffect(() => {
     if (!user) return;
@@ -140,11 +143,9 @@ const AppContent: React.FC = () => {
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // التطبيق في الخلفية - نبدأ مؤقت جديد
         clearTimeout(timeoutId);
         timeoutId = setTimeout(handleLogoutDueToInactivity, INACTIVITY_TIMEOUT);
       } else {
-        // التطبيق عاد للواجهة - نتحقق من الوقت
         const timePassed = Date.now() - lastActiveTime;
         if (timePassed >= INACTIVITY_TIMEOUT) {
           handleLogoutDueToInactivity();
@@ -154,17 +155,11 @@ const AppContent: React.FC = () => {
       }
     };
 
-    // أحداث النشاط (الماوس، الكيبورد، اللمس)
     const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'wheel'];
     activityEvents.forEach(evt => window.addEventListener(evt, resetTimer, { passive: true }));
-    
-    // مراقبة تغيير حالة التطبيق (خلفية/واجهة)
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // بدء المؤقت
     resetTimer();
 
-    // التنظيف عند الخروج
     return () => {
       clearTimeout(timeoutId);
       activityEvents.forEach(evt => window.removeEventListener(evt, resetTimer));
@@ -192,7 +187,8 @@ const AppContent: React.FC = () => {
         }}
       />
       <TopNav />
-      <div className="flex bg-gray-50 dark:bg-gray-900 min-h-[calc(100vh-4rem)] relative print:bg-white print:min-h-0 transition-colors duration-300">
+      {/* تمت إزالة الكلاسات المسؤولة عن الخلفية الغامقة الإجبارية */}
+      <div className="flex min-h-[calc(100vh-4rem)] relative print:bg-white print:min-h-0 transition-colors duration-300">
         {user && <Sidebar />}
         <main className="flex-1 flex flex-col relative w-full min-w-0">
           <AnimatePresence>
@@ -201,10 +197,13 @@ const AppContent: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75"
+                className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-opacity-75"
+                style={{ backgroundColor: 'var(--bg-secondary)' }}
               >
-                <Loader2 className="w-12 h-12 text-[#002D62] dark:text-[#FFC000] animate-spin mb-4" />
-                <p className="text-[#002D62] dark:text-[#FFC000] font-semibold text-lg animate-pulse">{t('loading') || 'Loading...'}</p>
+                <Loader2 className="w-12 h-12 animate-spin mb-4" style={{ color: 'var(--oc-navy)' }} />
+                <p className="font-semibold text-lg animate-pulse" style={{ color: 'var(--oc-navy)' }}>
+                  {t('loading') || 'Loading...'}
+                </p>
               </motion.div>
             ) : null}
           </AnimatePresence>
