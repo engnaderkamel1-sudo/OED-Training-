@@ -160,7 +160,7 @@ export const Sidebar: React.FC = () => {
                   transition={{ duration: 0.3 }}
                   className="overflow-hidden"
                 >
-                  <div className="flex flex-col gap-1 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg ml-6 rtl:ml-0 rtl:mr-6 border-l-2 rtl:border-l-0 rtl:border-r-2 border-gray-200 dark:border-gray-700">
+                  <div className="flex flex-col gap-1 px-3 py-2 ml-6 rtl:ml-0 rtl:mr-6 border-l-2 rtl:border-l-0 rtl:border-r-2 border-gray-200 dark:border-gray-700">
                     {link.subLinks.map((subLink: any) => {
                       const isActive = currentView === subLink.id || (currentView === 'tools' && subLink.id === 'tools_manage');
                       return (
