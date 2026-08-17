@@ -59,14 +59,17 @@ export const TopNav: React.FC = () => {
             
             {/* Logo and Brand */}
             <div className="flex items-center gap-3">
-              {/* صندوق ثابت تماماً والصورة فيه عادية جداً لمنع أي هزة في الشريط */}
+              {/* الصندوق ده مقفول بمقاس ثابت 100% لمنع أي هزة في الشريط */}
               <div className="w-10 h-10 flex-shrink-0">
-                <img 
-                  src="/app-icon.jpg" 
-                  alt="OED-TTMS" 
-                  className="w-full h-full object-cover rounded-xl shadow-sm border border-white/20 cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => setIsLogoExpanded(true)}
-                />
+                {!isLogoExpanded && (
+                  <motion.img 
+                    layoutId="magic-logo"
+                    src="/app-icon.jpg" 
+                    alt="OED-TTMS" 
+                    className="w-full h-full object-cover rounded-xl shadow-sm border border-white/20 cursor-pointer"
+                    onClick={() => setIsLogoExpanded(true)}
+                  />
+                )}
               </div>
               
               <div className="hidden md:block">
@@ -188,24 +191,23 @@ export const TopNav: React.FC = () => {
         </div>
       </nav>
 
-      {/* الشاشة المكبرة للوجو - معزولة تماماً عن الشريط لمنع أي هزة */}
+      {/* الشاشة المكبرة للوجو مع الحركة السحرية (Magic Move) */}
       <AnimatePresence>
         {isLogoExpanded && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
             className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-sm flex items-center justify-center cursor-pointer"
             onClick={() => setIsLogoExpanded(false)}
           >
             <motion.img
+              layoutId="magic-logo"
               src="/app-icon.jpg"
               alt="OED-TTMS Logo Expanded"
-              initial={{ scale: 0.5, opacity: 0, y: 50 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.5, opacity: 0, y: 50 }}
-              transition={{ type: "spring", damping: 20, stiffness: 300 }}
               className="w-64 h-64 md:w-96 md:h-96 object-cover rounded-[2rem] shadow-2xl border-4 border-white/20"
+              transition={{ type: "spring", stiffness: 200, damping: 25 }}
               onClick={(e) => {
                 e.stopPropagation();
                 setIsLogoExpanded(false);
