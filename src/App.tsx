@@ -18,7 +18,7 @@ import { SuggestionsPage } from './components/SuggestionsPage';
 import { Loader2 } from 'lucide-react';
 import { auth, db, messaging } from './firebase';
 import { getToken, onMessage } from 'firebase/messaging';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -101,72 +101,102 @@ const AppContent: React.FC = () => {
   }, []);
 
   // ============================================
-  // ★★★ AUTO LOGOUT AFTER 1 MINUTE INACTIVITY ★★★
+  // ★★★ SMART SESSION TRACKER (Replaces Auto-Logout) ★★★
   // ============================================
   React.useEffect(() => {
     if (!user) return;
 
-    const INACTIVITY_TIMEOUT = 1 * 60 * 1000; // 1 minute
+    // مدة الخمول: 5 دقائق
+    const IDLE_TIMEOUT = 5 * 60 * 1000; 
     let timeoutId: NodeJS.Timeout;
-    let lastActiveTime = Date.now();
-    let isLoggingOut = false;
+    let isIdle = false;
 
-    const handleLogoutDueToInactivity = async () => {
-      if (isLoggingOut) return;
-      isLoggingOut = true;
-
+    // دالة لتسجيل النشاط في قاعدة البيانات بذكاء
+    const logSessionActivity = async (actionType: string) => {
       try {
-        await signOut(auth);
+        await addDoc(collection(db, 'activity_logs'), {
+          userId: user.id,
+          userName: user.name,
+          hrCode: user.hrCode,
+          role: user.role,
+          action: actionType, // 'session_start' أو 'resume_after_idle'
+          timestamp: serverTimestamp(),
+        });
       } catch (error) {
-        console.error('Logout error:', error);
+        console.error('Error logging activity:', error);
       }
-      
-      setUser(null);
-      localStorage.removeItem('oed_training_user');
-      
-      import('react-hot-toast').then(({ default: toast }) => {
-        toast.error(
-          language === 'ar' || navigator.language.startsWith('ar') 
-            ? 'تم تسجيل الخروج تلقائياً لعدم النشاط.' 
-            : 'You have been automatically logged out due to inactivity.'
-        );
-      });
-
-      isLoggingOut = false;
     };
 
-    const resetTimer = () => {
-      lastActiveTime = Date.now();
+    // تسجيل الدخول الأساسي أول مرة يفتح فيها التطبيق
+    const hasLoggedInitialStart = sessionStorage.getItem('initial_session_logged');
+    if (!hasLoggedInitialStart) {
+      logSessionActivity('system_login');
+      sessionStorage.setItem('initial_session_logged', 'true');
+    }
+
+    // المستخدم دخل في حالة خمول
+    const handleBecomeIdle = () => {
+      isIdle = true;
+      console.log('User is idle. Awaiting next action to start new session.');
+    };
+
+    // المستخدم رجع يتفاعل مع التطبيق
+    const handleUserActivity = () => {
+      if (isIdle) {
+        // كان خامل ورجع، نسجل إن دي جلسة جديدة
+        isIdle = false;
+        logSessionActivity('session_resume');
+        
+        // إظهار رسالة ترحيب صغيرة (اختياري، يطمنه إن التطبيق متصل)
+        import('react-hot-toast').then(({ default: toast }) => {
+          toast.success(
+            language === 'ar' ? 'مرحباً بعودتك!' : 'Welcome back!',
+            { position: 'bottom-center', duration: 2000, style: { background: 'var(--bg-card)', color: 'var(--text-primary)' } }
+          );
+        });
+      }
+
+      // إعادة ضبط العداد
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleLogoutDueToInactivity, INACTIVITY_TIMEOUT);
+      timeoutId = setTimeout(handleBecomeIdle, IDLE_TIMEOUT);
     };
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
+        // التطبيق نزل في الخلفية، نعتبره خامل فوراً لتوفير الموارد
         clearTimeout(timeoutId);
-        timeoutId = setTimeout(handleLogoutDueToInactivity, INACTIVITY_TIMEOUT);
+        isIdle = true;
       } else {
-        const timePassed = Date.now() - lastActiveTime;
-        if (timePassed >= INACTIVITY_TIMEOUT) {
-          handleLogoutDueToInactivity();
-        } else {
-          resetTimer();
-        }
+        // التطبيق رجع للواجهة
+        handleUserActivity();
       }
     };
 
-    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'wheel'];
-    activityEvents.forEach(evt => window.addEventListener(evt, resetTimer, { passive: true }));
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    resetTimer();
+    // مراقبة أحداث الشاشة بـ (Throttling) عشان ما نهلكش الموبايل
+    const activityEvents = ['mousedown', 'keydown', 'touchstart', 'scroll'];
+    let lastEventTime = 0;
+    
+    const throttledActivityHandler = () => {
+      const now = Date.now();
+      if (now - lastEventTime > 2000) { // نفذ الأكشن كل ثانيتين كحد أقصى
+        handleUserActivity();
+        lastEventTime = now;
+      }
+    };
 
+    activityEvents.forEach(evt => window.addEventListener(evt, throttledActivityHandler, { passive: true }));
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // بدء العداد لأول مرة
+    timeoutId = setTimeout(handleBecomeIdle, IDLE_TIMEOUT);
+
+    // تنظيف
     return () => {
       clearTimeout(timeoutId);
-      activityEvents.forEach(evt => window.removeEventListener(evt, resetTimer));
+      activityEvents.forEach(evt => window.removeEventListener(evt, throttledActivityHandler));
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      isLoggingOut = false;
     };
-  }, [user, language, setUser]);
+  }, [user, language]);
 
   // ============================================
   // Render
@@ -187,7 +217,7 @@ const AppContent: React.FC = () => {
         }}
       />
       <TopNav />
-      {/* تمت إزالة الكلاسات المسؤولة عن الخلفية الغامقة الإجبارية */}
+      {/* الكلاسات الأساسية للتطبيق */}
       <div className="flex min-h-[calc(100vh-4rem)] relative print:bg-white print:min-h-0 transition-colors duration-300">
         {user && <Sidebar />}
         <main className="flex-1 flex flex-col relative w-full min-w-0">
