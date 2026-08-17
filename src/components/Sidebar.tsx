@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -27,10 +27,43 @@ export const Sidebar: React.FC = () => {
   const { user, language, t, currentView, setCurrentView } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
   const [isToolsExpanded, setIsToolsExpanded] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 
   if (!user) return null;
 
   const role = user.role;
+
+  // ============================================
+  // Auto collapse sidebar after 10 seconds of inactivity
+  // ============================================
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    const handleInactivity = () => {
+      if (!isOpen && !isCollapsed) {
+        setIsCollapsed(true);
+      }
+    };
+
+    const resetInactivityTimer = () => {
+      clearTimeout(timeoutId);
+      if (isCollapsed) {
+        setIsCollapsed(false);
+      }
+      timeoutId = setTimeout(handleInactivity, 10000); // 10 seconds
+    };
+
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(evt => window.addEventListener(evt, resetInactivityTimer));
+
+    resetInactivityTimer();
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(evt => window.removeEventListener(evt, resetInactivityTimer));
+    };
+  }, [isOpen, isCollapsed]);
 
   const handleNavClick = (id: string) => {
     setCurrentView(id);
@@ -109,13 +142,22 @@ export const Sidebar: React.FC = () => {
     </AnimatePresence>
   );
 
+  // Collapsed indicator (visible when sidebar is collapsed)
+  const CollapsedIndicator = () => (
+    <div className={`fixed top-20 left-0 rtl:left-auto rtl:right-0 z-[9998] transition-all duration-300 ${isCollapsed && !isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className="bg-[#002D62] dark:bg-gray-800 text-white px-2 py-3 rounded-r-lg rtl:rounded-l-lg rtl:rounded-r-none shadow-lg">
+        <Menu size={20} />
+      </div>
+    </div>
+  );
+
   // Sidebar content
   const SidebarContent = () => (
     <aside 
       className={`
         fixed top-0 h-[100dvh] bg-white dark:bg-gray-900 border-r rtl:border-r-0 rtl:border-l border-gray-200 dark:border-gray-800 
-        shadow-2xl w-72 shrink-0 transition-transform duration-300 ease-in-out z-[9999] overflow-y-auto print:hidden
-        ${isOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'}
+        shadow-2xl w-72 shrink-0 transition-all duration-300 ease-in-out z-[9999] overflow-y-auto print:hidden
+        ${isOpen ? 'translate-x-0' : isCollapsed ? '-translate-x-[calc(100%-50px)] rtl:translate-x-[calc(100%-50px)]' : '-translate-x-full rtl:translate-x-full'}
       `}
     >
       <div className="p-4 flex flex-col gap-2 pb-24">
@@ -216,6 +258,7 @@ export const Sidebar: React.FC = () => {
     <>
       <MenuButton />
       <Overlay />
+      <CollapsedIndicator />
       <SidebarContent />
     </>
   );

@@ -638,3 +638,55 @@ h1.text-2xl.md\:text-3xl.font-bold,
 [data-theme="dark"] .border-b-2.border-\[\#FFC000\] {
   border-bottom-color: #ffd54f !important;
 }
+/* ============================================
+   ★★★ FIX: ADMIN VIEW + SIDEBAR + COURSES ★★★
+   ============================================ */
+
+/* --- 1. تحسين ظهور "Admin View" في اللايت مود --- */
+.text-2xl.md\:text-3xl.font-bold.text-\[\#002D62\] {
+  color: #002D62 !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .text-2xl.md\:text-3xl.font-bold.text-\[\#002D62\] {
+  color: #f0f4ff !important;
+}
+
+/* --- 2. تحسين أسماء الكورسات في Courses Catalog (الدارك مود) --- */
+[data-theme="dark"] .text-\[\#002D62\],
+[data-theme="dark"] .text-gray-800,
+[data-theme="dark"] .text-gray-700,
+[data-theme="dark"] .font-semibold,
+[data-theme="dark"] .font-bold {
+  color: #f0f4ff !important;
+}
+
+/* --- 3. تحسين القائمة الجانبية على الموبايل --- */
+@media (max-width: 768px) {
+  .sidebar-collapsed {
+    transform: translateX(-85%) !important;
+    width: 72px !important;
+    opacity: 0.95;
+  }
+  
+  .sidebar-collapsed .sidebar-text {
+    display: none !important;
+  }
+  
+  .menu-button-container {
+    z-index: 10000 !important;
+  }
+}
+
+/* ============================================
+   ★★★ SIDEBAR AUTO-COLLAPSE ★★★
+   ============================================ */
+
+/* --- تحسين ظهور القائمة عند التصغير --- */
+.sidebar-collapsed-indicator {
+  transition: all 0.3s ease;
+}
+
+.sidebar-collapsed-indicator:hover {
+  transform: scale(1.1);
+}
