@@ -591,3 +591,66 @@ button:active:not(:disabled) {
     color: black !important; 
   }
 }
+/* ============================================
+   ★★★ MOBILE FIX - LIGHT MODE TABLES ★★★
+   ============================================ */
+
+/* --- تحسين الجداول على الموبايل في الوضع الفاتح --- */
+@media (max-width: 768px) {
+  table td,
+  table th,
+  .table-cell,
+  td span,
+  td div,
+  .text-gray-900,
+  .text-gray-800,
+  .text-gray-700,
+  .text-gray-600,
+  .text-gray-500 {
+    color: #0d1b2a !important;  /* لون غامق واضح */
+  }
+
+  /* --- تحسين خلفية الجدول في الموبايل --- */
+  table {
+    background-color: #ffffff !important;
+  }
+
+  table tbody tr {
+    background-color: #ffffff !important;
+  }
+
+  table tbody tr:nth-child(even) {
+    background-color: #f8f9fc !important;
+  }
+
+  /* --- تحسين ألوان الـ HR Code والاسم في الجدول --- */
+  .font-medium,
+  .font-bold,
+  .font-semibold {
+    color: #0d1b2a !important;
+  }
+
+  /* --- تحسين الأزرار والروابط في الموبايل --- */
+  button,
+  a,
+  .btn,
+  .text-\[\#002D62\] {
+    color: #002D62 !important;
+  }
+
+  /* --- تحسين لون الخلفية للجدول ككل --- */
+  .overflow-x-auto,
+  .overflow-x-auto > div {
+    background-color: #ffffff !important;
+  }
+
+  /* ★★★ تحسين إضافي للنصوص في الموبايل ★★★ */
+  .p-3,
+  .px-3,
+  .py-2,
+  .p-2,
+  .px-2,
+  .py-1 {
+    color: #0d1b2a !important;
+  }
+}
