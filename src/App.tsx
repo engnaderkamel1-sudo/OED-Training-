@@ -19,12 +19,16 @@ import { Loader2 } from 'lucide-react';
 import { auth, db, messaging } from './firebase';
 import { getToken, onMessage } from 'firebase/messaging';
 import { doc, updateDoc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AppContent: React.FC = () => {
-  const { user, isLoading, t, currentView } = useAppContext();
+  const { user, isLoading, t, currentView, language, setUser } = useAppContext();
 
+  // ============================================
+  // Notifications Permission
+  // ============================================
   React.useEffect(() => {
     if (user && messaging) {
       const requestPermission = async () => {
@@ -53,11 +57,13 @@ const AppContent: React.FC = () => {
     }
   }, [user]);
 
+  // ============================================
+  // Foreground Messages (Toast Notifications)
+  // ============================================
   React.useEffect(() => {
     if (messaging) {
       const unsubscribe = onMessage(messaging, (payload) => {
         if (payload.notification) {
-          // Show a toast notification instead of alert
           import('react-hot-toast').then(({ default: toast }) => {
             toast.custom((t) => (
               <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
@@ -90,22 +96,36 @@ const AppContent: React.FC = () => {
     }
   }, []);
 
+  // ============================================
+  // ★★★ AUTO LOGOUT AFTER 1 MINUTE INACTIVITY ★★★
+  // ============================================
   React.useEffect(() => {
     if (!user) return;
 
-    const INACTIVITY_TIMEOUT = 3 * 60 * 1000; // 3 minutes
+    const INACTIVITY_TIMEOUT = 1 * 60 * 1000; // 1 minute
     let timeoutId: NodeJS.Timeout;
     let lastActiveTime = Date.now();
 
-    const handleLogoutDueToInactivity = () => {
+    const handleLogoutDueToInactivity = async () => {
+      try {
+        // تسجيل الخروج من Firebase
+        await signOut(auth);
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
+      
+      // مسح المستخدم من التطبيق
+      setUser(null);
+      localStorage.removeItem('oed_training_user');
+      
+      // إظهار رسالة للمستخدم
       import('react-hot-toast').then(({ default: toast }) => {
         toast.error(
           language === 'ar' || navigator.language.startsWith('ar') 
-            ? 'تم تسجيل الخروج تلقائياً لعدم النشاط لمدة 3 دقائق لحماية حسابك.' 
-            : 'You have been automatically logged out due to 3 minutes of inactivity.'
+            ? 'تم تسجيل الخروج تلقائياً لعدم النشاط لمدة دقيقة.' 
+            : 'You have been automatically logged out due to 1 minute of inactivity.'
         );
       });
-      // The actual logout is handled in the context
     };
 
     const resetTimer = () => {
@@ -116,9 +136,12 @@ const AppContent: React.FC = () => {
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
+        // التطبيق في الخلفية - نسجل الوقت
         lastActiveTime = Date.now();
       } else {
-        if (Date.now() - lastActiveTime >= INACTIVITY_TIMEOUT) {
+        // التطبيق عاد للواجهة - نتحقق من الوقت
+        const timePassed = Date.now() - lastActiveTime;
+        if (timePassed >= INACTIVITY_TIMEOUT) {
           handleLogoutDueToInactivity();
         } else {
           resetTimer();
@@ -126,19 +149,27 @@ const AppContent: React.FC = () => {
       }
     };
 
-    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    // أحداث النشاط (الماوس، الكيبورد، اللمس)
+    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'wheel'];
     activityEvents.forEach(evt => window.addEventListener(evt, resetTimer, { passive: true }));
+    
+    // مراقبة تغيير حالة التطبيق (خلفية/واجهة)
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
+    // بدء المؤقت
     resetTimer();
 
+    // التنظيف عند الخروج
     return () => {
       clearTimeout(timeoutId);
       activityEvents.forEach(evt => window.removeEventListener(evt, resetTimer));
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [user]);
+  }, [user, language, setUser]);
 
+  // ============================================
+  // Render
+  // ============================================
   const activeRole = user?.role;
 
   return (
