@@ -85,11 +85,14 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
+  /* Added explicit background color for light mode on mobile */
+  background-color: var(--bg-secondary) !important;
   transition: background-color var(--transition-theme), color var(--transition-theme);
 }
 
 body {
-  background-color: var(--bg-secondary);
+  /* Added explicit background color for light mode on mobile */
+  background-color: var(--bg-secondary) !important;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -116,6 +119,11 @@ body {
   background-image:
     radial-gradient(ellipse at 15% 0%, rgba(0,61,133,0.2) 0%, transparent 55%),
     radial-gradient(ellipse at 85% 100%, rgba(255,192,0,0.06) 0%, transparent 55%);
+}
+
+[data-theme="dark"] html,
+[data-theme="dark"] body {
+    background-color: var(--bg-secondary) !important;
 }
 
 /* ============================================
