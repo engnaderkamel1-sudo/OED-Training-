@@ -416,5 +416,77 @@ button:active:not(:disabled) {
 @media print {
   body { background: white !important; }
   .shadow-sm, .shadow-md, .shadow-lg { box-shadow: none !important; }
-  [data-theme="dark"] body { background: white !important; color: black !important; }
+ [data-theme="dark"] {
+  --bg-primary: #0a1628;
+  --bg-secondary: #0f1a30;
+  --bg-tertiary: #15203a;
+  --bg-card: #1a2744;        /* خلفية البطاقات */
+  --bg-hover: #243456;
+  --bg-input: #1a2744;
+  --bg-nav: #0a1628;
+  --bg-sidebar: #0f1a30;
+
+  /* ★★★ الألوان المهمة للنصوص ★★★ */
+  --text-primary: #f0f4ff;   /* أبيض مائل للأزرق (واضح جداً) */
+  --text-secondary: #b0c4de; /* أزرق فاتح (واضح) */
+  --text-muted: #8899bb;     /* رمادي-أزرق (مقروء) */
+  --text-inverse: #0d1b2a;
+  --text-nav: #f0f4ff;
+
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-card: rgba(255, 255, 255, 0.1);
+  --border-input: rgba(255, 255, 255, 0.15);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.6);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+/* ============================================
+   DARK MODE - TEXT CLARITY
+   ============================================ */
+[data-theme="dark"] .text-gray-900 {
+  color: #f0f4ff !important;
+}
+
+[data-theme="dark"] .text-gray-800 {
+  color: #e0e8f5 !important;
+}
+
+[data-theme="dark"] .text-gray-700 {
+  color: #d0dcee !important;
+}
+
+[data-theme="dark"] .text-gray-600 {
+  color: #b0c4de !important;
+}
+
+[data-theme="dark"] .text-gray-500 {
+  color: #8899bb !important;
+}
+
+[data-theme="dark"] .text-gray-400 {
+  color: #667799 !important;
+}
+
+/* ★★★ خلفيات البطاقات ★★★ */
+[data-theme="dark"] .bg-white {
+  background-color: #1a2744 !important;
+}
+
+[data-theme="dark"] .bg-gray-50 {
+  background-color: #0f1a30 !important;
+}
+
+[data-theme="dark"] .bg-gray-100 {
+  background-color: #15203a !important;
+}
+
+[data-theme="dark"] .border-gray-200 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .border-gray-300 {
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }

@@ -76,9 +76,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
       const stored = localStorage.getItem('oed_theme');
-      return (stored as 'light' | 'dark') || 'light';
+      return (stored as 'light' | 'dark') || 'dark';
     } catch {
-      return 'light';
+      return 'dark';
     }
   });
 
