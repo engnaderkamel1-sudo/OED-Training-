@@ -505,3 +505,78 @@ button:active:not(:disabled) {
     color: black !important; 
   }
 }
+/* ============================================
+   ★★★ MOBILE FIX - DARK MODE TABLES ★★★
+   ============================================ */
+
+/* --- تحسين الجداول على الموبايل في الدارك مود --- */
+@media (max-width: 768px) {
+  [data-theme="dark"] table td,
+  [data-theme="dark"] table th,
+  [data-theme="dark"] .table-cell,
+  [data-theme="dark"] td span,
+  [data-theme="dark"] td div,
+  [data-theme="dark"] .text-gray-900,
+  [data-theme="dark"] .text-gray-800,
+  [data-theme="dark"] .text-gray-700,
+  [data-theme="dark"] .text-gray-600,
+  [data-theme="dark"] .text-gray-500 {
+    color: #f0f4ff !important;
+  }
+
+  /* --- تحسين خلفية الجدول في الموبايل --- */
+  [data-theme="dark"] table {
+    background-color: #1a2744 !important;
+  }
+
+  [data-theme="dark"] table tbody tr {
+    background-color: #1a2744 !important;
+  }
+
+  [data-theme="dark"] table tbody tr:nth-child(even) {
+    background-color: #15203a !important;
+  }
+
+  /* --- تحسين النصوص في بطاقات الجدول (لو الجدول بيتحول لكروت) --- */
+  [data-theme="dark"] .card,
+  [data-theme="dark"] .border,
+  [data-theme="dark"] .rounded-lg,
+  [data-theme="dark"] .rounded-xl {
+    background-color: #1a2744 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  [data-theme="dark"] .card *,
+  [data-theme="dark"] .border *,
+  [data-theme="dark"] .rounded-lg *,
+  [data-theme="dark"] .rounded-xl * {
+    color: #f0f4ff !important;
+  }
+
+  /* --- تحسين ألوان الـ HR Code والاسم في الجدول --- */
+  [data-theme="dark"] .font-medium,
+  [data-theme="dark"] .font-bold,
+  [data-theme="dark"] .font-semibold {
+    color: #f0f4ff !important;
+  }
+
+  /* --- تحسين الأزرار والروابط في الموبايل --- */
+  [data-theme="dark"] button,
+  [data-theme="dark"] a,
+  [data-theme="dark"] .btn,
+  [data-theme="dark"] .text-\[\#002D62\] {
+    color: #7eb8ff !important;
+  }
+
+  /* --- تحسين لون الخلفية للجدول ككل --- */
+  [data-theme="dark"] .overflow-x-auto,
+  [data-theme="dark"] .overflow-x-auto > div {
+    background-color: #0f1a30 !important;
+  }
+
+  /* --- تحسين التحديد (Selection) في الموبايل --- */
+  [data-theme="dark"] ::selection {
+    background-color: rgba(255, 192, 0, 0.3);
+    color: #ffffff;
+  }
+}
