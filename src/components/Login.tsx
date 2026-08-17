@@ -193,10 +193,6 @@ export const Login: React.FC = () => {
           <>
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-        {!isRegistering ? (
-          <>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {language === 'ar' ? 'الرقم الوظيفي (HR Code)' : 'HR Code'}
                 </label>
