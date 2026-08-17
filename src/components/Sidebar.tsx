@@ -129,36 +129,37 @@ export const Sidebar: React.FC = () => {
   return (
     <>
       {/* ── MOBILE MENU BUTTON ── */}
-      <div 
-        className={`
-          fixed top-20 z-[9999] print:hidden flex flex-col items-center gap-0.5
-          transition-all duration-300 ease-in-out
-          ${isOpen 
-            ? 'left-4 rtl:left-auto rtl:right-4' 
-            : '-left-8 hover:left-4 rtl:left-auto rtl:-right-8 rtl:hover:right-4 opacity-60 hover:opacity-100'
-          }
-        `}
-      >
-        <button
-          onClick={() => { setIsOpen(!isOpen); setIsNudging(false); }}
+      <div className="fixed top-20 left-0 rtl:left-auto rtl:right-0 w-6 h-20 z-[9999] print:hidden group">
+        <div 
           className={`
-            bg-[#002D62] dark:bg-[#0a1628] text-white p-3 rounded-full shadow-xl
-            hover:bg-blue-800 dark:hover:bg-[#132040] transition-all active:scale-95
-            border-2 border-[#FFC000] dark:border-[#FFC000]/60
-            ${isNudging && !isOpen ? 'menu-nudge' : ''}
+            absolute top-0 transition-all duration-300 ease-in-out flex flex-col items-center gap-0.5
+            ${isOpen 
+              ? 'left-4 rtl:left-auto rtl:right-4' 
+              : '-left-8 group-hover:left-4 rtl:left-auto rtl:-right-8 rtl:group-hover:right-4 opacity-60 group-hover:opacity-100'
+            }
           `}
-          aria-label={isOpen ? 'Close menu' : 'Open menu'}
         >
-          {isOpen ? <X size={22} strokeWidth={2.5} /> : <Menu size={22} strokeWidth={2.5} />}
-        </button>
-        {!isOpen && (
-          <span
-            className="text-[10px] font-bold tracking-wide uppercase select-none"
-            style={{ color: 'var(--oc-navy)', opacity: 0.75 }}
+          <button
+            onClick={() => { setIsOpen(!isOpen); setIsNudging(false); }}
+            className={`
+              bg-[#002D62] dark:bg-[#0a1628] text-white p-3 rounded-full shadow-xl
+              hover:bg-blue-800 dark:hover:bg-[#132040] transition-all active:scale-95
+              border-2 border-[#FFC000] dark:border-[#FFC000]/60
+              ${isNudging && !isOpen ? 'menu-nudge' : ''}
+            `}
+            aria-label={isOpen ? 'Close menu' : 'Open menu'}
           >
-            {language === 'ar' ? 'القائمة' : 'Menu'}
-          </span>
-        )}
+            {isOpen ? <X size={22} strokeWidth={2.5} /> : <Menu size={22} strokeWidth={2.5} />}
+          </button>
+          {!isOpen && (
+            <span
+              className="text-[10px] font-bold tracking-wide uppercase select-none"
+              style={{ color: 'var(--oc-navy)', opacity: 0.75 }}
+            >
+              {language === 'ar' ? 'القائمة' : 'Menu'}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* ── OVERLAY ── */}
