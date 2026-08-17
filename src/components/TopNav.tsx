@@ -53,10 +53,11 @@ export const TopNav: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo and Brand */}
           <div className="flex items-center gap-3">
+            {/* اللوجو الجديد تم إضافته هنا */}
             <img 
-              src="/oed-ttms-logo-v2.png" 
+              src="/app-icon.jpg" 
               alt="OED-TTMS" 
-              className="h-10 w-10 object-contain rounded-lg bg-white/10 p-1"
+              className="h-10 w-10 object-cover rounded-xl shadow-sm border border-white/20"
             />
             <div className="hidden md:block">
               <h1 className="text-sm font-bold tracking-tight text-white">
@@ -115,13 +116,12 @@ export const TopNav: React.FC = () => {
                       className="w-8 h-8 rounded-full object-cover border-2 border-[#FFC000]"
                     />
                   ) : (
-                    // --- هنا تم تعديل الألوان لتكون واضحة وجذابة ---
                     <div 
                       className="w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-[13px] shadow-sm"
                       style={{ 
-                        backgroundColor: '#ffffff', // خلفية بيضاء
-                        color: '#002D62', // خط كحلي
-                        border: '2px solid #FFC000' // إطار ذهبي
+                        backgroundColor: '#ffffff', 
+                        color: '#002D62', 
+                        border: '2px solid #FFC000' 
                       }}
                     >
                       {getInitials(user.name)}

@@ -21,14 +21,12 @@ import {
   History, 
   Activity, 
   MessageSquare,
-  ShieldAlert // Icon for System Monitoring
+  ShieldAlert
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
   const { user, language, t, currentView, setCurrentView } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
-  
-  // State لفتح أكثر من قائمة منسدلة
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     tools_parent: true,
     system_monitoring: true
@@ -37,7 +35,6 @@ export const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isNudging, setIsNudging] = useState(false);
 
-  // Nudge menu button after 2 seconds of being closed to hint at menu
   useEffect(() => {
     if (isOpen) return;
     const nudgeTimer = setTimeout(() => {
@@ -51,9 +48,6 @@ export const Sidebar: React.FC = () => {
 
   const role = user.role;
 
-  // ============================================
-  // Auto collapse sidebar after 10 seconds of inactivity
-  // ============================================
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     
@@ -68,7 +62,7 @@ export const Sidebar: React.FC = () => {
       if (isCollapsed) {
         setIsCollapsed(false);
       }
-      timeoutId = setTimeout(handleInactivity, 10000); // 10 seconds
+      timeoutId = setTimeout(handleInactivity, 10000);
     };
 
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
@@ -94,50 +88,49 @@ export const Sidebar: React.FC = () => {
   };
 
   const getTraineeLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'coursesCatalog', label: language === 'ar' ? 'دليل ومكتبة الكورسات' : 'Courses Catalog', icon: BookOpen },
-    { id: 'newCourses', label: language === 'ar' ? 'الدورات المتاحة' : 'Available Courses', icon: CalendarDays },
-    { id: 'notifications', label: language === 'ar' ? 'التنبيهات' : 'Notifications', icon: Bell },
-    { id: 'suggestions', label: language === 'ar' ? 'الاقتراحات والملاحظات' : 'Suggestions', icon: MessageSquare },
-    { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'coursesCatalog', label: 'Courses Catalog', icon: BookOpen },
+    { id: 'newCourses', label: 'Available Courses', icon: CalendarDays },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
+    { id: 'profile', label: 'My Profile', icon: UserCircle },
   ];
 
   const getManagerLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'coursesCatalog', label: language === 'ar' ? 'دليل ومكتبة الكورسات' : 'Courses Catalog', icon: BookOpen },
-    { id: 'userManagement', label: language === 'ar' ? 'طلبات المستخدمين' : 'User Requests', icon: Users },
-    { id: 'suggestions', label: language === 'ar' ? 'الاقتراحات والملاحظات' : 'Suggestions', icon: MessageSquare },
-    { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'coursesCatalog', label: 'Courses Catalog', icon: BookOpen },
+    { id: 'userManagement', label: 'User Requests', icon: Users },
+    { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
+    { id: 'profile', label: 'My Profile', icon: UserCircle },
   ];
 
   const getAdminLinks = () => [
-    { id: 'dashboard', label: language === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'coursesCatalog', label: language === 'ar' ? 'دليل ومكتبة الكورسات' : 'Courses Catalog', icon: BookOpen },
-    { id: 'userManagement', label: language === 'ar' ? 'طلبات المستخدمين' : 'User Requests', icon: Users },
-    { id: 'analytics', label: language === 'ar' ? 'التحليلات' : 'Analytics', icon: BarChart },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'coursesCatalog', label: 'Courses Catalog', icon: BookOpen },
+    { id: 'userManagement', label: 'User Requests', icon: Users },
+    { id: 'analytics', label: 'Analytics', icon: BarChart },
     { 
       id: 'tools_parent', 
-      label: language === 'ar' ? 'إدارة التدريب' : 'Training Management', 
+      label: 'Training Management', 
       icon: Database,
       subLinks: [
-        { id: 'tools_create', label: language === 'ar' ? 'إنشاء دورة' : 'Create Session', icon: PlusCircle },
-        { id: 'tools_manage', label: language === 'ar' ? 'إدارة الدورات' : 'Manage Sessions', icon: CalendarDays },
-        { id: 'tools_reports', label: language === 'ar' ? 'التقارير والمزامنة' : 'Reports & Sync', icon: Settings },
+        { id: 'tools_create', label: 'Create Session', icon: PlusCircle },
+        { id: 'tools_manage', label: 'Manage Sessions', icon: CalendarDays },
+        { id: 'tools_reports', label: 'Reports & Sync', icon: Settings },
       ]
     },
-    // --- المجموعة الجديدة لمراقبة النظام ---
     { 
       id: 'system_monitoring', 
-      label: language === 'ar' ? 'مراقبة النظام' : 'System Monitoring', 
+      label: 'System Monitoring', 
       icon: ShieldAlert,
       subLinks: [
-        { id: 'tools_logs', label: language === 'ar' ? 'سجل الدخول' : 'Login History', icon: History },
-        { id: 'tools_usage', label: language === 'ar' ? 'استهلاك قاعدة البيانات' : 'Firebase Quota', icon: Activity },
-        { id: 'activityLogs', label: language === 'ar' ? 'سجل النشاط' : 'Activity Logs', icon: FileText },
+        { id: 'tools_logs', label: 'Login History', icon: History },
+        { id: 'tools_usage', label: 'Firebase Quota', icon: Activity },
+        { id: 'activityLogs', label: 'Activity Logs', icon: FileText },
       ]
     },
-    { id: 'suggestions', label: language === 'ar' ? 'الاقتراحات والملاحظات' : 'Suggestions', icon: MessageSquare },
-    { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
+    { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
+    { id: 'profile', label: 'My Profile', icon: UserCircle },
   ];
 
   let links: any[] = [];
@@ -147,7 +140,6 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
-      {/* ── MOBILE MENU BUTTON ── */}
       <div className="fixed top-20 left-0 rtl:left-auto rtl:right-0 w-6 h-20 z-[9999] print:hidden group">
         <div 
           className={`
@@ -170,18 +162,9 @@ export const Sidebar: React.FC = () => {
           >
             {isOpen ? <X size={22} strokeWidth={2.5} /> : <Menu size={22} strokeWidth={2.5} />}
           </button>
-          {!isOpen && (
-            <span
-              className="text-[10px] font-bold tracking-wide uppercase select-none"
-              style={{ color: 'var(--oc-navy)', opacity: 0.75 }}
-            >
-              {language === 'ar' ? 'القائمة' : 'Menu'}
-            </span>
-          )}
         </div>
       </div>
 
-      {/* ── OVERLAY ── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -194,7 +177,6 @@ export const Sidebar: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* ── SIDEBAR ── */}
       <aside
         className={`
           fixed top-0 h-[100dvh] border-r rtl:border-r-0 rtl:border-l
@@ -214,13 +196,15 @@ export const Sidebar: React.FC = () => {
           {/* Header */}
           <div className="pb-4 mb-2 flex flex-col items-center justify-center gap-2"
             style={{ borderBottom: '1px solid var(--border-color)' }}>
+            
+            {/* اللوجو الجديد تم إضافته هنا */}
             <img
-              src="/oed-ttms-logo-v2.png"
+              src="/app-icon.jpg"
               alt="OED-TTMS Logo"
-              className="w-14 h-14 rounded-xl object-contain"
-              style={{ border: '1px solid var(--border-card)', boxShadow: 'var(--shadow-sm)' }}
+              className="w-16 h-16 rounded-2xl object-cover shadow-md border-2 border-white/10"
             />
-            <div className="text-center">
+            
+            <div className="text-center mt-1">
               <div className="font-bold text-xs tracking-wide uppercase"
                 style={{ color: 'var(--oc-navy)' }}>
                 Orascom Equipment Dept.
@@ -231,13 +215,11 @@ export const Sidebar: React.FC = () => {
             </div>
           </div>
 
-          {/* Section label */}
           <div className="text-xs font-bold uppercase tracking-wider mb-1 px-3"
             style={{ color: 'var(--text-muted)' }}>
-            {language === 'ar' ? 'القائمة الرئيسية' : 'Main Menu'}
+            Main Menu
           </div>
 
-          {/* Links */}
           {links.map((link) => {
             if (link.subLinks) {
               const isChildActive = link.subLinks.some((sl: any) => currentView === sl.id) || (currentView === 'tools' && link.id === 'tools_parent');
