@@ -15,8 +15,8 @@ import { Sidebar } from './components/Sidebar';
 import { ProfilePage } from './components/ProfilePage';
 import { CoursesPage } from './components/CoursesPage';
 import { SuggestionsPage } from './components/SuggestionsPage';
-// --- هنا استدعينا الشاشة الجديدة ---
-import { ActivityLogsView } from './ActivityLogsView'; 
+// --- تم تصحيح المسار هنا عشان يقرأ من فولدر components ---
+import { ActivityLogsView } from './components/ActivityLogsView'; 
 import { Loader2 } from 'lucide-react';
 import { auth, db, messaging } from './firebase';
 import { getToken, onMessage } from 'firebase/messaging';
@@ -258,7 +258,6 @@ const AppContent: React.FC = () => {
               </div>
             )}
 
-            {/* تم تحديث الشروط عشان الشاشة الأساسية تختفي لو احنا في الـ activityLogs */}
             {activeRole === 'trainee' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <TraineeDashboard />}
             {activeRole === 'manager' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <ManagerDashboard />}
             {activeRole === 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <AdminDashboard />}
