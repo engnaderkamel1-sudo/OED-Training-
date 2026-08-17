@@ -14,6 +14,7 @@ import { SiteSupervisorDashboard } from './components/SiteSupervisorDashboard';
 import { Sidebar } from './components/Sidebar';
 import { ProfilePage } from './components/ProfilePage';
 import { CoursesPage } from './components/CoursesPage';
+import { SuggestionsPage } from './components/SuggestionsPage';
 import { Loader2 } from 'lucide-react';
 import { auth, db, messaging } from './firebase';
 import { getToken, onMessage } from 'firebase/messaging';
@@ -130,10 +131,11 @@ const AppContent: React.FC = () => {
             {!activeRole && <Login />}
             {activeRole && currentView === 'profile' && <ProfilePage />}
             {activeRole && currentView === 'coursesCatalog' && <CoursesPage />}
-            {activeRole === 'trainee' && currentView !== 'profile' && currentView !== 'coursesCatalog' && <TraineeDashboard />}
-            {activeRole === 'manager' && currentView !== 'profile' && currentView !== 'coursesCatalog' && <ManagerDashboard />}
-            {activeRole === 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && <AdminDashboard />}
-            {activeRole === 'supervisor' && currentView !== 'profile' && currentView !== 'coursesCatalog' && <SiteSupervisorDashboard />}
+            {activeRole && currentView === 'suggestions' && <SuggestionsPage />}
+            {activeRole === 'trainee' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && <TraineeDashboard />}
+            {activeRole === 'manager' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && <ManagerDashboard />}
+            {activeRole === 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && <AdminDashboard />}
+            {activeRole === 'supervisor' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && <SiteSupervisorDashboard />}
           </div>
         </main>
       </div>

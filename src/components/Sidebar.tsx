@@ -17,7 +17,7 @@ import {
   PlusCircle,
   CalendarDays,
   Settings
-, History, Activity } from 'lucide-react';
+, History, Activity, MessageSquare } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
   const { user, language, t, currentView, setCurrentView } = useAppContext();
@@ -40,6 +40,7 @@ export const Sidebar: React.FC = () => {
     { id: 'coursesCatalog', label: language === 'ar' ? 'دليل ومكتبة الكورسات' : 'Courses Catalog', icon: BookOpen },
     { id: 'newCourses', label: language === 'ar' ? 'الدورات المتاحة' : 'Available Courses', icon: CalendarDays },
     { id: 'notifications', label: language === 'ar' ? 'التنبيهات' : 'Notifications', icon: Bell },
+    { id: 'suggestions', label: language === 'ar' ? 'الاقتراحات والملاحظات' : 'Suggestions', icon: MessageSquare },
     { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
   ];
 
@@ -47,6 +48,7 @@ export const Sidebar: React.FC = () => {
     { id: 'dashboard', label: language === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard },
     { id: 'coursesCatalog', label: language === 'ar' ? 'دليل ومكتبة الكورسات' : 'Courses Catalog', icon: BookOpen },
     { id: 'userManagement', label: language === 'ar' ? 'طلبات المستخدمين' : 'User Requests', icon: Users },
+    { id: 'suggestions', label: language === 'ar' ? 'الاقتراحات والملاحظات' : 'Suggestions', icon: MessageSquare },
     { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
   ];
 
@@ -67,6 +69,7 @@ export const Sidebar: React.FC = () => {
         { id: 'tools_usage', label: language === 'ar' ? 'استهلاك قاعدة البيانات' : 'Firebase Quota', icon: Activity },
       ]
     },
+    { id: 'suggestions', label: language === 'ar' ? 'الاقتراحات والملاحظات' : 'Suggestions', icon: MessageSquare },
     { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
   ];
 

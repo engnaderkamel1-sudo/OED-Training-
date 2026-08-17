@@ -118,5 +118,38 @@ export interface LoginLog {
   hrCode: string;
   role: Role;
   timestamp: string;
+  // Location & Device
+  city?: string;
+  country?: string;
+  ip?: string;
+  device?: string;
+  browser?: string;
+  // Activity tracking
+  activityLog?: ActivityEntry[];
 }
+
+export interface ActivityEntry {
+  view: string;
+  label: string;
+  timestamp: string;
+}
+
+export type SuggestionCategory = 'ui' | 'course' | 'bug' | 'general';
+export type SuggestionStatus = 'pending' | 'reviewing' | 'done' | 'rejected';
+
+export interface Suggestion {
+  id: string;
+  userId: string;
+  userName: string;
+  hrCode: string;
+  department: string;
+  title: string;
+  description: string;
+  category: SuggestionCategory;
+  status: SuggestionStatus;
+  createdAt: string;
+  adminNote?: string;
+  updatedAt?: string;
+}
+
 

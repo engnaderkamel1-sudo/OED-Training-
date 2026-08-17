@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { Language, User, Role, Course, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement, LoginLog } from './types';
+import { Language, User, Role, Course, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement, LoginLog, Suggestion } from './types';
 import { translations } from './i18n';
 import { collection, onSnapshot, doc, setDoc, writeBatch, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
@@ -46,6 +46,9 @@ interface AppContextType {
   deleteAnnouncement: (id: string) => void;
   loginLogs: LoginLog[];
   addLoginLog: (log: LoginLog) => void;
+  suggestions: Suggestion[];
+  addSuggestion: (s: Suggestion) => Promise<void>;
+  updateSuggestion: (id: string, updates: Partial<Suggestion>) => Promise<void>;
   debugRole: Role;
   setDebugRole: (role: Role) => void;
   t: (key: keyof typeof translations['en']) => string;
@@ -88,6 +91,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Announcements State
   const [announcements, setAnnouncementsState] = useState<SystemAnnouncement[]>([]);
   const [loginLogs, setLoginLogsState] = useState<LoginLog[]>([]);
+  const [suggestions, setSuggestionsState] = useState<Suggestion[]>([]);
   const [firebaseCourses, setFirebaseCoursesState] = useState<Course[]>([]);
 
   const [debugRole, setDebugRole] = useState<Role>(null);
@@ -131,10 +135,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const unsubLoginLogs = onSnapshot(collection(db, "loginLogs"), (snapshot) => {
       const logs: LoginLog[] = [];
       snapshot.forEach((d) => logs.push(d.data() as LoginLog));
-      // Sort by timestamp descending (newest first)
       logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       setLoginLogsState(logs);
     }, (error) => console.error("Firebase LoginLogs Error:", error));
+
+    const unsubSuggestions = onSnapshot(collection(db, "suggestions"), (snapshot) => {
+      const sugs: Suggestion[] = [];
+      snapshot.forEach((d) => sugs.push(d.data() as Suggestion));
+      sugs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setSuggestionsState(sugs);
+    }, (error) => console.error("Firebase Suggestions Error:", error));
 
     try {
       const storedFileName = localStorage.getItem('oed_training_filename');
@@ -150,6 +160,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       unsubData();
       unsubAnnouncements();
       unsubLoginLogs();
+      unsubSuggestions();
     };
   }, []);
 
@@ -350,7 +361,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch (error) {
       console.error("Error adding login log:", error);
     }
-  };;
+  };
+
+  const addSuggestion = async (s: Suggestion) => {
+    const clean = Object.fromEntries(Object.entries(s).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, "suggestions", s.id), clean);
+  };
+
+  const updateSuggestion = async (id: string, updates: Partial<Suggestion>) => {
+    const ref = doc(db, "suggestions", id);
+    const clean = Object.fromEntries(Object.entries({ ...updates, updatedAt: new Date().toISOString() }).filter(([_, v]) => v !== undefined));
+    await setDoc(ref, clean, { merge: true });
+  };
 
   const addAttendanceRecord = async (sessionId: string, hrCode: string) => {
     const session = upcomingSessions.find(s => s.id === sessionId);
@@ -459,6 +481,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       cancelSession, reactivateSession, registerTrainee, unregisterTrainee,
       announcements, addAnnouncement, deleteAnnouncement,
       loginLogs, addLoginLog,
+      suggestions, addSuggestion, updateSuggestion,
       addAttendanceRecord,
       debugRole, setDebugRole, 
       t, 

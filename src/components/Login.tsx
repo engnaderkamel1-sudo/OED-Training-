@@ -1,10 +1,33 @@
 import React, { useState } from "react";
 import { useAppContext, generateUUID } from "../context";
-import { User, Role } from "../types";
+import { User, Role, LoginLog } from "../types";
 import { Fingerprint, CheckCircle, Eye, EyeOff, Loader2, KeyRound } from "lucide-react";
 import { auth } from "../firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
+
+// Helper: get browser, device, and geolocation info for login log
+const getLoginMeta = async (): Promise<Partial<LoginLog>> => {
+  const ua = navigator.userAgent;
+  const device = /Mobi|Android|iPhone|iPad/i.test(ua) ? 'Mobile' : 'Desktop';
+  const browser = ua.includes('Chrome') && !ua.includes('Edg') ? 'Chrome'
+    : ua.includes('Edg') ? 'Edge'
+    : ua.includes('Firefox') ? 'Firefox'
+    : ua.includes('Safari') && !ua.includes('Chrome') ? 'Safari'
+    : 'Other';
+  let city = 'Unknown', country = 'Unknown', ip = '';
+  try {
+    const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+    if (res.ok) {
+      const data = await res.json();
+      city = data.city || 'Unknown';
+      country = data.country_name || 'Unknown';
+      ip = data.ip || '';
+    }
+  } catch { /* silently fail */ }
+  return { device, browser, city, country, ip };
+};
+
 export const Login: React.FC = () => {
   const { t, language, setUser, users, setUsers, uniqueDepartments, addLoginLog } = useAppContext();
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -113,13 +136,17 @@ export const Login: React.FC = () => {
         } as User);
       setUser(adminUser);
       localStorage.setItem("savedUserId", adminUser.id);
-      addLoginLog({
-        id: generateUUID(),
-        userId: adminUser.id,
-        name: adminUser.name,
-        hrCode: adminUser.hrCode,
-        role: adminUser.role,
-        timestamp: new Date().toISOString()
+      // Record login with location
+      getLoginMeta().then(meta => {
+        addLoginLog({
+          id: generateUUID(),
+          userId: adminUser.id,
+          name: adminUser.name,
+          hrCode: adminUser.hrCode,
+          role: adminUser.role,
+          timestamp: new Date().toISOString(),
+          ...meta
+        });
       });
       return;
     }
@@ -162,14 +189,17 @@ export const Login: React.FC = () => {
     } else {
       setUser(foundUser);
       localStorage.setItem("savedUserId", foundUser.id);
-      // Record login event for any user
-      addLoginLog({
-        id: generateUUID(),
-        userId: foundUser.id,
-        name: foundUser.name,
-        hrCode: foundUser.hrCode,
-        role: foundUser.role,
-        timestamp: new Date().toISOString()
+      // Record login with location
+      getLoginMeta().then(meta => {
+        addLoginLog({
+          id: generateUUID(),
+          userId: foundUser!.id,
+          name: foundUser!.name,
+          hrCode: foundUser!.hrCode,
+          role: foundUser!.role,
+          timestamp: new Date().toISOString(),
+          ...meta
+        });
       });
     }
     } finally {
