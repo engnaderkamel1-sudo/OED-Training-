@@ -416,6 +416,7 @@ button:active:not(:disabled) {
 @media print {
   body { background: white !important; }
   .shadow-sm, .shadow-md, .shadow-lg { box-shadow: none !important; }
+}
  [data-theme="dark"] {
   --bg-primary: #0a1628;
   --bg-secondary: #0f1a30;
