@@ -15,8 +15,6 @@ export interface User {
   createdAt?: string;
   managerEmails?: string[];
   password?: string;
-  createdAt?: string;
-  managerEmails?: string[];
   profileImageUrl?: string;
   hasUnreadNotifications?: boolean;
   fcmToken?: string;
@@ -98,7 +96,6 @@ export interface CleanedRecord {
   raw?: any;
 }
 
-
 export interface SystemAnnouncement {
   id: string;
   sessionId?: string; // Optional: If provided, it's for a specific course. If null, it's a global broadcast.
@@ -118,20 +115,12 @@ export interface LoginLog {
   hrCode: string;
   role: Role;
   timestamp: string;
-  // Location & Device
-  city?: string;
-  country?: string;
-  ip?: string;
   device?: string;
   browser?: string;
-  // Activity tracking
-  activityLog?: ActivityEntry[];
-}
-
-export interface ActivityEntry {
-  view: string;
-  label: string;
-  timestamp: string;
+  // --- الحقول الجديدة ---
+  ip?: string;
+  city?: string;
+  country?: string;
 }
 
 export type SuggestionCategory = 'ui' | 'course' | 'bug' | 'general';
@@ -153,5 +142,3 @@ export interface Suggestion {
   adminMessageAt?: string;
   updatedAt?: string;
 }
-
-
