@@ -2430,47 +2430,54 @@ export const AdminDashboard: React.FC = () => {
         )}
 
         {/* --- START tools_logs --- */}
-        {["tools_logs"].includes(currentView) && (
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-              <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0 flex items-center gap-2">
-                <Clock className="text-[#FFC000]" size={24} />
-                {language === "ar" ? "??? ??????" : "Login History"}
-              </h2>
-              {loginLogs && loginLogs.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left rtl:text-right text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b">
-                      <tr>
-                        <th className="px-6 py-3">{language === "ar" ? "?????" : "Name"}</th>
-                        <th className="px-6 py-3">{language === "ar" ? "????? ???????" : "HR Code"}</th>
-                        <th className="px-6 py-3">{language === "ar" ? "?????" : "Role"}</th>
-                        <th className="px-6 py-3">{language === "ar" ? "??? ??????" : "Time"}</th>
-                        <th className="p-3 align-top">
-                        <div className="font-semibold text-gray-700 mb-2">
-                          {language === "ar" ? "إجراءات" : "Actions"}
-                        </div>
-                      </th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                      {[...loginLogs].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 50).map(log => (
-                        <tr key={log.id} className="bg-white border-b hover:bg-gray-50">
-                          <td className="px-6 py-4 font-medium text-gray-900">{log.name}</td>
-                          <td className="px-6 py-4">{log.hrCode}</td>
-                          <td className="px-6 py-4 capitalize">{log.role}</td>
-                          <td className="px-6 py-4" dir="ltr">{new Date(log.timestamp).toLocaleString()}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  {language === "ar" ? "?? ???? ????? ???? ???" : "No login records yet"}
-                </div>
-              )}
-            </div>
-          )}
+       {/* --- START tools_logs --- */}
+{["tools_logs"].includes(currentView) && (
+  <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+    <h2 className="text-2xl font-bold mb-6 text-[#002D62] border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0 flex items-center gap-2">
+      <Clock className="text-[#FFC000]" size={24} />
+      {language === "ar" ? "سجل الدخول" : "Login History"}
+    </h2>
+    {loginLogs && loginLogs.length > 0 ? (
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left rtl:text-right text-gray-500">
+          <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+            <tr>
+              <th className="px-6 py-3">{language === "ar" ? "الاسم" : "Name"}</th>
+              <th className="px-6 py-3">{language === "ar" ? "الرقم الوظيفي" : "HR Code"}</th>
+              <th className="px-6 py-3">{language === "ar" ? "الدور" : "Role"}</th>
+              <th className="px-6 py-3">{language === "ar" ? "وقت الدخول" : "Time"}</th>
+              {/* --- الأعمدة الجديدة --- */}
+              <th className="px-6 py-3">IP Address</th>
+              <th className="px-6 py-3">{language === "ar" ? "الموقع" : "Location"}</th>
+              <th className="px-6 py-3">{language === "ar" ? "الجهاز" : "Device"}</th>
+              <th className="px-6 py-3">{language === "ar" ? "المتصفح" : "Browser"}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...loginLogs].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 50).map(log => (
+              <tr key={log.id} className="bg-white border-b hover:bg-gray-50">
+                <td className="px-6 py-4 font-medium text-gray-900">{log.name}</td>
+                <td className="px-6 py-4">{log.hrCode}</td>
+                <td className="px-6 py-4 capitalize">{log.role}</td>
+                <td className="px-6 py-4" dir="ltr">{new Date(log.timestamp).toLocaleString()}</td>
+                {/* --- عرض البيانات الجديدة --- */}
+                <td className="px-6 py-4 font-mono text-xs">{log.ip || 'N/A'}</td>
+                <td className="px-6 py-4">{log.country && log.city ? `${log.city}, ${log.country}` : (log.country || log.city || 'N/A')}</td>
+                <td className="px-6 py-4">{log.device || 'N/A'}</td>
+                <td className="px-6 py-4">{log.browser || 'N/A'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div className="text-center py-8 text-gray-500">
+        {language === "ar" ? "لا توجد سجلات دخول بعد" : "No login records yet"}
+      </div>
+    )}
+  </div>
+)}
+{/* --- END tools_logs --- */}
         {/* --- END tools_logs --- */}
         {/* --- START tools_usage --- */}
         {currentView === "tools_usage" && (
