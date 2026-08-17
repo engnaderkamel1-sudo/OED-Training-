@@ -140,7 +140,6 @@ nav.bg-\[\#002D62\] {
 
 /* ============================================
    ★★★ DARK MODE — WHITE BACKGROUND FIX ★★★
-   Every element that uses bg-white must go dark
    ============================================ */
 [data-theme="dark"] .bg-white {
   background-color: var(--bg-card) !important;
@@ -213,18 +212,14 @@ nav.bg-\[\#002D62\] {
 [data-theme="dark"] .text-gray-500 { color: #8aabcf !important; }
 [data-theme="dark"] .text-gray-400 { color: #6a8cb0 !important; }
 
-/* Navy text in dark mode → light blue */
 [data-theme="dark"] .text-\[\#002D62\] { color: #7ab8ff !important; }
-/* Gold stays gold but brighter */
 [data-theme="dark"] .text-\[\#FFC000\] { color: #ffd54f !important; }
 
-/* Table text */
 [data-theme="dark"] table th { color: #b0c8e6 !important; }
 [data-theme="dark"] table td { color: #e8eeff !important; }
 [data-theme="dark"] table td .text-gray-500,
 [data-theme="dark"] table td .text-gray-600 { color: #8aabcf !important; }
 
-/* Headings */
 [data-theme="dark"] h1, [data-theme="dark"] h2,
 [data-theme="dark"] h3, [data-theme="dark"] h4 {
   color: #e8eeff !important;
@@ -234,7 +229,6 @@ nav.bg-\[\#002D62\] {
   color: #7ab8ff !important;
 }
 
-/* Links */
 [data-theme="dark"] a:not(.no-dark) { color: #7ab8ff !important; }
 [data-theme="dark"] a:hover:not(.no-dark) { color: #a8d0ff !important; }
 
@@ -279,7 +273,6 @@ nav.bg-\[\#002D62\] {
 [data-theme="dark"] .bg-yellow-100 { background-color: rgba(234,179,8,0.18) !important; }
 [data-theme="dark"] .bg-red-100    { background-color: rgba(239,68,68,0.18) !important; }
 
-/* Keep badge TEXT colors as is — they work in dark */
 [data-theme="dark"] .text-green-700  { color: #34d399 !important; }
 [data-theme="dark"] .text-green-600  { color: #34d399 !important; }
 [data-theme="dark"] .text-blue-700   { color: #60a5fa !important; }
@@ -291,54 +284,11 @@ nav.bg-\[\#002D62\] {
 [data-theme="dark"] .text-orange-700 { color: #fb923c !important; }
 [data-theme="dark"] .text-purple-700 { color: #c084fc !important; }
 
-/* Border colors for badges */
 [data-theme="dark"] .border-green-200  { border-color: rgba(16,185,129,0.3) !important; }
 [data-theme="dark"] .border-blue-200   { border-color: rgba(59,130,246,0.3) !important; }
 [data-theme="dark"] .border-red-200    { border-color: rgba(239,68,68,0.3) !important; }
 [data-theme="dark"] .border-yellow-200 { border-color: rgba(234,179,8,0.3) !important; }
 [data-theme="dark"] .border-amber-200  { border-color: rgba(245,158,11,0.3) !important; }
-
-/* ============================================
-   ★★★ DROPDOWN MENU — LIGHT MODE TEXT FIX ★★★
-   The name dropdown text was invisible
-   ============================================ */
-.absolute.right-0.mt-2,
-.absolute.left-0.mt-2 {
-  background-color: #ffffff !important;
-  color: #0d1b2a !important;
-}
-.absolute.right-0.mt-2 p,
-.absolute.right-0.mt-2 span,
-.absolute.right-0.mt-2 button:not(.text-red-600) {
-  color: #0d1b2a !important;
-}
-.absolute.right-0.mt-2 .text-gray-500,
-.absolute.right-0.mt-2 .text-gray-600 {
-  color: #4a5568 !important;
-}
-
-/* Dark mode dropdown */
-[data-theme="dark"] .absolute.right-0.mt-2,
-[data-theme="dark"] .absolute.left-0.mt-2 {
-  background-color: #182a4a !important;
-  border-color: rgba(255,255,255,0.1) !important;
-  color: #e8eeff !important;
-}
-[data-theme="dark"] .absolute.right-0.mt-2 p,
-[data-theme="dark"] .absolute.right-0.mt-2 span {
-  color: #e8eeff !important;
-}
-[data-theme="dark"] .absolute.right-0.mt-2 .text-gray-500,
-[data-theme="dark"] .absolute.right-0.mt-2 .text-gray-600 {
-  color: #8aabcf !important;
-}
-[data-theme="dark"] .absolute.right-0.mt-2 .border-b,
-[data-theme="dark"] .absolute.right-0.mt-2 .border-gray-200 {
-  border-color: rgba(255,255,255,0.08) !important;
-}
-[data-theme="dark"] .absolute.right-0.mt-2 button:hover {
-  background-color: rgba(255,255,255,0.06) !important;
-}
 
 /* ============================================
    CARDS
@@ -379,12 +329,10 @@ nav.bg-\[\#002D62\] {
   box-shadow: 0 1px 4px rgba(0,45,98,0.25) !important;
 }
 
-/* Active sidebar items */
 .bg-\[\#002D62\].text-white {
   background: linear-gradient(135deg, var(--oc-navy) 0%, var(--oc-navy-light) 100%) !important;
 }
 
-/* Gold */
 .border-\[\#FFC000\]  { border-color: var(--oc-gold) !important; }
 .text-\[\#FFC000\]   { color: var(--oc-gold) !important; }
 .bg-\[\#FFC000\]     { background: var(--oc-gold) !important; }
@@ -429,11 +377,9 @@ textarea:focus {
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ============================================
-   ★★★ MOBILE — ADMIN VIEW TEXT FIX ★★★
-   "Admin Vi..." was getting cut off
+   ★★★ MOBILE MEDIA QUERIES ★★★
    ============================================ */
 @media (max-width: 640px) {
-  /* Give the page title more room */
   .text-2xl.font-bold,
   .text-xl.font-bold,
   h1 {
@@ -442,41 +388,9 @@ textarea:focus {
     white-space: normal !important;
     word-break: break-word !important;
   }
-
-  /* Admin view label visible on mobile */
-  .hidden.md\:block {
-    /* intentionally not showing — handled in TopNav */
-  }
 }
 
-/* ============================================
-   ★★★ MOBILE — MENU BUTTON ANIMATION ★★★
-   After 2 seconds idle, nudge button to show it's there
-   ============================================ */
-@keyframes menuNudge {
-  0%   { transform: translateX(0); }
-  20%  { transform: translateX(6px); }
-  40%  { transform: translateX(-4px); }
-  60%  { transform: translateX(5px); }
-  80%  { transform: translateX(-2px); }
-  100% { transform: translateX(0); }
-}
-
-@keyframes menuPulseRing {
-  0%   { box-shadow: 0 0 0 0 rgba(255,192,0,0.55); }
-  60%  { box-shadow: 0 0 0 10px rgba(255,192,0,0); }
-  100% { box-shadow: 0 0 0 0 rgba(255,192,0,0); }
-}
-
-.menu-nudge {
-  animation: menuNudge 0.7s ease-in-out, menuPulseRing 0.9s ease-in-out 0.1s;
-}
-
-/* ============================================
-   ★★★ MOBILE — MENU BUTTON VISIBILITY ★★★
-   ============================================ */
 @media (max-width: 768px) {
-  /* Menu button tooltip label */
   .menu-btn-label {
     display: inline-block;
     font-size: 10px;
@@ -487,22 +401,21 @@ textarea:focus {
     text-transform: uppercase;
   }
 
-  /* Light mode mobile — keep text dark in tables/cards ONLY */
   table td, table th {
     color: #0d1b2a;
   }
 
-  /* bg-[#002D62] children always white */
-  .bg-\[\#002D62\] *,
+  /* 
+     تم مسح علامة النجمة الكارثية (*) من هنا لكي لا تجبر 
+     القائمة المنسدلة (Dropdown) على اللون الأبيض
+  */
   .bg-\[\#002D62\] { color: #ffffff !important; }
 }
 
-/* Dark mode overrides — MUST come AFTER the mobile block to win */
 @media (max-width: 768px) {
   [data-theme="dark"] table td,
   [data-theme="dark"] table th { color: #e8eeff !important; }
 
-  /* Sidebar links text in dark mode on mobile */
   [data-theme="dark"] aside .font-medium,
   [data-theme="dark"] aside .font-bold,
   [data-theme="dark"] aside .font-semibold,
@@ -511,14 +424,12 @@ textarea:focus {
     color: #b8cce4 !important;
   }
 
-  /* Active sidebar item stays white */
   [data-theme="dark"] aside .bg-\[\#002D62\],
   [data-theme="dark"] aside .bg-\[\#003d85\],
   [data-theme="dark"] aside .bg-\[\#002D62\] * {
     color: #ffffff !important;
   }
 
-  /* All text in dark mode pages */
   [data-theme="dark"] .font-bold,
   [data-theme="dark"] .font-semibold,
   [data-theme="dark"] .font-medium {
