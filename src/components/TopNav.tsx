@@ -7,14 +7,13 @@ import {
   Sun, 
   Bell, 
   Settings,
-  ChevronDown,
-  Globe
+  ChevronDown
 } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 
 export const TopNav: React.FC = () => {
-  const { user, language, setLanguage, setUser, t, theme, toggleTheme } = useAppContext();
+  const { user, language, setUser, t, theme, toggleTheme } = useAppContext();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -37,10 +36,6 @@ export const TopNav: React.FC = () => {
     setUser(null);
     localStorage.removeItem('oed_training_user');
     setDropdownOpen(false);
-  };
-
-  const toggleLanguage = () => {
-    setLanguage(language === 'ar' ? 'en' : 'ar');
   };
 
   const getInitials = (name: string) => {
@@ -82,7 +77,7 @@ export const TopNav: React.FC = () => {
               </p>
               <p className="text-[9px] sm:text-[10px] text-white/55 truncate">
                 {user.role === 'admin'      ? (language === 'ar' ? 'مدير النظام' : 'Admin View')      :
-                 user.role === 'manager'    ? (language === 'ar' ? 'مدير' : 'Manager View')           :
+                 user.role === 'manager'    ? (language === 'ar' ? 'مدير' : 'Manager View')            :
                  user.role === 'supervisor' ? (language === 'ar' ? 'مشرف موقع' : 'Supervisor View')   :
                                               (language === 'ar' ? 'متدرب' : 'Trainee View')}
               </p>
@@ -107,15 +102,6 @@ export const TopNav: React.FC = () => {
               </span>
             </button>
 
-            {/* Language Toggle */}
-            <button
-              onClick={toggleLanguage}
-              className="flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-sm font-medium"
-            >
-              <Globe size={16} />
-              <span>{language === 'ar' ? 'EN' : 'عربي'}</span>
-            </button>
-
             {/* User Dropdown */}
             {user && (
               <div className="relative" ref={dropdownRef}>
@@ -137,7 +123,7 @@ export const TopNav: React.FC = () => {
                   <ChevronDown size={16} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* Dropdown Menu - الألوان محددة بشكل مباشر وقاطع هنا */}
+                {/* Dropdown Menu */}
                 {dropdownOpen && (
                   <div 
                     className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl overflow-hidden animate-fadeIn z-[99999]"
@@ -150,7 +136,6 @@ export const TopNav: React.FC = () => {
                       className="px-4 py-3 border-b"
                       style={{ borderColor: theme === 'dark' ? '#2d3748' : '#e2e8f0' }}
                     >
-                      {/* الاسم باللون الأسود الإجباري في الفاتح، والأبيض في المظلم */}
                       <p 
                         className="text-sm font-bold" 
                         style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}
@@ -158,7 +143,6 @@ export const TopNav: React.FC = () => {
                         {user.name}
                       </p>
                       
-                      {/* التفاصيل بلون رمادي */}
                       <p 
                         className="text-xs mt-1" 
                         style={{ color: theme === 'dark' ? '#a0aec0' : '#4a5568' }}
@@ -167,7 +151,6 @@ export const TopNav: React.FC = () => {
                       </p>
                     </div>
                     
-                    {/* زر الخروج باللون الأحمر الإجباري */}
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors"
