@@ -491,21 +491,6 @@ button:active:not(:disabled) {
 }
 
 /* ============================================
-   PRINT STYLES
-   ============================================ */
-@media print {
-  body { 
-    background: white !important; 
-  }
-  .shadow-sm, .shadow-md, .shadow-lg { 
-    box-shadow: none !important; 
-  }
-  [data-theme="dark"] body { 
-    background: white !important; 
-    color: black !important; 
-  }
-}
-/* ============================================
    ★★★ MOBILE FIX - DARK MODE TABLES ★★★
    ============================================ */
 
@@ -537,7 +522,7 @@ button:active:not(:disabled) {
     background-color: #15203a !important;
   }
 
-  /* --- تحسين النصوص في بطاقات الجدول (لو الجدول بيتحول لكروت) --- */
+  /* --- تحسين النصوص في بطاقات الجدول --- */
   [data-theme="dark"] .card,
   [data-theme="dark"] .border,
   [data-theme="dark"] .rounded-lg,
@@ -578,5 +563,31 @@ button:active:not(:disabled) {
   [data-theme="dark"] ::selection {
     background-color: rgba(255, 192, 0, 0.3);
     color: #ffffff;
+  }
+
+  /* ★★★ تحسين إضافي للنصوص في الموبايل ★★★ */
+  [data-theme="dark"] .p-3,
+  [data-theme="dark"] .px-3,
+  [data-theme="dark"] .py-2,
+  [data-theme="dark"] .p-2,
+  [data-theme="dark"] .px-2,
+  [data-theme="dark"] .py-1 {
+    color: #f0f4ff !important;
+  }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+  body { 
+    background: white !important; 
+  }
+  .shadow-sm, .shadow-md, .shadow-lg { 
+    box-shadow: none !important; 
+  }
+  [data-theme="dark"] body { 
+    background: white !important; 
+    color: black !important; 
   }
 }
