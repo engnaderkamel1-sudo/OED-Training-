@@ -551,3 +551,62 @@ button:active:not(:disabled) {
     color: black !important; 
   }
 }
+/* ============================================
+   ★★★ IMPROVE ADMIN VIEW & SIDEBAR ★★★
+   ============================================ */
+
+/* --- تحسين وضوح "Admin View" والألوان العامة --- */
+.text-2xl.md\:text-3xl.font-bold.text-\[\#002D62\] {
+  color: var(--text-primary) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* --- تحسين ظهور اسم المستخدم في الـ TopNav --- */
+nav .text-sm.font-medium.text-white\/90,
+nav .text-sm.font-medium {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+nav .text-\[\#FFC000\] {
+  color: var(--oc-gold-light) !important;
+}
+
+/* --- جعل القائمة الجانبية تظهر بشكل أفضل على الموبايل --- */
+@media (max-width: 768px) {
+  /* القائمة الجانبية تكون شفافة قليلاً عندما تكون مطوية */
+  .sidebar-collapsed {
+    opacity: 0.9;
+    backdrop-filter: blur(4px);
+  }
+  
+  /* تحسين ظهور القائمة عند الفتح */
+  .sidebar-open {
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ============================================
+   ★★★ DROPDOWN MENU - DARK MODE FIX ★★★
+   ============================================ */
+
+/* --- تحسين القائمة المنسدلة في الدارك مود --- */
+[data-theme="dark"] .absolute.right-0.mt-2 {
+  background-color: #1a2744 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .absolute.right-0.mt-2 .text-gray-900,
+[data-theme="dark"] .absolute.right-0.mt-2 .text-gray-700,
+[data-theme="dark"] .absolute.right-0.mt-2 .text-gray-800 {
+  color: #f0f4ff !important;
+}
+
+[data-theme="dark"] .absolute.right-0.mt-2 .text-gray-500,
+[data-theme="dark"] .absolute.right-0.mt-2 .text-gray-600 {
+  color: #b0c4de !important;
+}
+
+[data-theme="dark"] .absolute.right-0.mt-2 .border-b {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
