@@ -54,28 +54,30 @@ export const TopNav: React.FC = () => {
 
   return (
     <>
-      {/* هذا الكود الصغير يكسر أي أوامر CSS قديمة بتجبر النص يكون أبيض في الموبايل */}
+      {/* الحماية القصوى باستخدام ID للتغلب على كود index.css الخاص بالموبايل */}
       <style>
         {`
-          .force-logout-btn, .force-logout-btn * {
-            color: #dc2626 !important;
-          }
-          [data-theme="dark"] .force-logout-btn, [data-theme="dark"] .force-logout-btn * {
-            color: #f87171 !important;
-          }
-          
-          .force-dropdown-text p.user-name-text {
+          #user-dropdown-menu .user-name {
             color: #000000 !important;
           }
-          [data-theme="dark"] .force-dropdown-text p.user-name-text {
+          [data-theme="dark"] #user-dropdown-menu .user-name {
             color: #ffffff !important;
           }
           
-          .force-dropdown-text p.user-role-text {
+          #user-dropdown-menu .user-role {
             color: #4a5568 !important;
           }
-          [data-theme="dark"] .force-dropdown-text p.user-role-text {
+          [data-theme="dark"] #user-dropdown-menu .user-role {
             color: #a0aec0 !important;
+          }
+          
+          #user-dropdown-menu .logout-btn,
+          #user-dropdown-menu .logout-btn * {
+            color: #dc2626 !important;
+          }
+          [data-theme="dark"] #user-dropdown-menu .logout-btn,
+          [data-theme="dark"] #user-dropdown-menu .logout-btn * {
+            color: #f87171 !important;
           }
         `}
       </style>
@@ -164,21 +166,24 @@ export const TopNav: React.FC = () => {
                     <ChevronDown size={16} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
-                  {/* Dropdown Menu */}
+                  {/* Dropdown Menu - Added ID for Ultimate CSS Override */}
                   {dropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl border overflow-hidden animate-fadeIn z-[99999] force-dropdown-text bg-white border-gray-200 dark:bg-[#182a4a] dark:border-gray-700">
+                    <div 
+                      id="user-dropdown-menu"
+                      className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl border overflow-hidden animate-fadeIn z-[99999] bg-white border-gray-200 dark:bg-[#182a4a] dark:border-gray-700"
+                    >
                       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                        <p className="text-sm font-bold user-name-text">
+                        <p className="text-sm font-bold user-name">
                           {user.name}
                         </p>
-                        <p className="text-xs mt-1 user-role-text">
+                        <p className="text-xs mt-1 user-role">
                           {user.hrCode} • {user.department}
                         </p>
                       </div>
                       
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors force-logout-btn bg-transparent hover:bg-red-50 dark:hover:bg-red-900/30"
+                        className="logout-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors bg-transparent hover:bg-red-50 dark:hover:bg-red-900/30"
                       >
                         <LogOut size={18} />
                         <span>
