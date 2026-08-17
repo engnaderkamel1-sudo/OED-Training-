@@ -346,55 +346,149 @@ export const TraineeDashboard: React.FC = () => {
 
       {/* Stats Section (dashboard) */}
       {currentView === 'dashboard' && (
-        <section className="print:hidden animate-fadeIn">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">{t('personalStats')}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-6 rounded-lg shadow border-l-4 border-[#002D62]">
-            <p className="text-sm text-gray-500">{t('totalCourses')}</p>
-            <p className="text-3xl font-bold text-[#002D62]">{totalCourses}</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow border-l-4 border-[#FFC000]">
-            <p className="text-sm text-gray-500">{t('averageScore')}</p>
-            <p className="text-3xl font-bold text-[#002D62]">{averageScore}%</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow border-l-4 border-gray-300 col-span-1 md:col-span-3 lg:col-span-1">
-            <p className="text-sm text-gray-500 mb-3">{t('attendanceDates')}</p>
-            <ul className="space-y-3">
-              {userRecords.map(r => {
-                const course = mockCourses.find(c => c.id === r.courseId);
-                const totalDaysStr = r.raw?.['Course Duration'] || r.totalDays || course?.duration || '1 Day';
-                const attendedDaysStr = r.raw?.['Attended Days'] || r.daysAttended || totalDaysStr;
-                const handleScanSuccess = async (scannedSessionId: string) => {
-    if (scannedSessionId !== scanningSessionId) {
-      alert(language === "ar" ? "????? ??????? ?? ????? ??? ??????!" : "Scanned code does not match this session!");
-      return;
-    }
-    if (user) {
-      await addAttendanceRecord(scannedSessionId, user.hrCode);
-      alert(language === "ar" ? "?? ????? ????? ?????!" : "Attendance recorded successfully!");
-    }
-    setScanningSessionId(null);
-  };
+        <section className="print:hidden animate-fadeIn space-y-6">
+          {/* Digital Training Passport / Profile Card */}
+          <div className="bg-gradient-to-r from-[#002D62] to-[#0a3f82] rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              <div className="flex items-center gap-4">
+                {user?.profileImageUrl ? (
+                  <img
+                    src={user.profileImageUrl}
+                    alt={user.name}
+                    className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-md shrink-0"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/20 flex items-center justify-center text-white font-black text-2xl shrink-0 shadow-inner">
+                    {(user?.name || 'T').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-xl font-bold tracking-tight">{user?.name || 'Trainee'}</h2>
+                    <span className="text-xs bg-[#FFC000] text-[#002D62] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
+                      {user?.jobRole || user?.role || 'Technical Staff'}
+                    </span>
+                  </div>
+                  <div className="text-xs text-blue-200 mt-1 flex items-center gap-3 flex-wrap">
+                    <span>{language === 'ar' ? 'Ø§Ù„ÙƒÙˆØ¯ Ø§Ù„ÙˆØ¸ÙŠÙÙŠ:' : 'HR Code:'} <strong className="text-white font-mono">{user?.hrCode}</strong></span>
+                    {user?.department && (
+                      <>
+                        <span>â€¢</span>
+                        <span>{user?.department}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-  return (
-                  <li key={r.id} className="text-sm flex flex-col bg-gray-50 p-3 rounded border border-gray-100">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-bold text-[#002D62] truncate mr-2" title={course?.title || r.courseName}>
-                        <DataField>{course?.title || r.courseName || 'Unknown Course'}</DataField>
-                      </span>
-                      <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded"><DataField>{formatDateToStandard(r.attendanceDate)}</DataField></span>
-                    </div>
-                    <div className="flex justify-between items-center text-gray-600 text-xs">
-                      <span>{t('attendedDays')} <DataField>{attendedDaysStr}</DataField> / <DataField>{totalDaysStr}</DataField></span>
-                      <span className="font-semibold">{t('score')}: <DataField>{formatScore(r.raw?.['Score'] || r.score)}</DataField></span>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+              {/* Quick Badge */}
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 px-4 border border-white/15 flex items-center gap-3">
+                <div className="text-center">
+                  <div className="text-[10px] text-blue-200 uppercase tracking-wider font-bold">
+                    {language === 'ar' ? 'Ù…Ø¹Ø¯Ù„ Ø§Ù„ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ø¹Ø§Ù…' : 'Performance Benchmark'}
+                  </div>
+                  <div className="text-2xl font-black text-[#FFC000]">
+                    {averageScore}%
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+
+          {/* Metric Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-2xs hover:shadow-xs transition-all flex items-center gap-4">
+              <div className="p-3 bg-blue-50 text-[#002D62] rounded-xl shrink-0">
+                <Calendar size={24} />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">{t('totalCourses')}</p>
+                <p className="text-2xl font-black text-[#002D62] mt-0.5">{totalCourses}</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">{language === 'ar' ? 'Ø¯ÙˆØ±Ø§Øª Ù…ÙƒØªÙ…Ù„Ø© ÙˆÙ…ÙˆØ«Ù‚Ø©' : 'Completed course records'}</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-2xs hover:shadow-xs transition-all flex items-center gap-4">
+              <div className="p-3 bg-amber-50 text-[#FFC000] rounded-xl shrink-0">
+                <CheckCircle size={24} />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">{t('averageScore')}</p>
+                <p className="text-2xl font-black text-gray-800 mt-0.5">{averageScore}%</p>
+                <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                  {averageScore >= 80 ? (language === 'ar' ? 'Ù…Ù…ØªØ§Ø² (Excellent)' : 'High Distinction') : (language === 'ar' ? 'Ù…Ø³ØªÙˆÙ‰ Ø¬ÙŠØ¯' : 'Good Standing')}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-2xs hover:shadow-xs transition-all flex items-center gap-4">
+              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+                <Clock size={24} />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">{language === 'ar' ? 'Ø³Ø§Ø¹Ø§Øª Ø§Ù„Ø­Ø¶ÙˆØ±' : 'Training Hours'}</p>
+                <p className="text-2xl font-black text-emerald-700 mt-0.5">{totalCourses * 8}h</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">{language === 'ar' ? 'Ø³Ø§Ø¹Ø§Øª ØªØ¯Ø±ÙŠØ¨ ÙÙ†ÙŠ Ù…Ø¹ØªÙ…Ø¯Ø©' : 'Accredited technical hours'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Attendance and Course History List */}
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-2xs">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
+              <h3 className="font-bold text-base text-[#002D62] flex items-center gap-2">
+                <Calendar size={18} className="text-[#FFC000]" />
+                <span>{language === 'ar' ? 'Ø³Ø¬Ù„ Ø§Ù„Ø¯ÙˆØ±Ø§Øª Ø§Ù„Ù…ÙƒØªÙ…Ù„Ø© ÙˆØªÙˆØ§Ø±ÙŠØ® Ø§Ù„Ø­Ø¶ÙˆØ±' : 'Completed Courses & Attendance History'}</span>
+              </h3>
+              <span className="text-xs text-gray-400 font-bold">{userRecords.length} {language === 'ar' ? 'Ø³Ø¬Ù„' : 'Records'}</span>
+            </div>
+
+            {userRecords.length === 0 ? (
+              <div className="text-center py-8 text-gray-400 text-sm">
+                {language === 'ar' ? 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø³Ø¬Ù„Ø§Øª ØªØ¯Ø±ÙŠØ¨ ØªØ§Ø±ÙŠØ®ÙŠØ© Ù…Ø³Ø¬Ù„Ø© Ø¨Ø¹Ø¯' : 'No training records found yet'}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {userRecords.map(r => {
+                  const course = mockCourses.find(c => c.id === r.courseId);
+                  const totalDaysStr = r.raw?.['Course Duration'] || r.totalDays || course?.duration || '1 Day';
+                  const attendedDaysStr = r.raw?.['Attended Days'] || r.daysAttended || totalDaysStr;
+                  const scoreVal = parseScore(r.raw?.['Score'] || r.score);
+
+                  return (
+                    <div key={r.id} className="p-4 rounded-xl bg-gray-50/80 border border-gray-200/80 hover:bg-white hover:shadow-2xs transition-all flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-start gap-2 mb-2">
+                          <span className="font-bold text-[#002D62] text-sm leading-snug">
+                            <DataField>{course?.title || r.courseName || 'Technical Course'}</DataField>
+                          </span>
+                          <span className="text-[11px] font-mono text-gray-500 bg-white px-2 py-0.5 rounded-md border border-gray-200 shrink-0">
+                            <DataField>{formatDateToStandard(r.attendanceDate)}</DataField>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-200/60 text-xs">
+                        <span className="text-gray-500">
+                          {t('attendedDays')}: <strong className="text-gray-700">{attendedDaysStr} / {totalDaysStr}</strong>
+                        </span>
+                        <span className={`font-bold px-2 py-0.5 rounded-md text-[11px] ${
+                          scoreVal >= 85 
+                            ? 'bg-emerald-100 text-emerald-800' 
+                            : scoreVal >= 70 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {t('score')}: {formatScore(scoreVal)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
       )}
 
       {/* Action Feedback Toast */}
