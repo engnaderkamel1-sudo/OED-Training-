@@ -20,15 +20,21 @@ import {
   Settings,
   History, 
   Activity, 
-  MessageSquare 
+  MessageSquare,
+  ShieldAlert // Icon for System Monitoring
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
   const { user, language, t, currentView, setCurrentView } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
-  const [isToolsExpanded, setIsToolsExpanded] = useState(true);
+  
+  // State لفتح أكثر من قائمة منسدلة
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
+    tools_parent: true,
+    system_monitoring: true
+  });
+  
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isNudging, setIsNudging] = useState(false);
 
   // Nudge menu button after 2 seconds of being closed to hint at menu
@@ -78,9 +84,13 @@ export const Sidebar: React.FC = () => {
 
   const handleNavClick = (id: string) => {
     setCurrentView(id);
-    if (id !== 'tools_parent') {
+    if (id !== 'tools_parent' && id !== 'system_monitoring') {
       setIsOpen(false);
     }
+  };
+
+  const toggleMenu = (menuId: string) => {
+    setExpandedMenus(prev => ({ ...prev, [menuId]: !prev[menuId] }));
   };
 
   const getTraineeLinks = () => [
@@ -113,13 +123,20 @@ export const Sidebar: React.FC = () => {
         { id: 'tools_create', label: language === 'ar' ? 'إنشاء دورة' : 'Create Session', icon: PlusCircle },
         { id: 'tools_manage', label: language === 'ar' ? 'إدارة الدورات' : 'Manage Sessions', icon: CalendarDays },
         { id: 'tools_reports', label: language === 'ar' ? 'التقارير والمزامنة' : 'Reports & Sync', icon: Settings },
+      ]
+    },
+    // --- المجموعة الجديدة لمراقبة النظام ---
+    { 
+      id: 'system_monitoring', 
+      label: language === 'ar' ? 'مراقبة النظام' : 'System Monitoring', 
+      icon: ShieldAlert,
+      subLinks: [
         { id: 'tools_logs', label: language === 'ar' ? 'سجل الدخول' : 'Login History', icon: History },
         { id: 'tools_usage', label: language === 'ar' ? 'استهلاك قاعدة البيانات' : 'Firebase Quota', icon: Activity },
+        { id: 'activityLogs', label: language === 'ar' ? 'سجل النشاط' : 'Activity Logs', icon: FileText },
       ]
     },
     { id: 'suggestions', label: language === 'ar' ? 'الاقتراحات والملاحظات' : 'Suggestions', icon: MessageSquare },
-    // --- هنا ضفنا سجل النشاط ---
-    { id: 'activityLogs', label: language === 'ar' ? 'سجل النشاط' : 'Activity Logs', icon: Activity },
     { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
   ];
 
@@ -223,16 +240,18 @@ export const Sidebar: React.FC = () => {
           {/* Links */}
           {links.map((link) => {
             if (link.subLinks) {
-              const isChildActive = link.subLinks.some((sl: any) => currentView === sl.id) || currentView === 'tools';
+              const isChildActive = link.subLinks.some((sl: any) => currentView === sl.id) || (currentView === 'tools' && link.id === 'tools_parent');
+              const isExpanded = expandedMenus[link.id];
+
               return (
                 <div key={link.id} className="flex flex-col gap-1">
                   <button
-                    onClick={() => setIsToolsExpanded(!isToolsExpanded)}
+                    onClick={() => toggleMenu(link.id)}
                     className="flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all duration-200"
                     style={{
-                      backgroundColor: isChildActive && !isToolsExpanded ? 'rgba(0,45,98,0.08)' : 'transparent',
-                      color: isChildActive && !isToolsExpanded ? 'var(--oc-navy)' : 'var(--text-secondary)',
-                      fontWeight: isChildActive && !isToolsExpanded ? '700' : '500',
+                      backgroundColor: isChildActive && !isExpanded ? 'rgba(0,45,98,0.08)' : 'transparent',
+                      color: isChildActive && !isExpanded ? 'var(--oc-navy)' : 'var(--text-secondary)',
+                      fontWeight: isChildActive && !isExpanded ? '700' : '500',
                     }}
                   >
                     <div className="flex items-center">
@@ -241,13 +260,13 @@ export const Sidebar: React.FC = () => {
                     </div>
                     <ChevronDown
                       size={15}
-                      className={`transition-transform duration-300 ${isToolsExpanded ? 'rotate-180' : ''}`}
+                      className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
                     />
                   </button>
 
                   <motion.div
                     initial={false}
-                    animate={{ height: isToolsExpanded ? 'auto' : 0, opacity: isToolsExpanded ? 1 : 0 }}
+                    animate={{ height: isExpanded ? 'auto' : 0, opacity: isExpanded ? 1 : 0 }}
                     transition={{ duration: 0.25 }}
                     className="overflow-hidden"
                   >
