@@ -129,7 +129,16 @@ export const Sidebar: React.FC = () => {
   return (
     <>
       {/* ── MOBILE MENU BUTTON ── */}
-      <div className="fixed top-20 left-4 rtl:left-auto rtl:right-4 z-[9999] print:hidden flex flex-col items-center gap-0.5">
+      <div 
+        className={`
+          fixed top-20 z-[9999] print:hidden flex flex-col items-center gap-0.5
+          transition-all duration-300 ease-in-out
+          ${isOpen 
+            ? 'left-4 rtl:left-auto rtl:right-4' 
+            : '-left-8 hover:left-4 rtl:left-auto rtl:-right-8 rtl:hover:right-4 opacity-60 hover:opacity-100'
+          }
+        `}
+      >
         <button
           onClick={() => { setIsOpen(!isOpen); setIsNudging(false); }}
           className={`
