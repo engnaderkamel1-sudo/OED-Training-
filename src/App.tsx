@@ -97,11 +97,23 @@ const AppContent: React.FC = () => {
   }, []);
 
   // ============================================
-  // ★★★ SILENT AUTO-UPDATE CHECKER ★★★
+  // ★★★ PWA AUTO-UPDATE WITH SUCCESS NOTIFICATION ★★★
   // ============================================
   React.useEffect(() => {
+    // 1. Check if we just reloaded from an update
+    const justUpdated = localStorage.getItem('oed_just_updated');
+    if (justUpdated === 'true') {
+      import('react-hot-toast').then(({ default: toast }) => {
+        toast.success(
+          language === 'ar' ? 'تم تحديث التطبيق إلى أحدث نسخة بنجاح!' : 'App successfully updated to the latest version!',
+          { duration: 5000, position: 'top-center' }
+        );
+      });
+      localStorage.removeItem('oed_just_updated');
+    }
+
     if ('serviceWorker' in navigator) {
-      // 1. Check for updates every time the app becomes visible
+      // 2. Check for updates every time the app becomes visible
       const handleVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
           navigator.serviceWorker.ready.then((registration) => {
@@ -111,14 +123,17 @@ const AppContent: React.FC = () => {
       };
       document.addEventListener('visibilitychange', handleVisibilityChange);
 
-      // 2. Listen for actual updates
+      // 3. Listen for actual updates
       navigator.serviceWorker.ready.then(registration => {
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // تحديث صامت: يمسح الكاش القديم ويعمل ريفريش فوراً بدون رسائل
+                // Set the flag before reloading
+                localStorage.setItem('oed_just_updated', 'true');
+                
+                // Unregister and reload silently
                 registration.unregister().then(() => {
                   window.location.reload();
                 });
@@ -130,7 +145,7 @@ const AppContent: React.FC = () => {
 
       return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
     }
-  }, []);
+  }, [language]);
 
   // ============================================
   // ★★★ AUTO LOGOUT AFTER 1 MINUTE INACTIVITY ★★★
