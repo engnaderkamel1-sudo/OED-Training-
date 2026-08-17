@@ -97,6 +97,42 @@ const AppContent: React.FC = () => {
   }, []);
 
   // ============================================
+  // ★★★ SILENT AUTO-UPDATE CHECKER ★★★
+  // ============================================
+  React.useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      // 1. Check for updates every time the app becomes visible
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          navigator.serviceWorker.ready.then((registration) => {
+            registration.update().catch(() => {});
+          });
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      // 2. Listen for actual updates
+      navigator.serviceWorker.ready.then(registration => {
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // تحديث صامت: يمسح الكاش القديم ويعمل ريفريش فوراً بدون رسائل
+                registration.unregister().then(() => {
+                  window.location.reload();
+                });
+              }
+            });
+          }
+        });
+      });
+
+      return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }
+  }, []);
+
+  // ============================================
   // ★★★ AUTO LOGOUT AFTER 1 MINUTE INACTIVITY ★★★
   // (Works even when app is in background)
   // ============================================
