@@ -731,6 +731,7 @@ export const AdminDashboard: React.FC = () => {
                   <p className="font-bold text-gray-800 mb-8">{language === 'ar' ? 'اعتماد مدير التدريب الفني' : 'Authorized by Technical Training Manager'}</p>
                   <p className="text-[#002D62] font-medium text-lg">Nader Kamel</p>
                 </div>
+                <div className="text-right text-gray-400 text-xs">
                   OED Training Management System
                 </div>
               </div>
