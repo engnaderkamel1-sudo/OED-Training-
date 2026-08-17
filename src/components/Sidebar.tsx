@@ -118,6 +118,8 @@ export const Sidebar: React.FC = () => {
       ]
     },
     { id: 'suggestions', label: language === 'ar' ? 'الاقتراحات والملاحظات' : 'Suggestions', icon: MessageSquare },
+    // --- هنا ضفنا سجل النشاط ---
+    { id: 'activityLogs', label: language === 'ar' ? 'سجل النشاط' : 'Activity Logs', icon: Activity },
     { id: 'profile', label: language === 'ar' ? 'ملفي الشخصي' : 'My Profile', icon: UserCircle },
   ];
 

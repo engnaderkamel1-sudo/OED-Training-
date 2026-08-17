@@ -15,6 +15,8 @@ import { Sidebar } from './components/Sidebar';
 import { ProfilePage } from './components/ProfilePage';
 import { CoursesPage } from './components/CoursesPage';
 import { SuggestionsPage } from './components/SuggestionsPage';
+// --- هنا استدعينا الشاشة الجديدة ---
+import { ActivityLogsView } from './ActivityLogsView'; 
 import { Loader2 } from 'lucide-react';
 import { auth, db, messaging } from './firebase';
 import { getToken, onMessage } from 'firebase/messaging';
@@ -248,10 +250,19 @@ const AppContent: React.FC = () => {
             {activeRole && currentView === 'profile' && <ProfilePage />}
             {activeRole && currentView === 'coursesCatalog' && <CoursesPage />}
             {activeRole && currentView === 'suggestions' && <SuggestionsPage />}
-            {activeRole === 'trainee' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && <TraineeDashboard />}
-            {activeRole === 'manager' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && <ManagerDashboard />}
-            {activeRole === 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && <AdminDashboard />}
-            {activeRole === 'supervisor' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && <SiteSupervisorDashboard />}
+            
+            {/* --- عرض شاشة سجل النشاط الجديدة للمدير فقط --- */}
+            {activeRole === 'admin' && currentView === 'activityLogs' && (
+              <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
+                <ActivityLogsView />
+              </div>
+            )}
+
+            {/* تم تحديث الشروط عشان الشاشة الأساسية تختفي لو احنا في الـ activityLogs */}
+            {activeRole === 'trainee' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <TraineeDashboard />}
+            {activeRole === 'manager' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <ManagerDashboard />}
+            {activeRole === 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <AdminDashboard />}
+            {activeRole === 'supervisor' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <SiteSupervisorDashboard />}
           </motion.div>
         </main>
       </div>

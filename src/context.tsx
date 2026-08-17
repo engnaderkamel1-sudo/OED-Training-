@@ -11,6 +11,9 @@ export const generateUUID = (): string => {
   return 'uuid_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
 };
 
+// --- هنا تم إضافة activityLogs ---
+export type ViewState = 'dashboard' | 'profile' | 'coursesCatalog' | 'suggestions' | 'activityLogs';
+
 interface AppContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
