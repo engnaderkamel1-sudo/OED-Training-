@@ -73,7 +73,7 @@ export const TopNav: React.FC = () => {
             </div>
           </div>
 
-          {/* Center - User Greeting — visible on all sizes */}
+          {/* Center - User Greeting */}
           {user && (
             <div className="text-center flex-1 min-w-0 px-1">
               <p className="text-xs sm:text-sm font-medium text-white/90 truncate">
@@ -137,24 +137,46 @@ export const TopNav: React.FC = () => {
                   <ChevronDown size={16} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* Dropdown Menu - Fixed Text Colors for Mobile & Web */}
+                {/* Dropdown Menu - FORCED INLINE STYLES FOR MOBILE */}
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-xl border overflow-hidden animate-fadeIn z-50 bg-white border-gray-200 dark:bg-[#182a4a] dark:border-gray-700">
-                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  <div 
+                    className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl overflow-hidden animate-fadeIn z-[99999]"
+                    style={{ 
+                      backgroundColor: theme === 'dark' ? '#182a4a' : '#ffffff',
+                      border: `1px solid ${theme === 'dark' ? '#2d3748' : '#e2e8f0'}`
+                    }}
+                  >
+                    <div 
+                      className="px-4 py-3 border-b"
+                      style={{ borderColor: theme === 'dark' ? '#2d3748' : '#e2e8f0' }}
+                    >
+                      <p 
+                        className="text-sm font-bold" 
+                        style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}
+                      >
                         {user.name}
                       </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-300">
+                      <p 
+                        className="text-xs mt-1" 
+                        style={{ color: theme === 'dark' ? '#a0aec0' : '#4a5568' }}
+                      >
                         {user.hrCode} • {user.department}
                       </p>
                     </div>
                     
+                    {/* Logout Button Fixed Colors */}
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors font-medium"
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors !text-red-600 dark:!text-red-400"
+                      style={{ 
+                        color: theme === 'dark' ? '#fc8181' : '#dc2626', // Forced Hex Color
+                        backgroundColor: 'transparent'
+                      }}
                     >
                       <LogOut size={18} />
-                      {t('logout') || (language === 'ar' ? 'تسجيل الخروج' : 'Logout')}
+                      <span style={{ color: theme === 'dark' ? '#fc8181' : '#dc2626' }}>
+                         {t('logout') || (language === 'ar' ? 'تسجيل الخروج' : 'Logout')}
+                      </span>
                     </button>
                   </div>
                 )}
