@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
   FileText, 
@@ -16,8 +17,11 @@ import {
   ChevronDown,
   PlusCircle,
   CalendarDays,
-  Settings
-, History, Activity, MessageSquare } from 'lucide-react';
+  Settings,
+  History, 
+  Activity, 
+  MessageSquare 
+} from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
   const { user, language, t, currentView, setCurrentView } = useAppContext();
@@ -78,118 +82,141 @@ export const Sidebar: React.FC = () => {
   else if (role === 'admin') links = getAdminLinks();
   else if (role === 'manager' || role === 'supervisor') links = getManagerLinks();
 
-  return (
-    <>
-      <div className="fixed top-20 left-4 rtl:left-auto rtl:right-4 z-[9999] print:hidden">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="bg-[#002D62]/80 backdrop-blur-md text-white p-3 rounded-full shadow-lg hover:bg-blue-900 transition-transform active:scale-95 border border-white/20"
-        >
-          {isOpen ? <X size={26} /> : <Menu size={26} strokeWidth={2.5} />}
-        </button>
-      </div>
+  // Menu button (mobile)
+  const MenuButton = () => (
+    <div className="fixed top-20 left-4 rtl:left-auto rtl:right-4 z-[9999] print:hidden">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="bg-[#002D62] dark:bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-blue-800 dark:hover:bg-gray-700 transition-all active:scale-95 border border-white/20 dark:border-gray-600"
+      >
+        {isOpen ? <X size={26} /> : <Menu size={26} strokeWidth={2.5} />}
+      </button>
+    </div>
+  );
 
+  // Overlay
+  const Overlay = () => (
+    <AnimatePresence>
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 z-[9998] print:hidden backdrop-blur-sm transition-opacity"
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 z-[9998] print:hidden backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
         />
       )}
+    </AnimatePresence>
+  );
 
-      <aside 
-        className={`
-          fixed top-0 h-[100dvh] bg-white border-r rtl:border-r-0 rtl:border-l border-gray-200 shadow-xl w-72 shrink-0
-          transition-transform duration-300 ease-in-out z-[9999] overflow-y-auto print:hidden
-          ${isOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'}
-        `}
-      >
-        <div className="p-4 flex flex-col gap-2 pb-24">
-          <div className="pb-4 mb-3 border-b border-gray-100 flex flex-col items-center justify-center gap-2">
-            <img src="/oed-ttms-logo-v2.png" alt="OED-TTMS Logo" className="w-14 h-14 rounded-xl shadow-xs border border-gray-100 object-contain" />
-            <div className="text-center">
-              <div className="font-bold text-xs text-[#002D62] tracking-wide uppercase">Orascom Equipment Dept.</div>
-              <div className="text-[10px] text-[#FFC000] font-bold">TTMS System</div>
-            </div>
+  // Sidebar content
+  const SidebarContent = () => (
+    <aside 
+      className={`
+        fixed top-0 h-[100dvh] bg-white dark:bg-gray-900 border-r rtl:border-r-0 rtl:border-l border-gray-200 dark:border-gray-800 
+        shadow-xl w-72 shrink-0 transition-transform duration-300 ease-in-out z-[9999] overflow-y-auto print:hidden
+        ${isOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'}
+      `}
+    >
+      <div className="p-4 flex flex-col gap-2 pb-24">
+        <div className="pb-4 mb-3 border-b border-gray-200 dark:border-gray-800 flex flex-col items-center justify-center gap-2">
+          <img src="/oed-ttms-logo-v2.png" alt="OED-TTMS Logo" className="w-14 h-14 rounded-xl shadow-xs border border-gray-200 dark:border-gray-700 object-contain" />
+          <div className="text-center">
+            <div className="font-bold text-xs text-[#002D62] dark:text-white tracking-wide uppercase">Orascom Equipment Dept.</div>
+            <div className="text-[10px] text-[#FFC000] font-bold">TTMS System</div>
           </div>
-
-          <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
-            {language === 'ar' ? 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¦Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¦Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â³Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©' : 'Main Menu'}
-          </div>
-
-          {links.map((link) => {
-            if (link.subLinks) {
-              const isChildActive = link.subLinks.some((sl: any) => currentView === sl.id) || currentView === 'tools';
-              
-              return (
-                <div key={link.id} className="flex flex-col gap-1">
-                  <button
-                    onClick={() => setIsToolsExpanded(!isToolsExpanded)}
-                    className={`
-                      flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all duration-200
-                      ${isChildActive && !isToolsExpanded
-                        ? 'bg-blue-50 text-[#002D62] font-bold shadow-sm' 
-                        : 'text-gray-600 hover:bg-gray-100 font-medium'
-                      }
-                    `}
-                  >
-                    <div className="flex items-center">
-                      <link.icon size={20} className="mr-3 rtl:ml-3 rtl:mr-0 shrink-0" />
-                      <span className="truncate">{link.label}</span>
-                    </div>
-                    <ChevronDown size={16} className={`transition-transform duration-300 ${isToolsExpanded ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isToolsExpanded ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="flex flex-col gap-1 px-3 py-2 bg-gray-50/50 rounded-lg ml-6 rtl:ml-0 rtl:mr-6 border-l-2 rtl:border-l-0 rtl:border-r-2 border-gray-200">
-                      {link.subLinks.map((subLink: any) => {
-                        // Compatibility logic: if currentView is 'tools', default to 'tools_manage'
-                        const isActive = currentView === subLink.id || (currentView === 'tools' && subLink.id === 'tools_manage');
-                        return (
-                          <button
-                            key={subLink.id}
-                            onClick={() => handleNavClick(subLink.id)}
-                            className={`
-                              flex items-center w-full px-4 py-2.5 rounded-md transition-all duration-200 text-sm
-                              ${isActive 
-                                ? 'bg-[#002D62] text-white font-bold shadow-md' 
-                                : 'text-gray-600 hover:bg-white hover:text-gray-900 font-medium hover:shadow-sm'
-                              }
-                            `}
-                          >
-                            <subLink.icon size={16} className="mr-3 rtl:ml-3 rtl:mr-0 shrink-0" />
-                            <span className="truncate">{subLink.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-
-            const isActive = currentView === link.id || (link.id === 'dashboard' && currentView === 'userManagement');
-            return (
-              <button
-                key={link.id}
-                onClick={() => handleNavClick(link.id)}
-                className={`
-                  flex items-center w-full px-4 py-3 rounded-lg transition-all duration-200
-                  ${isActive 
-                    ? 'bg-[#002D62] text-white scale-[1.05] font-bold shadow-md' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium hover:scale-[1.02]'
-                  }
-                `}
-              >
-                <link.icon size={20} className="mr-3 rtl:ml-3 rtl:mr-0 shrink-0" />
-                <span className="truncate">{link.label}</span>
-              </button>
-            );
-          })}
         </div>
-      </aside>
+
+        <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 px-3">
+          {language === 'ar' ? 'القائمة الرئيسية' : 'Main Menu'}
+        </div>
+
+        {links.map((link) => {
+          if (link.subLinks) {
+            const isChildActive = link.subLinks.some((sl: any) => currentView === sl.id) || currentView === 'tools';
+            
+            return (
+              <div key={link.id} className="flex flex-col gap-1">
+                <button
+                  onClick={() => setIsToolsExpanded(!isToolsExpanded)}
+                  className={`
+                    flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all duration-200
+                    ${isChildActive && !isToolsExpanded
+                      ? 'bg-blue-50 dark:bg-blue-900/20 text-[#002D62] dark:text-white font-bold shadow-sm' 
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium'
+                    }
+                  `}
+                >
+                  <div className="flex items-center">
+                    <link.icon size={20} className="mr-3 rtl:ml-3 rtl:mr-0 shrink-0" />
+                    <span className="truncate">{link.label}</span>
+                  </div>
+                  <ChevronDown size={16} className={`transition-transform duration-300 ${isToolsExpanded ? 'rotate-180' : ''}`} />
+                </button>
+
+                <motion.div 
+                  initial={false}
+                  animate={{ height: isToolsExpanded ? 'auto' : 0, opacity: isToolsExpanded ? 1 : 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex flex-col gap-1 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg ml-6 rtl:ml-0 rtl:mr-6 border-l-2 rtl:border-l-0 rtl:border-r-2 border-gray-200 dark:border-gray-700">
+                    {link.subLinks.map((subLink: any) => {
+                      const isActive = currentView === subLink.id || (currentView === 'tools' && subLink.id === 'tools_manage');
+                      return (
+                        <motion.button
+                          key={subLink.id}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleNavClick(subLink.id)}
+                          className={`
+                            flex items-center w-full px-4 py-2.5 rounded-md transition-all duration-200 text-sm
+                            ${isActive 
+                              ? 'bg-[#002D62] dark:bg-[#003d85] text-white font-bold shadow-md' 
+                              : 'text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white font-medium hover:shadow-sm'
+                            }
+                          `}
+                        >
+                          <subLink.icon size={16} className="mr-3 rtl:ml-3 rtl:mr-0 shrink-0" />
+                          <span className="truncate">{subLink.label}</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              </div>
+            );
+          }
+
+          const isActive = currentView === link.id || (link.id === 'dashboard' && currentView === 'userManagement');
+          return (
+            <motion.button
+              key={link.id}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleNavClick(link.id)}
+              className={`
+                flex items-center w-full px-4 py-3 rounded-lg transition-all duration-200
+                ${isActive 
+                  ? 'bg-[#002D62] dark:bg-[#003d85] text-white scale-[1.05] font-bold shadow-md' 
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white font-medium hover:scale-[1.02]'
+                }
+              `}
+            >
+              <link.icon size={20} className="mr-3 rtl:ml-3 rtl:mr-0 shrink-0" />
+              <span className="truncate">{link.label}</span>
+            </motion.button>
+          );
+        })}
+      </div>
+    </aside>
+  );
+
+  return (
+    <>
+      <MenuButton />
+      <Overlay />
+      <SidebarContent />
     </>
   );
 };
-
-
-

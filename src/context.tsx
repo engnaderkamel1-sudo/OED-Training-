@@ -53,6 +53,9 @@ interface AppContextType {
   setDebugRole: (role: Role) => void;
   t: (key: keyof typeof translations['en']) => string;
   isLoading: boolean;
+  // Theme
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -68,6 +71,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return null;
     }
   });
+
+  // Theme state
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      const stored = localStorage.getItem('oed_theme');
+      return (stored as 'light' | 'dark') || 'light';
+    } catch {
+      return 'light';
+    }
+  });
+
+  // Apply theme to document
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('oed_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   useEffect(() => {
     if (user) {
@@ -127,7 +150,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const unsubAnnouncements = onSnapshot(collection(db, "announcements"), (snapshot) => {
       const ann: SystemAnnouncement[] = [];
       snapshot.forEach((d) => ann.push(d.data() as SystemAnnouncement));
-      // Sort by date descending
       ann.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setAnnouncementsState(ann);
     }, (error) => console.error("Firebase Announcements Error:", error));
@@ -174,7 +196,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [localUsers, user]);
 
   const setUpcomingSessions = (sessions: UpcomingSession[] | ((prev: UpcomingSession[]) => UpcomingSession[])) => {
-    // This function is mostly for wholesale updates, but we'll adapt it
     const updated = typeof sessions === 'function' ? sessions(upcomingSessions) : sessions;
     const batch = writeBatch(db);
     updated.forEach(session => {
@@ -380,7 +401,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const trainee = localUsers.find(u => u.hrCode === hrCode);
     if (!trainee) return;
     
-    // Create CleanedRecord
     const recordId = generateUUID();
     const newRecord: CleanedRecord = {
       id: recordId,
@@ -390,9 +410,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       date: session.startDate,
       hrCode: trainee.hrCode,
       name: trainee.name,
-      score: "N/A", // Default for attendance
-      attendedDays: 1, // Marked as attended
-      duration: "1 day", // Rough estimate, printUtils handles exact duration
+      score: "N/A",
+      attendedDays: 1,
+      duration: "1 day",
       raw: {
         "Attended Days": 1,
         "Score": "N/A"
@@ -402,16 +422,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await setDoc(doc(db, "cleanedData", recordId), newRecord);
   };
 
-  // Merged Courses List (Firebase saved courses + courses from cleanedData + upcomingSessions)
   const courses = useMemo(() => {
     const courseMap = new Map<string, Course>();
 
-    // 1. First add explicitly saved courses from Firebase
     firebaseCourses.forEach(c => {
       courseMap.set(c.title.trim().toLowerCase(), c);
     });
 
-    // 2. Extract distinct courses from cleanedData
     cleanedData.forEach(r => {
       if (r.courseName && r.courseName.trim()) {
         const titleKey = r.courseName.trim().toLowerCase();
@@ -430,7 +447,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     });
 
-    // 3. Extract distinct courses from upcoming sessions
     upcomingSessions.forEach(s => {
       if (s.courseTitle && s.courseTitle.trim()) {
         const titleKey = s.courseTitle.trim().toLowerCase();
@@ -482,12 +498,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       announcements, addAnnouncement, deleteAnnouncement,
       loginLogs, addLoginLog,
       suggestions, addSuggestion, updateSuggestion,
-      addAttendanceRecord,
       debugRole, setDebugRole, 
       t, 
-      isLoading 
+      isLoading,
+      theme,
+      toggleTheme,
     }}>
-      <div dir={language === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen bg-gray-50 text-gray-900 ${language === 'ar' ? 'font-arabic' : 'font-sans'}`}>
+      <div dir={language === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${language === 'ar' ? 'font-arabic' : 'font-sans'}`}>
         {children}
       </div>
     </AppContext.Provider>
@@ -499,6 +516,3 @@ export const useAppContext = () => {
   if (!context) throw new Error('useAppContext must be used within an AppProvider');
   return context;
 };
-
-
-

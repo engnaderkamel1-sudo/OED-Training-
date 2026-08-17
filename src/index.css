@@ -1,49 +1,85 @@
 @import "tailwindcss";
 
 /* ============================================
-   ORASCOM TTMS — Design System
+   ORASCOM TTMS — Design System v2.0
    Brand: Navy #002D62 · Gold #FFC000 · White
-   Inspired by orascom.com
+   Light & Dark Themes
    ============================================ */
 
-/* --- CSS Custom Properties --- */
+/* --- CSS Custom Properties (Variables) --- */
 :root {
-  --oc-navy:        #002D62;
-  --oc-navy-dark:   #001f45;
-  --oc-navy-light:  #003d85;
-  --oc-gold:        #FFC000;
-  --oc-gold-light:  #FFD54F;
-  --oc-gold-muted:  rgba(255,192,0,0.12);
+  /* Navy Colors */
+  --oc-navy: #002D62;
+  --oc-navy-dark: #001f45;
+  --oc-navy-light: #003d85;
+  --oc-gold: #FFC000;
+  --oc-gold-light: #FFD54F;
+  --oc-gold-muted: rgba(255, 192, 0, 0.12);
 
-  /* Surface */
-  --surface-bg:     #F4F6FA;
-  --surface-card:   #FFFFFF;
-  --surface-hover:  #F8F9FC;
+  /* Light Theme (default) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f4f6fa;
+  --bg-tertiary: #eef0f5;
+  --bg-card: #ffffff;
+  --bg-hover: #f8f9fc;
+  --bg-input: #ffffff;
+  --bg-nav: #002D62;
+  --bg-sidebar: #ffffff;
 
-  /* Text */
-  --text-primary:   #0D1B2A;
-  --text-secondary: #4A5568;
-  --text-muted:     #94A3B8;
+  --text-primary: #0d1b2a;
+  --text-secondary: #4a5568;
+  --text-muted: #94a3b8;
+  --text-inverse: #ffffff;
+  --text-nav: #ffffff;
 
-  /* Shadows */
-  --shadow-sm:      0 1px 3px rgba(0,45,98,0.07), 0 1px 2px rgba(0,45,98,0.04);
-  --shadow-md:      0 4px 12px rgba(0,45,98,0.09), 0 2px 6px rgba(0,45,98,0.05);
-  --shadow-lg:      0 10px 28px rgba(0,45,98,0.12), 0 4px 10px rgba(0,45,98,0.06);
-  --shadow-card:    0 2px 8px rgba(0,45,98,0.06), 0 0 1px rgba(0,45,98,0.08);
-  --shadow-card-hover: 0 8px 24px rgba(0,45,98,0.12), 0 2px 6px rgba(0,45,98,0.06);
+  --border-color: rgba(0, 45, 98, 0.08);
+  --border-card: rgba(0, 45, 98, 0.1);
+  --border-input: #d1d5db;
 
-  /* Border */
-  --border-subtle:  rgba(0,45,98,0.08);
-  --border-card:    rgba(0,45,98,0.1);
+  --shadow-sm: 0 1px 3px rgba(0, 45, 98, 0.07), 0 1px 2px rgba(0, 45, 98, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 45, 98, 0.09), 0 2px 6px rgba(0, 45, 98, 0.05);
+  --shadow-lg: 0 10px 28px rgba(0, 45, 98, 0.12), 0 4px 10px rgba(0, 45, 98, 0.06);
+  --shadow-card: 0 2px 8px rgba(0, 45, 98, 0.06), 0 0 1px rgba(0, 45, 98, 0.08);
+  --shadow-card-hover: 0 8px 24px rgba(0, 45, 98, 0.12), 0 2px 6px rgba(0, 45, 98, 0.06);
 
   /* Radius */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 18px;
+  --radius-full: 9999px;
 
   /* Transitions */
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-theme: 0.3s ease;
+}
+
+/* --- Dark Theme --- */
+[data-theme="dark"] {
+  --bg-primary: #0a1628;
+  --bg-secondary: #0f1a30;
+  --bg-tertiary: #15203a;
+  --bg-card: #1a2744;
+  --bg-hover: #243456;
+  --bg-input: #1a2744;
+  --bg-nav: #0a1628;
+  --bg-sidebar: #0f1a30;
+
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-inverse: #0d1b2a;
+  --text-nav: #e2e8f0;
+
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-card: rgba(255, 255, 255, 0.08);
+  --border-input: rgba(255, 255, 255, 0.12);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 /* --- Global Reset & Base --- */
@@ -51,11 +87,16 @@
   box-sizing: border-box;
 }
 
+html {
+  transition: background-color var(--transition-theme), color var(--transition-theme);
+}
+
 body {
-  background-color: var(--surface-bg);
+  background-color: var(--bg-secondary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-theme), color var(--transition-theme);
 }
 
 /* --- Arabic Font --- */
@@ -67,44 +108,56 @@ body {
 }
 
 /* ============================================
-   PAGE BACKGROUND — Subtle premium texture
+   PAGE BACKGROUND
    ============================================ */
 .min-h-screen {
-  background-color: var(--surface-bg);
+  background-color: var(--bg-secondary);
   background-image:
-    radial-gradient(ellipse at 20% 0%, rgba(0,45,98,0.04) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(255,192,0,0.03) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 0%, rgba(0, 45, 98, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(255, 192, 0, 0.03) 0%, transparent 50%);
+  transition: background-color var(--transition-theme);
+}
+
+[data-theme="dark"] .min-h-screen {
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(0, 45, 98, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(255, 192, 0, 0.05) 0%, transparent 50%);
 }
 
 /* ============================================
-   TOPNAV — Glass premium feel
+   TOPNAV
    ============================================ */
 nav.bg-\[\#002D62\] {
   background: linear-gradient(135deg, var(--oc-navy-dark) 0%, var(--oc-navy) 60%, var(--oc-navy-light) 100%) !important;
-  box-shadow: 0 2px 16px rgba(0,45,98,0.25), 0 1px 0 rgba(255,192,0,0.15) !important;
-  border-bottom: 1px solid rgba(255,192,0,0.2);
-  backdrop-filter: blur(0px);
+  box-shadow: 0 2px 16px rgba(0, 45, 98, 0.25), 0 1px 0 rgba(255, 192, 0, 0.15) !important;
+  border-bottom: 1px solid rgba(255, 192, 0, 0.2);
+}
+
+[data-theme="dark"] nav.bg-\[\#002D62\] {
+  background: linear-gradient(135deg, #061224 0%, #0a1628 60%, #0f1a30 100%) !important;
+  border-bottom: 1px solid rgba(255, 192, 0, 0.08);
 }
 
 /* ============================================
-   CARDS — Elevated, depth-aware
+   CARDS
    ============================================ */
-.bg-white {
-  transition: all 0.2s var(--ease-smooth);
+.bg-white, .bg-card {
+  background: var(--bg-card) !important;
+  transition: background-color var(--transition-theme), box-shadow var(--transition-theme);
 }
 
-/* Card pattern: bg-white + rounded + shadow OR border */
 .bg-white.rounded-xl,
 .bg-white.rounded-lg,
-.bg-white.rounded-2xl {
-  background: var(--surface-card) !important;
+.bg-white.rounded-2xl,
+.bg-card.rounded-xl,
+.bg-card.rounded-lg {
+  background: var(--bg-card) !important;
   box-shadow: var(--shadow-card) !important;
   border-color: var(--border-card) !important;
+  transition: background-color var(--transition-theme), box-shadow var(--transition-theme);
 }
 
-/* ============================================
-   CARD HOVER — Subtle lift
-   ============================================ */
+/* Card Hover Effect */
 .card-hover {
   transition: all 0.22s var(--ease-smooth);
   will-change: transform, box-shadow;
@@ -114,108 +167,114 @@ nav.bg-\[\#002D62\] {
   box-shadow: var(--shadow-card-hover) !important;
 }
 
-/* Session cards lift */
-.group:hover {
-  box-shadow: var(--shadow-card-hover);
-}
-
 /* ============================================
-   PRIMARY BUTTONS — Navy with gold shimmer
+   BUTTONS
    ============================================ */
-.bg-\[\#002D62\] {
+.btn-primary {
   background: linear-gradient(135deg, var(--oc-navy) 0%, var(--oc-navy-light) 100%) !important;
-  box-shadow: 0 2px 8px rgba(0,45,98,0.3), 0 1px 2px rgba(0,45,98,0.2) !important;
-  transition: all 0.2s var(--ease-smooth) !important;
+  border-radius: var(--radius-md);
+  padding: 10px 24px;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 45, 98, 0.25);
+  transition: all 0.2s var(--ease-smooth);
+  border: none;
+  cursor: pointer;
 }
-.bg-\[\#002D62\]:hover {
-  background: linear-gradient(135deg, var(--oc-navy-dark) 0%, var(--oc-navy) 100%) !important;
-  box-shadow: 0 4px 14px rgba(0,45,98,0.4), 0 2px 4px rgba(0,45,98,0.2) !important;
-  transform: translateY(-1px);
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 45, 98, 0.35);
 }
-.bg-\[\#002D62\]:active {
+.btn-primary:active {
   transform: translateY(0);
-  box-shadow: 0 1px 4px rgba(0,45,98,0.3) !important;
+  box-shadow: 0 2px 4px rgba(0, 45, 98, 0.2);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--oc-gold) 0%, #e6a800 100%) !important;
+  border-radius: var(--radius-md);
+  padding: 10px 24px;
+  font-weight: 600;
+  color: var(--oc-navy);
+  box-shadow: 0 2px 8px rgba(255, 192, 0, 0.3);
+  transition: all 0.2s var(--ease-smooth);
+  border: none;
+  cursor: pointer;
+}
+.btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 192, 0, 0.4);
 }
 
 /* ============================================
-   GOLD ACCENT — Orascom signature
+   SIDEBAR
    ============================================ */
-.border-\[\#FFC000\] {
-  border-color: var(--oc-gold) !important;
-}
-.text-\[\#FFC000\] {
-  color: var(--oc-gold) !important;
-}
-.bg-\[\#FFC000\] {
-  background: var(--oc-gold) !important;
-}
-
-/* Border-top gold accent on cards (brand signature) */
-.border-t-4.border-\[\#FFC000\] {
-  border-top: 3px solid var(--oc-gold) !important;
-  box-shadow: 0 -1px 0 0 rgba(255,192,0,0.3), var(--shadow-md) !important;
-}
-
-/* ============================================
-   SIDEBAR — Clean premium panel
-   ============================================ */
-aside.bg-white {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
-  box-shadow: 4px 0 20px rgba(0,45,98,0.09), 1px 0 0 var(--border-subtle) !important;
-  border-right: 1px solid var(--border-card) !important;
+aside.bg-white,
+[data-theme="dark"] aside.bg-white {
+  background: var(--bg-sidebar) !important;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.09), 1px 0 0 var(--border-color) !important;
+  border-right: 1px solid var(--border-color) !important;
+  transition: background-color var(--transition-theme), border-color var(--transition-theme);
 }
 
 /* Active nav item */
 .bg-\[\#002D62\].text-white.scale-\[1\.05\] {
   background: linear-gradient(135deg, var(--oc-navy) 0%, var(--oc-navy-light) 100%) !important;
-  box-shadow: 0 3px 10px rgba(0,45,98,0.25) !important;
+  box-shadow: 0 3px 10px rgba(0, 45, 98, 0.25) !important;
   border-radius: var(--radius-md) !important;
 }
 
-/* Sub-link active */
-.bg-\[\#002D62\].text-white.font-bold.shadow-md {
-  background: linear-gradient(135deg, var(--oc-navy) 0%, var(--oc-navy-light) 100%) !important;
-  box-shadow: 0 2px 8px rgba(0,45,98,0.25) !important;
+[data-theme="dark"] .bg-\[\#002D62\].text-white.scale-\[1\.05\] {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* ============================================
-   INPUTS — Refined focus states
+   INPUTS
    ============================================ */
 input:not([type="checkbox"]):not([type="radio"]),
 select,
 textarea {
-  transition: border-color 0.18s var(--ease-smooth), box-shadow 0.18s var(--ease-smooth) !important;
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border-color: var(--border-input);
+  transition: border-color 0.18s var(--ease-smooth), box-shadow 0.18s var(--ease-smooth), background-color var(--transition-theme), color var(--transition-theme);
 }
+
 input:not([type="checkbox"]):not([type="radio"]):focus,
 select:focus,
 textarea:focus {
-  border-color: rgba(0,45,98,0.4) !important;
-  box-shadow: 0 0 0 3px rgba(0,45,98,0.08), 0 1px 3px rgba(0,45,98,0.06) !important;
+  border-color: rgba(0, 45, 98, 0.4) !important;
+  box-shadow: 0 0 0 3px rgba(0, 45, 98, 0.08), 0 1px 3px rgba(0, 45, 98, 0.06) !important;
   outline: none !important;
 }
 
-/* ============================================
-   BADGES / STATUS CHIPS — Polished
-   ============================================ */
-.rounded-full.text-xs.font-semibold,
-.rounded-full.text-xs.font-bold {
-  font-size: 0.7rem !important;
-  letter-spacing: 0.02em;
+[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: rgba(255, 192, 0, 0.4) !important;
+  box-shadow: 0 0 0 3px rgba(255, 192, 0, 0.08) !important;
 }
 
 /* ============================================
-   TABLE ROWS — Alternating subtle bg
+   TABLE ROWS
    ============================================ */
 tr:nth-child(even) td {
-  background-color: rgba(0,45,98,0.018);
+  background-color: rgba(0, 45, 98, 0.018);
 }
 tr:hover td {
-  background-color: rgba(0,45,98,0.04) !important;
+  background-color: rgba(0, 45, 98, 0.04) !important;
   transition: background-color 0.15s var(--ease-smooth);
 }
 
+[data-theme="dark"] tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+[data-theme="dark"] tr:hover td {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
 /* ============================================
-   SCROLLBAR — Brand-styled
+   SCROLLBAR
    ============================================ */
 ::-webkit-scrollbar {
   width: 5px;
@@ -225,19 +284,26 @@ tr:hover td {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0,45,98,0.2);
+  background: rgba(0, 45, 98, 0.2);
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0,45,98,0.35);
+  background: rgba(0, 45, 98, 0.35);
 }
 
-/* --- Hide scrollbar for tabs --- */
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Hide scrollbar for tabs */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ============================================
-   PAGE TRANSITIONS
+   ANIMATIONS
    ============================================ */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
@@ -255,34 +321,83 @@ tr:hover td {
   animation: slideInRight 0.25s var(--ease-smooth) forwards;
 }
 
-/* ============================================
-   KPI / STAT CARDS — Elevated numbers
-   ============================================ */
-.text-3xl.font-bold,
-.text-4xl.font-bold,
-.text-2xl.font-bold.text-\[\#002D62\] {
-  letter-spacing: -0.02em;
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
 }
 
 /* ============================================
-   MODAL OVERLAY — Refined
+   THEME TOGGLE BUTTON
+   ============================================ */
+.theme-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-full);
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-smooth);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+[data-theme="dark"] .theme-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ============================================
+   BADGES / STATUS CHIPS
+   ============================================ */
+.rounded-full.text-xs.font-semibold,
+.rounded-full.text-xs.font-bold {
+  font-size: 0.7rem !important;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================
+   MODAL OVERLAY
    ============================================ */
 .fixed.inset-0.z-50.flex.items-center.justify-center {
   backdrop-filter: blur(4px) !important;
 }
 
-/* ============================================
-   SECTION DIVIDERS — Subtle gold accent
-   ============================================ */
-.border-t-4.border-\[\#FFC000\] + * {
-  padding-top: 0.5rem;
+[data-theme="dark"] .fixed.inset-0.z-50.flex.items-center.justify-center {
+  backdrop-filter: blur(6px) !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
 }
 
 /* ============================================
-   LOADING SPINNER — Brand colored
+   LOADING SPINNER
    ============================================ */
 .animate-spin.text-\[\#002D62\] {
-  filter: drop-shadow(0 0 6px rgba(0,45,98,0.3));
+  filter: drop-shadow(0 0 6px rgba(0, 45, 98, 0.3));
+}
+
+/* ============================================
+   GOLD ACCENT
+   ============================================ */
+.border-\[\#FFC000\] {
+  border-color: var(--oc-gold) !important;
+}
+.text-\[\#FFC000\] {
+  color: var(--oc-gold) !important;
+}
+.bg-\[\#FFC000\] {
+  background: var(--oc-gold) !important;
+}
+
+.border-t-4.border-\[\#FFC000\] {
+  border-top: 3px solid var(--oc-gold) !important;
+  box-shadow: 0 -1px 0 0 rgba(255, 192, 0, 0.3), var(--shadow-md) !important;
 }
 
 /* ============================================
@@ -296,9 +411,10 @@ button:active:not(:disabled) {
 }
 
 /* ============================================
-   PRINT STYLES — Clean output
+   PRINT STYLES
    ============================================ */
 @media print {
   body { background: white !important; }
   .shadow-sm, .shadow-md, .shadow-lg { box-shadow: none !important; }
+  [data-theme="dark"] body { background: white !important; color: black !important; }
 }

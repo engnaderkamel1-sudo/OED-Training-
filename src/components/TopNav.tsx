@@ -1,111 +1,166 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAppContext } from '../context';
-import { LogOut, Globe, Bell } from 'lucide-react';
+import { 
+  User, 
+  LogOut, 
+  Moon, 
+  Sun, 
+  Bell, 
+  Settings,
+  ChevronDown,
+  Globe
+} from 'lucide-react';
+import { auth } from '../firebase';
+import { signOut } from 'firebase/auth';
 
 export const TopNav: React.FC = () => {
-  const { language, setLanguage, user, setUser, users, setUsers, t, setCurrentView } = useAppContext();
+  const { user, language, setLanguage, setUser, t, theme, toggleTheme } = useAppContext();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+    setUser(null);
+    localStorage.removeItem('oed_training_user');
+    setDropdownOpen(false);
+  };
 
   const toggleLanguage = () => {
     setLanguage(language === 'ar' ? 'en' : 'ar');
   };
 
-  const handleClearNotifications = () => {
-    if (setCurrentView) setCurrentView('notifications');
-    if (user && user.hasUnreadNotifications) {
-      const updatedUser = { ...user, hasUnreadNotifications: false };
-      setUser(updatedUser);
-      setUsers(users.map(u => u.id === user.id ? updatedUser : u));
-    }
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
-    <>
-      <nav className="bg-[#002D62] text-white print:hidden" style={{ position: 'relative' }}>
-        {/* Orascom gold accent line at bottom of nav */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px',
-          background: 'linear-gradient(90deg, transparent 0%, #FFC000 25%, #FFD54F 50%, #FFC000 75%, transparent 100%)',
-          opacity: 0.75
-        }} />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between min-h-16 py-1 sm:py-0 items-center px-2 md:px-0">
-
-            {/* Mobile Branding */}
-            <div className="flex sm:hidden flex-col flex-1 min-w-0 mr-1 rtl:ml-1 rtl:mr-0 gap-0.5 justify-center" dir="ltr">
-              <span className="text-[10px] text-[#FFC000] font-bold tracking-tight leading-tight truncate">
-                Technical Training Management System (TTMS)
-              </span>
-              <span className="font-bold text-[9px] tracking-widest uppercase leading-none truncate text-white/70 mt-0.5">
-                Orascom Equipment Department
-              </span>
-            </div>
-
-            {/* Desktop Branding */}
-            <div className="hidden sm:flex flex-row items-center gap-3 md:gap-4 flex-1 min-w-0">
-              <div className="flex-shrink-0 flex items-center justify-center bg-white px-2 py-1 rounded-lg"
-                style={{ boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
-                <img src="/orascom_logo.png" alt="Orascom Logo" className="h-8 md:h-10 object-contain" />
-              </div>
-              <div className="flex flex-col justify-center flex-1 min-w-0">
-                <span className="font-bold text-base md:text-lg leading-tight uppercase truncate"
-                  style={{ letterSpacing: '0.05em' }}>
-                  Orascom Equipment Department
-                </span>
-                <span className="text-[10px] md:text-xs font-semibold leading-tight truncate"
-                  style={{ color: '#FFC000', letterSpacing: '0.07em', opacity: 0.92 }}>
-                  Technical Training Management System — TTMS
-                </span>
-              </div>
-            </div>
-
-            {/* Right Actions */}
-            <div className="flex items-center gap-0.5 md:gap-2">
-              {user && user.role === 'trainee' && (
-                <button
-                  onClick={handleClearNotifications}
-                  className="relative flex items-center gap-1 hover:text-[#FFC000] transition-all px-2.5 py-2 rounded-lg hover:bg-white/10"
-                  title="Notifications"
-                >
-                  <Bell size={18} />
-                  {user.hasUnreadNotifications && (
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-400 rounded-full border border-[#002D62] animate-pulse" />
-                  )}
-                </button>
-              )}
-
-              <button
-                onClick={toggleLanguage}
-                className="flex items-center gap-1.5 hover:text-[#FFC000] transition-all px-2.5 py-2 rounded-lg hover:bg-white/10 text-sm font-semibold"
-              >
-                <Globe size={16} />
-                <span className="uppercase tracking-wider">{language === 'ar' ? 'EN' : 'عربي'}</span>
-              </button>
-
-              {user && (
-                <button
-                  onClick={() => setUser(null)}
-                  className="flex items-center gap-1.5 hover:text-red-300 transition-all px-2.5 py-2 rounded-lg hover:bg-white/10 text-sm"
-                >
-                  <LogOut size={16} />
-                  <span className="hidden md:inline">{t('logout')}</span>
-                </button>
-              )}
+    <nav className="bg-[#002D62] dark:bg-gray-900 text-white shadow-md sticky top-0 z-50 print:hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo and Brand */}
+          <div className="flex items-center gap-3">
+            <img 
+              src="/oed-ttms-logo-v2.png" 
+              alt="OED-TTMS" 
+              className="h-10 w-10 object-contain rounded-lg bg-white/10 p-1"
+            />
+            <div className="hidden md:block">
+              <h1 className="text-sm font-bold tracking-tight text-white">
+                OED-TTMS
+              </h1>
+              <p className="text-[10px] text-[#FFC000] font-medium -mt-0.5">
+                {language === 'ar' ? 'نظام إدارة التدريب الفني' : 'Technical Training Management'}
+              </p>
             </div>
           </div>
-        </div>
-      </nav>
 
-      {/* Mobile Logo Bar */}
-      <div
-        className="sm:hidden flex justify-start items-center bg-white py-1.5 px-3 border-b border-gray-200"
-        style={{ boxShadow: '0 1px 4px rgba(0,45,98,0.07)' }}
-        dir="ltr"
-      >
-        <div className="bg-white p-0.5 rounded shadow-sm inline-block">
-          <img src="/orascom_logo.png" alt="Orascom Logo" className="h-6 object-contain" />
+          {/* Center - User Greeting */}
+          {user && (
+            <div className="hidden md:block text-center">
+              <p className="text-sm font-medium text-white/90">
+                {language === 'ar' ? 'مرحباً' : 'Welcome'}, <span className="text-[#FFC000]">{user.name}</span>
+              </p>
+              <p className="text-[10px] text-white/60">
+                {user.role === 'admin' ? (language === 'ar' ? 'مدير النظام' : 'Administrator') :
+                 user.role === 'manager' ? (language === 'ar' ? 'مدير' : 'Manager') :
+                 user.role === 'supervisor' ? (language === 'ar' ? 'مشرف موقع' : 'Site Supervisor') :
+                 (language === 'ar' ? 'متدرب' : 'Trainee')}
+              </p>
+            </div>
+          )}
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-2">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="theme-toggle"
+              aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            >
+              {theme === 'light' ? (
+                <Moon size={18} />
+              ) : (
+                <Sun size={18} className="text-[#FFC000]" />
+              )}
+              <span className="hidden sm:inline text-xs">
+                {theme === 'light' ? (language === 'ar' ? 'مظلم' : 'Dark') : (language === 'ar' ? 'فاتح' : 'Light')}
+              </span>
+            </button>
+
+            {/* Language Toggle */}
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-sm font-medium"
+            >
+              <Globe size={16} />
+              <span>{language === 'ar' ? 'EN' : 'عربي'}</span>
+            </button>
+
+            {/* User Dropdown */}
+            {user && (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  {user.profileImageUrl ? (
+                    <img 
+                      src={user.profileImageUrl} 
+                      alt={user.name}
+                      className="w-8 h-8 rounded-full object-cover border-2 border-[#FFC000]"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-[#FFC000] flex items-center justify-center text-[#002D62] font-bold text-sm">
+                      {getInitials(user.name)}
+                    </div>
+                  )}
+                  <ChevronDown size={16} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden animate-fadeIn">
+                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {user.name}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {user.hrCode} • {user.department}
+                      </p>
+                    </div>
+                    
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    >
+                      <LogOut size={18} />
+                      {t('logout') || (language === 'ar' ? 'تسجيل الخروج' : 'Logout')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </>
+    </nav>
   );
 };
