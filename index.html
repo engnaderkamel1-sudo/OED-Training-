@@ -6,9 +6,13 @@
     <title>OED TTMS</title>
     <link rel="icon" href="/oed-ttms-logo-v2.png" />
     <link rel="apple-touch-icon" href="/oed-ttms-logo-v2.png" />
-    <meta name="theme-color" content="#002D62" />
+    
+    <!-- تم تعديل الألوان لتدعم اللايت والدارك مود بشكل صحيح على الموبايل -->
+    <meta name="theme-color" content="#f4f6fa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a1628" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
   </head>
@@ -17,5 +21,3 @@
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
-
