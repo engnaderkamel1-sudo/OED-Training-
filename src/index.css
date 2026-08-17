@@ -65,21 +65,22 @@
   --bg-nav: #0a1628;
   --bg-sidebar: #0f1a30;
 
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  /* ★★★ ألوان النصوص في الدارك مود - واضحة جداً ★★★ */
+  --text-primary: #f0f4ff;
+  --text-secondary: #c8d6e8;
+  --text-muted: #8899bb;
   --text-inverse: #0d1b2a;
-  --text-nav: #e2e8f0;
+  --text-nav: #f0f4ff;
 
-  --border-color: rgba(255, 255, 255, 0.06);
-  --border-card: rgba(255, 255, 255, 0.08);
-  --border-input: rgba(255, 255, 255, 0.12);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-card: rgba(255, 255, 255, 0.1);
+  --border-input: rgba(255, 255, 255, 0.15);
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.5);
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 1px rgba(255, 255, 255, 0.04);
-  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.6);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 /* --- Global Reset & Base --- */
@@ -411,42 +412,10 @@ button:active:not(:disabled) {
 }
 
 /* ============================================
-   PRINT STYLES
+   ★★★ DARK MODE - TEXT CLARITY ★★★
    ============================================ */
-@media print {
-  body { background: white !important; }
-  .shadow-sm, .shadow-md, .shadow-lg { box-shadow: none !important; }
-}
- [data-theme="dark"] {
-  --bg-primary: #0a1628;
-  --bg-secondary: #0f1a30;
-  --bg-tertiary: #15203a;
-  --bg-card: #1a2744;        /* خلفية البطاقات */
-  --bg-hover: #243456;
-  --bg-input: #1a2744;
-  --bg-nav: #0a1628;
-  --bg-sidebar: #0f1a30;
 
-  /* ★★★ الألوان المهمة للنصوص ★★★ */
-  --text-primary: #f0f4ff;   /* أبيض مائل للأزرق (واضح جداً) */
-  --text-secondary: #b0c4de; /* أزرق فاتح (واضح) */
-  --text-muted: #8899bb;     /* رمادي-أزرق (مقروء) */
-  --text-inverse: #0d1b2a;
-  --text-nav: #f0f4ff;
-
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-card: rgba(255, 255, 255, 0.1);
-  --border-input: rgba(255, 255, 255, 0.15);
-
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.6);
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.6);
-}
-/* ============================================
-   DARK MODE - TEXT CLARITY
-   ============================================ */
+/* --- إجبار النصوص على الوضوح في الدارك مود --- */
 [data-theme="dark"] .text-gray-900 {
   color: #f0f4ff !important;
 }
@@ -471,7 +440,16 @@ button:active:not(:disabled) {
   color: #667799 !important;
 }
 
-/* ★★★ خلفيات البطاقات ★★★ */
+/* --- ألوان النصوص الخاصة بالشركة --- */
+[data-theme="dark"] .text-\[\#002D62\] {
+  color: #7eb8ff !important;
+}
+
+[data-theme="dark"] .text-\[\#FFC000\] {
+  color: #ffd54f !important;
+}
+
+/* --- خلفيات البطاقات في الدارك مود --- */
 [data-theme="dark"] .bg-white {
   background-color: #1a2744 !important;
 }
@@ -490,4 +468,40 @@ button:active:not(:disabled) {
 
 [data-theme="dark"] .border-gray-300 {
   border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* --- نصوص الجداول في الدارك مود --- */
+[data-theme="dark"] table td,
+[data-theme="dark"] table th {
+  color: #f0f4ff !important;
+}
+
+[data-theme="dark"] table td .text-gray-500,
+[data-theme="dark"] table td .text-gray-600 {
+  color: #b0c4de !important;
+}
+
+/* --- نصوص الروابط --- */
+[data-theme="dark"] a {
+  color: #7eb8ff !important;
+}
+
+[data-theme="dark"] a:hover {
+  color: #a8d0ff !important;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+  body { 
+    background: white !important; 
+  }
+  .shadow-sm, .shadow-md, .shadow-lg { 
+    box-shadow: none !important; 
+  }
+  [data-theme="dark"] body { 
+    background: white !important; 
+    color: black !important; 
+  }
 }
