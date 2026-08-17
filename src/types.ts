@@ -149,6 +149,8 @@ export interface Suggestion {
   status: SuggestionStatus;
   createdAt: string;
   adminNote?: string;
+  adminMessage?: string;
+  adminMessageAt?: string;
   updatedAt?: string;
 }
 
