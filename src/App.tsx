@@ -98,6 +98,7 @@ const AppContent: React.FC = () => {
 
   // ============================================
   // ★★★ AUTO LOGOUT AFTER 1 MINUTE INACTIVITY ★★★
+  // (Works even when app is in background)
   // ============================================
   React.useEffect(() => {
     if (!user) return;
@@ -105,27 +106,30 @@ const AppContent: React.FC = () => {
     const INACTIVITY_TIMEOUT = 1 * 60 * 1000; // 1 minute
     let timeoutId: NodeJS.Timeout;
     let lastActiveTime = Date.now();
+    let isLoggingOut = false;
 
     const handleLogoutDueToInactivity = async () => {
+      if (isLoggingOut) return;
+      isLoggingOut = true;
+
       try {
-        // تسجيل الخروج من Firebase
         await signOut(auth);
       } catch (error) {
         console.error('Logout error:', error);
       }
       
-      // مسح المستخدم من التطبيق
       setUser(null);
       localStorage.removeItem('oed_training_user');
       
-      // إظهار رسالة للمستخدم
       import('react-hot-toast').then(({ default: toast }) => {
         toast.error(
           language === 'ar' || navigator.language.startsWith('ar') 
-            ? 'تم تسجيل الخروج تلقائياً لعدم النشاط لمدة دقيقة.' 
-            : 'You have been automatically logged out due to 1 minute of inactivity.'
+            ? 'تم تسجيل الخروج تلقائياً لعدم النشاط.' 
+            : 'You have been automatically logged out due to inactivity.'
         );
       });
+
+      isLoggingOut = false;
     };
 
     const resetTimer = () => {
@@ -136,8 +140,9 @@ const AppContent: React.FC = () => {
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // التطبيق في الخلفية - نسجل الوقت
-        lastActiveTime = Date.now();
+        // التطبيق في الخلفية - نبدأ مؤقت جديد
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(handleLogoutDueToInactivity, INACTIVITY_TIMEOUT);
       } else {
         // التطبيق عاد للواجهة - نتحقق من الوقت
         const timePassed = Date.now() - lastActiveTime;
@@ -164,6 +169,7 @@ const AppContent: React.FC = () => {
       clearTimeout(timeoutId);
       activityEvents.forEach(evt => window.removeEventListener(evt, resetTimer));
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      isLoggingOut = false;
     };
   }, [user, language, setUser]);
 
