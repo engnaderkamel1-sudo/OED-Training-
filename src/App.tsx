@@ -97,51 +97,6 @@ const AppContent: React.FC = () => {
   }, []);
 
   // ============================================
-  // ★★★ SAFE SILENT AUTO-UPDATE (FIXED LOOP) ★★★
-  // ============================================
-  React.useEffect(() => {
-    // 1. Show success message if we just updated
-    const justUpdated = localStorage.getItem('oed_just_updated');
-    if (justUpdated === 'true') {
-      import('react-hot-toast').then(({ default: toast }) => {
-        toast.success(
-          language === 'ar' ? 'تم تحديث التطبيق إلى أحدث نسخة بنجاح!' : 'App successfully updated to the latest version!',
-          { duration: 5000, position: 'top-center' }
-        );
-      });
-      localStorage.removeItem('oed_just_updated');
-    }
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(registration => {
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              // We only care when the new worker is installed and ready to take over
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                
-                // صمام الأمان: نمنع التحديث لو كان لسه حاصل من أقل من 5 دقايق
-                const lastReload = localStorage.getItem('oed_last_reload_time');
-                const now = Date.now();
-                const COOLDOWN_PERIOD = 5 * 60 * 1000; // 5 minutes in milliseconds
-                
-                if (!lastReload || now - parseInt(lastReload) > COOLDOWN_PERIOD) {
-                  localStorage.setItem('oed_last_reload_time', now.toString());
-                  localStorage.setItem('oed_just_updated', 'true');
-                  
-                  // ريفريش آمن
-                  window.location.reload();
-                }
-              }
-            });
-          }
-        });
-      });
-    }
-  }, [language]);
-
-  // ============================================
   // ★★★ AUTO LOGOUT AFTER 1 MINUTE INACTIVITY ★★★
   // (Works even when app is in background)
   // ============================================
