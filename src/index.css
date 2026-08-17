@@ -466,7 +466,6 @@ textarea:focus {
 
 /* ============================================
    ★★★ MOBILE — MENU BUTTON VISIBILITY ★★★
-   Large, visible, clearly labelled on small screens
    ============================================ */
 @media (max-width: 768px) {
   /* Menu button tooltip label */
@@ -480,25 +479,49 @@ textarea:focus {
     text-transform: uppercase;
   }
 
-  /* Light mode mobile — keep text dark */
-  table td, table th,
-  .font-medium, .font-bold, .font-semibold,
-  .text-gray-900, .text-gray-800, .text-gray-700 {
+  /* Light mode mobile — keep text dark in tables/cards ONLY */
+  table td, table th {
     color: #0d1b2a;
-  }
-
-  /* Override for dark mode cells */
-  [data-theme="dark"] table td,
-  [data-theme="dark"] table th,
-  [data-theme="dark"] .font-bold,
-  [data-theme="dark"] .font-semibold {
-    color: #e8eeff !important;
   }
 
   /* bg-[#002D62] children always white */
   .bg-\[\#002D62\] *,
   .bg-\[\#002D62\] { color: #ffffff !important; }
 }
+
+/* Dark mode overrides — MUST come AFTER the mobile block to win */
+@media (max-width: 768px) {
+  [data-theme="dark"] table td,
+  [data-theme="dark"] table th { color: #e8eeff !important; }
+
+  /* Sidebar links text in dark mode on mobile */
+  [data-theme="dark"] aside .font-medium,
+  [data-theme="dark"] aside .font-bold,
+  [data-theme="dark"] aside .font-semibold,
+  [data-theme="dark"] aside span,
+  [data-theme="dark"] aside button:not(.bg-\[\#002D62\]) {
+    color: #b8cce4 !important;
+  }
+
+  /* Active sidebar item stays white */
+  [data-theme="dark"] aside .bg-\[\#002D62\],
+  [data-theme="dark"] aside .bg-\[\#003d85\],
+  [data-theme="dark"] aside .bg-\[\#002D62\] * {
+    color: #ffffff !important;
+  }
+
+  /* All text in dark mode pages */
+  [data-theme="dark"] .font-bold,
+  [data-theme="dark"] .font-semibold,
+  [data-theme="dark"] .font-medium {
+    color: #e8eeff !important;
+  }
+  [data-theme="dark"] .text-gray-600,
+  [data-theme="dark"] .text-gray-500 {
+    color: #8aabcf !important;
+  }
+}
+
 
 /* ============================================
    THEME TOGGLE BUTTON
