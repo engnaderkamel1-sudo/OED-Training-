@@ -1,20 +1,101 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context';
 import { mockCourses } from '../data';
-import { ExternalLink, CheckCircle, Calendar, Printer, Download, Bell, BellOff, AlertTriangle, XCircle, Users, Clock, MapPin, Tag, Ban } from 'lucide-react';
-import { formatScore, formatDateToStandard } from '../utils/formatters';
-import { safePrintReport, downloadReportPDF, ReportOptions } from '../utils/printUtils';
+import { ExternalLink, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag, Megaphone, Radio, Volume2, Sparkles } from 'lucide-react';
+
+// Web Audio API Sound Chime
+export const playNotificationSound = () => {
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    
+    // Tone 1 (High bell - D5)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
+    gain1.gain.setValueAtTime(0, ctx.currentTime);
+    gain1.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+    gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 0.35);
+
+    // Tone 2 (Crisp resolve chime - A5)
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
+    gain2.gain.setValueAtTime(0, ctx.currentTime + 0.12);
+    gain2.gain.linearRampToValueAtTime(0.35, ctx.currentTime + 0.17);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(ctx.currentTime + 0.12);
+    osc2.stop(ctx.currentTime + 0.55);
+
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate([100, 50, 100]);
+    }
+  } catch (e) {
+    console.log('Audio playback prevented or unsupported', e);
+  }
+};
+
+export const formatNotificationDate = (timestampStr?: string, lang: string = 'en'): string => {
+  if (!timestampStr) return '';
+  const d = new Date(timestampStr);
+  if (isNaN(d.getTime())) {
+    return String(timestampStr);
+  }
+  return d.toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+};
 import { DataField } from './DataField';
 import { SessionCard } from './SessionCard';
-
+import { QRScannerModal } from './QRScannerModal';
 import { UpcomingSession } from '../types';
 
+// Helper functions that were accidentally removed
+const parseScore = (score: any): number => {
+  if (typeof score === 'number') return score <= 1 && score > 0 ? score * 100 : score;
+  if (typeof score === 'string') {
+    const parsed = parseFloat(score.replace(/[^0-9.]/g, ''));
+    if (isNaN(parsed)) return 0;
+    return parsed <= 1 && score.includes('%') ? parsed * 100 : parsed;
+  }
+  return 0;
+};
+
+const formatScore = (score: any): string => {
+  const parsed = parseScore(score);
+  return parsed ? `${parsed}%` : 'N/A';
+};
+
+const formatDateToStandard = (dateStr: any): string => {
+  if (!dateStr) return 'N/A';
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? String(dateStr) : d.toLocaleDateString('en-GB');
+};
+
 export const TraineeDashboard: React.FC = () => {
-  const { t, user, records, language, upcomingSessions, registerTrainee, unregisterTrainee } = useAppContext();
+  const { t, user, records, language, upcomingSessions, registerTrainee, unregisterTrainee, currentView, users, setUsers, announcements } = useAppContext();
   const [requestedTopic, setRequestedTopic] = useState('');
   const [requestSent, setRequestSent] = useState(false);
+  const [registeringSession, setRegisteringSession] = useState<UpcomingSession | null>(null);
+  const [tempManagerEmails, setTempManagerEmails] = useState<string[]>(['', '', '']);
   const [registeredCourseIds, setRegisteredCourseIds] = useState<string[]>([]);
   const [actionToast, setActionToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+
+  const [hasPlayedSound, setHasPlayedSound] = useState(false);
 
   // Unread Notifications State
   const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
@@ -27,10 +108,15 @@ export const TraineeDashboard: React.FC = () => {
   });
 
   // Calculate stats for current user
-  const userRecords = records.filter(r => r.userId === user?.id || r.userId === 'u1'); // Default to u1 if in debug mode
+  const userRecords = records.filter(r => 
+    r.userId === user?.id || 
+    r.userId === user?.hrCode || 
+    r.hrCode === user?.hrCode || 
+    r.userId === 'u1'
+  );
   const totalCourses = userRecords.length;
   const averageScore = userRecords.length > 0 
-    ? Math.round(userRecords.reduce((acc, curr) => acc + curr.score, 0) / userRecords.length) 
+    ? Math.round(userRecords.reduce((acc, curr) => acc + parseScore(curr.raw?.['Score'] || curr.score), 0) / userRecords.length) 
     : 0;
   
   const activeUpcomingSessions = upcomingSessions.filter(s => !s.isDeleted && s.status !== 'Cancelled');
@@ -46,32 +132,85 @@ export const TraineeDashboard: React.FC = () => {
       startTime?: string;
       location?: string;
       targetParticipants?: string;
-      type: 'Standard' | 'Final';
+      type: 'Standard' | 'Final' | 'Announcement' | 'Global';
       timestamp: string;
+      title?: string;
+      message?: string;
+      author?: string;
     }> = [];
 
+    // Helper to check if current trainee matches target audience
+    const userRoleInfo = `${user?.jobRole || ""} ${user?.role || ""} ${user?.department || ""}`.toLowerCase();
+    const isTargetMatch = (target?: string) => {
+      if (!target || target === "mixed" || target === "all" || target === "Ø§Ù„Ø¬Ù…ÙŠØ¹") return true;
+      if (target === "engineers" || target === "engineer" || target === "Ù…Ù‡Ù†Ø¯Ø³ÙŠÙ†" || target === "Ù…Ù‡Ù†Ø¯Ø³") {
+        return userRoleInfo.includes("engineer") || userRoleInfo.includes("Ù…Ù‡Ù†Ø¯Ø³") || userRoleInfo.includes("eng");
+      }
+      if (target === "technicians" || target === "technician" || target === "ÙÙ†ÙŠÙŠÙ†" || target === "ÙÙ†ÙŠ") {
+        return userRoleInfo.includes("technician") || userRoleInfo.includes("ÙÙ†ÙŠ") || userRoleInfo.includes("tech");
+      }
+      return true;
+    };
+
     activeUpcomingSessions.forEach(session => {
-      if (session.reminderLog && session.reminderLog.length > 0) {
-        session.reminderLog.forEach(log => {
-          list.push({
-            id: log.id || `${session.id}_${log.timestamp}`,
-            sessionId: session.id,
-            courseTitle: session.courseTitle,
-            startDate: session.startDate,
-            endDate: session.endDate,
-            startTime: session.startTime,
-            location: session.location,
-            targetParticipants: session.targetParticipants,
-            type: log.type,
-            timestamp: log.timestamp
+      // Only include reminders if user is in target audience OR already registered in this session
+      const isRegistered = session.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(session.id);
+      if (isRegistered || isTargetMatch(session.targetParticipants)) {
+        if (session.reminderLog && session.reminderLog.length > 0) {
+          session.reminderLog.forEach(log => {
+            list.push({
+              id: log.id || `${session.id}_${log.timestamp}`,
+              sessionId: session.id,
+              courseTitle: session.courseTitle,
+              startDate: session.startDate,
+              endDate: session.endDate,
+              startTime: session.startTime,
+              location: session.location,
+              targetParticipants: session.targetParticipants,
+              type: log.type,
+              timestamp: log.timestamp
+            });
           });
-        });
+        }
       }
     });
 
+    // Add Announcements targeted for this user
+    if (announcements && announcements.length > 0) {
+      announcements.forEach(ann => {
+        const matchingSession = activeUpcomingSessions.find(s => s.id === ann.sessionId);
+        const target = ann.targetAudience || matchingSession?.targetParticipants;
+        const isRegistered = matchingSession && (matchingSession.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(matchingSession.id));
+
+        if (ann.isGlobal || isRegistered || isTargetMatch(target)) {
+          list.push({
+            id: ann.id,
+            sessionId: ann.sessionId || 'global',
+            courseTitle: ann.courseName || (language === 'ar' ? 'Ø¹Ø§Ù…' : 'Global'),
+            startDate: '',
+            type: ann.isGlobal ? 'Global' : 'Announcement',
+            timestamp: ann.date,
+            title: ann.title,
+            message: ann.message,
+            author: ann.author
+          });
+        }
+      });
+    }
+
+    // Filter notifications sent before user registered
+    const userCreatedAt = user?.createdAt ? new Date(user.createdAt).getTime() : 0;
+    
+    const filteredList = list.filter(notif => {
+      if (!userCreatedAt) return true; // If no createdAt, show all
+      // notif.timestamp is like "13-Aug-2026 01:57"
+      const notifTime = new Date(notif.timestamp).getTime();
+      return isNaN(notifTime) || notifTime >= userCreatedAt;
+    });
+
     // Newest reminders first
-    return list.reverse();
-  }, [activeUpcomingSessions]);
+    return filteredList.reverse();
+  }, [activeUpcomingSessions, user?.createdAt]);
 
   const markNotifAsRead = (id: string) => {
     if (!readNotifIds.includes(id)) {
@@ -101,19 +240,40 @@ export const TraineeDashboard: React.FC = () => {
   }, [allNotifications, readNotifIds]);
 
   const handleRegisterSession = (session: UpcomingSession) => {
-    const userCode = user?.hrCode || 'trainee';
-    registerTrainee(session.id, userCode);
+    setRegisteringSession(session);
+    setTempManagerEmails([
+      user?.managerEmails?.[0] || '',
+      user?.managerEmails?.[1] || '',
+      user?.managerEmails?.[2] || ''
+    ]);
+  };
 
-    if (!registeredCourseIds.includes(session.id)) {
-      setRegisteredCourseIds(prev => [...prev, session.id]);
+  const confirmRegistration = () => {
+    if (!registeringSession) return;
+    
+    // Save updated manager emails to the user profile
+    if (user && setUsers) {
+      const updatedUser = { 
+        ...user, 
+        managerEmails: tempManagerEmails.filter(e => e.trim() !== '') 
+      };
+      setUsers(users.map(u => u.id === user.id ? updatedUser : u));
+    }
+
+    const userCode = user?.hrCode || 'trainee';
+    registerTrainee(registeringSession.id, userCode);
+
+    if (!registeredCourseIds.includes(registeringSession.id)) {
+      setRegisteredCourseIds(prev => [...prev, registeringSession.id]);
     }
 
     const toastMsg = language === 'ar'
-      ? `تم تسجيل حضورك بنجاح في دورة [${session.courseTitle}]`
-      : `You have successfully registered for [${session.courseTitle}].`;
+      ? `ØªÙ… ØªØ³Ø¬ÙŠÙ„ Ø·Ù„Ø¨Ùƒ Ø¨Ù†Ø¬Ø§Ø­ ÙÙŠ ÙƒÙˆØ±Ø³ [${registeringSession.courseTitle}]`
+      : `You have successfully registered for [${registeringSession.courseTitle}].`;
 
     setActionToast({ message: toastMsg, type: 'success' });
     setTimeout(() => setActionToast(null), 4000);
+    setRegisteringSession(null);
   };
 
   const handleCancelRegistration = (sessionId: string) => {
@@ -131,7 +291,7 @@ export const TraineeDashboard: React.FC = () => {
 
       if (session) {
         const toastMsg = language === 'ar'
-          ? `تم إلغاء تسجيلك بنجاح من دورة [${session.courseTitle}]`
+          ? `ØªÙ… Ø¥Ù„ØºØ§Ø¡ ØªØ³Ø¬ÙŠÙ„Ùƒ Ø¨Ù†Ø¬Ø§Ø­ Ù…Ù† Ø¯ÙˆØ±Ø© [${session.courseTitle}]`
           : `You have successfully unregistered from [${session.courseTitle}].`;
 
         setActionToast({ message: toastMsg, type: 'info' });
@@ -149,7 +309,7 @@ export const TraineeDashboard: React.FC = () => {
     setRegisteredCourseIds(prev => prev.filter(id => id !== session.id));
     
     const toastMsg = language === 'ar'
-      ? `تم إلغاء تسجيلك بنجاح من دورة [${session.courseTitle}]`
+      ? `ØªÙ… Ø¥Ù„ØºØ§Ø¡ ØªØ³Ø¬ÙŠÙ„Ùƒ Ø¨Ù†Ø¬Ø§Ø­ Ù…Ù† Ø¯ÙˆØ±Ø© [${session.courseTitle}]`
       : `You have successfully unregistered from [${session.courseTitle}].`;
     setActionToast({ message: toastMsg, type: 'info' });
     setTimeout(() => setActionToast(null), 4000);
@@ -164,24 +324,16 @@ export const TraineeDashboard: React.FC = () => {
     }
   };
 
-  const getTraineeReportOptions = (): ReportOptions => ({
-    title: language === 'ar' ? 'تقرير تدريب فردي' : 'Individual Trainee Training Report',
-    language: (language === 'ar' ? 'ar' : 'en') as 'ar' | 'en',
-    records: userRecords,
-    singleTrainee: {
-      name: user?.name || 'Trainee',
-      hrCode: user?.hrCode || 'N/A',
-      department: user?.department || 'General',
-    },
-    fileName: `Individual_Training_Report_${user?.hrCode || 'Trainee'}.pdf`,
-  });
-
-  const handlePrint = () => {
-    safePrintReport(getTraineeReportOptions());
-  };
-
-  const handleDownloadPDF = async () => {
-    await downloadReportPDF(getTraineeReportOptions());
+  const handleScanSuccess = async (scannedSessionId: string) => {
+    if (scannedSessionId !== scanningSessionId) {
+      alert(language === "ar" ? "????? ??????? ?? ????? ??? ??????!" : "Scanned code does not match this session!");
+      return;
+    }
+    if (user) {
+      await addAttendanceRecord(scannedSessionId, user.hrCode);
+      alert(language === "ar" ? "?? ????? ????? ?????!" : "Attendance recorded successfully!");
+    }
+    setScanningSessionId(null);
   };
 
   return (
@@ -190,161 +342,154 @@ export const TraineeDashboard: React.FC = () => {
         <h1 className="text-2xl md:text-3xl font-bold text-[#002D62] border-b-2 border-[#FFC000] pb-2 inline-block">
           {t('traineeView')}
         </h1>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={handlePrint} 
-            className="bg-[#002D62] text-white px-3.5 py-2 rounded flex items-center gap-1.5 shadow hover:bg-blue-900 transition-colors text-sm font-medium"
-          >
-            <Printer size={16} />
-            {language === 'ar' ? 'طباعة التقرير' : 'Print Report'}
-          </button>
-          <button 
-            onClick={handleDownloadPDF} 
-            className="bg-emerald-700 text-white px-3.5 py-2 rounded flex items-center gap-1.5 shadow hover:bg-emerald-800 transition-colors text-sm font-medium"
-          >
-            <Download size={16} />
-            {language === 'ar' ? 'تحميل PDF' : 'Download PDF'}
-          </button>
-        </div>
       </div>
 
-      <div className="hidden print:block text-black bg-white">
-        <div className="flex justify-between items-end border-b-2 border-[#002D62] pb-4 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-gray-100 border-2 border-gray-300 flex items-center justify-center text-xs text-gray-500 font-bold uppercase text-center rounded-lg">
-              OED<br/>Logo
+      {/* Stats Section (dashboard) */}
+      {currentView === 'dashboard' && (
+        <section className="print:hidden animate-fadeIn space-y-6">
+          {/* Digital Training Passport / Profile Card */}
+          <div className="bg-gradient-to-r from-[#002D62] to-[#0a3f82] rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              <div className="flex items-center gap-4">
+                {user?.profileImageUrl ? (
+                  <img
+                    src={user.profileImageUrl}
+                    alt={user.name}
+                    className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-md shrink-0"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/20 flex items-center justify-center text-white font-black text-2xl shrink-0 shadow-inner">
+                    {(user?.name || 'T').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-xl font-bold tracking-tight">{user?.name || 'Trainee'}</h2>
+                    <span className="text-xs bg-[#FFC000] text-[#002D62] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
+                      {user?.jobRole || user?.role || 'Technical Staff'}
+                    </span>
+                  </div>
+                  <div className="text-xs text-blue-200 mt-1 flex items-center gap-3 flex-wrap">
+                    <span>{language === 'ar' ? 'Ø§Ù„ÙƒÙˆØ¯ Ø§Ù„ÙˆØ¸ÙŠÙÙŠ:' : 'HR Code:'} <strong className="text-white font-mono">{user?.hrCode}</strong></span>
+                    {user?.department && (
+                      <>
+                        <span>â€¢</span>
+                        <span>{user?.department}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Badge */}
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 px-4 border border-white/15 flex items-center gap-3">
+                <div className="text-center">
+                  <div className="text-[10px] text-blue-200 uppercase tracking-wider font-bold">
+                    {language === 'ar' ? 'Ù…Ø¹Ø¯Ù„ Ø§Ù„ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ø¹Ø§Ù…' : 'Performance Benchmark'}
+                  </div>
+                  <div className="text-2xl font-black text-[#FFC000]">
+                    {averageScore}%
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="text-right">
-            <h2 className="text-2xl font-bold text-[#002D62] mb-1">OED - Technical Training Department</h2>
-            <p className="text-gray-600 text-sm">{language === 'ar' ? 'إدارة المعدات' : 'Equipment Department'}</p>
-          </div>
-        </div>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-center uppercase tracking-wider mb-2 text-gray-800">
-            {language === 'ar' ? 'تقرير تدريب فردي' : 'Individual Trainee Training Report'}
-          </h1>
-          <p className="text-center text-sm text-gray-500 mb-8">
-            {language === 'ar' ? 'تم الإنشاء في:' : 'Generated on:'} {formatDateToStandard(new Date())}
-          </p>
-          {user && (
-            <div className="bg-gray-50 border-2 border-gray-200 p-5 rounded-lg flex flex-wrap justify-between gap-4">
-              <div className="flex-1 min-w-[200px]">
-                <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('name')}</span> 
-                <span className="text-lg font-bold text-[#002D62]">{user.name}</span>
+
+          {/* Metric Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-2xs hover:shadow-xs transition-all flex items-center gap-4">
+              <div className="p-3 bg-blue-50 text-[#002D62] rounded-xl shrink-0">
+                <Calendar size={24} />
               </div>
-              <div className="flex-1 min-w-[150px]">
-                <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('hrCode')}</span> 
-                <span className="text-lg font-bold text-gray-800">{user.hrCode}</span>
-              </div>
-              <div className="flex-1 min-w-[200px]">
-                <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('department')}</span> 
-                <span className="text-lg font-medium text-gray-800">{user.department}</span>
+              <div>
+                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">{t('totalCourses')}</p>
+                <p className="text-2xl font-black text-[#002D62] mt-0.5">{totalCourses}</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">{language === 'ar' ? 'Ø¯ÙˆØ±Ø§Øª Ù…ÙƒØªÙ…Ù„Ø© ÙˆÙ…ÙˆØ«Ù‚Ø©' : 'Completed course records'}</p>
               </div>
             </div>
-          )}
-        </div>
-        <table className="w-full text-left border-collapse text-sm print:table mb-12">
-          <thead className="print:table-header-group">
-            <tr className="border-b-2 border-gray-800 bg-gray-100 text-gray-800">
-              <th className="p-3 font-bold">{t('courseName')}</th>
-              <th className="p-3 font-bold">{language === 'ar' ? 'مدة الدورة' : 'Duration'}</th>
-              <th className="p-3 font-bold">{language === 'ar' ? 'أيام الحضور' : 'Attended Days'}</th>
-              <th className="p-3 font-bold">{t('score')}</th>
-              <th className="p-3 font-bold">{t('date')}</th>
-            </tr>
-          </thead>
-          <tbody className="print:table-row-group">
-            {userRecords.map(r => {
-              const course = mockCourses.find(c => c.id === r.courseId);
-              const totalDaysStr = r.raw?.['Course Duration'] || r.totalDays || course?.duration || '1 Day';
-              const attendedDaysStr = r.raw?.['Attended Days'] || r.daysAttended || totalDaysStr;
-              return (
-                <tr key={r.id} className="border-b border-gray-300 break-inside-avoid">
-                  <td className="p-3 font-medium text-gray-900">{course?.title || r.courseName || 'Unknown Course'}</td>
-                  <td className="p-3 text-gray-700">{totalDaysStr}</td>
-                  <td className="p-3 text-gray-700">{attendedDaysStr}</td>
-                  <td className="p-3 font-bold text-gray-900">{formatScore(r.raw?.['Score'] || r.score)}</td>
-                  <td className="p-3 text-gray-700">{formatDateToStandard(r.attendanceDate)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <div className="mt-16 pt-4 border-t-2 border-gray-300 flex justify-between items-end print:fixed print:bottom-0 print:left-0 print:w-full bg-white print:pb-8">
-          <div>
-            <p className="font-bold text-gray-800 mb-8">{language === 'ar' ? 'اعتماد مدير التدريب الفني' : 'Authorized by Technical Training Manager'}</p>
-            <p className="text-[#002D62] font-medium text-lg">Nader Kamel</p>
-          </div>
-          <div className="text-right text-gray-400 text-xs">
-            OED Training Management System
-          </div>
-        </div>
-      </div>
 
-      {/* Profile Card */}
-      <section className="bg-white p-6 rounded-lg shadow flex flex-col md:flex-row gap-6 items-start md:items-center border-l-4 border-[#002D62] print:hidden">
-        <div className="w-16 h-16 bg-[#002D62] text-white rounded-full flex items-center justify-center text-2xl font-bold">
-          {user?.name.charAt(0).toUpperCase()}
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
-          <div>
-            <p className="text-sm text-gray-500">{t('name')}</p>
-            <p className="font-semibold text-lg"><DataField>{user?.name}</DataField></p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">{t('hrCode')}</p>
-            <p className="font-semibold"><DataField>{user?.hrCode}</DataField></p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">{t('department')}</p>
-            <p className="font-semibold"><DataField>{user?.department}</DataField></p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">{t('phone')}</p>
-            <p className="font-semibold"><DataField>{user?.phone}</DataField></p>
-          </div>
-        </div>
-      </section>
+            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-2xs hover:shadow-xs transition-all flex items-center gap-4">
+              <div className="p-3 bg-amber-50 text-[#FFC000] rounded-xl shrink-0">
+                <CheckCircle size={24} />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">{t('averageScore')}</p>
+                <p className="text-2xl font-black text-gray-800 mt-0.5">{averageScore}%</p>
+                <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                  {averageScore >= 80 ? (language === 'ar' ? 'Ù…Ù…ØªØ§Ø² (Excellent)' : 'High Distinction') : (language === 'ar' ? 'Ù…Ø³ØªÙˆÙ‰ Ø¬ÙŠØ¯' : 'Good Standing')}
+                </p>
+              </div>
+            </div>
 
-      {/* Stats Section */}
-      <section className="print:hidden">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">{t('personalStats')}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-6 rounded-lg shadow border-l-4 border-[#002D62]">
-            <p className="text-sm text-gray-500">{t('totalCourses')}</p>
-            <p className="text-3xl font-bold text-[#002D62]">{totalCourses}</p>
+            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-2xs hover:shadow-xs transition-all flex items-center gap-4">
+              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+                <Clock size={24} />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">{language === 'ar' ? 'Ø³Ø§Ø¹Ø§Øª Ø§Ù„Ø­Ø¶ÙˆØ±' : 'Training Hours'}</p>
+                <p className="text-2xl font-black text-emerald-700 mt-0.5">{totalCourses * 8}h</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">{language === 'ar' ? 'Ø³Ø§Ø¹Ø§Øª ØªØ¯Ø±ÙŠØ¨ ÙÙ†ÙŠ Ù…Ø¹ØªÙ…Ø¯Ø©' : 'Accredited technical hours'}</p>
+              </div>
+            </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow border-l-4 border-[#FFC000]">
-            <p className="text-sm text-gray-500">{t('averageScore')}</p>
-            <p className="text-3xl font-bold text-[#002D62]">{averageScore}%</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow border-l-4 border-gray-300 col-span-1 md:col-span-3 lg:col-span-1">
-            <p className="text-sm text-gray-500 mb-3">{t('attendanceDates')}</p>
-            <ul className="space-y-3">
-              {userRecords.map(r => {
-                const course = mockCourses.find(c => c.id === r.courseId);
-                const totalDaysStr = r.raw?.['Course Duration'] || r.totalDays || course?.duration || '1 Day';
-                const attendedDaysStr = r.raw?.['Attended Days'] || r.daysAttended || totalDaysStr;
-                return (
-                  <li key={r.id} className="text-sm flex flex-col bg-gray-50 p-3 rounded border border-gray-100">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-bold text-[#002D62] truncate mr-2" title={course?.title || r.courseName}>
-                        <DataField>{course?.title || r.courseName || 'Unknown Course'}</DataField>
-                      </span>
-                      <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded"><DataField>{formatDateToStandard(r.attendanceDate)}</DataField></span>
+
+          {/* Attendance and Course History List */}
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-2xs">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
+              <h3 className="font-bold text-base text-[#002D62] flex items-center gap-2">
+                <Calendar size={18} className="text-[#FFC000]" />
+                <span>{language === 'ar' ? 'Ø³Ø¬Ù„ Ø§Ù„Ø¯ÙˆØ±Ø§Øª Ø§Ù„Ù…ÙƒØªÙ…Ù„Ø© ÙˆØªÙˆØ§Ø±ÙŠØ® Ø§Ù„Ø­Ø¶ÙˆØ±' : 'Completed Courses & Attendance History'}</span>
+              </h3>
+              <span className="text-xs text-gray-400 font-bold">{userRecords.length} {language === 'ar' ? 'Ø³Ø¬Ù„' : 'Records'}</span>
+            </div>
+
+            {userRecords.length === 0 ? (
+              <div className="text-center py-8 text-gray-400 text-sm">
+                {language === 'ar' ? 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø³Ø¬Ù„Ø§Øª ØªØ¯Ø±ÙŠØ¨ ØªØ§Ø±ÙŠØ®ÙŠØ© Ù…Ø³Ø¬Ù„Ø© Ø¨Ø¹Ø¯' : 'No training records found yet'}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {userRecords.map(r => {
+                  const course = mockCourses.find(c => c.id === r.courseId);
+                  const totalDaysStr = r.raw?.['Course Duration'] || r.totalDays || course?.duration || '1 Day';
+                  const attendedDaysStr = r.raw?.['Attended Days'] || r.daysAttended || totalDaysStr;
+                  const scoreVal = parseScore(r.raw?.['Score'] || r.score);
+
+                  return (
+                    <div key={r.id} className="p-4 rounded-xl bg-gray-50/80 border border-gray-200/80 hover:bg-white hover:shadow-2xs transition-all flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-start gap-2 mb-2">
+                          <span className="font-bold text-[#002D62] text-sm leading-snug">
+                            <DataField>{course?.title || r.courseName || 'Technical Course'}</DataField>
+                          </span>
+                          <span className="text-[11px] font-mono text-gray-500 bg-white px-2 py-0.5 rounded-md border border-gray-200 shrink-0">
+                            <DataField>{formatDateToStandard(r.attendanceDate)}</DataField>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-200/60 text-xs">
+                        <span className="text-gray-500">
+                          {t('attendedDays')}: <strong className="text-gray-700">{attendedDaysStr} / {totalDaysStr}</strong>
+                        </span>
+                        <span className={`font-bold px-2 py-0.5 rounded-md text-[11px] ${
+                          scoreVal >= 85 
+                            ? 'bg-emerald-100 text-emerald-800' 
+                            : scoreVal >= 70 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {t('score')}: {formatScore(scoreVal)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center text-gray-600 text-xs">
-                      <span>{t('attendedDays')} <DataField>{attendedDaysStr}</DataField> / <DataField>{totalDaysStr}</DataField></span>
-                      <span className="font-semibold">{t('score')}: <DataField>{formatScore(r.raw?.['Score'] || r.score)}</DataField></span>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Action Feedback Toast */}
       {actionToast && (
@@ -358,146 +503,197 @@ export const TraineeDashboard: React.FC = () => {
             <span className="font-semibold text-sm md:text-base">{actionToast.message}</span>
           </div>
           <button onClick={() => setActionToast(null)} className="font-bold text-sm hover:opacity-75">
-            ✕
+            âœ•
           </button>
         </div>
       )}
 
-      {/* Trainee Notification Center / My Alerts Section */}
-      <section className="bg-white p-6 rounded-lg shadow border-t-4 border-[#002D62] print:hidden space-y-4">
-        <div className="flex justify-between items-center flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Bell className="h-6 w-6 text-[#002D62] animate-pulse" />
+      {/* Trainee Notification Center / My Alerts Section (notifications) */}
+      {currentView === 'notifications' && (
+        <section className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-[#002D62] print:hidden space-y-5 animate-fadeIn">
+          <div className="flex justify-between items-center flex-wrap gap-3 pb-4 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="relative p-2.5 bg-blue-50 text-[#002D62] rounded-xl border border-blue-200 shadow-xs">
+                <Bell className="h-6 w-6 animate-pulse" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black w-5 h-5 rounded-full border-2 border-white flex items-center justify-center animate-bounce shadow-sm">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 leading-tight">
+                  {language === 'ar' ? 'Ù…Ø±ÙƒØ² Ø§Ù„ØªÙ†Ø¨ÙŠÙ‡Ø§Øª ÙˆØ¥Ø´Ø¹Ø§Ø±Ø§Øª Ø§Ù„Ø¯ÙˆØ±Ø§Øª' : 'Notification Center / My Alerts'}
+                </h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {language === 'ar' ? 'Ø¬Ù…ÙŠØ¹ Ø§Ù„ØªÙ†Ø¨ÙŠÙ‡Ø§Øª ÙˆØ§Ù„Ø¥Ø¹Ù„Ø§Ù†Ø§Øª Ø§Ù„Ù…ÙˆØ¬Ù‡Ø© Ù„Ùƒ Ù…Ù† Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ØªØ¯Ø±ÙŠØ¨' : 'All training alerts and announcements sent by management'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Sound Test / Chime Button */}
+              <button
+                type="button"
+                onClick={() => playNotificationSound()}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border border-gray-200"
+                title={language === 'ar' ? 'ØªØ¬Ø±Ø¨Ø© Ù†ØºÙ…Ø© Ø§Ù„ØªÙ†Ø¨ÙŠÙ‡' : 'Test Notification Chime'}
+              >
+                <Volume2 size={14} className="text-[#002D62]" />
+                <span>{language === 'ar' ? 'ØªØ¬Ø±Ø¨Ø© Ø§Ù„ØµÙˆØª' : 'Play Sound'}</span>
+              </button>
+
               {unreadCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full border-2 border-white animate-bounce">
-                  {unreadCount}
-                </span>
+                <button 
+                  type="button"
+                  onClick={markAllNotifsAsRead}
+                  className="bg-[#002D62] hover:bg-blue-900 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                >
+                  <CheckCircle size={14} />
+                  <span>{language === 'ar' ? 'ØªØ­Ø¯ÙŠØ¯ Ø§Ù„ÙƒÙ„ ÙƒÙ…Ù‚Ø±ÙˆØ¡' : 'Mark All as Read'}</span>
+                </button>
               )}
             </div>
-            <h2 className="text-xl font-bold text-gray-800">{t('notificationCenter')}</h2>
-            {allNotifications.length > 0 && (
-              <span className="bg-[#FFC000] text-[#002D62] text-xs font-black px-2.5 py-0.5 rounded-full shadow-sm">
-                {allNotifications.length} {language === 'ar' ? 'تنبيه' : 'alerts'}
-              </span>
-            )}
-            {unreadCount > 0 && (
-              <span className="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-red-200">
-                {unreadCount} {language === 'ar' ? 'غير مقروء' : 'unread'}
-              </span>
-            )}
           </div>
-          <div className="flex items-center gap-3">
-            {unreadCount > 0 && (
-              <button 
-                type="button"
-                onClick={markAllNotifsAsRead}
-                className="bg-blue-50 text-[#002D62] hover:bg-blue-100 border border-blue-200 px-3 py-1 rounded text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
-              >
-                <CheckCircle size={13} className="text-[#002D62]" />
-                <span>{language === 'ar' ? 'تحديد الكل كمقروء' : 'Mark All as Read'}</span>
-              </button>
-            )}
-            <p className="text-xs text-gray-500 hidden sm:block">
-              {language === 'ar' ? 'جميع تنبيهات وتذكيرات الجلسات التدريبية الموجهة لك' : 'All training session reminder alerts sent by administration'}
-            </p>
-          </div>
-        </div>
 
-        {allNotifications.length === 0 ? (
-          <div className="text-center py-6 px-4 bg-gray-50 border border-dashed border-gray-200 rounded-lg">
-            <BellOff className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-            <p className="text-gray-500 text-sm">{t('noNotifications')}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {allNotifications.map((notif) => {
-              const isFinal = notif.type === 'Final';
-              const isRead = readNotifIds.includes(notif.id);
+          {allNotifications.length === 0 ? (
+            <div className="text-center py-12 px-4 bg-gray-50/80 border border-dashed border-gray-200 rounded-xl">
+              <BellOff className="mx-auto h-10 w-10 text-gray-400 mb-2" />
+              <p className="text-gray-600 font-medium text-sm">
+                {language === 'ar' ? 'Ù„Ø§ ØªÙˆØ¬Ø¯ ØªÙ†Ø¨ÙŠÙ‡Ø§Øª Ø­Ø§Ù„ÙŠØ§Ù‹' : 'No notifications available'}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {language === 'ar' ? 'Ø³ØªØ¸Ù‡Ø± Ù‡Ù†Ø§ ØªØ°ÙƒÙŠØ±Ø§Øª Ø§Ù„Ø¯ÙˆØ±Ø§Øª ÙˆØ§Ù„Ø¥Ø¹Ù„Ø§Ù†Ø§Øª Ø§Ù„Ø¹Ø§Ù…Ø© ÙÙˆØ± Ø¥Ø±Ø³Ø§Ù„Ù‡Ø§' : 'Course reminders and announcements will appear here'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {allNotifications.map((notif) => {
+                const isFinal = notif.type === 'Final';
+                const isRead = readNotifIds.includes(notif.id);
 
-              return (
-                <div 
-                  key={notif.id}
-                  onClick={() => markNotifAsRead(notif.id)}
-                  className={`p-4 rounded-lg border flex flex-col justify-between transition-all cursor-pointer relative ${
-                    !isRead
-                      ? isFinal 
-                        ? 'bg-amber-100/90 border-amber-400 shadow-md ring-2 ring-amber-400/50' 
-                        : 'bg-blue-100/80 border-blue-400 shadow-md ring-2 ring-blue-400/50'
-                      : isFinal 
-                        ? 'bg-amber-50/50 border-amber-200 opacity-80' 
-                        : 'bg-gray-50 border-gray-200 opacity-80'
-                  }`}
-                >
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-start gap-2 flex-wrap">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded border uppercase tracking-wider flex items-center gap-1 ${
-                          isFinal 
-                            ? 'bg-amber-200 text-amber-950 border-amber-400' 
-                            : 'bg-blue-200 text-blue-950 border-blue-300'
-                        }`}>
-                          {isFinal ? <AlertTriangle size={12} className="text-amber-800 shrink-0" /> : <Bell size={12} className="text-blue-800 shrink-0" />}
-                          <span>{isFinal ? t('finalReminder') : t('standardReminder')}</span>
-                        </span>
-                        {!isRead && (
-                          <span className="text-[10px] bg-red-600 text-white font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-                            <span>{language === 'ar' ? 'جديد' : 'NEW'}</span>
+                return (
+                  <div 
+                    key={notif.id}
+                    onClick={() => markNotifAsRead(notif.id)}
+                    className={`p-4 rounded-xl border flex flex-col justify-between transition-all cursor-pointer relative ${
+                      !isRead
+                        ? isFinal 
+                          ? 'bg-amber-50/90 border-amber-300 shadow-md ring-2 ring-amber-400/40' 
+                          : notif.type === 'Global'
+                            ? 'bg-red-50/90 border-red-300 shadow-md ring-2 ring-red-400/30'
+                            : notif.type === 'Announcement'
+                              ? 'bg-purple-50/90 border-purple-300 shadow-md ring-2 ring-purple-400/30'
+                              : 'bg-blue-50/90 border-blue-300 shadow-md ring-2 ring-blue-400/30'
+                        : 'bg-gray-50/70 border-gray-200 opacity-85 hover:opacity-100 hover:bg-white'
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-start gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border uppercase tracking-wider flex items-center gap-1.5 shadow-2xs ${
+                            isFinal 
+                              ? 'bg-amber-200 text-amber-950 border-amber-400' 
+                              : notif.type === 'Global' 
+                                ? 'bg-red-200 text-red-950 border-red-400'
+                                : notif.type === 'Announcement'
+                                  ? 'bg-purple-200 text-purple-950 border-purple-400'
+                                  : 'bg-blue-200 text-blue-950 border-blue-300'
+                          }`}>
+                            {notif.type === 'Global' && <Radio size={13} className="animate-pulse" />}
+                            {notif.type === 'Announcement' && <Megaphone size={13} />}
+                            {(notif.type === 'Standard' || notif.type === 'Final') && <Bell size={13} />}
+                            <span>
+                              {language === 'ar' 
+                                ? (isFinal ? 'ØªØ°ÙƒÙŠØ± Ù†Ù‡Ø§Ø¦ÙŠ' : notif.type === 'Global' ? 'ØªÙ†Ø¨ÙŠÙ‡ Ø¹Ø§Ù… Ø´Ø§Ù…Ù„' : notif.type === 'Announcement' ? 'Ø¥Ø¹Ù„Ø§Ù† ØªØ¯Ø±ÙŠØ¨ÙŠ' : 'ØªØ°ÙƒÙŠØ± Ø¨Ø§Ù„Ø¯ÙˆØ±Ø©') 
+                                : (isFinal ? 'FINAL REMINDER' : notif.type === 'Global' ? 'GLOBAL BROADCAST' : notif.type === 'Announcement' ? 'ANNOUNCEMENT' : 'UPCOMING SESSION')}
+                            </span>
                           </span>
-                        )}
+
+                          {!isRead && (
+                            <span className="text-[10px] bg-red-600 text-white font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+                              <span>{language === 'ar' ? 'Ø¬Ø¯ÙŠØ¯' : 'NEW'}</span>
+                            </span>
+                          )}
+                        </div>
+
+                        <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1 bg-white/80 px-2 py-0.5 rounded-md border border-gray-200/60">
+                          <Clock size={11} className="text-gray-400" />
+                          <span>{formatNotificationDate(notif.timestamp, language)}</span>
+                        </span>
                       </div>
-                      <span className="text-[11px] text-gray-500 font-mono flex items-center gap-1">
-                        <Clock size={11} />
-                        {notif.timestamp}
-                      </span>
+
+                      {notif.type === 'Announcement' || notif.type === 'Global' ? (
+                        <div className="mt-2 bg-white/90 p-3.5 rounded-xl text-sm text-gray-800 border border-gray-200 shadow-xs">
+                          {notif.title && (
+                            <div className="font-bold text-base mb-1 text-[#002D62] flex items-center gap-1.5">
+                              <Sparkles size={14} className="text-[#FFC000]" />
+                              <span>{notif.title}</span>
+                            </div>
+                          )}
+                          <div className="whitespace-pre-wrap leading-relaxed text-gray-700 font-normal">
+                            {notif.message}
+                          </div>
+                          {notif.author && (
+                            <div className="text-[11px] text-gray-500 mt-2.5 pt-1.5 border-t border-gray-100 font-semibold flex items-center gap-1">
+                              <span>{language === 'ar' ? 'Ø¨ÙˆØ§Ø³Ø·Ø© Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„:' : 'By Admin:'}</span>
+                              <span className="text-gray-800">{notif.author}</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mt-1 bg-white/90 p-3.5 rounded-xl border border-gray-200 shadow-xs space-y-1.5">
+                          <h4 className="font-bold text-base text-[#002D62]">
+                            <DataField>{notif.courseTitle}</DataField>
+                          </h4>
+
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <p className="flex items-center gap-1.5 font-medium">
+                              <Calendar size={13} className="text-amber-500 shrink-0" />
+                              <span>{formatDateToStandard(notif.startDate)} {notif.endDate ? ` - ${formatDateToStandard(notif.endDate)}` : ''} {notif.startTime ? ` â€¢ ${notif.startTime}` : ''}</span>
+                            </p>
+                            {notif.location && (
+                              <p className="flex items-center gap-1.5">
+                                <MapPin size={13} className="text-red-500 shrink-0" />
+                                <span>{t('location')}: <span className="font-semibold text-gray-800">{notif.location}</span></span>
+                              </p>
+                            )}
+                            {notif.targetParticipants && (
+                              <p className="flex items-center gap-1.5 text-[11px] text-gray-500">
+                                <Tag size={12} className="text-blue-500 shrink-0" />
+                                <span>{t('targetParticipants')}: {notif.targetParticipants === 'engineers' ? t('engineers') : notif.targetParticipants === 'technicians' ? t('technicians') : t('mixed')}</span>
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    <h4 className="font-bold text-base text-[#002D62] pt-1">
-                      <DataField>{notif.courseTitle}</DataField>
-                    </h4>
-
-                    <div className="text-xs text-gray-600 space-y-0.5">
-                      <p className="flex items-center gap-1 font-medium">
-                        <Calendar size={13} className="text-gray-500 shrink-0" />
-                        <span>{formatDateToStandard(notif.startDate)} {notif.endDate ? ` - ${formatDateToStandard(notif.endDate)}` : ''} {notif.startTime ? `• ${notif.startTime}` : ''}</span>
-                      </p>
-                      {notif.location && (
-                        <p className="flex items-center gap-1">
-                          <MapPin size={13} className="text-gray-500 shrink-0" />
-                          <span>{t('location')}: <span className="font-semibold text-gray-700">{notif.location}</span></span>
-                        </p>
-                      )}
-                      {notif.targetParticipants && (
-                        <p className="flex items-center gap-1 text-[11px] text-gray-500">
-                          <Tag size={12} className="shrink-0" />
-                          <span>{t('targetParticipants')}: {notif.targetParticipants === 'engineers' ? t('engineers') : notif.targetParticipants === 'technicians' ? t('technicians') : t('mixed')}</span>
-                        </p>
-                      )}
-                    </div>
+                    {!isRead && (
+                      <div className="mt-3 pt-2 border-t border-gray-200/70 flex justify-end">
+                        <button 
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); markNotifAsRead(notif.id); }}
+                          className="text-[11px] bg-white hover:bg-gray-50 text-gray-700 px-3 py-1 rounded-lg border border-gray-300 font-bold transition-all flex items-center gap-1.5 shadow-2xs hover:shadow-xs cursor-pointer"
+                        >
+                          <CheckCircle size={13} className="text-emerald-600" />
+                          <span>{language === 'ar' ? 'ØªØ¹Ù„ÙŠÙ… ÙƒÙ…Ù‚Ø±ÙˆØ¡' : 'Mark as read'}</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
 
-                  {!isRead && (
-                    <div className="mt-3 pt-2 border-t border-gray-200/60 flex justify-end">
-                      <button 
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); markNotifAsRead(notif.id); }}
-                        className="text-[11px] bg-white/80 hover:bg-white text-gray-700 px-2.5 py-1 rounded border border-gray-300 font-semibold transition-colors flex items-center gap-1"
-                      >
-                        <CheckCircle size={12} className="text-emerald-600" />
-                        <span>{language === 'ar' ? 'تعليم كمقروء' : 'Mark as read'}</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* Upcoming Sessions */}
-      <section className="print:hidden">
+      {/* Upcoming Sessions & Actions (newCourses) */}
+      {currentView === 'newCourses' && (
+        <div className="space-y-8 animate-fadeIn">
+          <section className="print:hidden">
         <h2 className="text-xl font-semibold mb-4 text-gray-800">{t('upcomingSessions')}</h2>
         {upcomingSessions.length === 0 ? (
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center text-gray-500 py-8">
@@ -558,7 +754,62 @@ export const TraineeDashboard: React.FC = () => {
             {t('goToForm')} <ExternalLink size={18} className="ml-2 rtl:mr-2 rtl:ml-0" />
           </a>
         </section>
-      </div>
+        </div>
+        </div>
+      )}
+      {registeringSession && (
+        <div className="fixed inset-0 bg-black/60 z-[99999] flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-xl shadow-2xl flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-[#002D62]">
+                {language === 'ar' ? '????? ??????? ????????' : 'Confirm Manager Emails'}
+              </h2>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-4">
+                {language === 'ar' ? '???? ????? ?? ????? ??????? ???????? ?????? ?????? ??? ?????? ?????.' : 'Please confirm or update your manager emails for course reports.'}
+              </p>
+              <div className="space-y-4">
+                {[1, 2, 3].map((num, i) => (
+                  <div key={num}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {language === 'ar' ? `Ù…Ø¯ÙŠØ± ${num}` : `Manager ${num}`} {i === 0 && <span className="text-red-500">*</span>}
+                    </label>
+                    <input
+                      type="email"
+                      value={tempManagerEmails[i]}
+                      onChange={(e) => {
+                        const newEmails = [...tempManagerEmails];
+                        newEmails[i] = e.target.value;
+                        setTempManagerEmails(newEmails);
+                      }}
+                      className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]"
+                      placeholder={`manager${num}@orascom.com`}
+                      required={i === 0}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 rounded-b-xl">
+              <button 
+                onClick={() => setRegisteringSession(null)}
+                className="px-4 py-2 border border-gray-300 rounded font-bold text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                {language === 'ar' ? '?????' : 'Cancel'}
+              </button>
+              <button
+                onClick={confirmRegistration}
+                disabled={!tempManagerEmails[0]?.trim()}
+                className="bg-[#002D62] text-white px-6 py-2 rounded font-bold hover:bg-blue-900 transition-colors disabled:opacity-50"
+              >
+                {language === 'ar' ? '????? ??????' : 'Confirm & Register'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+

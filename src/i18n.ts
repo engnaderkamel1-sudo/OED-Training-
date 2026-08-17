@@ -81,6 +81,7 @@ export const translations = {
     targetParticipants: 'Target Participants',
     sessionOne: 'Session One',
     sessionTwo: 'Session Two',
+    sessionThree: 'Session Three',
     engineers: 'Engineers',
     technicians: 'Technicians/Operators',
     mixed: 'Mixed',
@@ -264,3 +265,4 @@ export const translations = {
     totalAttendees: 'إجمالي الحضور',
   }
 };
+

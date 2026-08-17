@@ -4,7 +4,8 @@ import { UpcomingSession } from '../types';
 import { 
   Calendar, Clock, MapPin, Users, Ban, 
   RotateCcw, Edit2, Bell, AlertTriangle, 
-  CheckCircle, XCircle 
+  CheckCircle, FileText, QrCode, ScanLine, MessageSquare,
+  FileText, QrCode, ScanLine, MessageSquare, XCircle, Megaphone
 } from 'lucide-react';
 import { DataField } from './DataField';
 
@@ -13,6 +14,13 @@ interface SessionCardProps {
   isAdminView?: boolean;
   onEdit?: (session: UpcomingSession) => void;
   onSendReminder?: (sessionId: string, type: 'Standard' | 'Final') => void;
+  onAnnounceRequest?: (session: UpcomingSession) => void;
+  onManageAnnouncementsRequest?: (sessionId: string) => void;
+  onFinalizeRequest?: (session: UpcomingSession) => void;
+  onPrintRegisterRequest?: (session: UpcomingSession) => void;
+  onShowQR?: (session: UpcomingSession) => void;
+  onScanQR?: (session: UpcomingSession) => void;
+  onToggleFeedback?: (session: UpcomingSession) => void;
   registeredCourseIds?: string[];
   onRegister?: (session: UpcomingSession) => void;
   onUnregister?: (session: UpcomingSession) => void;
@@ -23,6 +31,13 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   isAdminView = false,
   onEdit,
   onSendReminder,
+  onAnnounceRequest,
+  onManageAnnouncementsRequest,
+  onFinalizeRequest,
+  onPrintRegisterRequest,
+  onShowQR,
+  onScanQR,
+  onToggleFeedback,
   registeredCourseIds = [],
   onRegister,
   onUnregister
@@ -41,6 +56,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   
   // -- State Derived from Context --
   const isCancelled = session.status === 'Cancelled' || !!session.isDeleted;
+  const isCompleted = session.status === 'Completed';
   const userCode = user?.hrCode || 'trainee';
   const isRegistered = session.registeredUsers?.includes(userCode) || registeredCourseIds.includes(session.id);
   const isUnregistered = session.unregisteredUsers?.includes(userCode);
@@ -95,7 +111,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   // DYNAMIC STYLING LOGIC
   // ==========================================
 
-  let cardClasses = "p-5 rounded-xl border transition-all duration-200 flex flex-col justify-between h-full relative group ";
+  let cardClasses = "p-5 rounded-lg shadow-sm border transition-all flex flex-col justify-between h-full relative group ";
   
   if (isCancelled) {
     // Admin Cancelled State
@@ -103,9 +119,12 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   } else if (!isAdminView && isUnregistered) {
     // Trainee Unregistered State
     cardClasses += "bg-orange-50/40 border-amber-200 opacity-50";
+  } else if (isCompleted) {
+    // Completed/Finalized State
+    cardClasses += "bg-emerald-50/50 border-emerald-300";
   } else {
     // Default Active State
-    cardClasses += "bg-white/90 backdrop-blur-sm border-gray-200/80 shadow-[0_4px_16px_-4px_rgba(0,45,98,0.06)] hover:shadow-[0_10px_24px_-4px_rgba(0,45,98,0.12)] hover:-translate-y-1 hover:border-[#002D62]/30";
+    cardClasses += "bg-white border-gray-200 hover:border-[#002D62]/30 hover:shadow-md";
   }
 
   return (
@@ -122,13 +141,19 @@ export const SessionCard: React.FC<SessionCardProps> = ({
           <div className="flex items-center gap-1.5 flex-wrap">
             {session.sessionNumber && (
               <span className="text-xs bg-blue-50 text-[#002D62] px-2 py-0.5 rounded font-semibold border border-blue-200 shadow-sm">
-                {session.sessionNumber === 'sessionOne' ? t('sessionOne') : session.sessionNumber === 'sessionTwo' ? t('sessionTwo') : session.sessionNumber}
+                {session.sessionNumber === 'sessionOne' ? t('sessionOne') : session.sessionNumber === 'sessionTwo' ? t('sessionTwo') : session.sessionNumber === 'sessionThree' ? t('sessionThree') : session.sessionNumber}
               </span>
             )}
             {isCancelled && (
               <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold border border-red-200 shadow-sm flex items-center gap-1">
                 <Ban size={12} />
                 {t('cancelled')}
+              </span>
+            )}
+            {isCompleted && (
+              <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-bold border border-emerald-200 shadow-sm flex items-center gap-1">
+                <CheckCircle size={12} />
+                {language === 'ar' ? 'مكتملة' : 'Completed'}
               </span>
             )}
           </div>
@@ -141,7 +166,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             <span className="font-medium">
               {session.startDate === session.endDate || !session.endDate
                 ? <DataField>{session.startDate}</DataField>
-                : <><DataField>{session.startDate}</DataField> <span className="text-gray-400 text-xs mx-1">{language === 'ar' ? 'إلى' : 'to'}</span> <DataField>{session.endDate}</DataField></>
+                : <><DataField>{session.startDate}</DataField> <span className="text-gray-400 text-xs mx-1">{language === 'ar' ? 'Ã˜Â¥Ã™â€žÃ™â€°' : 'to'}</span> <DataField>{session.endDate}</DataField></>
               }
             </span>
           </div>
@@ -162,7 +187,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               <span className="leading-snug"><DataField>{session.targetParticipants}</DataField></span>
               {isAdminView && (
                 <span className="text-xs font-bold text-emerald-700 mt-1 bg-emerald-50 px-2 py-0.5 rounded self-start border border-emerald-100">
-                  {attendeesCount} {language === 'ar' ? 'مسجلين' : 'registered'}
+                  {attendeesCount} {language === 'ar' ? 'Ã™â€¦Ã˜Â³Ã˜Â¬Ã™â€žÃ™Å Ã™â€ ' : 'registered'}
                 </span>
               )}
             </div>
@@ -177,8 +202,8 @@ export const SessionCard: React.FC<SessionCardProps> = ({
         <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex flex-col gap-2">
           <p className="text-sm font-semibold text-red-800">
             {confirmAction === 'cancel' 
-              ? (language === 'ar' ? 'هل أنت متأكد من إلغاء هذه الجلسة؟' : 'Are you sure you want to cancel this session?')
-              : (language === 'ar' ? 'هل أنت متأكد من إلغاء تسجيلك؟' : 'Are you sure you want to cancel your registration?')
+              ? (language === 'ar' ? 'Ã™â€¡Ã™â€ž Ã˜Â£Ã™â€ Ã˜Âª Ã™â€¦Ã˜ÂªÃ˜Â£Ã™Æ’Ã˜Â¯ Ã™â€¦Ã™â€  Ã˜Â¥Ã™â€žÃ˜ÂºÃ˜Â§Ã˜Â¡ Ã™â€¡Ã˜Â°Ã™â€¡ Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€žÃ˜Â³Ã˜Â©Ã˜Å¸' : 'Are you sure you want to cancel this session?')
+              : (language === 'ar' ? 'Ã™â€¡Ã™â€ž Ã˜Â£Ã™â€ Ã˜Âª Ã™â€¦Ã˜ÂªÃ˜Â£Ã™Æ’Ã˜Â¯ Ã™â€¦Ã™â€  Ã˜Â¥Ã™â€žÃ˜ÂºÃ˜Â§Ã˜Â¡ Ã˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€žÃ™Æ’Ã˜Å¸' : 'Are you sure you want to cancel your registration?')
             }
           </p>
           <div className="flex gap-2 justify-end">
@@ -187,7 +212,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               onClick={() => setConfirmAction(null)}
               className="bg-gray-200 text-gray-700 px-4 py-1.5 rounded text-xs font-bold hover:bg-gray-300 transition-colors cursor-pointer"
             >
-              {language === 'ar' ? 'لا' : 'No'}
+              {language === 'ar' ? 'Ã™â€žÃ˜Â§' : 'No'}
             </button>
             <button
               type="button"
@@ -197,7 +222,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               }}
               className="bg-red-600 text-white px-4 py-1.5 rounded text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer"
             >
-              {language === 'ar' ? 'نعم، تأكيد' : 'Yes, Confirm'}
+              {language === 'ar' ? 'Ã™â€ Ã˜Â¹Ã™â€¦Ã˜Å’ Ã˜ÂªÃ˜Â£Ã™Æ’Ã™Å Ã˜Â¯' : 'Yes, Confirm'}
             </button>
           </div>
         </div>
@@ -240,11 +265,53 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 </button>
                 <button 
                   type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(onEdit) onEdit(session); }}
-                  className="cursor-pointer bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-medium"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onAnnounceRequest) onAnnounceRequest(session); }}
+                  className="cursor-pointer bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-medium"
+                  title={language === 'ar' ? 'Ã˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜ÂªÃ™â€ Ã˜Â¨Ã™Å Ã™â€¡ Ã™â€žÃ™â€žÃ™â€¦Ã˜Â¬Ã™â€¦Ã™Ë†Ã˜Â¹Ã˜Â©' : 'Announce to Group'}
                 >
-                  <Edit2 size={13} />
-                  <span>{t('editSession')}</span>
+                  <Megaphone size={13} />
+                </button>
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onManageAnnouncementsRequest) onManageAnnouncementsRequest(session.id); }}
+                  className="cursor-pointer bg-purple-100 text-purple-800 hover:bg-purple-200 border border-purple-300 text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-medium"
+                  title={language === 'ar' ? 'Ã˜Â³Ã˜Â¬Ã™â€ž Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€ Ã˜Â¨Ã™Å Ã™â€¡Ã˜Â§Ã˜Âª' : 'Announcements Log'}
+                >
+                  <Clock size={13} />
+                </button>
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onEdit) onEdit(session); }}
+                  className="cursor-pointer bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-bold shadow-sm"
+                >
+                  <Edit2 size={14} />
+                  <span>{t('edit')}</span>
+                </button>
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onShowQR) onShowQR(session); }}
+                  className="cursor-pointer bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-bold shadow-sm"
+                  title={language === "ar" ? "??? ??? ??????" : "Show QR Code"}
+                >
+                  <QrCode size={14} />
+                  <span>QR Code</span>
+                </button>
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onPrintRegisterRequest) onPrintRegisterRequest(session); }}
+                  className="cursor-pointer bg-[#FFC000] hover:bg-yellow-500 text-[#002D62] text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-bold shadow-sm"
+                  title={language === 'ar' ? 'Ø·Ø¨Ø§Ø¹Ø© Ø§Ù„ÙƒØ´Ù' : 'Print Register'}
+                >
+                  <FileText size={14} />
+                  <span>{language === 'ar' ? 'Ø·Ø¨Ø§Ø¹Ø© Ø§Ù„ÙƒØ´Ù ' : 'Print Register'}</span>
+                </button>
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onFinalizeRequest) onFinalizeRequest(session); }}
+                  className={`cursor-pointer text-white text-xs px-3 py-2 rounded transition-colors flex items-center gap-1 font-bold shadow-sm ${isCompleted ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-[#002D62] hover:bg-blue-900'}`}
+                >
+                  <CheckCircle size={14} />
+                  <span>{isCompleted ? (language === 'ar' ? 'تم التسجيل ✓' : 'Finalized ✓') : (language === 'ar' ? 'إنهاء وحضور' : 'Finalize & Grade')}</span>
                 </button>
                 <button 
                   type="button"
@@ -265,7 +332,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             {!isAdminView && (
               <p className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
                 <Users size={13} />
-                <span>{attendeesCount} {language === 'ar' ? 'متدربين مسجلين' : 'registered attendees'}</span>
+                <span>{attendeesCount} {language === 'ar' ? 'Ã™â€¦Ã˜ÂªÃ˜Â¯Ã˜Â±Ã˜Â¨Ã™Å Ã™â€  Ã™â€¦Ã˜Â³Ã˜Â¬Ã™â€žÃ™Å Ã™â€ ' : 'registered attendees'}</span>
               </p>
             )}
             
@@ -273,7 +340,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               {isCancelled ? (
                 <span className="text-xs text-red-600 font-semibold italic flex items-center gap-1">
                   <Ban size={14} />
-                  <span>{language === 'ar' ? 'تم إلغاء الجلسة من قبل الإدارة' : 'Session Cancelled by Admin'}</span>
+                  <span>{language === 'ar' ? 'Ã˜ÂªÃ™â€¦ Ã˜Â¥Ã™â€žÃ˜ÂºÃ˜Â§Ã˜Â¡ Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€žÃ˜Â³Ã˜Â© Ã™â€¦Ã™â€  Ã™â€šÃ˜Â¨Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â©' : 'Session Cancelled by Admin'}</span>
                 </span>
               ) : isRegistered ? (
                 <>
@@ -288,6 +355,28 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                     <XCircle size={15} />
                     <span>{t('cancelRegistration')}</span>
                   </button>
+                  {session.status === "Active" && (
+                    <button 
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onScanQR) onScanQR(session); }}
+                      className="cursor-pointer bg-[#002D62] text-white hover:bg-blue-900 px-3.5 py-1.5 rounded text-xs font-semibold flex items-center gap-1 transition-colors shadow-sm"
+                    >
+                      <ScanLine size={15} />
+                      <span>{language === "ar" ? "????? ??????" : "Scan Attendance"}</span>
+                    </button>
+                  )}
+                  {session.feedbackEnabled && session.feedbackLink && (
+                    <a 
+                      href={session.feedbackLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="cursor-pointer bg-green-600 text-white hover:bg-green-700 px-3.5 py-1.5 rounded text-xs font-semibold flex items-center gap-1 transition-colors shadow-sm"
+                    >
+                      <MessageSquare size={15} />
+                      <span>{language === "ar" ? "????? ??????" : "Evaluate Session"}</span>
+                    </a>
+                  )}
                 </>
               ) : isUnregistered ? (
                 <>
@@ -327,3 +416,9 @@ export const SessionCard: React.FC<SessionCardProps> = ({
     </>
   );
 };
+
+
+
+
+
+
