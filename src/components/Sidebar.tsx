@@ -29,6 +29,17 @@ export const Sidebar: React.FC = () => {
   const [isToolsExpanded, setIsToolsExpanded] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isNudging, setIsNudging] = useState(false);
+
+  // Nudge menu button after 2 seconds of being closed to hint at menu
+  useEffect(() => {
+    if (isOpen) return;
+    const nudgeTimer = setTimeout(() => {
+      setIsNudging(true);
+      setTimeout(() => setIsNudging(false), 1000);
+    }, 2000);
+    return () => clearTimeout(nudgeTimer);
+  }, [isOpen, currentView]);
 
   if (!user) return null;
 
@@ -117,13 +128,22 @@ export const Sidebar: React.FC = () => {
 
   // Menu button (mobile)
   const MenuButton = () => (
-    <div className="fixed top-20 left-4 rtl:left-auto rtl:right-4 z-[9999] print:hidden">
+    <div className="fixed top-20 left-4 rtl:left-auto rtl:right-4 z-[9999] print:hidden flex flex-col items-center gap-0.5">
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="bg-[#002D62] dark:bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-blue-800 dark:hover:bg-gray-700 transition-all active:scale-95 border border-white/20 dark:border-gray-600"
+        onClick={() => { setIsOpen(!isOpen); setIsNudging(false); }}
+        className={`bg-[#002D62] dark:bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-blue-800 dark:hover:bg-gray-700 transition-all active:scale-95 border-2 border-[#FFC000]/60 dark:border-gray-600 ${
+          isNudging && !isOpen ? 'menu-nudge' : ''
+        }`}
+        aria-label={isOpen ? 'Close menu' : 'Open menu'}
       >
-        {isOpen ? <X size={26} /> : <Menu size={26} strokeWidth={2.5} />}
+        {isOpen ? <X size={24} strokeWidth={2.5} /> : <Menu size={24} strokeWidth={2.5} />}
       </button>
+      {/* Small label under button so user knows what it does */}
+      {!isOpen && (
+        <span className="menu-btn-label text-[#002D62] dark:text-gray-300 select-none">
+          {language === 'ar' ? 'القائمة' : 'Menu'}
+        </span>
+      )}
     </div>
   );
 

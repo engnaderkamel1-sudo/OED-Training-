@@ -73,17 +73,18 @@ export const TopNav: React.FC = () => {
             </div>
           </div>
 
-          {/* Center - User Greeting */}
+          {/* Center - User Greeting — visible on all sizes */}
           {user && (
-            <div className="hidden md:block text-center">
-              <p className="text-sm font-medium text-white/90">
-                {language === 'ar' ? 'مرحباً' : 'Welcome'}, <span className="text-[#FFC000]">{user.name}</span>
+            <div className="text-center flex-1 min-w-0 px-1">
+              <p className="text-xs sm:text-sm font-medium text-white/90 truncate">
+                {language === 'ar' ? 'مرحباً' : 'Hi,'}{' '}
+                <span className="text-[#FFC000]">{user.name.split(' ')[0]}</span>
               </p>
-              <p className="text-[10px] text-white/60">
-                {user.role === 'admin' ? (language === 'ar' ? 'مدير النظام' : 'Administrator') :
-                 user.role === 'manager' ? (language === 'ar' ? 'مدير' : 'Manager') :
-                 user.role === 'supervisor' ? (language === 'ar' ? 'مشرف موقع' : 'Site Supervisor') :
-                 (language === 'ar' ? 'متدرب' : 'Trainee')}
+              <p className="text-[9px] sm:text-[10px] text-white/55 truncate">
+                {user.role === 'admin'      ? (language === 'ar' ? 'مدير النظام' : 'Admin View')      :
+                 user.role === 'manager'    ? (language === 'ar' ? 'مدير' : 'Manager View')           :
+                 user.role === 'supervisor' ? (language === 'ar' ? 'مشرف موقع' : 'Supervisor View')   :
+                                              (language === 'ar' ? 'متدرب' : 'Trainee View')}
               </p>
             </div>
           )}
