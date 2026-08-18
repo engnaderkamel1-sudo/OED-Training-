@@ -91,7 +91,7 @@ export const TopNav: React.FC = () => {
                   className="text-[9px] sm:text-[11px] font-semibold leading-none"
                   style={{ color: '#FFC000' }}
                 >
-                  Technical Training Management
+                  Technical Training Management System
                 </p>
               </div>
 
