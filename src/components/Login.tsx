@@ -112,12 +112,11 @@ export const Login: React.FC = () => {
         return;
       }
 
-      // البحث عن طريق الإيميل، الكود الوظيفي، أو رقم التليفون
       let foundUser = users.find((u) => 
         u.email?.toLowerCase() === loginInput || 
         u.hrCode.toLowerCase() === loginInput || 
         u.phone === loginInput ||
-        u.phone === `0${loginInput}` // In case they didn't write the 0
+        u.phone === `0${loginInput}`
       );
 
       if (foundUser && foundUser.email) {
@@ -181,10 +180,18 @@ export const Login: React.FC = () => {
       setSuccessMsg("");
       
       const cleanHrCode = registerMode === 'official' ? hrCode.trim() : `TMP-${phone}`;
-      const fullEmail = registerMode === 'official' ? email.trim().toLowerCase() + "@orascom.com" : `${phone}@guest.orascom.com`;
       
-      if (!name || !department || !password) {
+      const fullEmail = registerMode === 'official' 
+        ? email.trim().toLowerCase() + "@orascom.com" 
+        : email.trim().toLowerCase(); 
+      
+      if (!name || !department || !password || !email.trim()) {
         setError(language === "ar" ? "الرجاء ملء جميع الحقول المطلوبة" : "Please fill all required fields");
+        return;
+      }
+
+      if (registerMode === 'temporary' && fullEmail.includes('@orascom.com')) {
+        setError(language === "ar" ? "برجاء استخدام بريد إلكتروني شخصي (مثل Gmail) وليس بريد الشركة" : "Please use a personal email (e.g. Gmail), not a company email.");
         return;
       }
       
@@ -215,11 +222,12 @@ export const Login: React.FC = () => {
           setError(language === "ar" ? "الكود الوظيفي مسجل بالفعل" : "HR Code already exists");
           return;
         }
-        const existingEmail = users.find((u) => u.email?.toLowerCase() === fullEmail);
-        if (existingEmail && !existingEmail.id.startsWith("derived_")) {
-          setError(language === "ar" ? "البريد الإلكتروني مسجل بالفعل" : "Email already exists");
-          return;
-        }
+      }
+
+      const existingEmail = users.find((u) => u.email?.toLowerCase() === fullEmail);
+      if (existingEmail && !existingEmail.id.startsWith("derived_")) {
+        setError(language === "ar" ? "البريد الإلكتروني مسجل بالفعل" : "Email already exists");
+        return;
       }
 
       try {
@@ -232,7 +240,12 @@ export const Login: React.FC = () => {
       }
 
       const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + 14); // 14 days grace period for guests
+      expiryDate.setDate(expiryDate.getDate() + 14); 
+
+      // التعديل هنا: إضافة @orascom.com برمجياً لإيميلات المديرين المكتوبة
+      const formattedManagerEmails = [managerEmail1, managerEmail2, managerEmail3]
+        .filter(e => e.trim() !== "")
+        .map(e => `${e.trim().toLowerCase()}@orascom.com`);
 
       const newUser: User = {
         id: `u${users.length + 1}_${Date.now()}`,
@@ -245,12 +258,12 @@ export const Login: React.FC = () => {
         jobRole: jobRole,
         status: "pending",
         createdAt: new Date().toISOString(),
-        managerEmails: [managerEmail1, managerEmail2, managerEmail3].filter(e => e.trim() !== ""),
+        managerEmails: formattedManagerEmails,
         password: password,
         profileImageUrl: profileImage,
-        isGuest: registerMode === 'temporary', // Custom flag for temporary accounts
+        isGuest: registerMode === 'temporary', 
         guestExpiryDate: registerMode === 'temporary' ? expiryDate.toISOString() : undefined
-      } as any; // Cast as any to bypass strict User type checks for the custom guest flags
+      } as any; 
 
       setUsers([...users, newUser]);
       setSuccessMsg(language === "ar" ? "تم إرسال طلب تسجيلك بنجاح وفي انتظار الموافقة قريباً" : "Registration request sent and pending approval");
@@ -264,6 +277,9 @@ export const Login: React.FC = () => {
         setPhone("");
         setEmail("");
         setName("");
+        setManagerEmail1("");
+        setManagerEmail2("");
+        setManagerEmail3("");
         setProfileImage(undefined);
       }, 3000);
 
@@ -366,9 +382,8 @@ export const Login: React.FC = () => {
         ) : isRegistering && registerMode === 'none' ? (
           <div className="animate-fadeIn">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-              {/* Card 1: Official Account */}
               <div 
-                onClick={() => setRegisterMode('official')}
+                onClick={() => { setRegisterMode('official'); setEmail(""); setHrCode(""); }}
                 className="cursor-pointer border-2 border-gray-200 hover:border-[#002D62] rounded-2xl p-6 flex flex-col items-center text-center transition-all hover:shadow-lg bg-gray-50 hover:bg-blue-50/50 group"
               >
                 <div className="bg-white p-4 rounded-full shadow-sm mb-4 group-hover:scale-110 transition-transform">
@@ -382,9 +397,8 @@ export const Login: React.FC = () => {
                 </p>
               </div>
 
-              {/* Card 2: Temporary Account */}
               <div 
-                onClick={() => setRegisterMode('temporary')}
+                onClick={() => { setRegisterMode('temporary'); setEmail(""); setHrCode(""); }}
                 className="cursor-pointer border-2 border-gray-200 hover:border-[#FFC000] rounded-2xl p-6 flex flex-col items-center text-center transition-all hover:shadow-lg bg-gray-50 hover:bg-orange-50/50 group"
               >
                 <div className="bg-white p-4 rounded-full shadow-sm mb-4 group-hover:scale-110 transition-transform relative">
@@ -394,8 +408,8 @@ export const Login: React.FC = () => {
                 <h3 className="font-bold text-lg text-gray-800 mb-2">{language === 'ar' ? 'حساب تعيين جديد (مؤقت)' : 'Temporary Account'}</h3>
                 <p className="text-xs text-gray-500 font-medium">
                   {language === 'ar' 
-                    ? 'تم تعييني حديثاً ولم أستلم البريد الإلكتروني بعد. (التسجيل برقم الهاتف)' 
-                    : 'I am a new hire and do not have my official email yet. (Phone only)'}
+                    ? 'تم تعييني حديثاً ولم أستلم بريد الشركة بعد. (تسجيل ببريد شخصي)' 
+                    : 'I am a new hire and do not have my official email yet. (Personal email)'}
                 </p>
               </div>
             </div>
@@ -411,17 +425,15 @@ export const Login: React.FC = () => {
         ) : (
           <form onSubmit={handleRegister} className="space-y-4 animate-fadeIn">
             
-            {/* زر العودة لاختيار الحساب */}
             <button 
               type="button" 
-              onClick={() => setRegisterMode('none')}
+              onClick={() => { setRegisterMode('none'); setEmail(""); setHrCode(""); }}
               className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#002D62] font-bold mb-4"
             >
               <ArrowRight size={14} className="rtl:rotate-180" />
               {language === 'ar' ? 'تغيير نوع الحساب' : 'Change Account Type'}
             </button>
 
-            {/* Profile Image Upload */}
             <div className="flex flex-col items-center mb-4">
               <label className="relative cursor-pointer w-20 h-20 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden hover:border-[#002D62] transition-colors">
                 {profileImage ? (
@@ -433,7 +445,6 @@ export const Login: React.FC = () => {
               </label>
             </div>
 
-            {/* Common Fields */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">{t("name")} *</label>
               <input type="text" value={name} onChange={(e) => setName(enforceEnglish(e.target.value))} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]" dir="ltr" required />
@@ -456,15 +467,35 @@ export const Login: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">{language === "ar" ? "البريد الإلكتروني الرسمي" : "Official Email"} *</label>
-                  <div className="flex border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62]" dir="ltr">
+                  <div className="flex border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62] bg-white" dir="ltr">
                     <input type="text" value={email} onChange={(e) => setEmail(enforceEnglish(e.target.value))} className="w-full px-3 py-2 outline-none" placeholder="name" required />
-                    <span className="bg-gray-100 px-3 py-2 border-l text-gray-600 font-bold text-xs flex items-center">@orascom.com</span>
+                    <span className="bg-gray-100 px-3 py-2 border-l border-gray-300 text-gray-600 font-bold text-xs flex items-center shrink-0">@orascom.com</span>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Job details */}
+            {/* Temporary Account Fields */}
+            {registerMode === 'temporary' && (
+              <div className="space-y-4 bg-orange-50/30 p-4 rounded-xl border border-orange-100">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">{language === "ar" ? "البريد الإلكتروني الشخصي" : "Personal Email"} *</label>
+                  <input 
+                    type="email" 
+                    value={email} 
+                    onChange={(e) => setEmail(enforceEnglish(e.target.value))} 
+                    className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#FFC000]" 
+                    dir="ltr" 
+                    placeholder="e.g. name@gmail.com" 
+                    required 
+                  />
+                  <p className="text-[10px] text-orange-700 font-semibold mt-1">
+                    {language === 'ar' ? '* سيتم استخدام هذا البريد لاسترجاع كلمة المرور فقط.' : '* Used for password recovery only.'}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">{t("department")} *</label>
               <select value={department} onChange={(e) => setDepartment(e.target.value)} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]" dir="ltr" required>
@@ -500,11 +531,28 @@ export const Login: React.FC = () => {
             {accessRole === "trainee" && (
               <div className="space-y-3 border border-gray-200 bg-gray-50/50 p-4 rounded-xl mt-4">
                 <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">{language === "ar" ? "إيميلات الإدارة للتقارير" : "Management Emails for Reports"}</h4>
+                
                 <div className="grid grid-cols-1 gap-3">
-                  <input type="email" value={managerEmail1} onChange={(e) => setManagerEmail1(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#002D62]" required placeholder={language === "ar" ? "مدير 1 (إلزامي)" : "Manager 1 (Required)"} />
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="email" value={managerEmail2} onChange={(e) => setManagerEmail2(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#002D62]" placeholder={language === "ar" ? "مدير 2 (اختياري)" : "Manager 2 (Optional)"} />
-                    <input type="email" value={managerEmail3} onChange={(e) => setManagerEmail3(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#002D62]" placeholder={language === "ar" ? "مدير 3 (اختياري)" : "Manager 3 (Optional)"} />
+                  <div>
+                    <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62] bg-white" dir="ltr">
+                      <input type="text" value={managerEmail1} onChange={(e) => setManagerEmail1(enforceEnglish(e.target.value))} className="w-full px-3 py-2 text-sm outline-none" required placeholder={language === "ar" ? "مدير 1 (إلزامي)" : "Manager 1 (Required)"} />
+                      <span className="bg-gray-100 px-3 py-2 border-l border-gray-300 text-gray-600 font-bold text-xs flex items-center shrink-0">@orascom.com</span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62] bg-white" dir="ltr">
+                        <input type="text" value={managerEmail2} onChange={(e) => setManagerEmail2(enforceEnglish(e.target.value))} className="w-full px-3 py-2 text-sm outline-none" placeholder={language === "ar" ? "مدير 2 (اختياري)" : "Manager 2 (Optional)"} />
+                        <span className="bg-gray-100 px-3 py-2 border-l border-gray-300 text-gray-600 font-bold text-xs flex items-center shrink-0">@orascom.com</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62] bg-white" dir="ltr">
+                        <input type="text" value={managerEmail3} onChange={(e) => setManagerEmail3(enforceEnglish(e.target.value))} className="w-full px-3 py-2 text-sm outline-none" placeholder={language === "ar" ? "مدير 3 (اختياري)" : "Manager 3 (Optional)"} />
+                        <span className="bg-gray-100 px-3 py-2 border-l border-gray-300 text-gray-600 font-bold text-xs flex items-center shrink-0">@orascom.com</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
