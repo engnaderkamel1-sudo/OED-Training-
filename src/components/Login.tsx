@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { useAppContext, generateUUID } from "../context";
-import { User, Role, LoginLog } from "../types";
-import { Fingerprint, CheckCircle, Eye, EyeOff, Loader2, KeyRound } from "lucide-react";
+import { User, Role } from "../types";
+import { 
+  CheckCircle, Eye, EyeOff, Loader2, 
+  Briefcase, Clock, ArrowRight, UserPlus
+} from "lucide-react";
 import { auth } from "../firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
@@ -10,8 +13,11 @@ import { getLoginMeta, getLocationFromIP } from "../utils/loginUtils";
 export const Login: React.FC = () => {
   const { t, language, setUser, users, setUsers, uniqueDepartments, addLoginLog } = useAppContext();
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [step, setStep] = useState<1 | 2>(1);
   const [isRegistering, setIsRegistering] = useState(false);
+  
+  // Register Mode: 'none' (selection screen), 'official' (full form), 'temporary' (guest form)
+  const [registerMode, setRegisterMode] = useState<'none' | 'official' | 'temporary'>('none');
+  
   const [hrCode, setHrCode] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -48,15 +54,9 @@ export const Login: React.FC = () => {
         let height = img.height;
 
         if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
         } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
         }
         canvas.width = width;
         canvas.height = height;
@@ -89,50 +89,36 @@ export const Login: React.FC = () => {
       } catch(e) {}
       setError("");
       setSuccessMsg("");
-      const loginInput = email.trim().toLowerCase();
+      const loginInput = email.trim().toLowerCase(); // Can be email, HR code, or Phone
 
       if (loginInput === "admin" && password === "admin123") {
-        const adminUser =
-          users.find((u) => u.hrCode.toLowerCase() === "admin") ||
-          ({
-            id: "admin",
-            hrCode: "admin",
-            name: "Master Admin",
-            department: "Training",
-            role: "admin",
-            phone: "01000000000",
-            status: "approved",
-            password: "admin123",
+        const adminUser = users.find((u) => u.hrCode.toLowerCase() === "admin") || ({
+            id: "admin", hrCode: "admin", name: "Master Admin", department: "Training", role: "admin",
+            phone: "01000000000", status: "approved", password: "admin123",
           } as User);
         setUser(adminUser);
         localStorage.setItem("savedUserId", adminUser.id);
         
         const loginMeta = getLoginMeta();
         let ipAddress = undefined;
-        try {
-          const res = await fetch('https://api.ipify.org?format=json');
-          const data = await res.json();
-          ipAddress = data.ip;
-        } catch (e) {}
-
+        try { const res = await fetch('https://api.ipify.org?format=json'); const data = await res.json(); ipAddress = data.ip; } catch (e) {}
         const locationInfo = ipAddress ? await getLocationFromIP(ipAddress) : { city: 'Unknown', country: 'Unknown' };
 
         addLoginLog({
-          id: generateUUID(),
-          userId: adminUser.id,
-          name: adminUser.name,
-          hrCode: adminUser.hrCode,
-          role: adminUser.role,
-          timestamp: new Date().toISOString(),
-          ...loginMeta,
-          city: locationInfo.city,
-          country: locationInfo.country,
-          ip: ipAddress
+          id: generateUUID(), userId: adminUser.id, name: adminUser.name, hrCode: adminUser.hrCode,
+          role: adminUser.role, timestamp: new Date().toISOString(), ...loginMeta, city: locationInfo.city,
+          country: locationInfo.country, ip: ipAddress
         });
         return;
       }
 
-      let foundUser = users.find((u) => u.email?.toLowerCase() === loginInput || u.hrCode.toLowerCase() === loginInput);
+      // البحث عن طريق الإيميل، الكود الوظيفي، أو رقم التليفون
+      let foundUser = users.find((u) => 
+        u.email?.toLowerCase() === loginInput || 
+        u.hrCode.toLowerCase() === loginInput || 
+        u.phone === loginInput ||
+        u.phone === `0${loginInput}` // In case they didn't write the 0
+      );
 
       if (foundUser && foundUser.email) {
         try {
@@ -162,7 +148,7 @@ export const Login: React.FC = () => {
       if (foundUser.status === "pending") {
         setError(language === "ar" ? "حسابك قيد المراجعة ولم يتم تفعيله بعد" : "Your account is pending approval");
       } else if (foundUser.status === "rejected") {
-        setError(language === "ar" ? "عذراً تم رفض طلبك. لمزيد من المعلومات يرجى مراسلة nader.reda@orascom.com" : "Your request was rejected. For more info, please email nader.reda@orascom.com");
+        setError(language === "ar" ? "عذراً تم رفض طلبك." : "Your request was rejected.");
       } else if (foundUser.status === "deleted") {
         setError(language === "ar" ? "تم إيقاف هذا الحساب (غير متاح)." : "This account has been deactivated.");
       } else {
@@ -171,25 +157,13 @@ export const Login: React.FC = () => {
 
         const loginMeta = getLoginMeta();
         let ipAddress = undefined;
-        try {
-          const res = await fetch('https://api.ipify.org?format=json');
-          const data = await res.json();
-          ipAddress = data.ip;
-        } catch (e) {}
-
+        try { const res = await fetch('https://api.ipify.org?format=json'); const data = await res.json(); ipAddress = data.ip; } catch (e) {}
         const locationInfo = ipAddress ? await getLocationFromIP(ipAddress) : { city: 'Unknown', country: 'Unknown' };
 
         addLoginLog({
-          id: generateUUID(),
-          userId: foundUser.id,
-          name: foundUser.name,
-          hrCode: foundUser.hrCode,
-          role: foundUser.role,
-          timestamp: new Date().toISOString(),
-          ...loginMeta,
-          city: locationInfo.city,
-          country: locationInfo.country,
-          ip: ipAddress
+          id: generateUUID(), userId: foundUser.id, name: foundUser.name, hrCode: foundUser.hrCode,
+          role: foundUser.role, timestamp: new Date().toISOString(), ...loginMeta, city: locationInfo.city,
+          country: locationInfo.country, ip: ipAddress
         });
       }
     } finally {
@@ -202,17 +176,15 @@ export const Login: React.FC = () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      try {
-        if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
-          await Notification.requestPermission();
-        }
-      } catch(e) {}
+      try { if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') await Notification.requestPermission(); } catch(e) {}
       setError("");
       setSuccessMsg("");
-      const cleanHrCode = hrCode.trim();
-      const fullEmail = email.trim().toLowerCase() + "@orascom.com";
-      if (!cleanHrCode || !password || !name || !department || !email.trim()) {
-        setError(language === "ar" ? "الرجاء ملء جميع الحقول المطلوبة بما فيها البريد الإلكتروني" : "Please fill all required fields including email");
+      
+      const cleanHrCode = registerMode === 'official' ? hrCode.trim() : `TMP-${phone}`;
+      const fullEmail = registerMode === 'official' ? email.trim().toLowerCase() + "@orascom.com" : `${phone}@guest.orascom.com`;
+      
+      if (!name || !department || !password) {
+        setError(language === "ar" ? "الرجاء ملء جميع الحقول المطلوبة" : "Please fill all required fields");
         return;
       }
       
@@ -220,6 +192,7 @@ export const Login: React.FC = () => {
         setError(language === "ar" ? "رقم الهاتف غير صحيح، يجب أن يتكون من 11 رقماً ويبدأ بـ 01" : "Phone must be 11 digits and start with 01 (e.g. 010xxxxxxxx)");
         return;
       }
+      
       if (password.length < 6) {
         setError(language === "ar" ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
         return;
@@ -229,16 +202,24 @@ export const Login: React.FC = () => {
         setError(language === "ar" ? "كلمة المرور غير متطابقة" : "Passwords do not match");
         return;
       }
-      const existingHrCode = users.find((u) => u.hrCode.toLowerCase() === cleanHrCode.toLowerCase());
-      if (existingHrCode && !existingHrCode.id.startsWith("derived_")) {
-        setError(language === "ar" ? "الكود الوظيفي مسجل بالفعل كحساب حقيقي" : "HR Code already exists as a registered account");
+
+      const existingPhone = users.find((u) => u.phone === phone);
+      if (existingPhone && !existingPhone.id.startsWith("derived_")) {
+        setError(language === "ar" ? "رقم الهاتف مسجل بالفعل" : "Phone number already exists");
         return;
       }
-      
-      const existingEmail = users.find((u) => u.email?.toLowerCase() === fullEmail);
-      if (existingEmail && !existingEmail.id.startsWith("derived_")) {
-        setError(language === "ar" ? "البريد الإلكتروني مسجل بالفعل" : "Email already exists");
-        return;
+
+      if (registerMode === 'official') {
+        const existingHrCode = users.find((u) => u.hrCode.toLowerCase() === cleanHrCode.toLowerCase());
+        if (existingHrCode && !existingHrCode.id.startsWith("derived_")) {
+          setError(language === "ar" ? "الكود الوظيفي مسجل بالفعل" : "HR Code already exists");
+          return;
+        }
+        const existingEmail = users.find((u) => u.email?.toLowerCase() === fullEmail);
+        if (existingEmail && !existingEmail.id.startsWith("derived_")) {
+          setError(language === "ar" ? "البريد الإلكتروني مسجل بالفعل" : "Email already exists");
+          return;
+        }
       }
 
       try {
@@ -249,6 +230,9 @@ export const Login: React.FC = () => {
         setError(language === "ar" ? `حدث خطأ من السيرفر: ${err.message}` : `Server error: ${err.message}`);
         return;
       }
+
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 14); // 14 days grace period for guests
 
       const newUser: User = {
         id: `u${users.length + 1}_${Date.now()}`,
@@ -264,17 +248,25 @@ export const Login: React.FC = () => {
         managerEmails: [managerEmail1, managerEmail2, managerEmail3].filter(e => e.trim() !== ""),
         password: password,
         profileImageUrl: profileImage,
-      };
+        isGuest: registerMode === 'temporary', // Custom flag for temporary accounts
+        guestExpiryDate: registerMode === 'temporary' ? expiryDate.toISOString() : undefined
+      } as any; // Cast as any to bypass strict User type checks for the custom guest flags
+
       setUsers([...users, newUser]);
       setSuccessMsg(language === "ar" ? "تم إرسال طلب تسجيلك بنجاح وفي انتظار الموافقة قريباً" : "Registration request sent and pending approval");
-      setIsRegistering(false);
-      setPassword("");
-      setConfirmPassword("");
-      setHrCode("");
-      setPhone("");
-      setEmail("");
-      setName("");
-      setProfileImage(undefined);
+      
+      setTimeout(() => {
+        setIsRegistering(false);
+        setRegisterMode('none');
+        setPassword("");
+        setConfirmPassword("");
+        setHrCode("");
+        setPhone("");
+        setEmail("");
+        setName("");
+        setProfileImage(undefined);
+      }, 3000);
+
     } finally {
       setIsSubmitting(false);
     }
@@ -282,7 +274,9 @@ export const Login: React.FC = () => {
 
   return (
     <div className="flex justify-center items-center min-h-[calc(100vh-6rem)] py-8 px-4">
-      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border-t-4 border-[#FFC000]">
+      <div className={`bg-white p-8 rounded-2xl shadow-xl w-full border-t-4 border-[#FFC000] transition-all duration-300 ${isRegistering && registerMode === 'none' ? 'max-w-2xl' : 'max-w-md'}`}>
+        
+        {/* رأس الفورم */}
         <div className="flex flex-col items-center justify-center mb-6">
           <img 
             src="/app-icon.jpg" 
@@ -290,29 +284,34 @@ export const Login: React.FC = () => {
             className="w-20 h-20 object-cover rounded-2xl shadow-md mb-3 border border-gray-100" 
           />
           <h2 className="text-2xl font-black text-center text-[#002D62]">
-            {isRegistering ? t("createAccount") : t("login")}
+            {!isRegistering ? t("login") : (registerMode === 'none' ? (language === 'ar' ? 'اختر نوع الحساب' : 'Select Account Type') : t("createAccount"))}
           </h2>
-          <p className="text-xs text-gray-500 font-semibold text-center mt-1">
-            {language === "ar" ? "منظومة إدارة التدريب الفني - قطاع المعدات" : "OED - Technical Training Management System"}
-          </p>
+          {isRegistering && registerMode !== 'none' && (
+            <span className={`mt-2 px-3 py-1 rounded-full text-xs font-bold ${registerMode === 'official' ? 'bg-blue-100 text-[#002D62]' : 'bg-orange-100 text-orange-700'}`}>
+              {registerMode === 'official' ? (language === 'ar' ? 'حساب رسمي' : 'Official Account') : (language === 'ar' ? 'حساب تعيين جديد (مؤقت)' : 'Temporary Account')}
+            </span>
+          )}
         </div>
+
+        {/* 1. حالة تسجيل الدخول (Login) */}
         {!isRegistering ? (
-          <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {language === "ar" ? "البريد الإلكتروني أو الرقم الوظيفي" : "Email or HR Code"}
-                </label>
-                <input
-                  type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-[#002D62]"
-                  dir="ltr"
-                  required
-                />
-              </div>
+          <form onSubmit={handleLogin} className="space-y-4 animate-fadeIn">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-bold text-gray-700 mb-1">
+                {language === "ar" ? "البريد الإلكتروني، الرقم الوظيفي، أو رقم الهاتف" : "Email, HR Code, or Phone No."}
+              </label>
+              <input
+                type="text"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#002D62] outline-none transition-shadow"
+                dir="ltr"
+                placeholder="e.g. 010xxxxxxxx or HR Code"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">
                 {language === "ar" ? "الرقم السري" : "Password"}
               </label>
               <div className="relative">
@@ -320,328 +319,230 @@ export const Login: React.FC = () => {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 pr-10 focus:ring-2 focus:ring-[#002D62]"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-[#002D62] outline-none transition-shadow"
                   dir="ltr"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#002D62]"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
-            {error && (
-              <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm text-center">
-                {error}
-              </div>
-            )}
-            {successMsg && (
-              <div className="bg-green-100 text-green-700 p-3 rounded mb-4 text-sm text-center">
-                {successMsg}
-              </div>
-            )}
+            {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center font-semibold">{error}</div>}
+            {successMsg && <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm text-center font-semibold">{successMsg}</div>}
+            
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full text-white font-bold py-2 px-4 rounded ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#002D62]'}`}
+              className={`w-full text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#002D62] hover:bg-blue-900'}`}
             >
               {isSubmitting ? <Loader2 size={20} className="animate-spin mx-auto" /> : t("login")}
             </button>
-            <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-2 text-xs">
+            
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3 text-sm">
               <button
                 type="button"
-                onClick={() => {
-                  setIsRegistering(true);
-                  setError("");
-                  setSuccessMsg("");
-                  setPassword("");
-                  setHrCode("");
-                }}
-                className="text-[#002D62] font-semibold hover:underline"
+                onClick={() => { setIsRegistering(true); setRegisterMode('none'); setError(""); setSuccessMsg(""); setPassword(""); setEmail(""); }}
+                className="text-[#002D62] font-bold hover:underline flex items-center gap-1"
               >
+                <UserPlus size={16} />
                 {t("register")}
               </button>
-
               <button
                 type="button"
                 onClick={() => setShowForgotPassword(true)}
                 className="text-gray-500 hover:text-[#002D62] hover:underline transition-colors"
               >
-                {language === "ar" ? "نسيت اسم المستخدم / كلمة المرور؟" : "Forgot Username / Password?"}
+                {language === "ar" ? "نسيت كلمة المرور؟" : "Forgot Password?"}
               </button>
             </div>
           </form>
+
+        /* 2. حالة اختيار نوع الحساب (Account Selection Screen) */
+        ) : isRegistering && registerMode === 'none' ? (
+          <div className="animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              {/* Card 1: Official Account */}
+              <div 
+                onClick={() => setRegisterMode('official')}
+                className="cursor-pointer border-2 border-gray-200 hover:border-[#002D62] rounded-2xl p-6 flex flex-col items-center text-center transition-all hover:shadow-lg bg-gray-50 hover:bg-blue-50/50 group"
+              >
+                <div className="bg-white p-4 rounded-full shadow-sm mb-4 group-hover:scale-110 transition-transform">
+                  <Briefcase size={32} className="text-[#002D62]" />
+                </div>
+                <h3 className="font-bold text-lg text-[#002D62] mb-2">{language === 'ar' ? 'حساب موظف رسمي' : 'Official Account'}</h3>
+                <p className="text-xs text-gray-500 font-medium">
+                  {language === 'ar' 
+                    ? 'لدي بالفعل بريد إلكتروني (@orascom.com) ورقم وظيفي معتمد.' 
+                    : 'I already have a company email and an HR Code.'}
+                </p>
+              </div>
+
+              {/* Card 2: Temporary Account */}
+              <div 
+                onClick={() => setRegisterMode('temporary')}
+                className="cursor-pointer border-2 border-gray-200 hover:border-[#FFC000] rounded-2xl p-6 flex flex-col items-center text-center transition-all hover:shadow-lg bg-gray-50 hover:bg-orange-50/50 group"
+              >
+                <div className="bg-white p-4 rounded-full shadow-sm mb-4 group-hover:scale-110 transition-transform relative">
+                  <Clock size={32} className="text-[#FFC000]" />
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">14 Days</span>
+                </div>
+                <h3 className="font-bold text-lg text-gray-800 mb-2">{language === 'ar' ? 'حساب تعيين جديد (مؤقت)' : 'Temporary Account'}</h3>
+                <p className="text-xs text-gray-500 font-medium">
+                  {language === 'ar' 
+                    ? 'تم تعييني حديثاً ولم أستلم البريد الإلكتروني بعد. (التسجيل برقم الهاتف)' 
+                    : 'I am a new hire and do not have my official email yet. (Phone only)'}
+                </p>
+              </div>
+            </div>
+            
+            <div className="text-center mt-8">
+              <button onClick={() => setIsRegistering(false)} className="text-sm text-gray-500 hover:text-[#002D62] hover:underline font-bold">
+                {t("backToLogin")}
+              </button>
+            </div>
+          </div>
+
+        /* 3. فورم التسجيل (سواء رسمي أو مؤقت) */
         ) : (
-          <form onSubmit={handleRegister} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-4 animate-fadeIn">
+            
+            {/* زر العودة لاختيار الحساب */}
+            <button 
+              type="button" 
+              onClick={() => setRegisterMode('none')}
+              className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#002D62] font-bold mb-4"
+            >
+              <ArrowRight size={14} className="rtl:rotate-180" />
+              {language === 'ar' ? 'تغيير نوع الحساب' : 'Change Account Type'}
+            </button>
+
+            {/* Profile Image Upload */}
             <div className="flex flex-col items-center mb-4">
-              <label className="relative cursor-pointer w-24 h-24 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden hover:border-[#002D62] transition-colors">
+              <label className="relative cursor-pointer w-20 h-20 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden hover:border-[#002D62] transition-colors">
                 {profileImage ? (
                   <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="text-center p-2">
-                    <span className="text-xs text-gray-500">{language === "ar" ? "أضف صورة" : "Add Photo"}</span>
-                  </div>
+                  <div className="text-center p-2"><span className="text-[10px] font-bold text-gray-500">{language === "ar" ? "صورتك" : "Photo"}</span></div>
                 )}
-                <input
-                  type="file"
-                  accept="image/png, image/jpeg, image/jpg"
-                  className="hidden"
-                  onChange={handleImageUpload}
-                />
+                <input type="file" accept="image/png, image/jpeg" className="hidden" onChange={handleImageUpload} />
               </label>
             </div>
+
+            {/* Common Fields */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t("name")}
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(enforceEnglish(e.target.value))}
-                className="w-full border rounded px-3 py-2"
-                dir="ltr"
-                required
-              />
+              <label className="block text-sm font-bold text-gray-700 mb-1">{t("name")} *</label>
+              <input type="text" value={name} onChange={(e) => setName(enforceEnglish(e.target.value))} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]" dir="ltr" required />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ar" ? "الرقم الوظيفي (HR Code)" : "HR Code"}
-              </label>
-              <input
-                type="text"
-                value={hrCode}
-                onChange={(e) => setHrCode(enforceEnglish(e.target.value))}
-                className="w-full border rounded px-3 py-2"
-                dir="ltr"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ar" ? "الرقم السري" : "Password"}
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 pr-10 focus:ring-2 focus:ring-[#002D62]"
-                  dir="ltr"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ar" ? "تأكيد الرقم السري" : "Confirm Password"}
-              </label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 pr-10 focus:ring-2 focus:ring-[#002D62]"
-                  dir="ltr"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 pr-3"
-                >
-                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t("phone")}
-              </label>
-              <div className="flex border rounded overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62]" dir="ltr">
-                <span className="bg-gray-100 px-3 py-2 border-r text-gray-600 font-medium">+2</span>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                  className="w-full px-3 py-2 outline-none"
-                  placeholder="010xxxxxxxx"
-                  required
-                />
+              <label className="block text-sm font-bold text-gray-700 mb-1">{t("phone")} *</label>
+              <div className="flex border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62]" dir="ltr">
+                <span className="bg-gray-100 px-3 py-2 border-r text-gray-600 font-bold">+2</span>
+                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} className="w-full px-3 py-2 outline-none" placeholder="010xxxxxxxx" required />
               </div>
             </div>
 
-            {accessRole === "trainee" && (
-              <div className="space-y-4 border border-blue-100 bg-blue-50/50 p-4 rounded-lg mt-4 animate-fadeIn">
-                <h4 className="text-sm font-bold text-[#002D62] mb-2">{language === "ar" ? "بريد المديرين (لإرسال التقارير)" : "Manager Emails (For Reports)"}</h4>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{language === "ar" ? "مدير 1 (إلزامي)" : "Manager 1 (Required)"}</label>
-                    <input
-                      type="email"
-                      value={managerEmail1}
-                      onChange={(e) => setManagerEmail1(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#002D62] outline-none"
-                      required
-                      placeholder="manager1@orascom.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{language === "ar" ? "مدير 2 (اختياري)" : "Manager 2 (Optional)"}</label>
-                    <input
-                      type="email"
-                      value={managerEmail2}
-                      onChange={(e) => setManagerEmail2(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#002D62] outline-none"
-                      placeholder="manager2@orascom.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{language === "ar" ? "مدير 3 (اختياري)" : "Manager 3 (Optional)"}</label>
-                    <input
-                      type="email"
-                      value={managerEmail3}
-                      onChange={(e) => setManagerEmail3(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#002D62] outline-none"
-                      placeholder="manager3@orascom.com"
-                    />
+            {/* Official Account Fields */}
+            {registerMode === 'official' && (
+              <div className="space-y-4 bg-blue-50/30 p-4 rounded-xl border border-blue-100">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">{language === "ar" ? "الرقم الوظيفي (HR Code)" : "HR Code"} *</label>
+                  <input type="text" value={hrCode} onChange={(e) => setHrCode(enforceEnglish(e.target.value))} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]" dir="ltr" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">{language === "ar" ? "البريد الإلكتروني الرسمي" : "Official Email"} *</label>
+                  <div className="flex border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62]" dir="ltr">
+                    <input type="text" value={email} onChange={(e) => setEmail(enforceEnglish(e.target.value))} className="w-full px-3 py-2 outline-none" placeholder="name" required />
+                    <span className="bg-gray-100 px-3 py-2 border-l text-gray-600 font-bold text-xs flex items-center">@orascom.com</span>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* Job details */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {language === "ar" ? "البريد الإلكتروني" : "Email"}
-              </label>
-              <div className="flex border rounded overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62]" dir="ltr">
-                <input
-                  type="text"
-                  value={email}
-                  onChange={(e) => setEmail(enforceEnglish(e.target.value))}
-                  className="w-full px-3 py-2 outline-none"
-                  placeholder="name"
-                  required
-                />
-                <span className="bg-gray-100 px-3 py-2 border-l text-gray-600 font-medium">@orascom.com</span>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t("department")}
-              </label>
-              <select
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-                dir="ltr"
-                required
-              >
-                {uniqueDepartments && uniqueDepartments.length > 0 ? (
-                  uniqueDepartments.map((dep) => (
-                    <option key={dep} value={dep}>
-                      {dep}
-                    </option>
-                  ))
-                ) : (
-                  <option value="Heavy Machinery">Heavy Machinery</option>
-                )}
+              <label className="block text-sm font-bold text-gray-700 mb-1">{t("department")} *</label>
+              <select value={department} onChange={(e) => setDepartment(e.target.value)} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]" dir="ltr" required>
+                {uniqueDepartments && uniqueDepartments.length > 0 ? uniqueDepartments.map((dep) => (<option key={dep} value={dep}>{dep}</option>)) : <option value="Heavy Machinery">Heavy Machinery</option>}
               </select>
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {language === "ar" ? "المسمى الوظيفي" : "Job Role"}
-                </label>
-                <select
-                  value={jobRole}
-                  onChange={(e) => setJobRole(e.target.value)}
-                  className="w-full border rounded px-3 py-2"
-                  dir={language === "ar" ? "rtl" : "ltr"}
-                >
-                  <option value="Engineer">
-                    {language === "ar" ? "مهندس" : "Engineer"}
-                  </option>
-                  <option value="Technician">
-                    {language === "ar" ? "فني" : "Technician"}
-                  </option>
-                  <option value="Operator">
-                    {language === "ar" ? "مشغل" : "Operator"}
-                  </option>
-                  <option value="Manager">
-                    {language === "ar" ? "مدير" : "Manager"}
-                  </option>
+                <label className="block text-sm font-bold text-gray-700 mb-1">{language === "ar" ? "المسمى الوظيفي" : "Job Role"}</label>
+                <select value={jobRole} onChange={(e) => setJobRole(e.target.value)} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]" dir={language === "ar" ? "rtl" : "ltr"}>
+                  <option value="Engineer">{language === "ar" ? "مهندس" : "Engineer"}</option>
+                  <option value="Technician">{language === "ar" ? "فني" : "Technician"}</option>
+                  <option value="Operator">{language === "ar" ? "مشغل" : "Operator"}</option>
+                  <option value="Manager">{language === "ar" ? "مدير" : "Manager"}</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {language === "ar" ? "صلاحية الوصول" : "Access Role"}
-                </label>
-                <select
-                  value={accessRole}
-                  onChange={(e) => setAccessRole(e.target.value as Role)}
-                  className="w-full border rounded px-3 py-2"
-                  dir={language === "ar" ? "rtl" : "ltr"}
-                >
-                  <option value="trainee">
-                    {language === "ar" ? "متدرب" : "Trainee"}
-                  </option>
-                  <option value="manager">
-                    {language === "ar" ? "مدير" : "Manager"}
-                  </option>
-                  <option value="admin">
-                    {language === "ar" ? "مشرف" : "Admin"}
-                  </option>
+                <label className="block text-sm font-bold text-gray-700 mb-1">{language === "ar" ? "الصلاحية" : "Role"}</label>
+                <select value={accessRole} onChange={(e) => setAccessRole(e.target.value as Role)} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]" dir={language === "ar" ? "rtl" : "ltr"}>
+                  <option value="trainee">{language === "ar" ? "متدرب" : "Trainee"}</option>
+                  {registerMode === 'official' && (
+                    <>
+                      <option value="manager">{language === "ar" ? "مدير" : "Manager"}</option>
+                      <option value="admin">{language === "ar" ? "مشرف" : "Admin"}</option>
+                    </>
+                  )}
                 </select>
               </div>
             </div>
-            {error && (
-              <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm text-center font-bold animate-pulse">
-                {error}
+
+            {/* Manager Emails - Only if trainee */}
+            {accessRole === "trainee" && (
+              <div className="space-y-3 border border-gray-200 bg-gray-50/50 p-4 rounded-xl mt-4">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">{language === "ar" ? "إيميلات الإدارة للتقارير" : "Management Emails for Reports"}</h4>
+                <div className="grid grid-cols-1 gap-3">
+                  <input type="email" value={managerEmail1} onChange={(e) => setManagerEmail1(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#002D62]" required placeholder={language === "ar" ? "مدير 1 (إلزامي)" : "Manager 1 (Required)"} />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="email" value={managerEmail2} onChange={(e) => setManagerEmail2(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#002D62]" placeholder={language === "ar" ? "مدير 2 (اختياري)" : "Manager 2 (Optional)"} />
+                    <input type="email" value={managerEmail3} onChange={(e) => setManagerEmail3(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#002D62]" placeholder={language === "ar" ? "مدير 3 (اختياري)" : "Manager 3 (Optional)"} />
+                  </div>
+                </div>
               </div>
             )}
-            {successMsg && (
-              <div className="bg-green-100 text-green-700 p-3 rounded mb-4 text-sm text-center font-bold">
-                {successMsg}
+
+            {/* Passwords */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">{language === "ar" ? "الرقم السري" : "Password"} *</label>
+                <div className="relative">
+                  <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border rounded-lg px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-[#002D62]" dir="ltr" required />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
-            )}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`w-full text-white font-bold py-2 px-4 rounded ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#002D62]'}`}
-            >
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">{language === "ar" ? "تأكيد السري" : "Confirm"} *</label>
+                <div className="relative">
+                  <input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full border rounded-lg px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-[#002D62]" dir="ltr" required />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center font-bold">{error}</div>}
+            {successMsg && <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm text-center font-bold">{successMsg}</div>}
+            
+            <button type="submit" disabled={isSubmitting} className={`w-full text-white font-bold py-3 px-4 rounded-lg shadow-md mt-4 transition-all ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#002D62] hover:bg-blue-900'}`}>
               {isSubmitting ? <Loader2 size={20} className="animate-spin mx-auto" /> : t("createAccount")}
             </button>
-            <div className="text-center mt-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRegistering(false);
-                  setError("");
-                  setSuccessMsg("");
-                }}
-                className="text-sm text-[#002D62] hover:underline"
-              >
-                {t("backToLogin")}
-              </button>
-            </div>
           </form>
         )}
       </div>
 
-      {showForgotPassword && (
-        <ForgotPasswordModal onClose={() => setShowForgotPassword(false)} />
-      )}
+      {showForgotPassword && <ForgotPasswordModal onClose={() => setShowForgotPassword(false)} />}
     </div>
   );
 };
