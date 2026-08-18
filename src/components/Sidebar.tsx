@@ -199,16 +199,16 @@ export const Sidebar: React.FC = () => {
               className="w-16 h-16 rounded-2xl object-cover shadow-md border-2 border-white/10"
             />
             
-            <div className="text-center mt-1 w-full px-2">
-              {/* التعديل الأول: اللون الأبيض والاسم الجديد */}
+            <div className="text-center mt-2 w-full px-2">
+              {/* التعديل الأول: الاسم الجديد مع ضبط الألوان لتعمل في الوضعين */}
               <div 
-                className="font-bold text-[10px] leading-tight tracking-wide uppercase text-white drop-shadow-sm mb-1"
+                className="font-extrabold text-[11px] leading-snug tracking-wide text-[#002D62] dark:text-white mb-1 transition-colors"
               >
                 Orascom Construction Equipment Department
               </div>
               {/* التعديل الثاني: الاسم الجديد مع الاحتفاظ باللون الأصفر */}
               <div 
-                className="text-[9px] font-bold" 
+                className="text-[10px] font-bold" 
                 style={{ color: 'var(--oc-gold)' }}
               >
                 Technical Training Management System
