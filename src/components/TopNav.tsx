@@ -60,7 +60,8 @@ export const TopNav: React.FC = () => {
 
   return (
     <>
-      <nav className="bg-[#002D62] dark:bg-[#061020] text-white shadow-md sticky top-0 z-50 print:hidden relative">
+      {/* تم تغيير ألوان الدارك مود هنا لتصبح أفتح ومفصولة بإطار سفلي */}
+      <nav className="bg-[#002D62] dark:bg-[#1e293b] border-b border-transparent dark:border-slate-700 text-white shadow-md sticky top-0 z-50 print:hidden relative">
         <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             
@@ -90,7 +91,7 @@ export const TopNav: React.FC = () => {
 
             </div>
 
-            {/* المنتصف - الترحيب باليوزر (تم إرجاعه وإلغاء نوع الحساب) */}
+            {/* المنتصف - الترحيب باليوزر */}
             {user && (
               <div className="text-center flex-1 min-w-0 px-1 hidden md:block z-50">
                 <p className="text-sm font-medium text-white/90 truncate">
@@ -190,10 +191,7 @@ export const TopNav: React.FC = () => {
           </div>
         </div>
 
-        {/* 
-          اللوجو المتدلي (Hanging Logo)
-          تم تحريكه للشمال عن طريق تعديل قيمة left
-        */}
+        {/* اللوجو المتدلي */}
         <div className="absolute top-full left-[1.5rem] sm:left-[3.5rem] rtl:left-auto rtl:right-[1.5rem] rtl:sm:right-[3.5rem] z-40">
           <div 
             className="rounded-b-lg border-x border-b shadow-lg px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-center -mt-[1px]"

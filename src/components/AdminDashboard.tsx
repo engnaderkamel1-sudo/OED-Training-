@@ -993,9 +993,6 @@ export const AdminDashboard: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 print:p-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 border-[#FFC000] pb-4 mb-6 gap-4 print:hidden">
-        <h1 className="text-2xl md:text-3xl font-bold text-[#002D62]">
-          {t("adminView")}
-        </h1>
         <div className="flex flex-wrap items-center gap-2">
           {user?.role === 'admin' || user?.role === 'supervisor' ? (
             <>
