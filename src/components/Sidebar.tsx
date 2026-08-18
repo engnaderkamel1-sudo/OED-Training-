@@ -93,7 +93,7 @@ export const Sidebar: React.FC = () => {
     { id: 'newCourses', label: 'Available Courses', icon: CalendarDays },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
-    { id: 'profile', label: 'My Profile', icon: UserCircle },
+    // تم حذف My Profile من هنا
   ];
 
   const getManagerLinks = () => [
@@ -101,7 +101,7 @@ export const Sidebar: React.FC = () => {
     { id: 'coursesCatalog', label: 'Courses Catalog', icon: BookOpen },
     { id: 'userManagement', label: 'User Requests', icon: Users },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
-    { id: 'profile', label: 'My Profile', icon: UserCircle },
+    // تم حذف My Profile من هنا
   ];
 
   const getAdminLinks = () => [
@@ -130,7 +130,7 @@ export const Sidebar: React.FC = () => {
       ]
     },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
-    { id: 'profile', label: 'My Profile', icon: UserCircle },
+    // تم حذف My Profile من هنا
   ];
 
   let links: any[] = [];
@@ -193,11 +193,9 @@ export const Sidebar: React.FC = () => {
         }}
       >
         <div className="p-4 flex flex-col gap-1.5 pb-24">
-          {/* Header */}
           <div className="pb-4 mb-2 flex flex-col items-center justify-center gap-2"
             style={{ borderBottom: '1px solid var(--border-color)' }}>
             
-            {/* اللوجو الجديد تم إضافته هنا */}
             <img
               src="/app-icon.jpg"
               alt="OED-TTMS Logo"

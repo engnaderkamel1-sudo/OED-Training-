@@ -7,19 +7,18 @@ import {
   Sun, 
   Bell, 
   Settings,
-  ChevronDown
+  ChevronDown,
+  UserCircle 
 } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const TopNav: React.FC = () => {
-  const { user, language, setUser, t, theme, toggleTheme } = useAppContext();
+  const { user, language, setUser, t, theme, toggleTheme, setCurrentView } = useAppContext();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  
-  // State للتحكم في تكبير اللوجو
   const [isLogoExpanded, setIsLogoExpanded] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -42,6 +41,11 @@ export const TopNav: React.FC = () => {
     setDropdownOpen(false);
   };
 
+  const openProfile = () => {
+    setCurrentView('profile');
+    setDropdownOpen(false);
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -57,35 +61,48 @@ export const TopNav: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             
-            {/* Logo and Brand */}
-            <div className="flex items-center gap-3">
-              {/* صندوق ثابت تماماً والصورة فيه عادية جداً لمنع أي هزة في الشريط */}
-              <div className="w-10 h-10 flex-shrink-0">
-                <img 
-                  src="/app-icon.jpg" 
-                  alt="OED-TTMS" 
-                  className="w-full h-full object-cover rounded-xl shadow-sm border border-white/20 cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => setIsLogoExpanded(true)}
-                />
+            {/* Logo, Brand and Orascom Logo */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 flex-shrink-0">
+                  {!isLogoExpanded && (
+                    <motion.img 
+                      layoutId="magic-logo"
+                      src="/app-icon.jpg" 
+                      alt="OED-TTMS" 
+                      className="w-full h-full object-cover rounded-xl shadow-sm border border-white/20 cursor-pointer"
+                      onClick={() => setIsLogoExpanded(true)}
+                    />
+                  )}
+                </div>
+                
+                <div className="hidden sm:block">
+                  <h1 className="text-sm font-bold tracking-tight text-white leading-tight">
+                    OED-TTMS
+                  </h1>
+                  <p className="text-[10px] text-[#FFC000] font-medium leading-tight">
+                    Technical Training Management
+                  </p>
+                </div>
               </div>
-              
-              <div className="hidden md:block">
-                <h1 className="text-sm font-bold tracking-tight text-white">
-                  OED-TTMS
-                </h1>
-                <p className="text-[10px] text-[#FFC000] font-medium -mt-0.5">
-                  Technical Training Management
-                </p>
+
+              {/* إضافة لوجو أوراسكوم الجديد هنا */}
+              <div className="hidden md:flex flex-col justify-center ml-2 rtl:mr-2 rtl:ml-0 border-l border-white/20 pl-4 rtl:pr-4 rtl:pl-0">
+                <img 
+                  src="/orascom_logo.jpg" /* تأكد من تغيير اسم الصورة لو مختلف */
+                  alt="Orascom Construction" 
+                  className="h-8 object-contain bg-white/90 p-1 rounded"
+                />
               </div>
             </div>
 
             {/* Center - User Greeting */}
             {user && (
-              <div className="text-center flex-1 min-w-0 px-1">
-                <p className="text-xs sm:text-sm font-medium text-white/90 truncate">
+              <div className="text-center flex-1 min-w-0 px-1 hidden lg:block">
+                <p className="text-sm font-medium text-white/90 truncate">
                   Hi, <span className="text-[#FFC000]">{user.name.split(' ')[0]}</span>
                 </p>
-                <p className="text-[9px] sm:text-[10px] text-white/55 truncate">
+                <p className="text-[10px] text-white/55 truncate">
                   {user.role === 'admin'      ? 'Admin View'      :
                    user.role === 'manager'    ? 'Manager View'    :
                    user.role === 'supervisor' ? 'Supervisor View' :
@@ -96,7 +113,6 @@ export const TopNav: React.FC = () => {
 
             {/* Right Actions */}
             <div className="flex items-center gap-2">
-              {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
                 className="theme-toggle"
@@ -112,7 +128,6 @@ export const TopNav: React.FC = () => {
                 </span>
               </button>
 
-              {/* User Dropdown */}
               {user && (
                 <div className="relative" ref={dropdownRef}>
                   <button
@@ -140,7 +155,6 @@ export const TopNav: React.FC = () => {
                     <ChevronDown size={16} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
-                  {/* Dropdown Menu */}
                   {dropdownOpen && (
                     <div 
                       className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl overflow-hidden animate-fadeIn z-[99999]"
@@ -149,28 +163,32 @@ export const TopNav: React.FC = () => {
                         border: `1px solid ${theme === 'dark' ? '#2d3748' : '#e2e8f0'}`
                       }}
                     >
-                      <div 
-                        className="px-4 py-3 border-b"
+                      <button 
+                        onClick={openProfile}
+                        className="w-full text-left rtl:text-right px-4 py-3 border-b hover:bg-black/5 dark:hover:bg-white/5 transition-colors group flex items-center justify-between"
                         style={{ borderColor: theme === 'dark' ? '#2d3748' : '#e2e8f0' }}
+                        title="Go to My Profile"
                       >
-                        <p 
-                          className="text-sm font-bold" 
-                          style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}
-                        >
-                          {user.name}
-                        </p>
-                        
-                        <p 
-                          className="text-xs mt-1" 
-                          style={{ color: theme === 'dark' ? '#a0aec0' : '#4a5568' }}
-                        >
-                          {user.hrCode} • {user.department}
-                        </p>
-                      </div>
+                        <div>
+                          <p 
+                            className="text-sm font-bold group-hover:text-blue-500 transition-colors" 
+                            style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}
+                          >
+                            {user.name}
+                          </p>
+                          <p 
+                            className="text-xs mt-1" 
+                            style={{ color: theme === 'dark' ? '#a0aec0' : '#4a5568' }}
+                          >
+                            {user.hrCode} • {user.department}
+                          </p>
+                        </div>
+                        <UserCircle size={18} className="text-gray-400 group-hover:text-blue-500 transition-colors" />
+                      </button>
                       
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
                         style={{ 
                           color: theme === 'dark' ? '#fc8181' : '#dc2626',
                           backgroundColor: 'transparent'
@@ -188,24 +206,22 @@ export const TopNav: React.FC = () => {
         </div>
       </nav>
 
-      {/* الشاشة المكبرة للوجو - معزولة تماماً عن الشريط لمنع أي هزة */}
       <AnimatePresence>
         {isLogoExpanded && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
             className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-sm flex items-center justify-center cursor-pointer"
             onClick={() => setIsLogoExpanded(false)}
           >
             <motion.img
+              layoutId="magic-logo"
               src="/app-icon.jpg"
               alt="OED-TTMS Logo Expanded"
-              initial={{ scale: 0.5, opacity: 0, y: 50 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.5, opacity: 0, y: 50 }}
-              transition={{ type: "spring", damping: 20, stiffness: 300 }}
               className="w-64 h-64 md:w-96 md:h-96 object-cover rounded-[2rem] shadow-2xl border-4 border-white/20"
+              transition={{ type: "spring", stiffness: 200, damping: 25 }}
               onClick={(e) => {
                 e.stopPropagation();
                 setIsLogoExpanded(false);
