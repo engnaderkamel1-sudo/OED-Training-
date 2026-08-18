@@ -107,7 +107,6 @@ export const Login: React.FC = () => {
         setUser(adminUser);
         localStorage.setItem("savedUserId", adminUser.id);
         
-        // جمع البيانات الجديدة لتسجيل الدخول (الجزء الأول)
         const loginMeta = getLoginMeta();
         let ipAddress = undefined;
         try {
@@ -116,7 +115,6 @@ export const Login: React.FC = () => {
           ipAddress = data.ip;
         } catch (e) {}
 
-        // استخدام الدالة الجديدة لجلب المكان من الـ IP
         const locationInfo = ipAddress ? await getLocationFromIP(ipAddress) : { city: 'Unknown', country: 'Unknown' };
 
         addLoginLog({
@@ -171,7 +169,6 @@ export const Login: React.FC = () => {
         setUser(foundUser);
         localStorage.setItem("savedUserId", foundUser.id);
 
-        // جمع البيانات الجديدة لتسجيل الدخول (الجزء الثاني)
         const loginMeta = getLoginMeta();
         let ipAddress = undefined;
         try {
@@ -180,7 +177,6 @@ export const Login: React.FC = () => {
           ipAddress = data.ip;
         } catch (e) {}
 
-        // استخدام الدالة الجديدة لجلب المكان من الـ IP
         const locationInfo = ipAddress ? await getLocationFromIP(ipAddress) : { city: 'Unknown', country: 'Unknown' };
 
         addLoginLog({
@@ -289,9 +285,9 @@ export const Login: React.FC = () => {
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border-t-4 border-[#FFC000]">
         <div className="flex flex-col items-center justify-center mb-6">
           <img 
-            src="/oed-ttms-logo-v2.png" 
+            src="/app-icon.jpg" 
             alt="OED-TTMS Logo" 
-            className="w-20 h-20 object-contain rounded-2xl shadow-md mb-3 border border-gray-100" 
+            className="w-20 h-20 object-cover rounded-2xl shadow-md mb-3 border border-gray-100" 
           />
           <h2 className="text-2xl font-black text-center text-[#002D62]">
             {isRegistering ? t("createAccount") : t("login")}
