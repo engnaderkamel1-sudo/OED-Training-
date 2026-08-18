@@ -93,7 +93,6 @@ export const Sidebar: React.FC = () => {
     { id: 'newCourses', label: 'Available Courses', icon: CalendarDays },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
-    // تم حذف My Profile من هنا
   ];
 
   const getManagerLinks = () => [
@@ -101,7 +100,6 @@ export const Sidebar: React.FC = () => {
     { id: 'coursesCatalog', label: 'Courses Catalog', icon: BookOpen },
     { id: 'userManagement', label: 'User Requests', icon: Users },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
-    // تم حذف My Profile من هنا
   ];
 
   const getAdminLinks = () => [
@@ -130,7 +128,6 @@ export const Sidebar: React.FC = () => {
       ]
     },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
-    // تم حذف My Profile من هنا
   ];
 
   let links: any[] = [];
@@ -202,13 +199,19 @@ export const Sidebar: React.FC = () => {
               className="w-16 h-16 rounded-2xl object-cover shadow-md border-2 border-white/10"
             />
             
-            <div className="text-center mt-1">
-              <div className="font-bold text-xs tracking-wide uppercase"
-                style={{ color: 'var(--oc-navy)' }}>
-                Orascom Equipment Dept.
+            <div className="text-center mt-1 w-full px-2">
+              {/* التعديل الأول: اللون الأبيض والاسم الجديد */}
+              <div 
+                className="font-bold text-[10px] leading-tight tracking-wide uppercase text-white drop-shadow-sm mb-1"
+              >
+                Orascom Construction Equipment Department
               </div>
-              <div className="text-[10px] font-bold" style={{ color: 'var(--oc-gold)' }}>
-                TTMS System
+              {/* التعديل الثاني: الاسم الجديد مع الاحتفاظ باللون الأصفر */}
+              <div 
+                className="text-[9px] font-bold" 
+                style={{ color: 'var(--oc-gold)' }}
+              >
+                Technical Training Management System
               </div>
             </div>
           </div>

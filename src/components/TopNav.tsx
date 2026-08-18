@@ -12,7 +12,7 @@ import { signOut } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const TopNav: React.FC = () => {
-  const { user, language, setUser, t, theme, toggleTheme, setCurrentView } = useAppContext();
+  const { user, language, setUser, theme, toggleTheme, setCurrentView } = useAppContext();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isLogoExpanded, setIsLogoExpanded] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -60,7 +60,6 @@ export const TopNav: React.FC = () => {
 
   return (
     <>
-      {/* تم تغيير ألوان الدارك مود هنا لتصبح أفتح ومفصولة بإطار سفلي */}
       <nav className="bg-[#002D62] dark:bg-[#1e293b] border-b border-transparent dark:border-slate-700 text-white shadow-md sticky top-0 z-50 print:hidden relative">
         <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -80,11 +79,18 @@ export const TopNav: React.FC = () => {
                 )}
               </div>
               
-              <div className="flex-shrink-0 z-50">
-                <h1 className="text-[14px] sm:text-[17px] font-extrabold tracking-tight text-white leading-none mb-0.5 mt-1">
+              <div className="flex-shrink-0 z-50 flex flex-col justify-center">
+                {/* تم وضع لون أبيض إجباري هنا لمنع تحول النص للأسود على الموبايل */}
+                <h1 
+                  className="text-[14px] sm:text-[17px] font-extrabold tracking-tight leading-none mb-0.5 mt-1"
+                  style={{ color: '#ffffff' }}
+                >
                   OED-TTMS
                 </h1>
-                <p className="text-[9px] sm:text-[11px] text-[#FFC000] font-semibold leading-none">
+                <p 
+                  className="text-[9px] sm:text-[11px] font-semibold leading-none"
+                  style={{ color: '#FFC000' }}
+                >
                   Technical Training Management
                 </p>
               </div>
@@ -104,7 +110,7 @@ export const TopNav: React.FC = () => {
             <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0 z-50">
               <button
                 onClick={toggleTheme}
-                className="theme-toggle p-1.5 sm:p-2"
+                className="theme-toggle p-1.5 sm:p-2 text-white"
                 aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
               >
                 {theme === 'light' ? (
@@ -138,45 +144,45 @@ export const TopNav: React.FC = () => {
                         {getInitials(user.name)}
                       </div>
                     )}
-                    <ChevronDown size={14} className={`transition-transform sm:w-4 sm:h-4 ${dropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`text-white transition-transform sm:w-4 sm:h-4 ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {dropdownOpen && (
                     <div 
                       className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl overflow-hidden animate-fadeIn z-[99999]"
                       style={{ 
-                        backgroundColor: theme === 'dark' ? '#182a4a' : '#ffffff',
-                        border: `1px solid ${theme === 'dark' ? '#2d3748' : '#e2e8f0'}`
+                        backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+                        border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`
                       }}
                     >
                       <button 
                         onClick={openProfile}
-                        className="w-full text-left rtl:text-right px-4 py-3 border-b hover:bg-black/5 dark:hover:bg-white/5 transition-colors group flex items-center justify-between"
-                        style={{ borderColor: theme === 'dark' ? '#2d3748' : '#e2e8f0' }}
+                        className="w-full text-left rtl:text-right px-4 py-3 border-b hover:bg-black/5 dark:hover:bg-slate-700 transition-colors group flex items-center justify-between"
+                        style={{ borderColor: theme === 'dark' ? '#334155' : '#e2e8f0' }}
                         title="Go to My Profile"
                       >
                         <div>
                           <p 
-                            className="text-sm font-bold group-hover:text-blue-500 transition-colors" 
+                            className="text-sm font-bold transition-colors" 
                             style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}
                           >
                             {user.name || 'User'}
                           </p>
                           <p 
                             className="text-xs mt-1" 
-                            style={{ color: theme === 'dark' ? '#a0aec0' : '#4a5568' }}
+                            style={{ color: theme === 'dark' ? '#cbd5e1' : '#4a5568' }}
                           >
                             {user.hrCode || 'N/A'} • {user.department || 'N/A'}
                           </p>
                         </div>
-                        <UserCircle size={18} className="text-gray-400 group-hover:text-blue-500 transition-colors" />
+                        <UserCircle size={18} className="text-gray-400 group-hover:text-[#002D62] dark:group-hover:text-blue-400 transition-colors" />
                       </button>
                       
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
                         style={{ 
-                          color: theme === 'dark' ? '#fc8181' : '#dc2626',
+                          color: theme === 'dark' ? '#f87171' : '#dc2626',
                           backgroundColor: 'transparent'
                         }}
                       >

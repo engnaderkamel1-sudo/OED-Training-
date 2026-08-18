@@ -161,13 +161,13 @@ export const CoursesPage: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left rtl:text-right border-collapse text-sm">
             <thead>
-              <tr className="bg-[#002D62] text-white text-xs uppercase tracking-wider font-bold">
-                <th className="p-4 w-12 text-center">#</th>
-                <th className="p-4 min-w-[220px]">{language === 'ar' ? 'اسم الكورس' : 'Course Title'}</th>
-                <th className="p-4 min-w-[130px]">{language === 'ar' ? 'عدد الأيام' : 'Duration'}</th>
-                <th className="p-4 min-w-[160px]">{language === 'ar' ? 'ماتريال الدورة' : 'Training Material'}</th>
-                <th className="p-4 min-w-[300px]">{language === 'ar' ? 'المواضيع والمحاور المغطاة' : 'Topics Covered'}</th>
-                {isAdmin && <th className="p-4 w-28 text-center">{language === 'ar' ? 'إجراءات' : 'Actions'}</th>}
+              <tr className="bg-[#002D62] text-xs uppercase tracking-wider font-bold" style={{ backgroundColor: '#002D62' }}>
+                <th className="p-4 w-12 text-center" style={{ color: '#ffffff' }}>#</th>
+                <th className="p-4 min-w-[220px]" style={{ color: '#ffffff' }}>{language === 'ar' ? 'اسم الكورس' : 'Course Title'}</th>
+                <th className="p-4 min-w-[130px]" style={{ color: '#ffffff' }}>{language === 'ar' ? 'عدد الأيام' : 'Duration'}</th>
+                <th className="p-4 min-w-[160px]" style={{ color: '#ffffff' }}>{language === 'ar' ? 'ماتريال الدورة' : 'Training Material'}</th>
+                <th className="p-4 min-w-[300px]" style={{ color: '#ffffff' }}>{language === 'ar' ? 'المواضيع والمحاور المغطاة' : 'Topics Covered'}</th>
+                {isAdmin && <th className="p-4 w-28 text-center" style={{ color: '#ffffff' }}>{language === 'ar' ? 'إجراءات' : 'Actions'}</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -293,7 +293,7 @@ export const CoursesPage: React.FC = () => {
             <div className="bg-[#002D62] text-white px-6 py-4 flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <BookOpen size={20} className="text-[#FFC000]" />
-                <h3 className="font-bold text-lg">
+                <h3 className="font-bold text-lg" style={{ color: '#ffffff' }}>
                   {editingCourse 
                     ? (language === 'ar' ? 'تعديل بيانات الكورس' : 'Edit Course') 
                     : (language === 'ar' ? 'إضافة كورس تدريبي جديد' : 'Add New Training Course')}
