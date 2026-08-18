@@ -58,47 +58,54 @@ export const TopNav: React.FC = () => {
   return (
     <>
       <nav className="bg-[#002D62] dark:bg-[#061020] text-white shadow-md sticky top-0 z-50 print:hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             
-            {/* Logo, Brand and Orascom Logo */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 flex-shrink-0">
-                  {!isLogoExpanded && (
-                    <motion.img 
-                      layoutId="magic-logo"
-                      src="/app-icon.jpg" 
-                      alt="OED-TTMS" 
-                      className="w-full h-full object-cover rounded-xl shadow-sm border border-white/20 cursor-pointer"
-                      onClick={() => setIsLogoExpanded(true)}
-                    />
-                  )}
-                </div>
-                
-                <div className="hidden sm:block">
-                  <h1 className="text-sm font-bold tracking-tight text-white leading-tight">
-                    OED-TTMS
-                  </h1>
-                  <p className="text-[10px] text-[#FFC000] font-medium leading-tight">
-                    Technical Training Management
-                  </p>
+            {/* الجزء الأيسر: الأيقونات والعلامة التجارية */}
+            <div className="flex items-center gap-2 sm:gap-4 h-full py-2">
+              
+              {/* أيقونة التطبيق الدائرية */}
+              <div className="w-9 h-9 sm:w-11 sm:h-11 flex-shrink-0">
+                {!isLogoExpanded && (
+                  <motion.img 
+                    layoutId="magic-logo"
+                    src="/app-icon.jpg" 
+                    alt="OED-TTMS" 
+                    className="w-full h-full object-cover rounded-full shadow-sm border border-white/20 cursor-pointer"
+                    onClick={() => setIsLogoExpanded(true)}
+                  />
+                )}
+              </div>
+              
+              {/* النصوص (OED-TTMS) تظهر فقط على الكمبيوتر/التابلت */}
+              <div className="hidden sm:block flex-shrink-0">
+                <h1 className="text-[17px] font-extrabold tracking-tight text-white leading-none mb-0.5">
+                  OED-TTMS
+                </h1>
+                <p className="text-[11px] text-[#FFC000] font-semibold leading-none">
+                  Technical Training Management
+                </p>
+              </div>
+
+              {/* الخط الفاصل الطولي (يظهر فقط على الكمبيوتر) */}
+              <div className="hidden sm:block w-[1px] h-9 bg-white/20 ml-2 mr-1 rtl:mr-2 rtl:ml-1 rounded-full"></div>
+
+              {/* لوجو أوراسكوم - متوافق مع الموبايل والكمبيوتر والتصميم المطلوب */}
+              <div className="flex flex-col justify-center h-full">
+                <div className="bg-white rounded-md border-2 border-gray-300/80 px-2 py-0.5 shadow-sm flex items-center justify-center">
+                  <img 
+                    src="/orascom-logo.png" 
+                    alt="Orascom Construction OED" 
+                    className="h-5 sm:h-7 w-auto object-contain"
+                  />
                 </div>
               </div>
 
-              {/* إضافة لوجو أوراسكوم الجديد هنا */}
-              <div className="hidden md:flex flex-col justify-center ml-2 rtl:mr-2 rtl:ml-0 border-l border-white/20 pl-4 rtl:pr-4 rtl:pl-0">
-                <img 
-                  src="/orascom_logo.jpg" /* تأكد من تغيير اسم الصورة لو مختلف */
-                  alt="Orascom Construction" 
-                  className="h-8 object-contain bg-white/90 p-1 rounded"
-                />
-              </div>
             </div>
 
             {/* Center - User Greeting */}
             {user && (
-              <div className="text-center flex-1 min-w-0 px-1 hidden lg:block">
+              <div className="text-center flex-1 min-w-0 px-1 hidden md:block">
                 <p className="text-sm font-medium text-white/90 truncate">
                   Hi, <span className="text-[#FFC000]">{user.name.split(' ')[0]}</span>
                 </p>
@@ -112,10 +119,10 @@ export const TopNav: React.FC = () => {
             )}
 
             {/* Right Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0">
               <button
                 onClick={toggleTheme}
-                className="theme-toggle"
+                className="theme-toggle p-1.5 sm:p-2"
                 aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
               >
                 {theme === 'light' ? (
@@ -123,16 +130,13 @@ export const TopNav: React.FC = () => {
                 ) : (
                   <Sun size={18} className="text-[#FFC000]" />
                 )}
-                <span className="hidden sm:inline text-xs">
-                  {theme === 'light' ? 'Dark' : 'Light'}
-                </span>
               </button>
 
               {user && (
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                    className="flex items-center gap-1.5 sm:gap-2 px-1 sm:px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
                   >
                     {user.profileImageUrl ? (
                       <img 
@@ -152,7 +156,7 @@ export const TopNav: React.FC = () => {
                         {getInitials(user.name)}
                       </div>
                     )}
-                    <ChevronDown size={16} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`transition-transform sm:w-4 sm:h-4 ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {dropdownOpen && (
