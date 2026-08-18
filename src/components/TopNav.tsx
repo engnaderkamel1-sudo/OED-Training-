@@ -194,14 +194,17 @@ export const TopNav: React.FC = () => {
 
         {/* 
           اللوجو المتعلق (Hanging Logo)
-          تم تحويله لشكل أقرب للمستطيل باستخدام rounded-b-lg بدلًا من rounded-b-xl
+          تم تكبير اللوجو والمربع المحيط به بنسبة 150% تقريباً
         */}
         <div className="absolute top-full left-[3.25rem] sm:left-[4.5rem] rtl:left-auto rtl:right-[3.25rem] rtl:sm:right-[4.5rem] z-40">
-          <div className="bg-white rounded-b-lg border-x border-b border-gray-200/80 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] px-2 sm:px-3 py-1 sm:py-1.5 flex items-center justify-center -mt-[1px]">
+          <div 
+            className="rounded-b-lg border-x border-b shadow-[0_6px_10px_-1px_rgba(0,0,0,0.1)] px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-center -mt-[1px]"
+            style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}
+          >
             <img 
               src="/orascom-logo.png" 
               alt="Orascom Construction OED" 
-              className="h-4 sm:h-6 w-auto object-contain"
+              className="h-6 sm:h-9 w-auto object-contain"
             />
           </div>
         </div>
