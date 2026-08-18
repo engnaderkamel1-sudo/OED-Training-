@@ -74,7 +74,7 @@ export const TopNav: React.FC = () => {
                 )}
               </div>
               
-              {/* النصوص (OED-TTMS) - الآن تظهر على الموبايل والكمبيوتر */}
+              {/* النصوص (OED-TTMS) */}
               <div className="flex-shrink-0 z-50">
                 <h1 className="text-[14px] sm:text-[17px] font-extrabold tracking-tight text-white leading-none mb-0.5 mt-1">
                   OED-TTMS
@@ -194,10 +194,10 @@ export const TopNav: React.FC = () => {
 
         {/* 
           اللوجو المتعلق (Hanging Logo)
-          موجود بره الشريط (absolute top-full) عشان ينزل تحت الشريط الأزرق في الموبايل والكمبيوتر
+          تم تحويله لشكل أقرب للمستطيل باستخدام rounded-b-lg بدلًا من rounded-b-xl
         */}
-        <div className="absolute top-full left-[3.5rem] sm:left-[4.5rem] rtl:left-auto rtl:right-[3.5rem] rtl:sm:right-[4.5rem] z-40">
-          <div className="bg-white rounded-b-xl border-x border-b border-gray-200/80 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] px-2 sm:px-3 py-1 sm:py-1.5 flex items-center justify-center -mt-[1px]">
+        <div className="absolute top-full left-[3.25rem] sm:left-[4.5rem] rtl:left-auto rtl:right-[3.25rem] rtl:sm:right-[4.5rem] z-40">
+          <div className="bg-white rounded-b-lg border-x border-b border-gray-200/80 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] px-2 sm:px-3 py-1 sm:py-1.5 flex items-center justify-center -mt-[1px]">
             <img 
               src="/orascom-logo.png" 
               alt="Orascom Construction OED" 
