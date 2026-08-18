@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context';
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-import { X, KeyRound, CheckCircle, Search, AlertCircle, ArrowRight } from 'lucide-react';
+import { X, KeyRound, CheckCircle, Search, AlertCircle, ArrowRight, Mail } from 'lucide-react';
 import { User } from '../types';
+import { auth } from '../firebase';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 interface ForgotPasswordModalProps {
   onClose: () => void;
 }
 
 export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ onClose }) => {
-  const { language, users, setUsers } = useAppContext();
+  const { language, users } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [foundUser, setFoundUser] = useState<User | null>(null);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -34,7 +32,17 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ onClos
     );
 
     if (user) {
-      setFoundUser(user);
+      if (!user.email) {
+        setMessage({
+          type: 'error',
+          text: language === 'ar' 
+            ? 'هذا الحساب لا يحتوي على بريد إلكتروني صالح لاسترجاع كلمة المرور. يرجى التواصل مع الإدارة.' 
+            : 'This account does not have a valid email for recovery. Please contact management.'
+        });
+        setFoundUser(null);
+      } else {
+        setFoundUser(user);
+      }
     } else {
       setMessage({
         type: 'error',
@@ -46,49 +54,35 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ onClos
     }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!foundUser) return;
-
-    if (newPassword.length < 6) {
-      setMessage({
-        type: 'error',
-        text: language === 'ar' ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.' : 'Password must be at least 6 characters.'
-      });
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setMessage({
-        type: 'error',
-        text: language === 'ar' ? 'كلمتا المرور غير متطابقتين.' : 'Passwords do not match.'
-      });
-      return;
-    }
+  const handleSendResetEmail = async () => {
+    if (!foundUser || !foundUser.email) return;
 
     setIsSubmitting(true);
     setMessage(null);
 
     try {
-      // Update in Firebase
-      await setDoc(doc(db, "users", foundUser.id), {
-        ...foundUser,
-        password: newPassword
-      }, { merge: true });
-
-      // Update in local users state
-      setUsers(users.map(u => u.id === foundUser.id ? { ...u, password: newPassword } : u));
+      // إرسال رابط استعادة كلمة المرور عبر Firebase Auth
+      await sendPasswordResetEmail(auth, foundUser.email);
 
       setIsDone(true);
       setMessage({
         type: 'success',
-        text: language === 'ar' ? 'تم تغيير كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول.' : 'Password reset successfully! You can now log in.'
+        text: language === 'ar' 
+          ? `تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني (${foundUser.email}). يرجى تفقد صندوق الوارد.` 
+          : `Password reset link sent to your email (${foundUser.email}). Please check your inbox.`
       });
     } catch (err: any) {
-      console.error("Error resetting password:", err);
+      console.error("Error sending reset email:", err);
+      let errorText = err.message;
+      
+      // تبسيط رسائل خطأ فايربيز للمستخدم
+      if (err.code === 'auth/user-not-found') {
+        errorText = language === 'ar' ? 'لم يتم العثور على مستخدم بهذا البريد في خوادم المصادقة.' : 'User not found in authentication server.';
+      }
+      
       setMessage({
         type: 'error',
-        text: language === 'ar' ? `حدث خطأ: ${err.message}` : `Error: ${err.message}`
+        text: language === 'ar' ? `حدث خطأ: ${errorText}` : `Error: ${errorText}`
       });
     } finally {
       setIsSubmitting(false);
@@ -103,7 +97,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ onClos
           <div className="flex items-center gap-2">
             <KeyRound size={20} className="text-[#FFC000]" />
             <h3 className="font-bold text-base md:text-lg">
-              {language === 'ar' ? 'استرجاع الحساب وكلمة المرور' : 'Account & Password Recovery'}
+              {language === 'ar' ? 'استرجاع كلمة المرور' : 'Password Recovery'}
             </h3>
           </div>
           <button onClick={onClose} className="text-gray-300 hover:text-white transition-colors">
@@ -118,7 +112,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ onClos
               message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
             }`}>
               {message.type === 'error' ? <AlertCircle size={18} className="shrink-0" /> : <CheckCircle size={18} className="shrink-0" />}
-              <span>{message.text}</span>
+              <span className="font-medium">{message.text}</span>
             </div>
           )}
 
@@ -126,8 +120,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ onClos
             <form onSubmit={handleSearch} className="space-y-4">
               <p className="text-sm text-gray-600">
                 {language === 'ar' 
-                  ? 'أدخل الرقم الوظيفي (HR Code) أو البريد الإلكتروني للبحث عن حسابك:' 
-                  : 'Enter your HR Code or Email to locate your account:'}
+                  ? 'أدخل الرقم الوظيفي (HR Code) أو البريد الإلكتروني للبحث عن حسابك وإرسال رابط الاستعادة:' 
+                  : 'Enter your HR Code or Email to locate your account and send a reset link:'}
               </p>
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
@@ -163,68 +157,57 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ onClos
                 </div>
                 <div className="text-sm text-gray-800">
                   <div><strong>{language === 'ar' ? 'الاسم:' : 'Name:'}</strong> {foundUser.name}</div>
-                  <div><strong>{language === 'ar' ? 'الرقم الوظيفي (HR Code):' : 'HR Code:'}</strong> {foundUser.hrCode}</div>
-                  <div><strong>{language === 'ar' ? 'القسم:' : 'Department:'}</strong> {foundUser.department}</div>
-                  {foundUser.email && <div><strong>{language === 'ar' ? 'اسم المستخدم / البريد:' : 'Username / Email:'}</strong> {foundUser.email}</div>}
+                  <div><strong>{language === 'ar' ? 'الرقم الوظيفي:' : 'HR Code:'}</strong> {foundUser.hrCode}</div>
+                  {foundUser.email && <div><strong>{language === 'ar' ? 'البريد الإلكتروني:' : 'Email:'}</strong> {foundUser.email}</div>}
                 </div>
               </div>
 
-              {/* Reset Password Form */}
-              <form onSubmit={handleResetPassword} className="space-y-3 pt-2">
-                <p className="text-xs font-bold text-gray-700 uppercase">
-                  {language === 'ar' ? 'تعيين كلمة مرور جديدة:' : 'Set New Password:'}
-                </p>
-                <div>
-                  <input
-                    type="password"
-                    required
-                    placeholder={language === 'ar' ? 'كلمة المرور الجديدة' : 'New Password'}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#002D62] outline-none"
-                    dir="ltr"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="password"
-                    required
-                    placeholder={language === 'ar' ? 'تأكيد كلمة المرور' : 'Confirm New Password'}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#002D62] outline-none"
-                    dir="ltr"
-                  />
-                </div>
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => { setFoundUser(null); setMessage(null); }}
-                    className="w-1/2 px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors"
-                  >
-                    {language === 'ar' ? 'بحث عن حساب آخر' : 'Back'}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-1/2 bg-[#002D62] hover:bg-blue-900 text-white font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 text-sm"
-                  >
-                    <span>{isSubmitting ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : (language === 'ar' ? 'حفظ وتحديث' : 'Reset Password')}</span>
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
-              </form>
+              {/* Send Email Action */}
+              <div className="pt-2 flex flex-col gap-3">
+                <button
+                  type="button"
+                  onClick={handleSendResetEmail}
+                  disabled={isSubmitting}
+                  className="w-full bg-[#FFC000] hover:bg-yellow-500 text-[#002D62] font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin text-[#002D62] font-bold">↻</span> 
+                      {language === 'ar' ? 'جاري الإرسال...' : 'Sending...'}
+                    </span>
+                  ) : (
+                    <>
+                      <Mail size={18} />
+                      <span>{language === 'ar' ? 'إرسال رابط استعادة كلمة المرور' : 'Send Password Reset Link'}</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setFoundUser(null); setMessage(null); }}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors"
+                >
+                  {language === 'ar' ? 'بحث عن حساب آخر' : 'Back to Search'}
+                </button>
+              </div>
             </div>
           )}
 
           {isDone && (
             <div className="text-center py-4 space-y-4">
-              <CheckCircle size={48} className="text-emerald-500 mx-auto" />
+              <CheckCircle size={56} className="text-emerald-500 mx-auto" />
+              <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+                <p className="text-emerald-800 font-medium text-sm">
+                  {language === 'ar' 
+                    ? 'يرجى مراجعة بريدك الإلكتروني (بما في ذلك مجلد الرسائل المزعجة Spam). لقد أرسلنا لك رابطاً آمناً لتعيين كلمة مرور جديدة.' 
+                    : 'Please check your email inbox (including Spam folder). We have sent a secure link to reset your password.'}
+                </p>
+              </div>
               <button
                 onClick={onClose}
-                className="w-full bg-[#002D62] hover:bg-blue-900 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                className="w-full bg-[#002D62] hover:bg-blue-900 text-white font-bold py-2.5 px-4 rounded-lg transition-colors mt-2"
               >
-                {language === 'ar' ? 'الذهاب لتسجيل الدخول' : 'Go to Login'}
+                {language === 'ar' ? 'العودة لتسجيل الدخول' : 'Return to Login'}
               </button>
             </div>
           )}
