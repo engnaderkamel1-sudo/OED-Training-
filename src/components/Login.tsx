@@ -293,7 +293,7 @@ export const Login: React.FC = () => {
             {isRegistering ? t("createAccount") : t("login")}
           </h2>
           <p className="text-xs text-gray-500 font-semibold text-center mt-1">
-            {language === "ar" ? "منظومة إدارة التدريب الفني - قطاع المعدات" : "Technical Training Management System - OED"}
+            {language === "ar" ? "منظومة إدارة التدريب الفني - قطاع المعدات" : "OED - Technical Training Management System"}
           </p>
         </div>
         {!isRegistering ? (
