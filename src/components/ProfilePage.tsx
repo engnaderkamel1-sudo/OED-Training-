@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context';
 import { User } from '../types';
-import { Upload, Save, Loader2, User as UserIcon, Mail, Phone, Building, Briefcase, Hash } from 'lucide-react';
+import { Upload, Save, Loader2, User as UserIcon, Mail, Phone, Building, Briefcase, Hash, Info, Clock } from 'lucide-react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { DataField } from './DataField';
@@ -16,6 +16,10 @@ export const ProfilePage: React.FC = () => {
   const [department, setDepartment] = useState(user?.department || '');
   const [profileImage, setProfileImage] = useState<string | undefined>(user?.profileImageUrl);
   
+  // New Edit State for HR Code and Email
+  const [hrCode, setHrCode] = useState(user?.hrCode || '');
+  const [email, setEmail] = useState(user?.email || '');
+  
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -27,6 +31,8 @@ export const ProfilePage: React.FC = () => {
       setPhone(user.phone || '');
       setDepartment(user.department);
       setProfileImage(user.profileImageUrl);
+      setHrCode(user.hrCode || '');
+      setEmail(user.email || '');
     }
   }, [user, isEditing]);
 
@@ -49,15 +55,9 @@ export const ProfilePage: React.FC = () => {
         let height = img.height;
 
         if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
         } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
         }
 
         canvas.width = width;
@@ -83,24 +83,59 @@ export const ProfilePage: React.FC = () => {
       return;
     }
     
-    // Check if phone has 11 digits and starts with 01 (matches Login validation)
     if (phone.trim() && (phone.length !== 11 || !/^01(0|1|2|5)/.test(phone))) {
       setError(language === 'ar' ? 'رقم الهاتف غير صحيح، يجب أن يتكون من 11 رقماً ويبدأ بـ 01' : 'Phone must be 11 digits and start with 01 (e.g. 010xxxxxxxx)');
+      return;
+    }
+
+    if (!hrCode.trim()) {
+      setError(language === 'ar' ? 'الكود الوظيفي مطلوب' : 'HR Code is required');
       return;
     }
 
     setIsSaving(true);
     try {
       const userRef = doc(db, 'users', user.id);
-      await updateDoc(userRef, {
+      
+      const cleanHrCode = enforceEnglish(hrCode).trim();
+      const cleanEmail = enforceEnglish(email).trim().toLowerCase();
+
+      // Check if HR Code or Email were changed by an OFFICIAL user
+      const isHrCodeChanged = cleanHrCode !== user.hrCode;
+      const isEmailChanged = cleanEmail !== (user.email || '');
+      
+      const requiresApproval = !user.isGuest && (isHrCodeChanged || isEmailChanged);
+
+      let updateData: any = {
         name: enforceEnglish(name),
         phone,
         department,
         profileImageUrl: profileImage || null
-      });
-      setSuccess(language === 'ar' ? 'تم حفظ البيانات بنجاح!' : 'Profile updated successfully!');
+      };
+
+      if (user.isGuest) {
+        // Guest user: Apply changes directly (Merge logic will be handled later if needed)
+        updateData.hrCode = cleanHrCode;
+        updateData.email = cleanEmail;
+        setSuccess(language === 'ar' ? 'تم حفظ البيانات بنجاح!' : 'Profile updated successfully!');
+      } else {
+        // Official user: Send sensitive changes to pendingUpdates
+        if (requiresApproval) {
+          updateData.pendingUpdates = {
+            hrCode: isHrCodeChanged ? cleanHrCode : undefined,
+            email: isEmailChanged ? cleanEmail : undefined,
+            requestedAt: new Date().toISOString()
+          };
+          setSuccess(language === 'ar' ? 'تم حفظ بياناتك، ولكن تعديل (الكود الوظيفي/الإيميل) تم إرساله للإدارة للموافقة عليه.' : 'Profile saved. HR Code/Email changes are pending admin approval.');
+        } else {
+          setSuccess(language === 'ar' ? 'تم حفظ البيانات بنجاح!' : 'Profile updated successfully!');
+        }
+      }
+
+      await updateDoc(userRef, updateData);
+      
       setIsEditing(false);
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(''), 4000);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Failed to update profile');
@@ -108,6 +143,8 @@ export const ProfilePage: React.FC = () => {
       setIsSaving(false);
     }
   };
+
+  const hasPendingUpdates = user.pendingUpdates && (user.pendingUpdates.hrCode || user.pendingUpdates.email);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -127,12 +164,7 @@ export const ProfilePage: React.FC = () => {
                   <label className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
                     <Upload className="text-white h-5 w-5 mb-1" />
                     <span className="text-[10px] text-white font-semibold">{language === 'ar' ? 'تغيير' : 'Change'}</span>
-                    <input
-                      type="file"
-                      accept="image/png, image/jpeg, image/jpg"
-                      className="hidden"
-                      onChange={handleImageUpload}
-                    />
+                    <input type="file" accept="image/png, image/jpeg, image/jpg" className="hidden" onChange={handleImageUpload} />
                   </label>
                 )}
               </div>
@@ -152,13 +184,25 @@ export const ProfilePage: React.FC = () => {
 
         {/* Content */}
         <div className="pt-16 px-8 pb-8">
+          {/* Pending Approval Banner */}
+          {!isEditing && hasPendingUpdates && (
+            <div className="bg-orange-50 border border-orange-200 text-orange-700 p-3 rounded-lg mb-6 flex items-center gap-3 shadow-sm">
+              <Clock className="w-5 h-5 text-orange-500 shrink-0" />
+              <div className="text-sm font-medium">
+                {language === 'ar' 
+                  ? 'يوجد طلب تعديل (للكود الوظيفي أو الإيميل) قيد المراجعة حالياً من قبل إدارة التدريب.' 
+                  : 'A request to modify your HR Code or Email is currently pending admin approval.'}
+              </div>
+            </div>
+          )}
+
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-md mb-6 text-sm border border-red-200">
+            <div className="bg-red-50 text-red-600 p-3 rounded-md mb-6 text-sm border border-red-200 font-medium">
               {error}
             </div>
           )}
           {success && (
-            <div className="bg-emerald-50 text-emerald-600 p-3 rounded-md mb-6 text-sm border border-emerald-200">
+            <div className="bg-emerald-50 text-emerald-600 p-3 rounded-md mb-6 text-sm border border-emerald-200 font-medium">
               {success}
             </div>
           )}
@@ -169,6 +213,11 @@ export const ProfilePage: React.FC = () => {
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900"><DataField>{user.name}</DataField></h1>
                   <p className="text-[#002D62] font-semibold">{user.jobRole || (user.role === 'trainee' ? t('trainee') : user.role)}</p>
+                  {user.isGuest && (
+                    <span className="inline-block mt-2 px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full">
+                      {language === 'ar' ? 'حساب مؤقت' : 'Temporary Account'}
+                    </span>
+                  )}
                 </div>
                 
                 <div className="space-y-4">
@@ -176,7 +225,10 @@ export const ProfilePage: React.FC = () => {
                     <Hash className="text-gray-400" size={18} />
                     <div>
                       <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider">{t('hrCode')}</p>
-                      <p className="font-medium"><DataField>{user.hrCode}</DataField></p>
+                      <p className="font-medium">
+                        <DataField>{user.hrCode}</DataField>
+                        {user.pendingUpdates?.hrCode && <span className="text-xs text-orange-500 font-bold ml-2 rtl:mr-2 rtl:ml-0">(قيد المراجعة)</span>}
+                      </p>
                     </div>
                   </div>
                   
@@ -184,7 +236,10 @@ export const ProfilePage: React.FC = () => {
                     <Mail className="text-gray-400" size={18} />
                     <div>
                       <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider">{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</p>
-                      <p className="font-medium"><DataField>{user.email || 'N/A'}</DataField></p>
+                      <p className="font-medium">
+                        <DataField>{user.email || 'N/A'}</DataField>
+                        {user.pendingUpdates?.email && <span className="text-xs text-orange-500 font-bold ml-2 rtl:mr-2 rtl:ml-0">(قيد المراجعة)</span>}
+                      </p>
                     </div>
                   </div>
                   
@@ -268,18 +323,43 @@ export const ProfilePage: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* HR Code and Email are strictly Read-Only */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('hrCode')} <span className="text-gray-400 font-normal">({language === 'ar' ? 'غير قابل للتعديل' : 'Read-only'})</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={user.hrCode}
-                    disabled
-                    className="w-full border rounded px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed"
-                    dir="ltr"
-                  />
+                <div className="md:col-span-2 space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="flex items-start gap-2 mb-2">
+                    <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                    <p className="text-sm text-gray-600 font-medium">
+                      {user.isGuest 
+                        ? (language === 'ar' ? 'تحديث الكود الوظيفي والبريد الإلكتروني سيتم حفظه فوراً لحسابك المؤقت.' : 'Updating HR Code and Email will be saved immediately for your temporary account.')
+                        : (language === 'ar' ? 'لن يتم تعديل الكود الوظيفي أو البريد الإلكتروني إلا بعد الرجوع لموافقة مشرف النظام.' : 'HR Code and Email will not be modified without the approval of the system admin.')}
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {t('hrCode')}
+                      </label>
+                      <input
+                        type="text"
+                        value={hrCode}
+                        onChange={(e) => setHrCode(enforceEnglish(e.target.value))}
+                        className={`w-full border rounded px-3 py-2 focus:ring-2 focus:ring-[#002D62] outline-none ${!user.isGuest ? 'bg-white' : ''}`}
+                        dir="ltr"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {language === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(enforceEnglish(e.target.value))}
+                        className={`w-full border rounded px-3 py-2 focus:ring-2 focus:ring-[#002D62] outline-none ${!user.isGuest ? 'bg-white' : ''}`}
+                        dir="ltr"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -289,6 +369,8 @@ export const ProfilePage: React.FC = () => {
                   onClick={() => {
                     setIsEditing(false);
                     setProfileImage(user.profileImageUrl);
+                    setHrCode(user.hrCode);
+                    setEmail(user.email || '');
                   }}
                   className="px-6 py-2 border border-gray-300 rounded text-gray-700 font-medium hover:bg-gray-50 transition-colors"
                   disabled={isSaving}
@@ -305,7 +387,7 @@ export const ProfilePage: React.FC = () => {
                   ) : (
                     <Save size={18} />
                   )}
-                  <span>{language === 'ar' ? 'حفظ البيانات' : 'Save Changes'}</span>
+                  <span>{language === 'ar' ? 'حفظ التعديلات' : 'Save Changes'}</span>
                 </button>
               </div>
             </form>

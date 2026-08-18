@@ -2,9 +2,9 @@
 import { EditRecordModal } from './EditRecordModal';
 import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
-import { doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff } from "lucide-react";
+import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
@@ -88,7 +88,7 @@ export const AdminDashboard: React.FC = () => {
     reactivateSession, cleanedData, loginLogs, currentView, setCurrentView, addAnnouncement, theme
   } = useAppContext();
 
-  // Dark Mode Palette - ألوان مريحة للعين
+  // Dark Mode Palette
   const isDark = theme === 'dark';
   const bgColor = isDark ? '#1e293b' : 'transparent'; 
   const cardColor = isDark ? '#334155' : '#ffffff'; 
@@ -149,7 +149,9 @@ export const AdminDashboard: React.FC = () => {
   const handleToggleFeedback = (session: UpcomingSession) => {
     updateUpcomingSession({ ...session, feedbackEnabled: !session.feedbackEnabled });
   };
-  const [userManagementTab, setUserManagementTab] = useState<"pending" | "processed" | "deleted">("pending");
+  
+  // -- TABS: Added "updates" tab --
+  const [userManagementTab, setUserManagementTab] = useState<"pending" | "processed" | "deleted" | "updates">("pending");
 
   const sendPushNotification = async (title: string, body: string, targetTokens: string[]) => {
     if (!targetTokens || targetTokens.length === 0) return;
@@ -190,6 +192,10 @@ export const AdminDashboard: React.FC = () => {
   const [toDateFilter, setToDateFilter] = useState("");
   const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
 
+  // -- STATE FOR MANUAL RECORD ADDITION --
+  const [showManualAddModal, setShowManualAddModal] = useState(false);
+  const [manualRecord, setManualRecord] = useState({ hrCode: "", traineeName: "", department: "", courseId: "", score: "", duration: "1", attendedDays: "1", date: "" });
+
   const handleFinalizeSession = async (newRecords: TrainingRecord[]) => {
     try {
       for (const rec of newRecords) {
@@ -220,8 +226,12 @@ export const AdminDashboard: React.FC = () => {
   const [qrSession, setQrSession] = useState<UpcomingSession | null>(null);
   const [syncProgress, setSyncProgress] = useState(0);
   const [syncSuccess, setSyncSuccess] = useState(false);
+  
   const pendingUsers = users.filter((u) => u.status === "pending");
   const allTrainees = users.filter((u) => u.role === "trainee");
+  
+  // -- GET USERS WITH PENDING DATA UPDATES --
+  const usersWithPendingUpdates = users.filter(u => u.pendingUpdates && (u.pendingUpdates.email || u.pendingUpdates.hrCode));
 
   useEffect(() => {
     const checkAndRunAutoBackup = () => {
@@ -293,6 +303,97 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleRestoreUser = (id: string) => { setUsers(users.map((u) => (u.id === id ? { ...u, status: "approved", hasUnreadNotifications: true } : u))); };
+
+  // -- APPROVE / REJECT DATA UPDATES --
+  const handleApproveUpdate = async (user: User) => {
+    if (!user.pendingUpdates) return;
+    try {
+      const userRef = doc(db, 'users', user.id);
+      const updatePayload: any = {};
+      if (user.pendingUpdates.hrCode) updatePayload.hrCode = user.pendingUpdates.hrCode;
+      if (user.pendingUpdates.email) updatePayload.email = user.pendingUpdates.email;
+      updatePayload.pendingUpdates = null; // Clear pending
+
+      await updateDoc(userRef, updatePayload);
+      setUsers(users.map((u) => (u.id === user.id ? { ...u, ...updatePayload } : u)));
+      alert(language === 'ar' ? 'تمت الموافقة على التعديلات.' : 'Modifications approved.');
+    } catch (e: any) { alert("Error: " + e.message); }
+  };
+
+  const handleRejectUpdate = async (user: User) => {
+    try {
+      const userRef = doc(db, 'users', user.id);
+      await updateDoc(userRef, { pendingUpdates: null });
+      setUsers(users.map((u) => (u.id === user.id ? { ...u, pendingUpdates: undefined } : u)));
+      alert(language === 'ar' ? 'تم رفض التعديلات.' : 'Modifications rejected.');
+    } catch (e: any) { alert("Error: " + e.message); }
+  };
+
+  // -- MANUAL ADD RECORD SUBMIT LOGIC --
+  const handleManualRecordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualRecord.hrCode || !manualRecord.courseId || !manualRecord.date) {
+      alert("Missing required fields"); return;
+    }
+    
+    try {
+      let targetUserId = manualRecord.hrCode;
+      
+      // Check if user exists (Real or Shadow)
+      const existingUser = users.find(u => u.hrCode.toLowerCase() === manualRecord.hrCode.toLowerCase());
+      
+      if (!existingUser) {
+        // Create Shadow Account
+        const newShadowId = `derived_${Date.now()}`;
+        const newShadowUser: User = {
+          id: newShadowId,
+          hrCode: manualRecord.hrCode,
+          name: manualRecord.traineeName || `Trainee ${manualRecord.hrCode}`,
+          department: manualRecord.department || "General",
+          role: "trainee",
+          status: "approved",
+          phone: "00000000000",
+          isShadowAccount: true, // Flag it as shadow
+          createdAt: new Date().toISOString()
+        };
+        await setDoc(doc(db, "users", newShadowId), newShadowUser);
+        setUsers([...users, newShadowUser]);
+        targetUserId = newShadowId; // Use the derived ID for the record
+      } else {
+        targetUserId = existingUser.id; // Use existing ID
+      }
+
+      const courseName = dynamicCourses.find(c => c.id === manualRecord.courseId)?.title || manualRecord.courseId;
+
+      const newRecord: TrainingRecord = {
+        id: `rec_manual_${Date.now()}`,
+        userId: targetUserId,
+        hrCode: manualRecord.hrCode,
+        courseId: manualRecord.courseId,
+        courseName: courseName,
+        score: manualRecord.score || "N/A",
+        attendanceDate: manualRecord.date,
+        totalDays: manualRecord.duration,
+        daysAttended: manualRecord.attendedDays,
+        raw: {
+          "Attended Days": manualRecord.attendedDays,
+          "Score": manualRecord.score
+        }
+      } as any; // Cast as any because traineeName/department might be required in your specific logic
+
+      // Add to cleanedData directly for simplicity, or just setRecords
+      await setDoc(doc(db, "cleanedData", newRecord.id), newRecord);
+      setRecords([...records, newRecord]);
+      
+      alert(language === 'ar' ? 'تم إضافة السجل بنجاح!' : 'Record added successfully!');
+      setShowManualAddModal(false);
+      setManualRecord({ hrCode: "", traineeName: "", department: "", courseId: "", score: "", duration: "1", attendedDays: "1", date: "" });
+
+    } catch (err: any) {
+      alert("Error adding record: " + err.message);
+    }
+  };
+
 
   const handleCreateSession = (e: React.FormEvent) => {
     e.preventDefault();
@@ -500,7 +601,7 @@ export const AdminDashboard: React.FC = () => {
     <div className="min-h-screen pb-12 transition-colors duration-300" style={{ backgroundColor: bgColor }}>
       <div className="max-w-7xl mx-auto px-4 py-8 print:p-0">
         
-        {/* زرار الطباعة - تم نقله أقصى اليمين */}
+        {/* زرار الطباعة */}
         <div className="flex w-full justify-end border-b-2 border-[#FFC000] pb-4 mb-6 print:hidden">
           {user?.role === 'admin' || user?.role === 'supervisor' ? (
             <button 
@@ -522,8 +623,13 @@ export const AdminDashboard: React.FC = () => {
             <div className="space-y-12">
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="md:w-64 shrink-0 flex flex-col space-y-2 border-b md:border-b-0 md:border-r rtl:border-r-0 rtl:border-l pb-4 md:pb-0 md:pr-4 rtl:md:pl-4" style={{ borderColor: borderColor }}>
-                  <button onClick={() => setUserManagementTab('pending')} className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors ${userManagementTab === 'pending' ? 'bg-[#002D62] text-white dark:bg-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`} style={{ color: userManagementTab === 'pending' ? '#fff' : textMuted }}>
-                    {language === "ar" ? "طلبات معلقة" : "Pending Users"}
+                  <button onClick={() => setUserManagementTab('pending')} className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors flex justify-between items-center ${userManagementTab === 'pending' ? 'bg-[#002D62] text-white dark:bg-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`} style={{ color: userManagementTab === 'pending' ? '#fff' : textMuted }}>
+                    <span>{language === "ar" ? "طلبات معلقة" : "Pending Users"}</span>
+                    {pendingUsers.length > 0 && <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{pendingUsers.length}</span>}
+                  </button>
+                  <button onClick={() => setUserManagementTab('updates')} className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors flex justify-between items-center ${userManagementTab === 'updates' ? 'bg-[#002D62] text-white dark:bg-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`} style={{ color: userManagementTab === 'updates' ? '#fff' : textMuted }}>
+                    <span>{language === "ar" ? "تعديل البيانات" : "Data Updates"}</span>
+                    {usersWithPendingUpdates.length > 0 && <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">{usersWithPendingUpdates.length}</span>}
                   </button>
                   <button onClick={() => setUserManagementTab('processed')} className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors ${userManagementTab === 'processed' ? 'bg-[#002D62] text-white dark:bg-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`} style={{ color: userManagementTab === 'processed' ? '#fff' : textMuted }}>
                     {language === "ar" ? "طلبات مراجعة" : "Processed Requests"}
@@ -533,6 +639,7 @@ export const AdminDashboard: React.FC = () => {
                   </button>
                 </div>
                 <div className="flex-1 overflow-x-auto">
+                  {/* --- EXISTING TABS (PENDING, PROCESSED, DELETED) --- */}
                   {userManagementTab === 'pending' && (
                     <div>
                       <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "طلبات معلقة" : "Pending Users"}</h2>
@@ -586,6 +693,62 @@ export const AdminDashboard: React.FC = () => {
                       )}
                     </div>
                   )}
+                  
+                  {/* --- NEW UPDATES TAB --- */}
+                  {userManagementTab === 'updates' && (
+                    <div>
+                      <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "طلبات تعديل البيانات" : "Pending Data Updates"}</h2>
+                      {usersWithPendingUpdates.length > 0 ? (
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="border-b" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: textMuted }}>
+                              <th className="p-3">{language === "ar" ? "الاسم" : "Name"}</th>
+                              <th className="p-3">{language === "ar" ? "التعديل المطلوب" : "Requested Change"}</th>
+                              <th className="p-3">{language === "ar" ? "وقت الطلب" : "Requested At"}</th>
+                              <th className="p-3 align-top"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {usersWithPendingUpdates.map((u) => (
+                              <tr key={u.id} className="border-b transition-colors" style={{ borderColor: borderColor, color: textColor }}>
+                                <td className="p-3"><UserAvatarWithName user={u} /></td>
+                                <td className="p-3">
+                                  {u.pendingUpdates?.hrCode && (
+                                    <div className="mb-2">
+                                      <span className="text-xs text-gray-500 block">{language === "ar" ? "الكود الوظيفي:" : "HR Code:"}</span>
+                                      <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.hrCode}</span>
+                                      <span className="font-bold text-green-600">➔ {u.pendingUpdates.hrCode}</span>
+                                    </div>
+                                  )}
+                                  {u.pendingUpdates?.email && (
+                                    <div>
+                                      <span className="text-xs text-gray-500 block">{language === "ar" ? "الإيميل:" : "Email:"}</span>
+                                      <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.email || 'N/A'}</span>
+                                      <span className="font-bold text-green-600">➔ {u.pendingUpdates.email}</span>
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="p-3 text-sm" style={{ color: textMuted }}>
+                                  {u.pendingUpdates?.requestedAt ? new Date(u.pendingUpdates.requestedAt).toLocaleString() : 'N/A'}
+                                </td>
+                                <td className="p-3 flex gap-2">
+                                  <button onClick={() => handleApproveUpdate(u)} className="flex items-center text-green-600 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded hover:opacity-80">
+                                    <CheckCircle size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "موافق" : "Approve"}
+                                  </button>
+                                  <button onClick={() => handleRejectUpdate(u)} className="flex items-center text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded hover:opacity-80">
+                                    <X size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "رفض" : "Reject"}
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      ) : (
+                        <p style={{ color: textMuted }}>{language === "ar" ? "لا توجد طلبات تعديل." : "No pending updates."}</p>
+                      )}
+                    </div>
+                  )}
+
                   {userManagementTab === 'processed' && (
                     <div>
                       <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "طلبات مراجعة" : "Processed Requests"}</h2>
@@ -673,12 +836,23 @@ export const AdminDashboard: React.FC = () => {
                   <h2 className="text-2xl font-bold border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>
                     {language === "ar" ? "السجلات الشاملة" : "Global Records"}
                   </h2>
-                  {hasActiveFilters && (
-                    <button onClick={handleClearAllFilters} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer animate-fade-in">
-                      <RotateCcw size={14} className="text-red-600 dark:text-red-400" />
-                      <span>{language === "ar" ? "إلغاء الفلترة (إعادة تعيين)" : "Reset / Clear Filters"}</span>
+                  <div className="flex gap-2">
+                    {/* -- NEW MANUAL ADD BUTTON -- */}
+                    <button 
+                      onClick={() => setShowManualAddModal(true)} 
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFC000] text-[#002D62] rounded-xl text-sm font-bold transition-all shadow-xs cursor-pointer hover:bg-yellow-500"
+                    >
+                      <PlusCircle size={16} />
+                      <span>{language === "ar" ? "إضافة حضور يدوي" : "Add Record"}</span>
                     </button>
-                  )}
+
+                    {hasActiveFilters && (
+                      <button onClick={handleClearAllFilters} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer animate-fade-in">
+                        <RotateCcw size={14} className="text-red-600 dark:text-red-400" />
+                        <span>{language === "ar" ? "إلغاء الفلترة" : "Clear Filters"}</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 print:hidden">
@@ -1193,6 +1367,73 @@ export const AdminDashboard: React.FC = () => {
             <div className="w-full h-72 sm:h-84 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center border border-gray-100">
               <img src={viewingImage} alt="Profile" className="w-full h-full object-cover rounded-xl shadow-inner" />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- MANUAL ADD RECORD MODAL --- */}
+      {showManualAddModal && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-scaleIn">
+            <div className="bg-[#002D62] text-white p-4 flex justify-between items-center">
+              <h3 className="font-bold text-lg">{language === "ar" ? "إضافة سجل حضور يدوي" : "Add Manual Attendance"}</h3>
+              <button onClick={() => setShowManualAddModal(false)} className="hover:text-gray-300 transition-colors"><X size={20} /></button>
+            </div>
+            <form onSubmit={handleManualRecordSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "الكود الوظيفي *" : "HR Code *"}</label>
+                <input required type="text" value={manualRecord.hrCode} onChange={(e) => setManualRecord({...manualRecord, hrCode: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white" dir="ltr" />
+                <p className="text-[10px] text-gray-500 mt-1">{language === "ar" ? "إذا لم يكن للمتدرب حساب، سيتم إنشاء حساب وهمي له." : "If user doesn't exist, a shadow account will be created."}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "الاسم" : "Name"}</label>
+                  <input type="text" value={manualRecord.traineeName} onChange={(e) => setManualRecord({...manualRecord, traineeName: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "القسم" : "Department"}</label>
+                  <select value={manualRecord.department} onChange={(e) => setManualRecord({...manualRecord, department: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                    <option value="">{language === "ar" ? "اختر..." : "Select..."}</option>
+                    {dynamicDepartments.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "الدورة التدريبية *" : "Course Name *"}</label>
+                <select required value={manualRecord.courseId} onChange={(e) => setManualRecord({...manualRecord, courseId: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                  <option value="">{language === "ar" ? "اختر..." : "Select..."}</option>
+                  {dynamicCourses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "التاريخ *" : "Date *"}</label>
+                  <input required type="date" value={manualRecord.date} onChange={(e) => setManualRecord({...manualRecord, date: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "الدرجة" : "Score"}</label>
+                  <input type="text" placeholder="e.g. 85%" value={manualRecord.score} onChange={(e) => setManualRecord({...manualRecord, score: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "مدة الدورة (أيام)" : "Duration (Days)"}</label>
+                  <input type="number" min="1" value={manualRecord.duration} onChange={(e) => setManualRecord({...manualRecord, duration: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "أيام الحضور" : "Attended Days"}</label>
+                  <input type="number" min="1" value={manualRecord.attendedDays} onChange={(e) => setManualRecord({...manualRecord, attendedDays: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                </div>
+              </div>
+              <div className="pt-4 flex justify-end gap-2 border-t mt-4 dark:border-slate-700">
+                <button type="button" onClick={() => setShowManualAddModal(false)} className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:border-slate-600 dark:hover:bg-slate-700 transition-colors font-semibold">
+                  {language === "ar" ? "إلغاء" : "Cancel"}
+                </button>
+                <button type="submit" className="px-6 py-2 bg-[#002D62] text-white rounded font-bold hover:bg-blue-900 transition-colors shadow-sm">
+                  {language === "ar" ? "حفظ السجل" : "Save Record"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

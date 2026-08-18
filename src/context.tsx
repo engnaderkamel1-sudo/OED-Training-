@@ -11,7 +11,6 @@ export const generateUUID = (): string => {
   return 'uuid_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
 };
 
-// --- هنا تم إضافة activityLogs ---
 export type ViewState = 'dashboard' | 'profile' | 'coursesCatalog' | 'suggestions' | 'activityLogs';
 
 interface AppContextType {
@@ -56,7 +55,6 @@ interface AppContextType {
   setDebugRole: (role: Role) => void;
   t: (key: keyof typeof translations['en']) => string;
   isLoading: boolean;
-  // Theme
   theme: 'light' | 'dark';
   toggleTheme: () => void;
 }
@@ -75,7 +73,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   });
 
-  // Theme state
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
       const stored = localStorage.getItem('oed_theme');
@@ -85,7 +82,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   });
 
-  // Apply theme to document
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('oed_theme', theme);
@@ -103,18 +99,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [user]);
   
-  // Base states
   const [localUsers, setLocalUsers] = useState<User[]>([]);
   const [localRecords, setLocalRecords] = useState<TrainingRecord[]>([]);
-
-  // Analytics Excel Upload State
   const [cleanedData, setCleanedDataState] = useState<CleanedRecord[]>([]);
   const [cleanedFileName, setCleanedFileNameState] = useState<string>('');
-
-  // Upcoming Sessions State
   const [upcomingSessions, setUpcomingSessionsState] = useState<UpcomingSession[]>([]);
-
-  // Announcements State
   const [announcements, setAnnouncementsState] = useState<SystemAnnouncement[]>([]);
   const [loginLogs, setLoginLogsState] = useState<LoginLog[]>([]);
   const [suggestions, setSuggestionsState] = useState<Suggestion[]>([]);
@@ -314,7 +303,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     cleanedData.forEach(r => {
       const uId = r.hrCode || r.name;
       if (!uId) return;
-      const derivedId = `derived_${uId}`;
+      // تغيير الاسم لـ dummy_ عشان نفرق بينها وبين حسابات الظل الحقيقية
+      const derivedId = `dummy_${uId}`;
       if (!usersMap.has(uId) && !usersMap.has(derivedId)) {
         usersMap.set(derivedId, {
           id: derivedId,
@@ -324,7 +314,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           jobRole: r.role || '',
           role: 'trainee',
           phone: '01000000000',
-          status: 'approved'
+          status: 'approved',
+          isShadowAccount: true // نعلمها كحساب وهمي للقراءة فقط
         });
       }
     });
@@ -361,7 +352,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [cleanedData]);
 
   const setUsersWrapper = (newUsers: User[]) => {
-    const onlyLocal = newUsers.filter(u => !u.id.startsWith('derived_'));
+    // التعديل السحري: منع حفظ الحسابات الوهمية (dummy) بس، والسماح للـ shadow accounts بالحفظ
+    const onlyLocal = newUsers.filter(u => !u.id.startsWith('dummy_'));
     const batch = writeBatch(db);
     onlyLocal.forEach(u => {
       const ref = doc(db, "users", u.id);

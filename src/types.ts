@@ -18,6 +18,15 @@ export interface User {
   profileImageUrl?: string;
   hasUnreadNotifications?: boolean;
   fcmToken?: string;
+  // --- الخصائص الجديدة ---
+  isGuest?: boolean; // حساب مؤقت
+  guestExpiryDate?: string; // تاريخ انتهاء الحساب المؤقت
+  isShadowAccount?: boolean; // حساب وهمي لتسجيل الحضور اليدوي
+  pendingUpdates?: { 
+    email?: string; 
+    hrCode?: string; 
+    requestedAt?: string; 
+  }; // طلبات تعديل البيانات قيد المراجعة
 }
 
 export interface Course {
@@ -117,7 +126,6 @@ export interface LoginLog {
   timestamp: string;
   device?: string;
   browser?: string;
-  // --- الحقول الجديدة ---
   ip?: string;
   city?: string;
   country?: string;

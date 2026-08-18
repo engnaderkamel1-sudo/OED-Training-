@@ -5,8 +5,9 @@ import {
   CheckCircle, Eye, EyeOff, Loader2, 
   Briefcase, Clock, ArrowRight, UserPlus
 } from "lucide-react";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { getLoginMeta, getLocationFromIP } from "../utils/loginUtils";
 
@@ -89,7 +90,7 @@ export const Login: React.FC = () => {
       } catch(e) {}
       setError("");
       setSuccessMsg("");
-      const loginInput = email.trim().toLowerCase(); // Can be email, HR code, or Phone
+      const loginInput = email.trim().toLowerCase(); 
 
       if (loginInput === "admin" && password === "admin123") {
         const adminUser = users.find((u) => u.hrCode.toLowerCase() === "admin") || ({
@@ -210,22 +211,31 @@ export const Login: React.FC = () => {
         return;
       }
 
+      // --- MAGIC MERGE LOGIC ---
+      let targetUserId = `u${users.length + 1}_${Date.now()}`;
+      
       const existingPhone = users.find((u) => u.phone === phone);
-      if (existingPhone && !existingPhone.id.startsWith("derived_")) {
+      if (existingPhone && !existingPhone.isShadowAccount && !existingPhone.id.startsWith("derived_")) {
         setError(language === "ar" ? "رقم الهاتف مسجل بالفعل" : "Phone number already exists");
         return;
       }
 
       if (registerMode === 'official') {
-        const existingHrCode = users.find((u) => u.hrCode.toLowerCase() === cleanHrCode.toLowerCase());
-        if (existingHrCode && !existingHrCode.id.startsWith("derived_")) {
-          setError(language === "ar" ? "الكود الوظيفي مسجل بالفعل" : "HR Code already exists");
-          return;
+        const existingHrCodeUser = users.find((u) => u.hrCode.toLowerCase() === cleanHrCode.toLowerCase());
+        if (existingHrCodeUser) {
+          // If it's a real account, reject.
+          if (!existingHrCodeUser.isShadowAccount && !existingHrCodeUser.id.startsWith("derived_")) {
+            setError(language === "ar" ? "الكود الوظيفي مسجل بالفعل" : "HR Code already exists");
+            return;
+          } else {
+            // It's a shadow account -> We merge! Inherit the old ID to keep the history.
+            targetUserId = existingHrCodeUser.id;
+          }
         }
       }
 
       const existingEmail = users.find((u) => u.email?.toLowerCase() === fullEmail);
-      if (existingEmail && !existingEmail.id.startsWith("derived_")) {
+      if (existingEmail && !existingEmail.isShadowAccount && !existingEmail.id.startsWith("derived_")) {
         setError(language === "ar" ? "البريد الإلكتروني مسجل بالفعل" : "Email already exists");
         return;
       }
@@ -242,13 +252,12 @@ export const Login: React.FC = () => {
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + 14); 
 
-      // التعديل هنا: إضافة @orascom.com برمجياً لإيميلات المديرين المكتوبة
       const formattedManagerEmails = [managerEmail1, managerEmail2, managerEmail3]
         .filter(e => e.trim() !== "")
         .map(e => `${e.trim().toLowerCase()}@orascom.com`);
 
       const newUser: User = {
-        id: `u${users.length + 1}_${Date.now()}`,
+        id: targetUserId,
         hrCode: cleanHrCode,
         name: name.trim(),
         phone: phone.trim(),
@@ -262,26 +271,35 @@ export const Login: React.FC = () => {
         password: password,
         profileImageUrl: profileImage,
         isGuest: registerMode === 'temporary', 
-        guestExpiryDate: registerMode === 'temporary' ? expiryDate.toISOString() : undefined
+        guestExpiryDate: registerMode === 'temporary' ? expiryDate.toISOString() : undefined,
+        isShadowAccount: false // Remove shadow flag since it's a real account now
       } as any; 
 
-      setUsers([...users, newUser]);
-      setSuccessMsg(language === "ar" ? "تم إرسال طلب تسجيلك بنجاح وفي انتظار الموافقة قريباً" : "Registration request sent and pending approval");
-      
-      setTimeout(() => {
-        setIsRegistering(false);
-        setRegisterMode('none');
-        setPassword("");
-        setConfirmPassword("");
-        setHrCode("");
-        setPhone("");
-        setEmail("");
-        setName("");
-        setManagerEmail1("");
-        setManagerEmail2("");
-        setManagerEmail3("");
-        setProfileImage(undefined);
-      }, 3000);
+      // Save to Firebase and update local state
+      try {
+        await setDoc(doc(db, "users", targetUserId), newUser);
+        // Filter out the old shadow account (if any) and push the new user
+        setUsers(prev => [...prev.filter(u => u.id !== targetUserId), newUser]);
+        
+        setSuccessMsg(language === "ar" ? "تم إرسال طلب تسجيلك بنجاح وفي انتظار الموافقة قريباً" : "Registration request sent and pending approval");
+        
+        setTimeout(() => {
+          setIsRegistering(false);
+          setRegisterMode('none');
+          setPassword("");
+          setConfirmPassword("");
+          setHrCode("");
+          setPhone("");
+          setEmail("");
+          setName("");
+          setManagerEmail1("");
+          setManagerEmail2("");
+          setManagerEmail3("");
+          setProfileImage(undefined);
+        }, 3000);
+      } catch (err: any) {
+        setError("Error saving user data: " + err.message);
+      }
 
     } finally {
       setIsSubmitting(false);
@@ -530,7 +548,7 @@ export const Login: React.FC = () => {
             {/* Manager Emails - Only if trainee */}
             {accessRole === "trainee" && (
               <div className="space-y-3 border border-gray-200 bg-gray-50/50 p-4 rounded-xl mt-4">
-                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">{language === "ar" ? "إيميلات الإدارة للتقارير" : "Management Emails for Reports"}</h4>
+                <h4 className="text-sm font-bold text-gray-700">{language === "ar" ? "إيميلات الإدارة" : "Management Emails"}</h4>
                 
                 <div className="grid grid-cols-1 gap-3">
                   <div>
@@ -540,18 +558,17 @@ export const Login: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62] bg-white" dir="ltr">
-                        <input type="text" value={managerEmail2} onChange={(e) => setManagerEmail2(enforceEnglish(e.target.value))} className="w-full px-3 py-2 text-sm outline-none" placeholder={language === "ar" ? "مدير 2 (اختياري)" : "Manager 2 (Optional)"} />
-                        <span className="bg-gray-100 px-3 py-2 border-l border-gray-300 text-gray-600 font-bold text-xs flex items-center shrink-0">@orascom.com</span>
-                      </div>
+                  <div>
+                    <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62] bg-white" dir="ltr">
+                      <input type="text" value={managerEmail2} onChange={(e) => setManagerEmail2(enforceEnglish(e.target.value))} className="w-full px-3 py-2 text-sm outline-none" placeholder={language === "ar" ? "مدير 2 (اختياري)" : "Manager 2 (Optional)"} />
+                      <span className="bg-gray-100 px-3 py-2 border-l border-gray-300 text-gray-600 font-bold text-xs flex items-center shrink-0">@orascom.com</span>
                     </div>
-                    <div>
-                      <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62] bg-white" dir="ltr">
-                        <input type="text" value={managerEmail3} onChange={(e) => setManagerEmail3(enforceEnglish(e.target.value))} className="w-full px-3 py-2 text-sm outline-none" placeholder={language === "ar" ? "مدير 3 (اختياري)" : "Manager 3 (Optional)"} />
-                        <span className="bg-gray-100 px-3 py-2 border-l border-gray-300 text-gray-600 font-bold text-xs flex items-center shrink-0">@orascom.com</span>
-                      </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62] bg-white" dir="ltr">
+                      <input type="text" value={managerEmail3} onChange={(e) => setManagerEmail3(enforceEnglish(e.target.value))} className="w-full px-3 py-2 text-sm outline-none" placeholder={language === "ar" ? "مدير 3 (اختياري)" : "Manager 3 (Optional)"} />
+                      <span className="bg-gray-100 px-3 py-2 border-l border-gray-300 text-gray-600 font-bold text-xs flex items-center shrink-0">@orascom.com</span>
                     </div>
                   </div>
                 </div>
@@ -586,6 +603,22 @@ export const Login: React.FC = () => {
             <button type="submit" disabled={isSubmitting} className={`w-full text-white font-bold py-3 px-4 rounded-lg shadow-md mt-4 transition-all ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#002D62] hover:bg-blue-900'}`}>
               {isSubmitting ? <Loader2 size={20} className="animate-spin mx-auto" /> : t("createAccount")}
             </button>
+
+            {/* Back to Login Button */}
+            <div className="text-center mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegistering(false);
+                  setRegisterMode('none');
+                  setError("");
+                  setSuccessMsg("");
+                }}
+                className="text-sm text-gray-500 hover:text-[#002D62] hover:underline font-bold"
+              >
+                {t("backToLogin")}
+              </button>
+            </div>
           </form>
         )}
       </div>
