@@ -3,7 +3,8 @@ import { useAppContext } from '../context';
 import { User } from '../types';
 import { Upload, Save, Loader2, User as UserIcon, Mail, Phone, Building, Briefcase, Hash, Info, Clock } from 'lucide-react';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
+import { updateEmail } from 'firebase/auth';
 import { DataField } from './DataField';
 
 export const ProfilePage: React.FC = () => {
@@ -100,11 +101,10 @@ export const ProfilePage: React.FC = () => {
       const cleanHrCode = enforceEnglish(hrCode).trim();
       const cleanEmail = enforceEnglish(email).trim().toLowerCase();
 
-      // Check if HR Code or Email were changed by an OFFICIAL user
       const isHrCodeChanged = cleanHrCode !== user.hrCode;
       const isEmailChanged = cleanEmail !== (user.email || '');
       
-      const requiresApproval = !user.isGuest && (isHrCodeChanged || isEmailChanged);
+      const requiresHrApproval = !user.isGuest && isHrCodeChanged;
 
       let updateData: any = {
         name: enforceEnglish(name),
@@ -113,21 +113,31 @@ export const ProfilePage: React.FC = () => {
         profileImageUrl: profileImage || null
       };
 
-      if (user.isGuest) {
-        // Guest user: Apply changes directly 
-        updateData.hrCode = cleanHrCode;
+      // 1. تحديث الإيميل فوراً في Firebase Auth والداتابيز
+      if (isEmailChanged && cleanEmail) {
+        if (auth.currentUser) {
+          await updateEmail(auth.currentUser, cleanEmail);
+        }
         updateData.email = cleanEmail;
+      }
+
+      // 2. التعامل مع الكود الوظيفي
+      if (user.isGuest) {
+        // لو حساب مؤقت يتحدث الكود فوراً
+        if (isHrCodeChanged) updateData.hrCode = cleanHrCode;
         setSuccess(language === 'ar' ? 'تم حفظ البيانات بنجاح!' : 'Profile updated successfully!');
       } else {
-        // Official user: Send sensitive changes to pendingUpdates
-        if (requiresApproval) {
-          // التعديل الجذري لمنع إرسال undefined إلى Firebase
+        // لو حساب رسمي وتغير الكود الوظيفي يروح للموافقة
+        if (requiresHrApproval) {
           updateData.pendingUpdates = {
-            ...(isHrCodeChanged && { hrCode: cleanHrCode }),
-            ...(isEmailChanged && { email: cleanEmail }),
+            hrCode: cleanHrCode,
             requestedAt: new Date().toISOString()
           };
-          setSuccess(language === 'ar' ? 'تم حفظ بياناتك، ولكن تعديل (الكود الوظيفي/الإيميل) تم إرساله للإدارة للموافقة عليه.' : 'Profile saved. HR Code/Email changes are pending admin approval.');
+          if (isEmailChanged) {
+            setSuccess(language === 'ar' ? 'تم تحديث الإيميل بنجاح، وتعديل الكود الوظيفي قيد مراجعة الإدارة.' : 'Email updated successfully. HR Code change is pending admin approval.');
+          } else {
+            setSuccess(language === 'ar' ? 'تم إرسال طلب تعديل الكود الوظيفي للإدارة للموافقة عليه.' : 'HR Code change is pending admin approval.');
+          }
         } else {
           setSuccess(language === 'ar' ? 'تم حفظ البيانات بنجاح!' : 'Profile updated successfully!');
         }
@@ -139,13 +149,18 @@ export const ProfilePage: React.FC = () => {
       setTimeout(() => setSuccess(''), 4000);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Failed to update profile');
+      // التعامل مع رسالة أمان فايربيز لو طلب إعادة تسجيل الدخول لتغيير الإيميل
+      if (err.code === 'auth/requires-recent-login') {
+        setError(language === 'ar' ? 'لأسباب أمنية، يرجى تسجيل الخروج والدخول مجدداً لتتمكن من تغيير بريدك الإلكتروني.' : 'For security reasons, please log out and log in again to change your email.');
+      } else {
+        setError(err.message || 'Failed to update profile');
+      }
     } finally {
       setIsSaving(false);
     }
   };
 
-  const hasPendingUpdates = user.pendingUpdates && (user.pendingUpdates.hrCode || user.pendingUpdates.email);
+  const hasPendingUpdates = user.pendingUpdates && user.pendingUpdates.hrCode;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -191,8 +206,8 @@ export const ProfilePage: React.FC = () => {
               <Clock className="w-5 h-5 text-orange-500 shrink-0" />
               <div className="text-sm font-medium">
                 {language === 'ar' 
-                  ? 'يوجد طلب تعديل (للكود الوظيفي أو الإيميل) قيد المراجعة حالياً من قبل إدارة التدريب.' 
-                  : 'A request to modify your HR Code or Email is currently pending admin approval.'}
+                  ? 'يوجد طلب تعديل (للكود الوظيفي) قيد المراجعة حالياً من قبل إدارة التدريب.' 
+                  : 'A request to modify your HR Code is currently pending admin approval.'}
               </div>
             </div>
           )}
@@ -239,7 +254,6 @@ export const ProfilePage: React.FC = () => {
                       <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider">{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</p>
                       <p className="font-medium">
                         <DataField>{user.email || 'N/A'}</DataField>
-                        {user.pendingUpdates?.email && <span className="text-xs text-orange-500 font-bold ml-2 rtl:mr-2 rtl:ml-0">(قيد المراجعة)</span>}
                       </p>
                     </div>
                   </div>
@@ -330,7 +344,7 @@ export const ProfilePage: React.FC = () => {
                     <p className="text-sm text-gray-600 font-medium">
                       {user.isGuest 
                         ? (language === 'ar' ? 'تحديث الكود الوظيفي والبريد الإلكتروني سيتم حفظه فوراً لحسابك المؤقت.' : 'Updating HR Code and Email will be saved immediately for your temporary account.')
-                        : (language === 'ar' ? 'لن يتم تعديل الكود الوظيفي أو البريد الإلكتروني إلا بعد الرجوع لموافقة مشرف النظام.' : 'HR Code and Email will not be modified without the approval of the system admin.')}
+                        : (language === 'ar' ? 'لن يتم تعديل الكود الوظيفي إلا بعد الرجوع لموافقة مشرف النظام (الإيميل يتحدث فوراً).' : 'HR Code will not be modified without the approval of the system admin (Email updates immediately).')}
                     </p>
                   </div>
                   
