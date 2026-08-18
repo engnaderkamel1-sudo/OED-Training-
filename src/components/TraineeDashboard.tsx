@@ -97,10 +97,10 @@ export const TraineeDashboard: React.FC = () => {
 
   // تعريف متغير الألوان
   const isDark = theme === 'dark'; 
-  const bgColor = isDark ? '#1e293b' : 'transparent'; // Slate-800 للون المريح
-  const cardColor = isDark ? '#334155' : '#ffffff'; // Slate-700 للكروت
-  const borderColor = isDark ? '#475569' : '#e5e7eb'; // Slate-600 للحدود
-  const textColor = isDark ? '#f8fafc' : '#1f2937'; // نص أبيض
+  const bgColor = isDark ? '#1e293b' : 'transparent';
+  const cardColor = isDark ? '#334155' : '#ffffff';
+  const borderColor = isDark ? '#475569' : '#e5e7eb';
+  const textColor = isDark ? '#f8fafc' : '#1f2937';
 
   const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
     try {
@@ -117,12 +117,23 @@ export const TraineeDashboard: React.FC = () => {
     r.hrCode === user?.hrCode || 
     r.userId === 'u1'
   );
+  
   const totalCourses = userRecords.length;
   const averageScore = userRecords.length > 0 
     ? Math.round(userRecords.reduce((acc, curr) => acc + parseScore(curr.raw?.['Score'] || curr.score), 0) / userRecords.length) 
     : 0;
   
   const activeUpcomingSessions = upcomingSessions.filter(s => !s.isDeleted && s.status !== 'Cancelled');
+
+  // حساب الأيام المتبقية للحساب المؤقت
+  const remainingDays = useMemo(() => {
+    if (!user?.isGuest || !user?.guestExpiryDate) return null;
+    const expiryDate = new Date(user.guestExpiryDate);
+    const today = new Date();
+    const diffTime = expiryDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  }, [user]);
 
   const allNotifications = useMemo(() => {
     const list: Array<any> = [];
@@ -296,7 +307,6 @@ export const TraineeDashboard: React.FC = () => {
   };
 
   return (
-    // الغلاف الرئيسي للصفحة لتطبيق لون هادئ ومريح للعين
     <div 
       className="min-h-screen pb-12 transition-colors duration-300"
       style={{ backgroundColor: bgColor }}
@@ -306,6 +316,37 @@ export const TraineeDashboard: React.FC = () => {
         {/* Stats Section (dashboard) */}
         {currentView === 'dashboard' && (
           <section className="print:hidden animate-fadeIn space-y-6">
+            
+            {/* --- TEMPORARY ACCOUNT BANNER --- */}
+            {user?.isGuest && remainingDays !== null && (
+              <div 
+                className={`p-4 rounded-xl border-2 flex items-start sm:items-center gap-4 shadow-md ${remainingDays <= 3 ? 'bg-red-50 border-red-500 text-red-800 dark:bg-red-900/30 dark:text-red-300 animate-pulse' : 'bg-orange-50 border-orange-400 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'}`}
+              >
+                <AlertTriangle className={`w-8 h-8 shrink-0 mt-1 sm:mt-0 ${remainingDays <= 3 ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`} />
+                <div className="flex-1">
+                  <h3 className="font-black text-sm sm:text-base mb-1 tracking-wide">
+                    {language === 'ar' ? '⚠️ تنبيه هام: حساب ضيف مؤقت' : '⚠️ Alert: Temporary Guest Account'}
+                  </h3>
+                  <p className="text-xs sm:text-sm font-semibold opacity-90 leading-snug">
+                    {language === 'ar' 
+                      ? 'هذا الحساب مخصص فقط لتسجيل الحضور بشكل مؤقت. يرجى التوجه لصفحة (تعديل البيانات) وتحديث "الرقم الوظيفي" و "البريد الإلكتروني الرسمي" الخاص بالشركة قبل انتهاء المهلة المحددة لتجنب إيقاف الحساب.' 
+                      : 'This account is temporary. Please update your official HR Code and Company Email in your profile before the grace period ends to avoid account deactivation.'}
+                  </p>
+                </div>
+                <div 
+                  className={`shrink-0 flex flex-col items-center justify-center px-5 py-2.5 rounded-lg border-2 shadow-inner ${remainingDays <= 3 ? 'bg-red-100 border-red-200 dark:bg-red-800 dark:border-red-700' : 'bg-orange-100 border-orange-200 dark:bg-orange-800 dark:border-orange-700'}`}
+                >
+                  <span className="text-3xl font-black leading-none tracking-tighter">
+                    {remainingDays > 0 ? remainingDays : 0}
+                  </span>
+                  <span className="text-[10px] uppercase font-bold tracking-widest mt-1">
+                    {language === 'ar' ? 'يوم متبقي' : 'Days Left'}
+                  </span>
+                </div>
+              </div>
+            )}
+            {/* --------------------------------- */}
+
             {/* Digital Training Passport / Profile Card */}
             <div 
               className="rounded-2xl p-6 text-white shadow-md relative overflow-hidden border"

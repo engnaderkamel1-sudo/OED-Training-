@@ -114,16 +114,17 @@ export const ProfilePage: React.FC = () => {
       };
 
       if (user.isGuest) {
-        // Guest user: Apply changes directly (Merge logic will be handled later if needed)
+        // Guest user: Apply changes directly 
         updateData.hrCode = cleanHrCode;
         updateData.email = cleanEmail;
         setSuccess(language === 'ar' ? 'تم حفظ البيانات بنجاح!' : 'Profile updated successfully!');
       } else {
         // Official user: Send sensitive changes to pendingUpdates
         if (requiresApproval) {
+          // التعديل الجذري لمنع إرسال undefined إلى Firebase
           updateData.pendingUpdates = {
-            hrCode: isHrCodeChanged ? cleanHrCode : undefined,
-            email: isEmailChanged ? cleanEmail : undefined,
+            ...(isHrCodeChanged && { hrCode: cleanHrCode }),
+            ...(isEmailChanged && { email: cleanEmail }),
             requestedAt: new Date().toISOString()
           };
           setSuccess(language === 'ar' ? 'تم حفظ بياناتك، ولكن تعديل (الكود الوظيفي/الإيميل) تم إرساله للإدارة للموافقة عليه.' : 'Profile saved. HR Code/Email changes are pending admin approval.');
