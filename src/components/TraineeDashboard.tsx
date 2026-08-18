@@ -346,17 +346,6 @@ export const TraineeDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Quick Badge */}
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 px-4 border border-white/15 flex items-center gap-3">
-                  <div className="text-center">
-                    <div className="text-[10px] text-blue-200 uppercase tracking-wider font-bold">
-                      {language === 'ar' ? 'معدل التقييم العام' : 'Performance Benchmark'}
-                    </div>
-                    <div className="text-2xl font-black text-[#FFC000]">
-                      {averageScore}%
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -392,9 +381,7 @@ export const TraineeDashboard: React.FC = () => {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>{t('averageScore')}</p>
                   <p className="text-2xl font-black mt-0.5" style={{ color: textColor }}>{averageScore}%</p>
-                  <p className="text-[11px] font-semibold mt-0.5" style={{ color: isDark ? '#34d399' : '#059669' }}>
-                    {averageScore >= 80 ? (language === 'ar' ? 'ممتاز (Excellent)' : 'High Distinction') : (language === 'ar' ? 'مستوى جيد' : 'Good Standing')}
-                  </p>
+                  
                 </div>
               </div>
 
