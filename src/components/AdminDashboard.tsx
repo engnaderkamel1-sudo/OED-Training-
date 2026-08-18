@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle } from "lucide-react";
+import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
@@ -152,6 +152,10 @@ export const AdminDashboard: React.FC = () => {
   
   // -- TABS: Added "updates" tab --
   const [userManagementTab, setUserManagementTab] = useState<"pending" | "processed" | "deleted" | "updates">("pending");
+
+  // -- STATE FOR EDITING PENDING UPDATES --
+  const [editingUpdateUserId, setEditingUpdateUserId] = useState<string | null>(null);
+  const [updateEditFormData, setUpdateEditFormData] = useState<{hrCode?: string, email?: string}>({});
 
   const sendPushNotification = async (title: string, body: string, targetTokens: string[]) => {
     if (!targetTokens || targetTokens.length === 0) return;
@@ -327,6 +331,23 @@ export const AdminDashboard: React.FC = () => {
       setUsers(users.map((u) => (u.id === user.id ? { ...u, pendingUpdates: undefined } : u)));
       alert(language === 'ar' ? 'تم رفض التعديلات.' : 'Modifications rejected.');
     } catch (e: any) { alert("Error: " + e.message); }
+  };
+
+  // -- SAVE EDITED UPDATE REQUEST --
+  const handleSaveUpdateEdit = async (user: User) => {
+    if (!user.pendingUpdates) return;
+    try {
+      const userRef = doc(db, 'users', user.id);
+      const newPendingUpdates = {
+        ...user.pendingUpdates,
+        hrCode: updateEditFormData.hrCode || user.pendingUpdates.hrCode,
+        email: updateEditFormData.email || user.pendingUpdates.email
+      };
+      
+      await updateDoc(userRef, { pendingUpdates: newPendingUpdates });
+      setUsers(users.map(u => u.id === user.id ? { ...u, pendingUpdates: newPendingUpdates } : u));
+      setEditingUpdateUserId(null);
+    } catch (e: any) { alert("Error updating request: " + e.message); }
   };
 
   // -- MANUAL ADD RECORD SUBMIT LOGIC --
@@ -639,7 +660,7 @@ export const AdminDashboard: React.FC = () => {
                   </button>
                 </div>
                 <div className="flex-1 overflow-x-auto">
-                  {/* --- EXISTING TABS (PENDING, PROCESSED, DELETED) --- */}
+                  
                   {userManagementTab === 'pending' && (
                     <div>
                       <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "طلبات معلقة" : "Pending Users"}</h2>
@@ -694,7 +715,7 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                   )}
                   
-                  {/* --- NEW UPDATES TAB --- */}
+                  {/* --- NEW UPDATES TAB WITH EDIT SUPPORT --- */}
                   {userManagementTab === 'updates' && (
                     <div>
                       <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "طلبات تعديل البيانات" : "Pending Data Updates"}</h2>
@@ -713,31 +734,79 @@ export const AdminDashboard: React.FC = () => {
                               <tr key={u.id} className="border-b transition-colors" style={{ borderColor: borderColor, color: textColor }}>
                                 <td className="p-3"><UserAvatarWithName user={u} /></td>
                                 <td className="p-3">
-                                  {u.pendingUpdates?.hrCode && (
-                                    <div className="mb-2">
-                                      <span className="text-xs text-gray-500 block">{language === "ar" ? "الكود الوظيفي:" : "HR Code:"}</span>
-                                      <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.hrCode}</span>
-                                      <span className="font-bold text-green-600">➔ {u.pendingUpdates.hrCode}</span>
+                                  {editingUpdateUserId === u.id ? (
+                                    <div className="space-y-2">
+                                      {u.pendingUpdates?.hrCode && (
+                                        <div>
+                                          <span className="text-xs text-gray-500 block">{language === "ar" ? "الكود الوظيفي:" : "HR Code:"}</span>
+                                          <input 
+                                            type="text" 
+                                            value={updateEditFormData.hrCode || ""} 
+                                            onChange={(e) => setUpdateEditFormData({ ...updateEditFormData, hrCode: e.target.value })} 
+                                            className="border rounded px-2 py-1 w-full mt-1 text-sm focus:ring-[#002D62] outline-none" 
+                                            style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                                          />
+                                        </div>
+                                      )}
+                                      {u.pendingUpdates?.email && (
+                                        <div>
+                                          <span className="text-xs text-gray-500 block">{language === "ar" ? "الإيميل:" : "Email:"}</span>
+                                          <input 
+                                            type="email" 
+                                            value={updateEditFormData.email || ""} 
+                                            onChange={(e) => setUpdateEditFormData({ ...updateEditFormData, email: e.target.value })} 
+                                            className="border rounded px-2 py-1 w-full mt-1 text-sm focus:ring-[#002D62] outline-none" 
+                                            style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                                            dir="ltr"
+                                          />
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                  {u.pendingUpdates?.email && (
+                                  ) : (
                                     <div>
-                                      <span className="text-xs text-gray-500 block">{language === "ar" ? "الإيميل:" : "Email:"}</span>
-                                      <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.email || 'N/A'}</span>
-                                      <span className="font-bold text-green-600">➔ {u.pendingUpdates.email}</span>
+                                      {u.pendingUpdates?.hrCode && (
+                                        <div className="mb-2">
+                                          <span className="text-xs text-gray-500 block">{language === "ar" ? "الكود الوظيفي:" : "HR Code:"}</span>
+                                          <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.hrCode}</span>
+                                          <span className="font-bold text-green-600">➔ {u.pendingUpdates.hrCode}</span>
+                                        </div>
+                                      )}
+                                      {u.pendingUpdates?.email && (
+                                        <div>
+                                          <span className="text-xs text-gray-500 block">{language === "ar" ? "الإيميل:" : "Email:"}</span>
+                                          <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.email || 'N/A'}</span>
+                                          <span className="font-bold text-green-600">➔ {u.pendingUpdates.email}</span>
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </td>
                                 <td className="p-3 text-sm" style={{ color: textMuted }}>
                                   {u.pendingUpdates?.requestedAt ? new Date(u.pendingUpdates.requestedAt).toLocaleString() : 'N/A'}
                                 </td>
-                                <td className="p-3 flex gap-2">
-                                  <button onClick={() => handleApproveUpdate(u)} className="flex items-center text-green-600 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded hover:opacity-80">
-                                    <CheckCircle size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "موافق" : "Approve"}
-                                  </button>
-                                  <button onClick={() => handleRejectUpdate(u)} className="flex items-center text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded hover:opacity-80">
-                                    <X size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "رفض" : "Reject"}
-                                  </button>
+                                <td className="p-3 flex flex-wrap gap-2">
+                                  {editingUpdateUserId === u.id ? (
+                                    <>
+                                      <button onClick={() => handleSaveUpdateEdit(u)} className="flex items-center text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded hover:opacity-80">
+                                        <Save size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "حفظ" : "Save"}
+                                      </button>
+                                      <button onClick={() => setEditingUpdateUserId(null)} className="flex items-center text-gray-600 bg-gray-50 dark:text-gray-300 dark:bg-gray-800 px-3 py-1 rounded hover:opacity-80">
+                                        <X size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "إلغاء" : "Cancel"}
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button onClick={() => handleApproveUpdate(u)} className="flex items-center text-green-600 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded hover:opacity-80">
+                                        <CheckCircle size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "موافق" : "Approve"}
+                                      </button>
+                                      <button onClick={() => { setEditingUpdateUserId(u.id); setUpdateEditFormData({ hrCode: u.pendingUpdates?.hrCode, email: u.pendingUpdates?.email }); }} className="flex items-center text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded hover:opacity-80">
+                                        <Edit2 size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "تعديل" : "Edit"}
+                                      </button>
+                                      <button onClick={() => handleRejectUpdate(u)} className="flex items-center text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded hover:opacity-80">
+                                        <X size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "رفض" : "Reject"}
+                                      </button>
+                                    </>
+                                  )}
                                 </td>
                               </tr>
                             ))}
