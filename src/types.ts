@@ -1,3 +1,4 @@
+```typescript
 export type Role = "trainee" | "manager" | "admin" | "supervisor" | null;
 export type Language = "ar" | "en";
 
@@ -27,6 +28,13 @@ export interface User {
     hrCode?: string; 
     requestedAt?: string; 
   }; // طلبات تعديل البيانات قيد المراجعة
+  updateHistory?: { // <--- تم نقلها هنا داخل الـ User
+    hrCode?: string;
+    email?: string;
+    status: 'approved' | 'rejected';
+    processedAt: string;
+    requestedAt?: string;
+  }[];
 }
 
 export interface Course {

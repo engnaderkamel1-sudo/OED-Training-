@@ -150,8 +150,8 @@ export const AdminDashboard: React.FC = () => {
     updateUpcomingSession({ ...session, feedbackEnabled: !session.feedbackEnabled });
   };
   
-  // -- TABS: Added "updates" tab --
-  const [userManagementTab, setUserManagementTab] = useState<"pending" | "processed" | "deleted" | "updates">("pending");
+  // -- TABS: Added "processed_updates" tab --
+  const [userManagementTab, setUserManagementTab] = useState<"pending" | "processed" | "deleted" | "updates" | "processed_updates">("pending");
 
   // -- STATE FOR EDITING PENDING UPDATES --
   const [editingUpdateUserId, setEditingUpdateUserId] = useState<string | null>(null);
@@ -237,6 +237,19 @@ export const AdminDashboard: React.FC = () => {
   // -- GET USERS WITH PENDING DATA UPDATES --
   const usersWithPendingUpdates = users.filter(u => u.pendingUpdates && (u.pendingUpdates.email || u.pendingUpdates.hrCode));
 
+  // -- GET HISTORY OF PROCESSED UPDATES --
+  const processedUpdatesList = useMemo(() => {
+    const list: any[] = [];
+    users.forEach(u => {
+      if (u.updateHistory && u.updateHistory.length > 0) {
+        u.updateHistory.forEach((historyItem: any) => {
+          list.push({ user: u, history: historyItem });
+        });
+      }
+    });
+    return list.sort((a, b) => new Date(b.history.processedAt).getTime() - new Date(a.history.processedAt).getTime());
+  }, [users]);
+
   useEffect(() => {
     const checkAndRunAutoBackup = () => {
       const lastBackup = localStorage.getItem('last_auto_backup');
@@ -308,14 +321,26 @@ export const AdminDashboard: React.FC = () => {
 
   const handleRestoreUser = (id: string) => { setUsers(users.map((u) => (u.id === id ? { ...u, status: "approved", hasUnreadNotifications: true } : u))); };
 
-  // -- APPROVE / REJECT DATA UPDATES --
+  // -- APPROVE / REJECT DATA UPDATES WITH HISTORY --
   const handleApproveUpdate = async (user: User) => {
     if (!user.pendingUpdates) return;
     try {
       const userRef = doc(db, 'users', user.id);
       const updatePayload: any = {};
+      
       if (user.pendingUpdates.hrCode) updatePayload.hrCode = user.pendingUpdates.hrCode;
       if (user.pendingUpdates.email) updatePayload.email = user.pendingUpdates.email;
+      
+      // Save to History
+      const newHistoryRecord = {
+        hrCode: user.pendingUpdates.hrCode,
+        email: user.pendingUpdates.email,
+        status: 'approved',
+        processedAt: new Date().toISOString(),
+        requestedAt: user.pendingUpdates.requestedAt || new Date().toISOString()
+      };
+      
+      updatePayload.updateHistory = [...(user.updateHistory || []), newHistoryRecord];
       updatePayload.pendingUpdates = null; // Clear pending
 
       await updateDoc(userRef, updatePayload);
@@ -325,10 +350,26 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleRejectUpdate = async (user: User) => {
+    if (!user.pendingUpdates) return;
     try {
       const userRef = doc(db, 'users', user.id);
-      await updateDoc(userRef, { pendingUpdates: null });
-      setUsers(users.map((u) => (u.id === user.id ? { ...u, pendingUpdates: undefined } : u)));
+      
+      // Save to History
+      const newHistoryRecord = {
+        hrCode: user.pendingUpdates.hrCode,
+        email: user.pendingUpdates.email,
+        status: 'rejected',
+        processedAt: new Date().toISOString(),
+        requestedAt: user.pendingUpdates.requestedAt || new Date().toISOString()
+      };
+
+      const updatePayload = {
+        updateHistory: [...(user.updateHistory || []), newHistoryRecord],
+        pendingUpdates: null
+      };
+
+      await updateDoc(userRef, updatePayload);
+      setUsers(users.map((u) => (u.id === user.id ? { ...u, ...updatePayload } : u)));
       alert(language === 'ar' ? 'تم رفض التعديلات.' : 'Modifications rejected.');
     } catch (e: any) { alert("Error: " + e.message); }
   };
@@ -652,6 +693,12 @@ export const AdminDashboard: React.FC = () => {
                     <span>{language === "ar" ? "تعديل البيانات" : "Data Updates"}</span>
                     {usersWithPendingUpdates.length > 0 && <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">{usersWithPendingUpdates.length}</span>}
                   </button>
+                  
+                  {/* التابة الجديدة: سجل التعديلات المكتملة */}
+                  <button onClick={() => setUserManagementTab('processed_updates')} className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors flex justify-between items-center ${userManagementTab === 'processed_updates' ? 'bg-[#002D62] text-white dark:bg-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`} style={{ color: userManagementTab === 'processed_updates' ? '#fff' : textMuted }}>
+                    <span>{language === "ar" ? "سجل التعديلات" : "Processed Updates"}</span>
+                  </button>
+
                   <button onClick={() => setUserManagementTab('processed')} className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors ${userManagementTab === 'processed' ? 'bg-[#002D62] text-white dark:bg-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`} style={{ color: userManagementTab === 'processed' ? '#fff' : textMuted }}>
                     {language === "ar" ? "طلبات مراجعة" : "Processed Requests"}
                   </button>
@@ -715,7 +762,7 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                   )}
                   
-                  {/* --- NEW UPDATES TAB WITH EDIT SUPPORT --- */}
+                  {/* --- UPDATES TAB --- */}
                   {userManagementTab === 'updates' && (
                     <div>
                       <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "طلبات تعديل البيانات" : "Pending Data Updates"}</h2>
@@ -814,6 +861,60 @@ export const AdminDashboard: React.FC = () => {
                         </table>
                       ) : (
                         <p style={{ color: textMuted }}>{language === "ar" ? "لا توجد طلبات تعديل." : "No pending updates."}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* --- NEW TAB: PROCESSED UPDATES HISTORY --- */}
+                  {userManagementTab === 'processed_updates' && (
+                    <div>
+                      <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "سجل التعديلات المكتملة" : "Processed Data Updates"}</h2>
+                      {processedUpdatesList.length > 0 ? (
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="border-b" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: textMuted }}>
+                              <th className="p-3">{language === "ar" ? "الاسم" : "Name"}</th>
+                              <th className="p-3">{language === "ar" ? "التعديل الذي طُلب" : "Requested Change"}</th>
+                              <th className="p-3">{language === "ar" ? "الحالة" : "Status"}</th>
+                              <th className="p-3">{language === "ar" ? "وقت التنفيذ" : "Processed At"}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {processedUpdatesList.map((item, index) => (
+                              <tr key={`${item.user.id}_${index}`} className="border-b transition-colors" style={{ borderColor: borderColor, color: textColor }}>
+                                <td className="p-3"><UserAvatarWithName user={item.user} /></td>
+                                <td className="p-3">
+                                  {item.history.hrCode && (
+                                    <div className="mb-1 text-sm">
+                                      <span className="text-xs text-gray-500 mr-1 rtl:ml-1">{language === "ar" ? "الكود:" : "HR Code:"}</span>
+                                      <span className="font-bold">{item.history.hrCode}</span>
+                                    </div>
+                                  )}
+                                  {item.history.email && (
+                                    <div className="text-sm">
+                                      <span className="text-xs text-gray-500 mr-1 rtl:ml-1">{language === "ar" ? "الإيميل:" : "Email:"}</span>
+                                      <span className="font-bold">{item.history.email}</span>
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="p-3">
+                                  <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                    item.history.status === "approved" 
+                                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
+                                      : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                  }`}>
+                                    {item.history.status === "approved" ? (language === "ar" ? "تمت الموافقة" : "Approved") : (language === "ar" ? "مرفوض" : "Rejected")}
+                                  </span>
+                                </td>
+                                <td className="p-3 text-sm" style={{ color: textMuted }}>
+                                  {new Date(item.history.processedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB')}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      ) : (
+                        <p style={{ color: textMuted }}>{language === "ar" ? "لا يوجد سجل للتعديلات السابقة." : "No history of processed updates."}</p>
                       )}
                     </div>
                   )}
