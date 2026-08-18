@@ -1,12 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppContext } from '../context';
 import { 
-  User, 
   LogOut, 
   Moon, 
   Sun, 
-  Bell, 
-  Settings,
   ChevronDown,
   UserCircle 
 } from 'lucide-react';
@@ -57,15 +54,15 @@ export const TopNav: React.FC = () => {
 
   return (
     <>
-      <nav className="bg-[#002D62] dark:bg-[#061020] text-white shadow-md sticky top-0 z-50 print:hidden">
+      <nav className="bg-[#002D62] dark:bg-[#061020] text-white shadow-md sticky top-0 z-50 print:hidden relative">
         <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             
-            {/* الجزء الأيسر: الأيقونات والعلامة التجارية */}
-            <div className="flex items-center gap-2 sm:gap-4 h-full py-2">
+            {/* الجزء الأيسر: الأيقونة واسم التطبيق */}
+            <div className="flex items-center gap-2 sm:gap-3 h-full">
               
               {/* أيقونة التطبيق الدائرية */}
-              <div className="w-9 h-9 sm:w-11 sm:h-11 flex-shrink-0">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 flex-shrink-0 z-50">
                 {!isLogoExpanded && (
                   <motion.img 
                     layoutId="magic-logo"
@@ -77,35 +74,21 @@ export const TopNav: React.FC = () => {
                 )}
               </div>
               
-              {/* النصوص (OED-TTMS) تظهر فقط على الكمبيوتر/التابلت */}
-              <div className="hidden sm:block flex-shrink-0">
-                <h1 className="text-[17px] font-extrabold tracking-tight text-white leading-none mb-0.5">
+              {/* النصوص (OED-TTMS) - الآن تظهر على الموبايل والكمبيوتر */}
+              <div className="flex-shrink-0 z-50">
+                <h1 className="text-[14px] sm:text-[17px] font-extrabold tracking-tight text-white leading-none mb-0.5 mt-1">
                   OED-TTMS
                 </h1>
-                <p className="text-[11px] text-[#FFC000] font-semibold leading-none">
+                <p className="text-[9px] sm:text-[11px] text-[#FFC000] font-semibold leading-none">
                   Technical Training Management
                 </p>
-              </div>
-
-              {/* الخط الفاصل الطولي (يظهر فقط على الكمبيوتر) */}
-              <div className="hidden sm:block w-[1px] h-9 bg-white/20 ml-2 mr-1 rtl:mr-2 rtl:ml-1 rounded-full"></div>
-
-              {/* لوجو أوراسكوم - متوافق مع الموبايل والكمبيوتر والتصميم المطلوب */}
-              <div className="flex flex-col justify-center h-full">
-                <div className="bg-white rounded-md border-2 border-gray-300/80 px-2 py-0.5 shadow-sm flex items-center justify-center">
-                  <img 
-                    src="/orascom-logo.png" 
-                    alt="Orascom Construction OED" 
-                    className="h-5 sm:h-7 w-auto object-contain"
-                  />
-                </div>
               </div>
 
             </div>
 
             {/* Center - User Greeting */}
             {user && (
-              <div className="text-center flex-1 min-w-0 px-1 hidden md:block">
+              <div className="text-center flex-1 min-w-0 px-1 hidden lg:block">
                 <p className="text-sm font-medium text-white/90 truncate">
                   Hi, <span className="text-[#FFC000]">{user.name.split(' ')[0]}</span>
                 </p>
@@ -119,7 +102,7 @@ export const TopNav: React.FC = () => {
             )}
 
             {/* Right Actions */}
-            <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0 z-50">
               <button
                 onClick={toggleTheme}
                 className="theme-toggle p-1.5 sm:p-2"
@@ -208,6 +191,21 @@ export const TopNav: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* 
+          اللوجو المتعلق (Hanging Logo)
+          موجود بره الشريط (absolute top-full) عشان ينزل تحت الشريط الأزرق في الموبايل والكمبيوتر
+        */}
+        <div className="absolute top-full left-[3.5rem] sm:left-[4.5rem] rtl:left-auto rtl:right-[3.5rem] rtl:sm:right-[4.5rem] z-40">
+          <div className="bg-white rounded-b-xl border-x border-b border-gray-200/80 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] px-2 sm:px-3 py-1 sm:py-1.5 flex items-center justify-center -mt-[1px]">
+            <img 
+              src="/orascom-logo.png" 
+              alt="Orascom Construction OED" 
+              className="h-4 sm:h-6 w-auto object-contain"
+            />
+          </div>
+        </div>
+
       </nav>
 
       <AnimatePresence>
