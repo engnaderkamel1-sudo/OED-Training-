@@ -3,7 +3,7 @@ import { EditRecordModal } from './EditRecordModal';
 import { EditUserModal } from './EditUserModal';
 import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
-import { doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, updateDoc, deleteField } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -464,22 +464,30 @@ export const AdminDashboard: React.FC = () => {
       if (user.pendingUpdates.hrCode) updatePayload.hrCode = user.pendingUpdates.hrCode;
       if (user.pendingUpdates.email) updatePayload.email = user.pendingUpdates.email;
       
-      // Save to History
-      const newHistoryRecord = {
-        hrCode: user.pendingUpdates.hrCode,
-        email: user.pendingUpdates.email,
+      // Save to History (no undefined fields)
+      const newHistoryRecord: any = {
         status: 'approved',
         processedAt: new Date().toISOString(),
         requestedAt: user.pendingUpdates.requestedAt || new Date().toISOString()
       };
+      if (user.pendingUpdates.hrCode) newHistoryRecord.hrCode = user.pendingUpdates.hrCode;
+      if (user.pendingUpdates.email) newHistoryRecord.email = user.pendingUpdates.email;
       
-      updatePayload.updateHistory = [...(user.updateHistory || []), newHistoryRecord];
-      updatePayload.pendingUpdates = null; // Clear pending
+      const existingHistory = user.updateHistory || [];
+      updatePayload.updateHistory = [...existingHistory, newHistoryRecord];
+      updatePayload.pendingUpdates = deleteField();
 
       await updateDoc(userRef, updatePayload);
-      setUsers(users.map((u) => (u.id === user.id ? { ...u, ...updatePayload } : u)));
-      alert(language === 'ar' ? 'تمت الموافقة على التعديلات.' : 'Modifications approved.');
-    } catch (e: any) { alert("Error: " + e.message); }
+
+      // Local state update
+      const localUpdated = { ...user, ...updatePayload };
+      delete localUpdated.pendingUpdates;
+      setUsers(users.map((u) => (u.id === user.id ? localUpdated : u)));
+      alert(language === 'ar' ? 'تمت الموافقة على التعديلات بنجاح!' : 'Modifications approved successfully!');
+    } catch (e: any) { 
+      console.error("Error approving update:", e);
+      alert("Error: " + e.message); 
+    }
   };
 
   const handleRejectUpdate = async (user: User) => {
@@ -487,24 +495,32 @@ export const AdminDashboard: React.FC = () => {
     try {
       const userRef = doc(db, 'users', user.id);
       
-      // Save to History
-      const newHistoryRecord = {
-        hrCode: user.pendingUpdates.hrCode,
-        email: user.pendingUpdates.email,
+      // Save to History (no undefined fields)
+      const newHistoryRecord: any = {
         status: 'rejected',
         processedAt: new Date().toISOString(),
         requestedAt: user.pendingUpdates.requestedAt || new Date().toISOString()
       };
+      if (user.pendingUpdates.hrCode) newHistoryRecord.hrCode = user.pendingUpdates.hrCode;
+      if (user.pendingUpdates.email) newHistoryRecord.email = user.pendingUpdates.email;
 
-      const updatePayload = {
-        updateHistory: [...(user.updateHistory || []), newHistoryRecord],
-        pendingUpdates: null
+      const existingHistory = user.updateHistory || [];
+      const updatePayload: any = {
+        updateHistory: [...existingHistory, newHistoryRecord],
+        pendingUpdates: deleteField()
       };
 
       await updateDoc(userRef, updatePayload);
-      setUsers(users.map((u) => (u.id === user.id ? { ...u, ...updatePayload } : u)));
+
+      // Local state update
+      const localUpdated = { ...user, ...updatePayload };
+      delete localUpdated.pendingUpdates;
+      setUsers(users.map((u) => (u.id === user.id ? localUpdated : u)));
       alert(language === 'ar' ? 'تم رفض التعديلات.' : 'Modifications rejected.');
-    } catch (e: any) { alert("Error: " + e.message); }
+    } catch (e: any) { 
+      console.error("Error rejecting update:", e);
+      alert("Error: " + e.message); 
+    }
   };
 
   // -- SAVE EDITED UPDATE REQUEST --
@@ -512,11 +528,11 @@ export const AdminDashboard: React.FC = () => {
     if (!user.pendingUpdates) return;
     try {
       const userRef = doc(db, 'users', user.id);
-      const newPendingUpdates = {
-        ...user.pendingUpdates,
-        hrCode: updateEditFormData.hrCode || user.pendingUpdates.hrCode,
-        email: updateEditFormData.email || user.pendingUpdates.email
+      const newPendingUpdates: any = {
+        ...user.pendingUpdates
       };
+      if (updateEditFormData.hrCode) newPendingUpdates.hrCode = updateEditFormData.hrCode;
+      if (updateEditFormData.email) newPendingUpdates.email = updateEditFormData.email;
       
       await updateDoc(userRef, { pendingUpdates: newPendingUpdates });
       setUsers(users.map(u => u.id === user.id ? { ...u, pendingUpdates: newPendingUpdates } : u));
@@ -1458,13 +1474,13 @@ It is my pleasure to announce the beginning of the following course:
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 print:hidden">
                   <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                     <BookOpen className="mb-2" size={24} style={{ color: isDark ? '#60a5fa' : '#002D62' }} />
-                    <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "إجمالي الدورات" : "Total Sessions"}</span>
-                    <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalCourses}</span>
+                    <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "إجمالي الدورات" : "Total Courses"}</span>
+                    <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalCourses || (recordsLoaded ? 0 : courses.length)}</span>
                   </div>
                   <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                     <Calendar className="text-[#FFC000] mb-2" size={24} />
                     <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "إجمالي الجلسات" : "Total Sessions"}</span>
-                    <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalSessions}</span>
+                    <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalSessions || (recordsLoaded ? 0 : upcomingSessions.length)}</span>
                   </div>
                   <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                     <Users className="text-green-600 dark:text-green-400 mb-2" size={24} />
@@ -1494,7 +1510,7 @@ It is my pleasure to announce the beginning of the following course:
                     <button
                       onClick={() => handleExecuteRecordsSearch(false)}
                       disabled={isFetchingRecords}
-                      className="px-6 py-2.5 bg-[#002D62] hover:bg-[#003d85] text-white font-bold rounded-xl shadow-md transition-all text-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 hover:scale-105 active:scale-95"
+                      className="px-5 py-2.5 bg-[#002D62] hover:bg-[#003d85] text-white font-bold rounded-xl shadow-md transition-all text-xs sm:text-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 hover:scale-105 active:scale-95"
                     >
                       {isFetchingRecords ? (
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1506,11 +1522,10 @@ It is my pleasure to announce the beginning of the following course:
                     <button
                       onClick={() => handleExecuteRecordsSearch(true)}
                       disabled={isFetchingRecords}
-                      className="px-4 py-2.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-800 dark:text-gray-200 font-semibold rounded-xl border transition-all text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                      style={{ borderColor: borderColor }}
+                      className="px-4 py-2.5 bg-white dark:bg-slate-800 text-[#002D62] dark:text-[#FFC000] hover:bg-blue-50 dark:hover:bg-slate-700 font-extrabold rounded-xl border-2 border-[#002D62]/40 dark:border-[#FFC000]/60 transition-all text-xs sm:text-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow-xs"
                       title={language === 'ar' ? 'جلب كافة السجلات لتقرير شامل' : 'Fetch all records for full report'}
                     >
-                      <Database size={14} className="text-blue-500" />
+                      <Database size={15} className="text-[#002D62] dark:text-[#FFC000]" />
                       <span>{language === 'ar' ? 'جلب كافة السجلات (تقرير شامل)' : 'Fetch All Records'}</span>
                     </button>
                   </div>
@@ -1589,14 +1604,14 @@ It is my pleasure to announce the beginning of the following course:
                           <th className="p-3 !text-white" style={{ color: '#FFFFFF' }}>
                             <div className="font-extrabold mb-2 text-sm !text-white tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الكود الوظيفي" : "HR Code"}</div>
                             <div className="relative">
-                              <input type="text" value={searchHrCode} onChange={(e) => setSearchHrCode(e.target.value)} className="w-full border rounded-md px-2 py-1 text-xs focus:ring-[#FFC000] pr-6 shadow-2xs font-medium" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} placeholder={language === "ar" ? "تصفية..." : "Filter..."} />
+                              <input type="text" value={searchHrCode} onKeyDown={(e) => { if (e.key === 'Enter') handleExecuteRecordsSearch(false); }} onChange={(e) => setSearchHrCode(e.target.value)} className="w-full border rounded-md px-2 py-1 text-xs focus:ring-[#FFC000] pr-6 shadow-2xs font-medium" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} placeholder={language === "ar" ? "تصفية..." : "Filter..."} />
                               {searchHrCode && <button onClick={() => setSearchHrCode("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                             </div>
                           </th>
                           <th className="p-3 !text-white" style={{ color: '#FFFFFF' }}>
                             <div className="font-extrabold mb-2 text-sm !text-white tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الاسم" : "Name"}</div>
                             <div className="relative">
-                              <input type="text" value={searchTrainee} onChange={(e) => setSearchTrainee(e.target.value)} className="w-full border rounded-md px-2 py-1 text-xs focus:ring-[#FFC000] pr-6 shadow-2xs font-medium" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} placeholder={language === "ar" ? "تصفية..." : "Filter..."} />
+                              <input type="text" value={searchTrainee} onKeyDown={(e) => { if (e.key === 'Enter') handleExecuteRecordsSearch(false); }} onChange={(e) => setSearchTrainee(e.target.value)} className="w-full border rounded-md px-2 py-1 text-xs focus:ring-[#FFC000] pr-6 shadow-2xs font-medium" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} placeholder={language === "ar" ? "تصفية..." : "Filter..."} />
                               {searchTrainee && <button onClick={() => setSearchTrainee("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                             </div>
                           </th>
