@@ -1046,38 +1046,41 @@ It is my pleasure to announce the beginning of the following course:
 
   const hasActiveFilters = Boolean((searchHrCode && searchHrCode.trim()) || (searchTrainee && searchTrainee.trim()) || searchDepartment || selectedCourseFilter || fromDateFilter || toDateFilter);
 
-  const filteredRecords = records.filter((r) => {
-    const user = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}` || u.name?.toLowerCase() === r.userId?.toLowerCase());
-    if (searchHrCode && searchHrCode.trim()) {
-      const q = searchHrCode.trim().toLowerCase();
-      const hr = (user?.hrCode || r.hrCode || r.userId || "").toLowerCase();
-      if (!hr.includes(q)) return false;
-    }
-    if (searchTrainee && searchTrainee.trim()) {
-      const q = searchTrainee.trim().toLowerCase();
-      const rawName = (user?.name || r.name || r.raw?.["Trainee Name"] || r.raw?.["Name"] || r.userId || "").toLowerCase();
-      if (!rawName.includes(q)) return false;
-    }
-    if (searchDepartment) {
-      const dept = user?.department || r.department || r.raw?.["Department"];
-      if (dept !== searchDepartment) return false;
-    }
-    if (selectedCourseFilter) {
-      if (r.courseId !== selectedCourseFilter && r.courseName !== selectedCourseFilter) return false;
-    }
-    if (fromDateFilter || toDateFilter) {
-      const recordDateStr = r.attendanceDate || r.date || r.raw?.["Date"] || r.raw?.["Attendance Date"];
-      if (!recordDateStr) return false;
-      const recordDate = new Date(recordDateStr).getTime();
-      if (isNaN(recordDate)) return false;
-      if (fromDateFilter && recordDate < new Date(fromDateFilter).getTime()) return false;
-      if (toDateFilter) {
-        const toDate = new Date(toDateFilter); toDate.setHours(23, 59, 59, 999);
-        if (recordDate > toDate.getTime()) return false;
+  const filteredRecords = useMemo(() => {
+    if (!hasActiveFilters && !recordsLoaded) return [];
+    return records.filter((r) => {
+      const user = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}` || u.name?.toLowerCase() === r.userId?.toLowerCase());
+      if (searchHrCode && searchHrCode.trim()) {
+        const q = searchHrCode.trim().toLowerCase();
+        const hr = (user?.hrCode || r.hrCode || r.userId || "").toLowerCase();
+        if (!hr.includes(q)) return false;
       }
-    }
-    return true;
-  });
+      if (searchTrainee && searchTrainee.trim()) {
+        const q = searchTrainee.trim().toLowerCase();
+        const rawName = (user?.name || r.name || r.raw?.["Trainee Name"] || r.raw?.["Name"] || r.userId || "").toLowerCase();
+        if (!rawName.includes(q)) return false;
+      }
+      if (searchDepartment) {
+        const dept = user?.department || r.department || r.raw?.["Department"];
+        if (dept !== searchDepartment) return false;
+      }
+      if (selectedCourseFilter) {
+        if (r.courseId !== selectedCourseFilter && r.courseName !== selectedCourseFilter) return false;
+      }
+      if (fromDateFilter || toDateFilter) {
+        const recordDateStr = r.attendanceDate || r.date || r.raw?.["Date"] || r.raw?.["Attendance Date"];
+        if (!recordDateStr) return false;
+        const recordDate = new Date(recordDateStr).getTime();
+        if (isNaN(recordDate)) return false;
+        if (fromDateFilter && recordDate < new Date(fromDateFilter).getTime()) return false;
+        if (toDateFilter) {
+          const toDate = new Date(toDateFilter); toDate.setHours(23, 59, 59, 999);
+          if (recordDate > toDate.getTime()) return false;
+        }
+      }
+      return true;
+    });
+  }, [hasActiveFilters, recordsLoaded, records, users, searchHrCode, searchTrainee, searchDepartment, selectedCourseFilter, fromDateFilter, toDateFilter]);
 
   const kpiStats = useMemo(() => {
     if (filteredRecords.length === 0 && !hasActiveFilters && !recordsLoaded) {
