@@ -72,14 +72,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const stored = localStorage.getItem('oed_training_user');
       if (!stored) return null;
       const parsed = JSON.parse(stored);
-      if (
-        parsed && (
-          parsed.hrCode === '830557' || 
-          parsed.hrCode?.toLowerCase() === 'admin' ||
-          parsed.email?.toLowerCase().includes('nader.reda') ||
-          parsed.email?.toLowerCase().includes('eng.naderkamel1')
-        )
-      ) {
+      if (parsed && (parsed.hrCode?.toLowerCase() === 'admin' || parsed.id === 'admin')) {
         parsed.role = 'admin';
         parsed.status = 'approved';
       }
@@ -90,16 +83,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   const setUser = (newUser: User | null) => {
-    if (newUser) {
-      if (
-        newUser.hrCode === '830557' || 
-        newUser.hrCode?.toLowerCase() === 'admin' ||
-        newUser.email?.toLowerCase().includes('nader.reda') ||
-        newUser.email?.toLowerCase().includes('eng.naderkamel1')
-      ) {
-        newUser.role = 'admin';
-        newUser.status = 'approved';
-      }
+    if (newUser && (newUser.hrCode?.toLowerCase() === 'admin' || newUser.id === 'admin')) {
+      newUser.role = 'admin';
+      newUser.status = 'approved';
     }
     setUserState(newUser);
   };
@@ -155,12 +141,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const users: User[] = [];
       snapshot.forEach((d) => {
         const uData = d.data() as User;
-        if (
-          uData.hrCode === '830557' || 
-          uData.hrCode?.toLowerCase() === 'admin' ||
-          uData.email?.toLowerCase().includes('nader.reda') ||
-          uData.email?.toLowerCase().includes('eng.naderkamel1')
-        ) {
+        if (uData.hrCode?.toLowerCase() === 'admin' || uData.id === 'admin') {
           uData.role = 'admin';
           uData.status = 'approved';
         }
@@ -255,12 +236,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (user && localUsers.length > 0) {
       const updatedUser = localUsers.find(u => u.id === user.id);
       if (updatedUser) {
-        if (
-          updatedUser.hrCode === '830557' || 
-          updatedUser.hrCode?.toLowerCase() === 'admin' ||
-          updatedUser.email?.toLowerCase().includes('nader.reda') ||
-          updatedUser.email?.toLowerCase().includes('eng.naderkamel1')
-        ) {
+        if (updatedUser.hrCode?.toLowerCase() === 'admin' || updatedUser.id === 'admin') {
           updatedUser.role = 'admin';
           updatedUser.status = 'approved';
         }
