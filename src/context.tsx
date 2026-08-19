@@ -3,6 +3,7 @@ import { Language, User, Role, Course, TrainingRecord, CleanedRecord, UpcomingSe
 import { translations } from './i18n';
 import { collection, onSnapshot, doc, setDoc, writeBatch, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { APP_VERSION } from './version';
 
 export const generateUUID = (): string => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -57,6 +58,8 @@ interface AppContextType {
   isLoading: boolean;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
+  systemVersion: string;
+  updateSystemVersion: (newVersion: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -165,6 +168,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setSuggestionsState(sugs);
     }, (error) => console.error("Firebase Suggestions Error:", error));
 
+    const unsubVersion = onSnapshot(doc(db, "systemSettings", "appConfig"), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.version) {
+          setSystemVersionState(data.version);
+        }
+      }
+    }, (error) => console.warn("Firebase AppConfig Error:", error));
+
     try {
       const storedFileName = localStorage.getItem('oed_training_filename');
       if (storedFileName) setCleanedFileNameState(storedFileName);
@@ -180,8 +192,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       unsubAnnouncements();
       unsubLoginLogs();
       unsubSuggestions();
+      unsubVersion();
     };
   }, []);
+
+  const [systemVersion, setSystemVersionState] = useState<string>(APP_VERSION.version);
+
+  const updateSystemVersion = async (newVersion: string) => {
+    const cleanVer = newVersion.trim().replace(/^v/i, '');
+    setSystemVersionState(cleanVer);
+    try {
+      await setDoc(doc(db, "systemSettings", "appConfig"), { 
+        version: cleanVer, 
+        updatedAt: new Date().toISOString() 
+      }, { merge: true });
+    } catch (e) {
+      console.error("Error updating system version in Firestore:", e);
+    }
+  };
 
   useEffect(() => {
     if (user && localUsers.length > 0) {
@@ -503,6 +531,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       isLoading,
       theme,
       toggleTheme,
+      systemVersion,
+      updateSystemVersion,
     }}>
       <div dir={language === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${language === 'ar' ? 'font-arabic' : 'font-sans'}`}>
         {children}

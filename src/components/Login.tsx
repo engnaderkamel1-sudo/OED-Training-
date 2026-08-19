@@ -13,7 +13,7 @@ import { getLoginMeta, getLocationFromIP } from "../utils/loginUtils";
 import { APP_VERSION } from "../version";
 
 export const Login: React.FC = () => {
-  const { t, language, setUser, users, setUsers, uniqueDepartments, addLoginLog } = useAppContext();
+  const { t, language, setUser, users, setUsers, uniqueDepartments, addLoginLog, systemVersion } = useAppContext();
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   
@@ -447,6 +447,16 @@ export const Login: React.FC = () => {
                 {language === "ar" ? "نسيت كلمة المرور؟" : "Forgot Password?"}
               </button>
             </div>
+
+            {/* System Info & Copyright directly under Register button */}
+            <div className="mt-6 pt-3 border-t border-gray-100 dark:border-gray-800 text-center space-y-0.5">
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                {APP_VERSION.systemName} • {APP_VERSION.systemFullName} • v{systemVersion || APP_VERSION.version}
+              </p>
+              <p className="text-[9px] text-gray-400 dark:text-gray-500">
+                {APP_VERSION.copyright}
+              </p>
+            </div>
           </form>
 
         /* 2. حالة اختيار نوع الحساب (Account Selection Screen) */
@@ -674,19 +684,6 @@ export const Login: React.FC = () => {
             </div>
           </form>
         )}
-      </div>
-
-      {/* Official Enterprise System & Developer Credit */}
-      <div className="mt-6 text-center text-xs space-y-1 z-10 px-4">
-        <p className="font-bold text-[#002D62] dark:text-blue-200">
-          {APP_VERSION.creditLine}
-        </p>
-        <p className="text-[11px] text-gray-500 dark:text-gray-400">
-          {APP_VERSION.systemName} • {APP_VERSION.systemFullName} • v{APP_VERSION.version}
-        </p>
-        <p className="text-[10px] text-gray-400 dark:text-gray-500">
-          {APP_VERSION.copyright}
-        </p>
       </div>
 
       {showForgotPassword && <ForgotPasswordModal onClose={() => setShowForgotPassword(false)} />}

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { X, Mail } from 'lucide-react';
 import { APP_VERSION } from '../version';
 import { useAppContext } from '../context';
@@ -8,7 +8,7 @@ interface AboutModalProps {
 }
 
 export const AboutModal: React.FC<AboutModalProps> = ({ onClose }) => {
-  const { language, theme } = useAppContext();
+  const { language, theme, systemVersion } = useAppContext();
   const isDark = theme === 'dark';
 
   return (
@@ -43,7 +43,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ onClose }) => {
                   {APP_VERSION.systemName}
                 </h3>
                 <span className="bg-[#FFC000] text-[#001D42] font-mono font-black text-xs px-2.5 py-0.5 rounded-full shadow-2xs">
-                  v{APP_VERSION.version}
+                  v{systemVersion || APP_VERSION.version}
                 </span>
               </div>
               <p className="text-xs text-[#FFC000] font-bold mt-0.5">
@@ -81,7 +81,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ onClose }) => {
               borderColor: isDark ? '#FFC000/30' : '#FDE68A'
             }}
           >
-            <p className="text-sm font-black text-[#002D62] dark:text-[#FFC000] leading-snug">
+            <p className="text-xs font-bold text-[#002D62] dark:text-[#FFC000] leading-snug">
               {APP_VERSION.creditLine}
             </p>
 

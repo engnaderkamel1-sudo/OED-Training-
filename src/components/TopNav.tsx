@@ -112,16 +112,6 @@ export const TopNav: React.FC = () => {
 
             {/* الجزء الأيمن: القائمة المنسدلة والدارك مود */}
             <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0 z-50">
-              {/* About System Quick Button */}
-              <button
-                onClick={() => setAboutOpen(true)}
-                className="p-1.5 sm:p-2 text-white hover:text-[#FFC000] transition-colors cursor-pointer rounded-lg hover:bg-white/10"
-                title={language === 'ar' ? 'عن المنظومة' : 'About System'}
-                aria-label="About System"
-              >
-                <Info size={18} />
-              </button>
-
               <button
                 onClick={toggleTheme}
                 className="theme-toggle p-1.5 sm:p-2 text-white cursor-pointer hover:bg-white/10 rounded-lg transition-colors"

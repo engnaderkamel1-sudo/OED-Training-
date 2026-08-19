@@ -85,7 +85,8 @@ export const AdminDashboard: React.FC = () => {
   const {
     t, language, user, users, setUsers, records, setRecords, upcomingSessions,
     setUpcomingSessions, addUpcomingSession, updateUpcomingSession, cancelSession,
-    reactivateSession, cleanedData, loginLogs, currentView, setCurrentView, addAnnouncement, theme
+    reactivateSession, cleanedData, loginLogs, currentView, setCurrentView, addAnnouncement, theme,
+    systemVersion, updateSystemVersion
   } = useAppContext();
 
   // Unified Dark/Light Mode Palette (Orascom Brand Theme)
@@ -223,6 +224,32 @@ export const AdminDashboard: React.FC = () => {
   const [fromDateFilter, setFromDateFilter] = useState("");
   const [toDateFilter, setToDateFilter] = useState("");
   const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
+
+  // -- STATE FOR SYSTEM VERSION CONTROL (ADMIN ONLY) --
+  const [versionInput, setVersionInput] = useState(systemVersion || '1.0.0');
+  const [isSavingVersion, setIsSavingVersion] = useState(false);
+  const [versionSuccessToast, setVersionSuccessToast] = useState(false);
+
+  useEffect(() => {
+    if (systemVersion) {
+      setVersionInput(systemVersion);
+    }
+  }, [systemVersion]);
+
+  const handleSaveSystemVersion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!versionInput.trim()) return;
+    setIsSavingVersion(true);
+    try {
+      await updateSystemVersion(versionInput.trim());
+      setVersionSuccessToast(true);
+      setTimeout(() => setVersionSuccessToast(false), 4000);
+    } catch (e) {
+      console.error("Error saving system version:", e);
+    } finally {
+      setIsSavingVersion(false);
+    }
+  };
 
   // -- STATE FOR MANUAL RECORD ADDITION --
   const [showManualAddModal, setShowManualAddModal] = useState(false);
@@ -1792,6 +1819,68 @@ It is my pleasure to announce the beginning of the following course:
                     </div>
 
                     <div>
+                      {/* SYSTEM VERSION CONTROL (ADMIN ONLY) */}
+                      {user?.role === 'admin' && (
+                        <div 
+                          className="p-5 rounded-2xl border shadow-sm mb-8 transition-all"
+                          style={{ 
+                            backgroundColor: cardColor, 
+                            borderColor: isDark ? 'rgba(255, 192, 0, 0.35)' : '#FDE68A' 
+                          }}
+                        >
+                          <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-xl bg-[#FFC000] text-[#001D42] flex items-center justify-center font-black shadow-xs">
+                                v
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-base text-[#002D62] dark:text-[#93C5FD]">
+                                  {language === "ar" ? "التحكم في رقم إصدار المنظومة (System Version Control)" : "System Version Control"}
+                                </h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {language === "ar" ? "خاص بالمسؤول فقط: تعديل وتعميم رقم الإصدار الجديد لجميع المستخدمين" : "Admin Only: Update and broadcast system release version to all users"}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="bg-blue-100 dark:bg-blue-900/60 text-[#002D62] dark:text-blue-200 font-mono font-bold text-xs px-3 py-1 rounded-full border border-blue-200 dark:border-blue-700">
+                              {language === 'ar' ? 'الإصدار الحالي:' : 'Current:'} v{systemVersion}
+                            </span>
+                          </div>
+
+                          {versionSuccessToast && (
+                            <div className="bg-green-50 dark:bg-green-900/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 text-xs font-bold p-2.5 rounded-xl mb-3 flex items-center gap-2 animate-fadeIn">
+                              <CheckCircle size={16} />
+                              <span>{language === 'ar' ? `تم حفظ وتعميم الإصدار الجديد (v${systemVersion}) بنجاح على مستوى النظام!` : `System version updated to v${systemVersion} successfully!`}</span>
+                            </div>
+                          )}
+
+                          <form onSubmit={handleSaveSystemVersion} className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                            <div className="relative flex-1 min-w-[200px]">
+                              <span className="absolute inset-y-0 left-3 rtl:left-auto rtl:right-3 flex items-center text-gray-400 font-mono font-bold text-sm">
+                                v
+                              </span>
+                              <input 
+                                type="text" 
+                                required 
+                                value={versionInput} 
+                                onChange={(e) => setVersionInput(e.target.value)} 
+                                placeholder="1.0.0" 
+                                className="w-full border rounded-xl pl-8 rtl:pl-3 rtl:pr-8 pr-3 py-2 text-sm font-mono font-bold focus:ring-2 focus:ring-[#002D62]" 
+                                style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                              />
+                            </div>
+                            <button 
+                              type="submit" 
+                              disabled={isSavingVersion || versionInput.trim() === systemVersion}
+                              className="bg-[#002D62] hover:bg-blue-900 disabled:opacity-50 text-white font-bold text-xs sm:text-sm px-5 py-2 rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-2 shrink-0"
+                            >
+                              {isSavingVersion ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                              <span>{language === "ar" ? "حفظ وتعميم الإصدار" : "Broadcast Version"}</span>
+                            </button>
+                          </form>
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
                         <h2 className="text-2xl font-bold border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0" style={{ color: isDark ? '#FFFFFF' : '#002D62' }}>{language === "ar" ? "إدارة البيانات والنسخ الاحتياطي" : "Data Management & Backup"}</h2>
                         <div className="flex flex-wrap gap-2">
