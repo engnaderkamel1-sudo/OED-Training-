@@ -11,14 +11,9 @@ export default defineConfig(() => {
       react(),
       tailwindcss(),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
+        injectRegister: null,
         includeAssets: ['app-icon.jpg', 'orascom-logo.png'],
-        workbox: {
-          skipWaiting: true,
-          clientsClaim: true,
-          cleanupOutdatedCaches: true,
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg}']
-        },
         manifest: {
           name: 'OED TTMS (Technical Training Management System)',
           short_name: 'OED-TTMS',
