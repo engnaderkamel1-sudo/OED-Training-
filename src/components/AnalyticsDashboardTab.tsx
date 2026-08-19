@@ -379,6 +379,7 @@ export const AnalyticsDashboardTab = () => {
                         <td className="p-3 text-gray-600 dark:text-gray-300"><DataField>{formatDateToStandard(r.date)}</DataField></td>
                       </tr>
                     );
+                  })}
                   {filteredData.length === 0 && (
                     <tr>
                       <td colSpan={9} className="p-8 text-center text-gray-500 dark:text-gray-400 font-medium">

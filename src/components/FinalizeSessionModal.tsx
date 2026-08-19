@@ -171,7 +171,14 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
         'Course Title': session.courseTitle,
         'Instructor': 'Nader Reda',
         'Attended Days': (traineeData[u.id] || { days: 1 }).days,
-        'Score': `${(traineeData[u.id] || { sco  return (
+        'Score': `${(traineeData[u.id] || { score: 0 }).score}%`
+      }
+    }));
+
+    onFinalize(newRecords);
+  };
+
+  return (
     <div className="fixed inset-0 bg-black/60 z-[99999] flex items-center justify-center p-4">
       <div className="bg-white dark:bg-[#13223F] w-full max-w-4xl rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-200 dark:border-white/[0.12]">
         <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
