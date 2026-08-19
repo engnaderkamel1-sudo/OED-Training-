@@ -93,24 +93,36 @@ export const Login: React.FC = () => {
       setSuccessMsg("");
       const loginInput = email.trim().toLowerCase(); 
 
-      if (loginInput === "admin" && password === "admin123") {
-        const adminUser = users.find((u) => u.hrCode.toLowerCase() === "admin") || ({
-            id: "admin", hrCode: "admin", name: "Master Admin", department: "Training", role: "admin",
-            phone: "01000000000", status: "approved", password: "admin123",
-          } as User);
+      // 1. Direct Master Admin Login Bypass
+      if (loginInput === "admin" && (password === "admin123" || password === "123456")) {
+        const found = users.find((u) => u.hrCode?.toLowerCase() === "admin" || u.id === "admin");
+        const adminUser: User = found ? { ...found, role: 'admin', status: 'approved' } : ({
+          id: "admin",
+          hrCode: "admin",
+          name: "Master Admin",
+          department: "Training",
+          role: "admin",
+          phone: "01000000000",
+          status: "approved",
+          password: password,
+          email: "admin@orascom.com"
+        } as User);
         setUser(adminUser);
         localStorage.setItem("savedUserId", adminUser.id);
+        localStorage.setItem("oed_training_user", JSON.stringify(adminUser));
         
-        const loginMeta = getLoginMeta();
-        let ipAddress = undefined;
-        try { const res = await fetch('https://api.ipify.org?format=json'); const data = await res.json(); ipAddress = data.ip; } catch (e) {}
-        const locationInfo = ipAddress ? await getLocationFromIP(ipAddress) : { city: 'Unknown', country: 'Unknown' };
+        try {
+          const loginMeta = getLoginMeta();
+          let ipAddress = undefined;
+          try { const res = await fetch('https://api.ipify.org?format=json'); const data = await res.json(); ipAddress = data.ip; } catch (e) {}
+          const locationInfo = ipAddress ? await getLocationFromIP(ipAddress) : { city: 'Unknown', country: 'Unknown' };
 
-        addLoginLog({
-          id: generateUUID(), userId: adminUser.id, name: adminUser.name, hrCode: adminUser.hrCode,
-          role: adminUser.role, timestamp: new Date().toISOString(), ...loginMeta, city: locationInfo.city,
-          country: locationInfo.country, ip: ipAddress
-        });
+          addLoginLog({
+            id: generateUUID(), userId: adminUser.id, name: adminUser.name, hrCode: adminUser.hrCode,
+            role: adminUser.role, timestamp: new Date().toISOString(), ...loginMeta, city: locationInfo.city,
+            country: locationInfo.country, ip: ipAddress
+          });
+        } catch (logErr) {}
         return;
       }
 
