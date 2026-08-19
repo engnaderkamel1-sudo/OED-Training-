@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { auth, db } from "../firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { getLoginMeta, getLocationFromIP } from "../utils/loginUtils";
 
@@ -115,10 +115,46 @@ export const Login: React.FC = () => {
 
       let foundUser = users.find((u) => 
         u.email?.toLowerCase() === loginInput || 
-        u.hrCode.toLowerCase() === loginInput || 
+        u.hrCode?.toLowerCase() === loginInput || 
         u.phone === loginInput ||
         u.phone === `0${loginInput}`
       );
+
+      // If not in local users list, attempt direct Firebase Auth & Firestore query fallback
+      if (!foundUser && loginInput.includes('@')) {
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, loginInput, password);
+          if (userCredential.user) {
+            const q = query(collection(db, "users"), where("email", "==", loginInput));
+            const querySnap = await getDocs(q);
+            if (!querySnap.empty) {
+              foundUser = querySnap.docs[0].data() as User;
+            } else {
+              // Auto-recover user document in Firestore if registered in Auth earlier
+              const cleanHrCode = `TMP-${userCredential.user.uid.slice(0, 6)}`;
+              const recoveredUser: User = {
+                id: `u_${userCredential.user.uid}`,
+                hrCode: cleanHrCode,
+                name: loginInput.split('@')[0],
+                email: loginInput,
+                phone: '',
+                department: 'Heavy Machinery',
+                role: 'trainee',
+                jobRole: 'Engineer',
+                status: 'pending',
+                createdAt: new Date().toISOString(),
+                password: password,
+                isGuest: true
+              } as any;
+              await setDoc(doc(db, "users", recoveredUser.id), recoveredUser);
+              foundUser = recoveredUser;
+              setUsers(prev => [...prev, recoveredUser]);
+            }
+          }
+        } catch (authErr: any) {
+          // Authentication error
+        }
+      }
 
       if (foundUser && foundUser.email) {
         try {
@@ -244,9 +280,20 @@ export const Login: React.FC = () => {
         await createUserWithEmailAndPassword(auth, fullEmail, password);
         await auth.signOut();
       } catch (err: any) {
-        console.error(err);
-        setError(language === "ar" ? `حدث خطأ من السيرفر: ${err.message}` : `Server error: ${err.message}`);
-        return;
+        if (err.code === 'auth/email-already-in-use') {
+          // If already in Auth from earlier attempt, verify credentials
+          try {
+            await signInWithEmailAndPassword(auth, fullEmail, password);
+            await auth.signOut();
+          } catch (signInErr: any) {
+            setError(language === "ar" ? "البريد الإلكتروني مسجل بالفعل بكلمة مرور مختلفة" : "Email already registered with a different password.");
+            return;
+          }
+        } else {
+          console.error(err);
+          setError(language === "ar" ? `حدث خطأ من السيرفر: ${err.message}` : `Server error: ${err.message}`);
+          return;
+        }
       }
 
       const expiryDate = new Date();
