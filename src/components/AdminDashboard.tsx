@@ -179,13 +179,36 @@ export const AdminDashboard: React.FC = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [sessionNumber, setSessionNumber] = useState("");
-  const [location, setLocation] = useState("");
-  const [startTime, setStartTime] = useState("");
+  const [location, setLocation] = useState("Training Room - Central Workshop, Kattamya");
+  const [startTime, setStartTime] = useState("09:00");
   const [targetParticipants, setTargetParticipants] = useState("");
   const [feedbackLink, setFeedbackLink] = useState("");
-  const [additionalCcEmails, setAdditionalCcEmails] = useState<string>(() => {
-    return localStorage.getItem('oed_saved_cc_emails') || '';
+
+  const DEFAULT_TO_EMAILS = `EQ-Maintenance Engineers-OC <EQ-MaintenanceEngineers-OC@orascom.com>; EQ-Maintenance Engineers-OFC <EQ-Maintenance-Engineers-OFC@orascom.com>; EQ-Maintenance Engineers-ORC <EQ-Maintenance-Engineers-ORC@orascom.com>`;
+
+  const DEFAULT_CC_EMAILS = `Akram Amir <Akram.Amir@orascom.com>; Yasser Elsaied <Yasser.Elsaied@orascom.com>; Alaa Mohamed Dawoud Mansour <Alaa.Mohamed@orascom.com>; Amr Abdelkhalek <Amr.Abdelkhalek@orascom.com>; Athanassious Armya <Athanassious.Armya@orascom.com>; Ehab Wasfy <Ehab.Wasfy@orascom.com>; Emad Magdy Naguib Fahmy <Emad.Magdy@orascom.com>; Ibrahim Ahmed Eltayeb <Ibrahim.Eltayeb@orascom.com>; Mahmoud Morsi <Mahmoud.Morsi@orascom.com>; Mina Fekry <Mina.Fekry@orascom.com>; Mohamed Abd Elhai Abd Elaal <Mohamed.Elhai@orascom.com>; Mohamed Essam <Mohamed.Essam@orascom.com>; Mohamed Samir <Mohamed.Samir@orascom.com>; Mostafa Abdelatif <Mostafa.Abdelatif@orascom.com>; Peter Attia <Peter.Attia@orascom.com>; Rimon Ayad Daoud <Rimon.Ayad@orascom.com>; Milad Fouad <Milad.Fouad@orascom.com>; Samir Moen <Samir.Moen@orascom.com>; Samy Aziz Saleh <Samy.Aziz@orascom.com>; Amr Zoair <Amr.Zoair@orascom.com>; Ragy Ibrahim Adib <Ragy.Ibrahim@orascom.com>; Sherif Elmasry <Sherif.Elmasry@orascom.com>; Amr Hammed <Amr.Hammed@orascom.com>; Mohammed Mustafa <Mohamed.Mustafa@orascom.com>; Mohamed Abdalla Ali Hafiz <Mohamed.Hafiz@orascom.com>; Bishoy Shenoda <Bishoy.Shenoda@orascom.com>; Albert John <Albert.John@orascom.com>; Mina Magdy Ghattas Saad <Mina.Saad@orascom.com>; Mostafa Kamal <Mostafa.Kamal@orascom.com>; Sherif Elmasry <Sherif.Elmasry@orascom.com>; Mena Reda <mena.reda@orascom.com>`;
+
+  const [toEmails, setToEmails] = useState<string>(() => {
+    return localStorage.getItem('oed_saved_to_emails') || DEFAULT_TO_EMAILS;
   });
+
+  const [ccEmails, setCcEmails] = useState<string>(() => {
+    return localStorage.getItem('oed_saved_cc_emails') || DEFAULT_CC_EMAILS;
+  });
+
+  const [reviewModalSession, setReviewModalSession] = useState<{
+    courseTitle: string;
+    sessionNumber: string;
+    startDate: string;
+    endDate: string;
+    startTime: string;
+    location: string;
+    targetParticipants: string;
+    toEmails: string;
+    ccEmails: string;
+    isEditing: boolean;
+  } | null>(null);
+
   const [resourceLink, setResourceLink] = useState("");
   const [selectedCourseForResource, setSelectedCourseForResource] = useState(mockCourses[0]?.id || "");
   const [showUsageModal, setShowUsageModal] = useState(false);
@@ -460,22 +483,84 @@ export const AdminDashboard: React.FC = () => {
   };
 
 
+  // Helper to extract clean email addresses for mailto without syntax errors
+  const extractCleanEmails = (input: string): string => {
+    if (!input) return '';
+    const parts = input.split(/[;,\n]+/);
+    const cleanList: string[] = [];
+
+    for (const part of parts) {
+      const trimmed = part.trim();
+      if (!trimmed) continue;
+      
+      const angleMatch = trimmed.match(/<([^>]+@[^>]+)>/);
+      if (angleMatch && angleMatch[1]) {
+        cleanList.push(angleMatch[1].trim());
+      } else if (trimmed.includes('@')) {
+        const emailMatch = trimmed.match(/[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}/);
+        if (emailMatch) {
+          cleanList.push(emailMatch[0]);
+        } else {
+          cleanList.push(trimmed);
+        }
+      }
+    }
+
+    return Array.from(new Set(cleanList)).join('; ');
+  };
+
+  const formatFullEmailDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-US', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  const getSessionOrdinalText = (numStr: string) => {
+    const num = parseInt(numStr, 10);
+    if (isNaN(num)) return numStr ? `Session ${numStr}` : '';
+    const suffixes = ["th", "st", "nd", "rd"];
+    const v = num % 100;
+    return num + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]) + " Session";
+  };
+
   const handleCreateSession = (e: React.FormEvent) => {
     e.preventDefault();
     const foundCourse = dynamicCourses.find((c) => c.id === selectedCourseId);
     const courseTitle = foundCourse?.title || selectedCourseId;
+    if (!courseTitle) return;
 
-    // Save CC emails automatically to localStorage for future sessions
-    if (additionalCcEmails && additionalCcEmails.trim() !== '') {
-      localStorage.setItem('oed_saved_cc_emails', additionalCcEmails.trim());
-    }
+    // Open review modal first so user can check all details before sending
+    setReviewModalSession({
+      courseTitle,
+      sessionNumber,
+      startDate,
+      endDate,
+      startTime,
+      location,
+      targetParticipants,
+      toEmails,
+      ccEmails,
+      isEditing: !!editingSessionId,
+    });
+  };
 
-    const ccListArray = additionalCcEmails
-      .split(/[,;\n]/)
-      .map(e => e.trim())
-      .filter(e => e.includes('@'));
+  const handleConfirmAndPublishSession = () => {
+    if (!reviewModalSession) return;
+    const { courseTitle, sessionNumber, startDate, endDate, startTime, location, targetParticipants, toEmails: toStr, ccEmails: ccStr, isEditing } = reviewModalSession;
 
-    if (editingSessionId) {
+    // 1. Save TO & CC emails automatically for future sessions
+    if (toStr) localStorage.setItem('oed_saved_to_emails', toStr.trim());
+    if (ccStr) localStorage.setItem('oed_saved_cc_emails', ccStr.trim());
+
+    const ccListArray = ccStr.split(/[;,\n]+/).map(e => e.trim()).filter(e => e.includes('@'));
+
+    if (isEditing && editingSessionId) {
       const existing = upcomingSessions.find((s) => s.id === editingSessionId);
       if (existing) {
         updateUpcomingSession({
@@ -530,53 +615,31 @@ export const AdminDashboard: React.FC = () => {
         id: `ann_${Date.now()}`, sessionId: newSession.id, courseName: courseTitle, title: language === "ar" ? `دورة جديدة: ${courseTitle}` : `New Session: ${courseTitle}`, message: `${courseTitle} - ${startDate}`, date: new Date().toISOString(), author: "Admin", isGlobal: true, targetAudience: targetParticipants,
       });
 
-      // --- AUTOMATIC EMAIL TRIGGER VIA OUTLOOK / CORPORATE MAIL CLIENT ---
+      // --- AUTOMATIC EMAIL TRIGGER VIA OUTLOOK WITH CLEAN TO / CC LISTS ---
       try {
-        const targetEmails = targetAudienceUsers
-          .filter(u => u.email && u.email.trim().includes('@'))
-          .map(u => u.email!.trim());
-
-        const toField = targetEmails.join('; ');
-        const ccField = ccListArray.join('; ');
-
-        // Helper to format date as "Sunday, 06 September 2026"
-        const formatFullEmailDate = (dateStr: string) => {
-          if (!dateStr) return '';
-          const d = new Date(dateStr);
-          if (isNaN(d.getTime())) return dateStr;
-          return d.toLocaleDateString('en-US', {
-            weekday: 'long',
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric'
-          });
-        };
-
-        // Helper for session ordinal (1st Session, 2nd Session, etc.)
-        const getSessionOrdinalText = (numStr: string) => {
-          const num = parseInt(numStr, 10);
-          if (isNaN(num)) return numStr ? `Session ${numStr}` : '';
-          const suffixes = ["th", "st", "nd", "rd"];
-          const v = num % 100;
-          return num + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]) + " Session";
-        };
+        const cleanTo = extractCleanEmails(toStr);
+        const cleanCc = extractCleanEmails(ccStr);
 
         const sessionOrdinal = sessionNumber ? getSessionOrdinalText(sessionNumber) : '';
         const subject = sessionOrdinal 
           ? `Course Announcement ( ${courseTitle} - ${sessionOrdinal} )`
           : `Course Announcement ( ${courseTitle} )`;
 
+        // Preserves trailing blank lines for Outlook's automatic signature
         const emailBody = `Dear Gents,
 
 It is my pleasure to announce the beginning of the following course:
 
 •	Course Name : ${courseTitle}${sessionOrdinal ? `\n•	Session : ${sessionOrdinal}` : ''}
 •	Start Date: ${formatFullEmailDate(startDate)}  
-•	End Date: ${formatFullEmailDate(endDate)}${startTime ? `\n•	Time: ${startTime}` : ''}${location ? `\n•	Location: ${location}` : ''}`;
+•	End Date: ${formatFullEmailDate(endDate)}${startTime ? `\n•	Time: ${startTime}` : ''}${location ? `\n•	Location: ${location}` : ''}
 
-        const mailtoLink = `mailto:${encodeURIComponent(toField)}?cc=${encodeURIComponent(ccField)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
+
+
+`;
+
+        const mailtoLink = `mailto:${encodeURIComponent(cleanTo)}?cc=${encodeURIComponent(cleanCc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
         
-        // Open user's official Outlook / Mail client automatically with pre-filled content!
         window.location.href = mailtoLink;
       } catch (mailErr) {
         console.error("Error opening mail client:", mailErr);
@@ -584,7 +647,16 @@ It is my pleasure to announce the beginning of the following course:
 
       alert(t("sessionPublished"));
     }
-    setSelectedCourseId(""); setStartDate(""); setEndDate(""); setSessionNumber(""); setLocation(""); setStartTime(""); setTargetParticipants(""); setFeedbackLink("");
+
+    setReviewModalSession(null);
+    setSelectedCourseId(""); 
+    setStartDate(""); 
+    setEndDate(""); 
+    setSessionNumber(""); 
+    setLocation(DEFAULT_LOCATION); 
+    setStartTime(DEFAULT_START_TIME); 
+    setTargetParticipants(""); 
+    setFeedbackLink("");
   };
 
   const handleStartEdit = (session: UpcomingSession) => {
@@ -593,12 +665,12 @@ It is my pleasure to announce the beginning of the following course:
     setStartDate(session.startDate || ""); 
     setEndDate(session.endDate || ""); 
     setSessionNumber(session.sessionNumber || ""); 
-    setLocation(session.location || ""); 
-    setStartTime(session.startTime || ""); 
+    setLocation(session.location || DEFAULT_LOCATION); 
+    setStartTime(session.startTime || DEFAULT_START_TIME); 
     setTargetParticipants(session.targetParticipants || ""); 
     setFeedbackLink(session.feedbackLink || ""); 
     if (session.additionalNotificationEmails && session.additionalNotificationEmails.length > 0) {
-      setAdditionalCcEmails(session.additionalNotificationEmails.join(', '));
+      setCcEmails(session.additionalNotificationEmails.join('; '));
     }
     window.scrollTo({ top: 300, behavior: "smooth" });
   };
@@ -609,11 +681,12 @@ It is my pleasure to announce the beginning of the following course:
     setStartDate(""); 
     setEndDate(""); 
     setSessionNumber(""); 
-    setLocation(""); 
-    setStartTime(""); 
+    setLocation(DEFAULT_LOCATION); 
+    setStartTime(DEFAULT_START_TIME); 
     setTargetParticipants(""); 
     setFeedbackLink(""); 
-    setAdditionalCcEmails(localStorage.getItem('oed_saved_cc_emails') || '');
+    setCcEmails(localStorage.getItem('oed_saved_cc_emails') || DEFAULT_CC_EMAILS);
+    setToEmails(localStorage.getItem('oed_saved_to_emails') || DEFAULT_TO_EMAILS);
   };
 
   const handleSendReminder = (sessionId: string, reminderType: "Standard" | "Final" = "Standard") => {
@@ -1463,7 +1536,7 @@ It is my pleasure to announce the beginning of the following course:
                           </select>
                         </div>
 
-                        {/* CC & Coordination Emails Section */}
+                        {/* TO Email Recipients Section */}
                         <div 
                           className="md:col-span-2 p-4 rounded-xl border space-y-2 transition-colors"
                           style={{
@@ -1474,21 +1547,56 @@ It is my pleasure to announce the beginning of the following course:
                           <div className="flex items-center justify-between flex-wrap gap-1">
                             <label className="text-sm font-bold flex items-center gap-1.5" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>
                               <Mail size={16} className="text-[#FFC000]" />
-                              <span>{language === "ar" ? "إيميلات إضافية للإشعار والتنسيق (CC)" : "Coordination & CC Notification Emails"}</span>
+                              <span>{language === "ar" ? "قائمة الإرسال الأساسية (To)" : "Primary Recipients (To)"}</span>
                             </label>
                             <span className="text-[11px] font-medium" style={{ color: isDark ? '#C8DBF6' : '#64748B' }}>
-                              {language === 'ar' ? 'مثل: الشؤون الإدارية لتجهيز القاعة' : 'e.g. Admin Affairs for Hall Setup'}
+                              {language === 'ar' ? 'المجموعات والمهندسين المستهدفين' : 'Target groups & engineers'}
                             </span>
                           </div>
                           <textarea
                             rows={2}
-                            value={additionalCcEmails}
+                            value={toEmails}
                             onChange={(e) => {
-                              setAdditionalCcEmails(e.target.value);
+                              setToEmails(e.target.value);
+                              localStorage.setItem('oed_saved_to_emails', e.target.value);
+                            }}
+                            placeholder="EQ-Maintenance Engineers-OC <EQ-MaintenanceEngineers-OC@orascom.com>; ..."
+                            className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-[#002D62] outline-none font-mono"
+                            style={{ 
+                              backgroundColor: inputBg, 
+                              borderColor: borderColor, 
+                              color: textColor 
+                            }}
+                            dir="ltr"
+                          />
+                        </div>
+
+                        {/* CC Email Recipients Section */}
+                        <div 
+                          className="md:col-span-2 p-4 rounded-xl border space-y-2 transition-colors"
+                          style={{
+                            backgroundColor: isDark ? '#162B4D' : '#F0F6FF',
+                            borderColor: isDark ? 'rgba(148, 190, 255, 0.35)' : '#BFDBFE',
+                          }}
+                        >
+                          <div className="flex items-center justify-between flex-wrap gap-1">
+                            <label className="text-sm font-bold flex items-center gap-1.5" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>
+                              <Mail size={16} className="text-[#FFC000]" />
+                              <span>{language === "ar" ? "قائمة النسخة الإضافية والتنسيق (CC)" : "Coordination & CC Notification Emails"}</span>
+                            </label>
+                            <span className="text-[11px] font-medium" style={{ color: isDark ? '#C8DBF6' : '#64748B' }}>
+                              {language === 'ar' ? 'الشؤون الإدارية ومدراء الأقسام' : 'Admin affairs & managers'}
+                            </span>
+                          </div>
+                          <textarea
+                            rows={3}
+                            value={ccEmails}
+                            onChange={(e) => {
+                              setCcEmails(e.target.value);
                               localStorage.setItem('oed_saved_cc_emails', e.target.value);
                             }}
-                            placeholder="admin.affairs@orascom.com, logistics@orascom.com, ..."
-                            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#002D62] outline-none font-mono"
+                            placeholder="Akram.Amir@orascom.com; Yasser.Elsaied@orascom.com; ..."
+                            className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-[#002D62] outline-none font-mono"
                             style={{ 
                               backgroundColor: inputBg, 
                               borderColor: borderColor, 
@@ -1498,8 +1606,8 @@ It is my pleasure to announce the beginning of the following course:
                           />
                           <p className="text-[11px] font-medium" style={{ color: isDark ? '#93C5FD' : '#475569' }}>
                             {language === 'ar' 
-                              ? '💾 يتم حفظ هذه الإيميلات تلقائياً للدورات القادمة، وسيتم فتح مسودة الإيميل في برنامج Outlook تلقائياً ببيانات الدورة فور نشرها.' 
-                              : '💾 Saved automatically for future sessions. Email draft in Outlook will open automatically with pre-filled details upon publishing.'}
+                              ? '💾 يتم حفظ هذه القوائم تلقائياً للدورات القادمة، وستظهر شاشة مراجعة للتأكيد قبل فتح Outlook.' 
+                              : '💾 Saved automatically for future sessions. A review dialog will appear before opening Outlook.'}
                           </p>
                         </div>
                       </div>
@@ -1770,6 +1878,156 @@ It is my pleasure to announce the beginning of the following course:
       {showAnnouncementManager && <AnnouncementManagerModal sessionId={showAnnouncementManager === "GLOBAL" ? undefined : showAnnouncementManager} onClose={() => setShowAnnouncementManager(null)} />}
       {editingRecord && <EditRecordModal record={editingRecord} onClose={() => setEditingRecord(null)} />}
       {showUsageModal && <FirebaseUsageModal onClose={() => setShowUsageModal(false)} />}
+
+      {/* --- SESSION ANNOUNCEMENT & EMAIL REVIEW MODAL --- */}
+      {reviewModalSession && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fadeIn">
+          <div 
+            className="w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border animate-scaleIn"
+            style={{ 
+              backgroundColor: isDark ? '#0D1E38' : '#FFFFFF', 
+              borderColor: isDark ? 'rgba(148, 190, 255, 0.4)' : '#E2E8F0' 
+            }}
+          >
+            {/* Modal Header */}
+            <div className="bg-[#002D62] text-white px-6 py-4 flex justify-between items-center shrink-0 border-b border-blue-900">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#FFC000] text-[#001D42] flex items-center justify-center font-bold shadow-xs">
+                  <Mail size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base md:text-lg leading-tight">
+                    {language === 'ar' ? 'مراجعة بيانات الدورة قبل النشر والإرسال' : 'Review Session & Email Announcement'}
+                  </h3>
+                  <p className="text-xs text-blue-200">
+                    {language === 'ar' ? 'تأكد من صحة التفاصيل قبل فتح الإيميل في Outlook' : 'Verify details before opening Outlook'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setReviewModalSession(null)} 
+                className="text-gray-300 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-4 text-sm flex-1">
+              {/* Course Info Cards */}
+              <div 
+                className="p-4 rounded-xl border space-y-3"
+                style={{ 
+                  backgroundColor: isDark ? '#162B4D' : '#F0F6FF', 
+                  borderColor: isDark ? 'rgba(148, 190, 255, 0.3)' : '#BFDBFE' 
+                }}
+              >
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <span className="font-black text-lg text-[#002D62] dark:text-[#93C5FD]">
+                    {reviewModalSession.courseTitle}
+                  </span>
+                  <span className="bg-[#FFC000] text-[#001D42] font-black text-xs px-2.5 py-1 rounded-lg shadow-2xs">
+                    {reviewModalSession.sessionNumber ? getSessionOrdinalText(reviewModalSession.sessionNumber) : '1st Session'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" style={{ color: textColor }}>
+                  <div><strong>📅 {language === 'ar' ? 'تاريخ البدء:' : 'Start Date:'}</strong> {formatFullEmailDate(reviewModalSession.startDate)}</div>
+                  <div><strong>📅 {language === 'ar' ? 'تاريخ الانتهاء:' : 'End Date:'}</strong> {formatFullEmailDate(reviewModalSession.endDate)}</div>
+                  <div><strong>⏰ {language === 'ar' ? 'التوقيت:' : 'Time:'}</strong> {reviewModalSession.startTime || '09:00 AM'}</div>
+                  <div><strong>📍 {language === 'ar' ? 'المكان:' : 'Location:'}</strong> {reviewModalSession.location}</div>
+                  <div className="sm:col-span-2">
+                    <strong>👥 {language === 'ar' ? 'الفئة المستهدفة:' : 'Target:'}</strong> {
+                      reviewModalSession.targetParticipants === 'engineers' ? (language === 'ar' ? 'المهندسين' : 'Engineers')
+                      : reviewModalSession.targetParticipants === 'technicians' ? (language === 'ar' ? 'الفنيين' : 'Technicians')
+                      : (language === 'ar' ? 'مختلط (الجميع)' : 'Mixed')
+                    }
+                  </div>
+                </div>
+              </div>
+
+              {/* Email Recipients Summary */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold" style={{ color: textColor }}>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                    {language === 'ar' ? 'المستلمون في خانة To:' : 'To Recipients:'}
+                  </span>
+                  <span className="text-[11px] text-gray-500 font-mono">
+                    {extractCleanEmails(reviewModalSession.toEmails).split(';').filter(Boolean).length} emails
+                  </span>
+                </div>
+                <div 
+                  className="p-2.5 rounded-lg border text-xs font-mono max-h-16 overflow-y-auto"
+                  style={{ backgroundColor: inputBg, borderColor: borderColor, color: textMuted }}
+                  dir="ltr"
+                >
+                  {reviewModalSession.toEmails || 'None'}
+                </div>
+
+                <div className="flex items-center justify-between text-xs font-bold pt-1" style={{ color: textColor }}>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#FFC000]"></span>
+                    {language === 'ar' ? 'النسخة الإضافية في خانة CC:' : 'CC Recipients:'}
+                  </span>
+                  <span className="text-[11px] text-gray-500 font-mono">
+                    {extractCleanEmails(reviewModalSession.ccEmails).split(';').filter(Boolean).length} emails
+                  </span>
+                </div>
+                <div 
+                  className="p-2.5 rounded-lg border text-xs font-mono max-h-16 overflow-y-auto"
+                  style={{ backgroundColor: inputBg, borderColor: borderColor, color: textMuted }}
+                  dir="ltr"
+                >
+                  {reviewModalSession.ccEmails || 'None'}
+                </div>
+              </div>
+
+              {/* Email Body Live Preview */}
+              <div className="space-y-1.5 pt-2">
+                <label className="text-xs font-bold uppercase tracking-wider block" style={{ color: textMuted }}>
+                  {language === 'ar' ? 'معاينة نص الرسالة في Outlook:' : 'Outlook Email Message Preview:'}
+                </label>
+                <div 
+                  className="p-4 rounded-xl border font-sans text-xs whitespace-pre-wrap leading-relaxed shadow-2xs"
+                  style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
+                  dir="ltr"
+                >
+{`Dear Gents,
+
+It is my pleasure to announce the beginning of the following course:
+
+•	Course Name : ${reviewModalSession.courseTitle}${reviewModalSession.sessionNumber ? `\n•	Session : ${getSessionOrdinalText(reviewModalSession.sessionNumber)}` : ''}
+•	Start Date: ${formatFullEmailDate(reviewModalSession.startDate)}  
+•	End Date: ${formatFullEmailDate(reviewModalSession.endDate)}${reviewModalSession.startTime ? `\n•	Time: ${reviewModalSession.startTime}` : ''}${reviewModalSession.location ? `\n•	Location: ${reviewModalSession.location}` : ''}`}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div 
+              className="p-4 px-6 border-t flex flex-col-reverse sm:flex-row justify-end gap-3 shrink-0"
+              style={{ backgroundColor: isDark ? '#132543' : '#F8FAFC', borderColor: borderColor }}
+            >
+              <button
+                type="button"
+                onClick={() => setReviewModalSession(null)}
+                className="px-5 py-2.5 border rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 font-bold transition-colors text-sm cursor-pointer"
+              >
+                {language === 'ar' ? 'الرجوع للتعديل' : 'Back to Edit'}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmAndPublishSession}
+                className="px-6 py-2.5 bg-[#FFC000] hover:bg-yellow-400 text-[#001D42] font-black rounded-xl shadow-md transition-all text-sm flex items-center justify-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <Mail size={16} />
+                <span>{language === 'ar' ? 'تأكيد النشر وفتح الإيميل في Outlook' : 'Confirm & Open Outlook'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showMonthlyReport && <MonthlyReportModal onClose={() => setShowMonthlyReport(false)} records={records} upcomingSessions={upcomingSessions} />}
     </div>
   );
