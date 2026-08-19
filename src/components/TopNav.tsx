@@ -149,45 +149,48 @@ export const TopNav: React.FC = () => {
 
                   {dropdownOpen && (
                     <div 
-                      className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl overflow-hidden animate-fadeIn z-[99999] border"
-                      style={{ 
-                        backgroundColor: theme === 'dark' ? '#193158' : '#ffffff',
-                        borderColor: theme === 'dark' ? 'rgba(148, 190, 255, 0.22)' : '#e2e8f0'
-                      }}
+                      className="absolute right-0 rtl:right-auto rtl:left-0 mt-2.5 w-64 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn z-[99999] border p-2 bg-white dark:bg-[#1E3A68] border-gray-200 dark:border-blue-400/30 backdrop-blur-md"
                     >
+                      {/* User Info Header / Quick Profile Access */}
                       <button 
                         onClick={openProfile}
-                        className="w-full text-left rtl:text-right px-4 py-3 border-b hover:bg-black/5 dark:hover:bg-white/[0.08] transition-colors group flex items-center justify-between cursor-pointer"
-                        style={{ borderColor: theme === 'dark' ? 'rgba(148, 190, 255, 0.15)' : '#e2e8f0' }}
+                        className="w-full text-left rtl:text-right p-3 rounded-xl hover:bg-blue-50/80 dark:hover:bg-[#284C85] transition-all group flex items-center justify-between cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-400/20"
                         title="Go to My Profile"
                       >
-                        <div>
-                          <p 
-                            className="text-sm font-bold transition-colors" 
-                            style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}
-                          >
+                        <div className="flex-1 min-w-0 pr-2 rtl:pr-0 rtl:pl-2">
+                          <p className="text-sm font-black text-gray-900 dark:text-white truncate group-hover:text-[#002D62] dark:group-hover:text-[#FFC000] transition-colors">
                             {user.name || 'User'}
                           </p>
-                          <p 
-                            className="text-xs mt-1" 
-                            style={{ color: theme === 'dark' ? '#C8DBF6' : '#4a5568' }}
-                          >
-                            {user.hrCode || 'N/A'} • {user.department || 'N/A'}
-                          </p>
+                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                            <span className="bg-blue-100 dark:bg-blue-900/80 text-[#002D62] dark:text-[#93C5FD] px-1.5 py-0.5 rounded font-mono font-bold text-[11px] border border-blue-200 dark:border-blue-700/50">
+                              {user.hrCode || 'N/A'}
+                            </span>
+                            <span className="text-xs text-gray-600 dark:text-[#D1E2FF] font-medium truncate">
+                              • {user.department || 'General'}
+                            </span>
+                          </div>
                         </div>
-                        <UserCircle size={18} className="text-gray-400 group-hover:text-[#002D62] dark:group-hover:text-blue-300 transition-colors" />
+                        <UserCircle size={22} className="text-[#002D62] dark:text-[#FFC000] shrink-0 opacity-80 group-hover:opacity-100 transition-opacity" />
                       </button>
-                      
+
+                      <div className="my-1.5 border-t border-gray-100 dark:border-blue-400/20" />
+
+                      {/* My Profile Button */}
+                      <button
+                        onClick={openProfile}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs md:text-sm font-bold text-gray-700 dark:text-gray-100 hover:bg-blue-50/80 dark:hover:bg-[#284C85] transition-colors cursor-pointer"
+                      >
+                        <UserCircle size={17} className="text-[#002D62] dark:text-[#93C5FD]" />
+                        <span>{language === 'ar' ? 'الملف الشخصي' : 'My Profile'}</span>
+                      </button>
+
+                      {/* Logout Button */}
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
-                        style={{ 
-                          color: theme === 'dark' ? '#f87171' : '#dc2626',
-                          backgroundColor: 'transparent'
-                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs md:text-sm font-bold text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer mt-0.5"
                       >
-                        <LogOut size={18} />
-                        <span>Logout</span>
+                        <LogOut size={17} className="text-red-600 dark:text-red-400" />
+                        <span>{language === 'ar' ? 'تسجيل الخروج' : 'Logout'}</span>
                       </button>
                     </div>
                   )}
