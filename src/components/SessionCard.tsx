@@ -116,7 +116,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   if (isCancelled) {
     // Admin Cancelled State
     cardClasses += "bg-gray-100 dark:bg-white/[0.04] border-gray-300 dark:border-white/[0.1] opacity-75 grayscale";
-  } else if (!isAdminView &&   } else if (isUnregistered) {
+  } else if (!isAdminView && isUnregistered) {
     // Trainee Unregistered State
     cardClasses += "bg-white dark:bg-[#193158] border-amber-300 dark:border-amber-500/40";
   } else if (isCompleted) {
