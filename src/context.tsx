@@ -59,10 +59,17 @@ interface AppContextType {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   systemVersion: string;
-  updateSystemVersion: (newVersion: string) => Promise<void>;
   isFetchingRecords: boolean;
   recordsLoaded: boolean;
   fetchTrainingRecords: (filter?: { hrCode?: string; name?: string; department?: string; courseName?: string; fromDate?: string; toDate?: string }) => Promise<CleanedRecord[]>;
+  globalKPIs: {
+    totalCourses: number;
+    totalSessions: number;
+    totalParticipants: number;
+    totalEngineers: number;
+    totalTechnicians: number;
+    totalOperators: number;
+  };
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -191,6 +198,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     }, (error) => console.warn("Firebase AppConfig Error:", error));
 
+    const unsubKPIs = onSnapshot(doc(db, "systemSettings", "globalKPIs"), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as any;
+        if (data) {
+          const kpis = {
+            totalCourses: data.totalCourses || 0,
+            totalSessions: data.totalSessions || 0,
+            totalParticipants: data.totalParticipants || 0,
+            totalEngineers: data.totalEngineers || 0,
+            totalTechnicians: data.totalTechnicians || 0,
+            totalOperators: data.totalOperators || 0
+          };
+          setGlobalKPIs(kpis);
+          try {
+            localStorage.setItem('oed_cached_global_kpis', JSON.stringify(kpis));
+          } catch (e) {}
+        }
+      }
+    }, (error) => console.warn("Firebase globalKPIs Error:", error));
+
     try {
       const storedFileName = localStorage.getItem('oed_training_filename');
       if (storedFileName) setCleanedFileNameState(storedFileName);
@@ -205,11 +232,37 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       unsubAnnouncements();
       unsubSuggestions();
       unsubVersion();
+      unsubKPIs();
     };
   }, []);
 
   const [isFetchingRecords, setIsFetchingRecords] = useState(false);
   const [recordsLoaded, setRecordsLoaded] = useState(false);
+  const [globalKPIs, setGlobalKPIs] = useState<{
+    totalCourses: number;
+    totalSessions: number;
+    totalParticipants: number;
+    totalEngineers: number;
+    totalTechnicians: number;
+    totalOperators: number;
+  }>(() => {
+    try {
+      const stored = localStorage.getItem('oed_cached_global_kpis');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.totalParticipants > 0) return parsed;
+      }
+    } catch (e) {}
+    // Official totals directly from OED_Smart_Dashboard.xlsx 'Analytics Dashboard' sheet
+    return { 
+      totalCourses: 21, 
+      totalSessions: 124, 
+      totalParticipants: 984, 
+      totalEngineers: 765, 
+      totalTechnicians: 117, 
+      totalOperators: 102 
+    };
+  });
 
   const fetchTrainingRecords = async (filter?: { hrCode?: string; name?: string; department?: string; courseName?: string; fromDate?: string; toDate?: string }) => {
     setIsFetchingRecords(true);
@@ -235,6 +288,37 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       snapshot.forEach((d) => data.push(d.data() as CleanedRecord));
       setCleanedDataState(data);
       setRecordsLoaded(true);
+
+      // Auto-calculate and cache global KPIs when full/broad data is fetched
+      if (data.length > 0 && (!filter || (!filter.hrCode && !filter.department))) {
+        const coursesSet = new Set<string>();
+        const sessionsSet = new Set<string>();
+        let eng = 0, tech = 0, op = 0;
+        data.forEach(r => {
+          if (r.courseName) coursesSet.add(r.courseName.trim());
+          if (r.courseName && r.date) sessionsSet.add(`${r.courseName.trim()}-${r.date}`);
+          const roleStr = `${r.role || ''} ${r.department || ''}`.toLowerCase();
+          if (roleStr.includes('eng') || roleStr.includes('مهندس')) eng++;
+          if (roleStr.includes('tech') || roleStr.includes('فني')) tech++;
+          if (roleStr.includes('op') || roleStr.includes('مشغل')) op++;
+        });
+
+        const newKPIs = {
+          totalCourses: coursesSet.size || 0,
+          totalSessions: sessionsSet.size || 0,
+          totalParticipants: data.length,
+          totalEngineers: eng,
+          totalTechnicians: tech,
+          totalOperators: op
+        };
+
+        setGlobalKPIs(newKPIs);
+        try {
+          localStorage.setItem('oed_cached_global_kpis', JSON.stringify(newKPIs));
+          await setDoc(doc(db, "systemSettings", "globalKPIs"), newKPIs, { merge: true });
+        } catch (e) {}
+      }
+
       return data;
     } catch (err) {
       console.error("Error fetching training records:", err);
@@ -613,6 +697,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       isFetchingRecords,
       recordsLoaded,
       fetchTrainingRecords,
+      globalKPIs,
     }}>
       <div dir={language === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${language === 'ar' ? 'font-arabic' : 'font-sans'}`}>
         {children}

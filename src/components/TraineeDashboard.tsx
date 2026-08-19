@@ -87,13 +87,20 @@ const formatDateToStandard = (dateStr: any): string => {
 };
 
 export const TraineeDashboard: React.FC = () => {
-  const { t, user, records, language, upcomingSessions, registerTrainee, unregisterTrainee, currentView, users, setUsers, announcements, theme } = useAppContext();
+  const { t, user, records, language, upcomingSessions, registerTrainee, unregisterTrainee, currentView, users, setUsers, announcements, theme, fetchTrainingRecords, recordsLoaded } = useAppContext();
   const [requestedTopic, setRequestedTopic] = useState('');
   const [requestSent, setRequestSent] = useState(false);
   const [registeringSession, setRegisteringSession] = useState<UpcomingSession | null>(null);
   const [tempManagerEmails, setTempManagerEmails] = useState<string[]>(['', '', '']);
   const [registeredCourseIds, setRegisteredCourseIds] = useState<string[]>([]);
   const [actionToast, setActionToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+
+  // Automatically fetch trainee's own records on demand (costs only 1-3 reads!)
+  React.useEffect(() => {
+    if (user?.hrCode && (!records || records.length === 0) && !recordsLoaded) {
+      fetchTrainingRecords({ hrCode: user.hrCode });
+    }
+  }, [user?.hrCode, recordsLoaded]);
 
   // Unified Dark/Light Mode Palette
   const isDark = theme === 'dark'; 

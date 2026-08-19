@@ -165,25 +165,10 @@ export const ProfilePage: React.FC = () => {
         Object.entries(updateData).filter(([_, v]) => v !== undefined)
       );
 
-      // 3. Save directly to doc(db, 'users', user.id) with merge
+      // 3. Save directly to doc(db, 'users', user.id) with merge (1 write, 0 reads)
       await setDoc(doc(db, 'users', user.id), sanitizedData, { merge: true });
 
-      // 4. Also search by HR code to ensure all matching documents in Firestore are synced
-      if (user.hrCode) {
-        try {
-          const q = query(collection(db, 'users'), where('hrCode', '==', user.hrCode));
-          const snap = await getDocs(q);
-          for (const d of snap.docs) {
-            if (d.id !== user.id) {
-              await setDoc(doc(db, 'users', d.id), sanitizedData, { merge: true });
-            }
-          }
-        } catch (e) {
-          // secondary sync fallback
-        }
-      }
-
-      // 5. Update local context & localStorage immediately
+      // 4. Update local context & localStorage immediately
       const updatedUser: User = {
         ...user,
         ...updateData,
