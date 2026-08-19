@@ -1,4 +1,5 @@
 ﻿{
+  "id": "/?v=5",
   "name": "OED Training Management System",
   "short_name": "OED-TTMS",
   "description": "Technical Training Management System - Orascom Construction Equipment Department",
@@ -9,19 +10,19 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/app-icon.jpg?v=3",
+      "src": "/app-icon.jpg?v=5",
       "sizes": "192x192",
       "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-192x192.png?v=3",
+      "src": "/icon-192x192.png?v=5",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512x512.png?v=3",
+      "src": "/icon-512x512.png?v=5",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

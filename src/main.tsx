@@ -3,19 +3,18 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-// Unregister any active Service Workers causing reload loops and clear cache
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    for (const registration of registrations) {
-      registration.unregister();
-    }
-  }).catch(() => {});
-
+// Force instant cache refresh & ensure active service worker update
+if (typeof window !== 'undefined') {
   if ('caches' in window) {
     caches.keys().then((names) => {
-      for (const name of names) {
+      names.forEach((name) => {
         caches.delete(name);
-      }
+      });
+    }).catch(() => {});
+  }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/firebase-messaging-sw.js').then((reg) => {
+      reg.update().catch(() => {});
     }).catch(() => {});
   }
 }
