@@ -925,12 +925,12 @@ export const AdminDashboard: React.FC = () => {
                       {users.filter(u => (u.status === "approved" || u.status === "rejected") && u.createdAt).length > 0 ? (
                         <table className="w-full text-left border-collapse">
                           <thead>
-                            <tr className="border-b" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: textMuted }}>
-                              <th className="p-3">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
-                              <th className="p-3">{language === "ar" ? "الاسم" : "Name"}</th>
-                              <th className="p-3">{language === "ar" ? "القسم" : "Department"}</th>
-                              <th className="p-3">{language === "ar" ? "الحالة" : "Status"}</th>
-                              <th className="p-3 align-top"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
+                            <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
+                              <th className="p-3 text-white">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
+                              <th className="p-3 text-white">{language === "ar" ? "الاسم" : "Name"}</th>
+                              <th className="p-3 text-white">{language === "ar" ? "القسم" : "Department"}</th>
+                              <th className="p-3 text-white">{language === "ar" ? "الحالة" : "Status"}</th>
+                              <th className="p-3 align-top text-white"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -966,11 +966,11 @@ export const AdminDashboard: React.FC = () => {
                       {users.filter(u => u.status === "deleted").length > 0 ? (
                         <table className="w-full text-left border-collapse">
                           <thead>
-                            <tr className="border-b" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: textMuted }}>
-                              <th className="p-3">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
-                              <th className="p-3">{language === "ar" ? "الاسم" : "Name"}</th>
-                              <th className="p-3">{language === "ar" ? "القسم" : "Department"}</th>
-                              <th className="p-3 align-top"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
+                            <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
+                              <th className="p-3 text-white">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
+                              <th className="p-3 text-white">{language === "ar" ? "الاسم" : "Name"}</th>
+                              <th className="p-3 text-white">{language === "ar" ? "القسم" : "Department"}</th>
+                              <th className="p-3 align-top text-white"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1118,58 +1118,58 @@ export const AdminDashboard: React.FC = () => {
                   <div className="overflow-x-auto border rounded-lg shadow-sm print:hidden" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                     <table className="w-full text-left border-collapse text-sm">
                       <thead>
-                        <tr className="border-b" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
+                        <tr className="border-b text-white" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
                           <th className="p-3">
-                            <div className="font-semibold mb-2" style={{ color: textMuted }}>{language === "ar" ? "الكود الوظيفي" : "HR Code"}</div>
+                            <div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</div>
                             <div className="relative">
-                              <input type="text" value={searchHrCode} onChange={(e) => setSearchHrCode(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#002D62] pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} placeholder={language === "ar" ? "تصفية..." : "Filter..."} />
-                              {searchHrCode && <button onClick={() => setSearchHrCode("")} className="absolute right-1 top-1/2 -translate-y-1/2" style={{ color: textMuted }}><X size={12} /></button>}
+                              <input type="text" value={searchHrCode} onChange={(e) => setSearchHrCode(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#FFC000] pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} placeholder={language === "ar" ? "تصفية..." : "Filter..."} />
+                              {searchHrCode && <button onClick={() => setSearchHrCode("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                             </div>
                           </th>
                           <th className="p-3">
-                            <div className="font-semibold mb-2" style={{ color: textMuted }}>{language === "ar" ? "الاسم" : "Name"}</div>
+                            <div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "الاسم" : "Name"}</div>
                             <div className="relative">
-                              <input type="text" value={searchTrainee} onChange={(e) => setSearchTrainee(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#002D62] pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} placeholder={language === "ar" ? "تصفية..." : "Filter..."} />
-                              {searchTrainee && <button onClick={() => setSearchTrainee("")} className="absolute right-1 top-1/2 -translate-y-1/2" style={{ color: textMuted }}><X size={12} /></button>}
+                              <input type="text" value={searchTrainee} onChange={(e) => setSearchTrainee(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#FFC000] pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} placeholder={language === "ar" ? "تصفية..." : "Filter..."} />
+                              {searchTrainee && <button onClick={() => setSearchTrainee("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                             </div>
                           </th>
                           <th className="p-3">
-                            <div className="font-semibold mb-2" style={{ color: textMuted }}>{language === "ar" ? "القسم" : "Department"}</div>
+                            <div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "القسم" : "Department"}</div>
                             <div className="relative">
-                              <select value={searchDepartment} onChange={(e) => setSearchDepartment(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#002D62] appearance-none pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}>
+                              <select value={searchDepartment} onChange={(e) => setSearchDepartment(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#FFC000] appearance-none pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}>
                                 <option value="">{language === "ar" ? "الكل" : "All"}</option>
                                 {dynamicDepartments.map((d) => <option key={d} value={d}>{d}</option>)}
                               </select>
-                              {searchDepartment && <button onClick={() => setSearchDepartment("")} className="absolute right-4 top-1/2 -translate-y-1/2" style={{ color: textMuted }}><X size={12} /></button>}
+                              {searchDepartment && <button onClick={() => setSearchDepartment("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                             </div>
                           </th>
                           <th className="p-3">
-                            <div className="font-semibold mb-2" style={{ color: textMuted }}>{language === "ar" ? "الدورة التدريبية" : "Course Name"}</div>
+                            <div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "الدورة التدريبية" : "Course Name"}</div>
                             <div className="relative">
-                              <select value={selectedCourseFilter} onChange={(e) => setSelectedCourseFilter(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#002D62] appearance-none pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}>
+                              <select value={selectedCourseFilter} onChange={(e) => setSelectedCourseFilter(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#FFC000] appearance-none pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}>
                                 <option value="">{language === "ar" ? "الكل" : "All"}</option>
                                 {dynamicCourses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
                               </select>
-                              {selectedCourseFilter && <button onClick={() => setSelectedCourseFilter("")} className="absolute right-4 top-1/2 -translate-y-1/2" style={{ color: textMuted }}><X size={12} /></button>}
+                              {selectedCourseFilter && <button onClick={() => setSelectedCourseFilter("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                             </div>
                           </th>
-                          <th className="p-3 align-top"><div className="font-semibold mb-2" style={{ color: textMuted }}>{language === "ar" ? "المدة" : "Duration"}</div></th>
-                          <th className="p-3 align-top"><div className="font-semibold mb-2" style={{ color: textMuted }}>{language === "ar" ? "أيام الحضور" : "Attended Days"}</div></th>
-                          <th className="p-3 align-top"><div className="font-semibold mb-2" style={{ color: textMuted }}>{language === "ar" ? "الدرجة" : "Score"}</div></th>
+                          <th className="p-3 align-top"><div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "المدة" : "Duration"}</div></th>
+                          <th className="p-3 align-top"><div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "أيام الحضور" : "Attended Days"}</div></th>
+                          <th className="p-3 align-top"><div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "الدرجة" : "Score"}</div></th>
                           <th className="p-3 align-top min-w-[140px]">
-                            <div className="font-semibold mb-2" style={{ color: textMuted }}>{language === "ar" ? "التاريخ" : "Date"}</div>
+                            <div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "التاريخ" : "Date"}</div>
                             <div className="flex flex-col gap-2">
                               <div className="relative">
-                                <input type="date" value={fromDateFilter} onChange={(e) => setFromDateFilter(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#002D62] pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} title={language === "ar" ? "من تاريخ" : "From Date"} />
-                                {fromDateFilter && <button onClick={() => setFromDateFilter("")} className="absolute right-1 top-1/2 -translate-y-1/2" style={{ color: textMuted }}><X size={12} /></button>}
+                                <input type="date" value={fromDateFilter} onChange={(e) => setFromDateFilter(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#FFC000] pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} title={language === "ar" ? "من تاريخ" : "From Date"} />
+                                {fromDateFilter && <button onClick={() => setFromDateFilter("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                               </div>
                               <div className="relative">
-                                <input type="date" value={toDateFilter} onChange={(e) => setToDateFilter(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#002D62] pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} title={language === "ar" ? "إلى تاريخ" : "To Date"} />
-                                {toDateFilter && <button onClick={() => setToDateFilter("")} className="absolute right-1 top-1/2 -translate-y-1/2" style={{ color: textMuted }}><X size={12} /></button>}
+                                <input type="date" value={toDateFilter} onChange={(e) => setToDateFilter(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#FFC000] pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} title={language === "ar" ? "إلى تاريخ" : "To Date"} />
+                                {toDateFilter && <button onClick={() => setToDateFilter("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                               </div>
                             </div>
                           </th>
-                          <th className="p-3 align-top"><div className="font-semibold mb-2" style={{ color: textMuted }}>{language === "ar" ? "إجراءات" : "Actions"}</div></th>
+                          <th className="p-3 align-top"><div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
                         </tr>
                       </thead>
                       <tbody>
