@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { X, Sparkles, Mail, ShieldCheck, Cpu, Code2, Award, ExternalLink } from 'lucide-react';
+import { X, Mail } from 'lucide-react';
 import { APP_VERSION } from '../version';
 import { useAppContext } from '../context';
 
@@ -20,10 +20,8 @@ export const AboutModal: React.FC<AboutModalProps> = ({ onClose }) => {
           borderColor: isDark ? 'rgba(148, 190, 255, 0.4)' : '#E2E8F0' 
         }}
       >
-        {/* Header with Orascom Navy & Gold Accent */}
+        {/* Header */}
         <div className="bg-[#002D62] text-white p-6 relative overflow-hidden shrink-0 border-b border-blue-900">
-          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#FFC000]/10 rounded-full blur-2xl pointer-events-none" />
-          
           <button 
             onClick={onClose} 
             className="absolute top-4 right-4 rtl:right-auto rtl:left-4 text-gray-300 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
@@ -61,7 +59,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ onClose }) => {
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-5 text-sm flex-1">
           
-          {/* System Overview */}
+          {/* General System Overview */}
           <div 
             className="p-4 rounded-xl border leading-relaxed text-xs sm:text-sm"
             style={{ 
@@ -75,7 +73,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ onClose }) => {
             </p>
           </div>
 
-          {/* Lead Developer & Designer Card */}
+          {/* Developer & Management Card */}
           <div 
             className="p-4 rounded-xl border relative overflow-hidden shadow-xs"
             style={{ 
@@ -83,16 +81,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ onClose }) => {
               borderColor: isDark ? '#FFC000/30' : '#FDE68A'
             }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-lg bg-[#FFC000] text-[#001D42] flex items-center justify-center font-black shrink-0">
-                <Code2 size={14} />
-              </div>
-              <span className="text-xs font-black uppercase tracking-wider text-[#002D62] dark:text-[#FFC000]">
-                {language === 'ar' ? 'تصميم وتطوير المنظومة' : 'Design & Engineering'}
-              </span>
-            </div>
-
-            <p className="text-sm font-black text-[#002D62] dark:text-white mt-1">
+            <p className="text-sm font-black text-[#002D62] dark:text-[#FFC000] leading-snug">
               {APP_VERSION.creditLine}
             </p>
 
@@ -107,24 +96,6 @@ export const AboutModal: React.FC<AboutModalProps> = ({ onClose }) => {
               <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400">
                 Build {APP_VERSION.buildTimestamp}
               </span>
-            </div>
-          </div>
-
-          {/* Core System Highlights */}
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div 
-              className="p-2.5 rounded-lg border flex items-center gap-2"
-              style={{ backgroundColor: isDark ? '#11223F' : '#F8FAFC', borderColor: isDark ? 'rgba(148, 190, 255, 0.15)' : '#E2E8F0', color: isDark ? '#CBD5E1' : '#475569' }}
-            >
-              <ShieldCheck size={16} className="text-emerald-500 shrink-0" />
-              <span className="font-bold">{language === 'ar' ? 'أمان وسرية البيانات' : 'Enterprise Security'}</span>
-            </div>
-            <div 
-              className="p-2.5 rounded-lg border flex items-center gap-2"
-              style={{ backgroundColor: isDark ? '#11223F' : '#F8FAFC', borderColor: isDark ? 'rgba(148, 190, 255, 0.15)' : '#E2E8F0', color: isDark ? '#CBD5E1' : '#475569' }}
-            >
-              <Sparkles size={16} className="text-[#FFC000] shrink-0" />
-              <span className="font-bold">{language === 'ar' ? 'أتمتة إعلانات Outlook' : 'Outlook Automation'}</span>
             </div>
           </div>
         </div>
