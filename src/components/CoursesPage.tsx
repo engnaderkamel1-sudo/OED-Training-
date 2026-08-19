@@ -179,12 +179,12 @@ export const CoursesPage: React.FC = () => {
                 return (
                   <tr key={c.id || index} className="hover:bg-blue-50/40 transition-colors">
                     {/* Index */}
-                    <td className="p-4 text-center text-gray-400 font-semibold text-xs">
+                    <td className="p-4 text-center text-gray-400 dark:text-gray-500 font-semibold text-xs">
                       {index + 1}
                     </td>
 
                     {/* Course Title */}
-                    <td className="p-4 font-bold text-[#002D62]">
+                    <td className="p-4 font-bold text-[#002D62] dark:text-[#70B2FF]">
                       <div className="flex items-center gap-2">
                         <BookOpen size={16} className="text-[#FFC000] shrink-0" />
                         <span>{c.title}</span>
@@ -192,9 +192,9 @@ export const CoursesPage: React.FC = () => {
                     </td>
 
                     {/* Duration / Days */}
-                    <td className="p-4 text-gray-700 font-medium">
+                    <td className="p-4 text-gray-700 dark:text-gray-300 font-medium">
                       <div className="flex items-center gap-1.5">
-                        <Clock size={15} className="text-gray-400" />
+                        <Clock size={15} className="text-gray-400 dark:text-gray-500" />
                         <span>{c.duration || `${c.durationDays || 1} Days`}</span>
                       </div>
                     </td>
@@ -206,9 +206,9 @@ export const CoursesPage: React.FC = () => {
                           href={c.materialLink || c.sharedResourceLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-900 text-xs font-bold transition-colors border border-blue-200"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-xs font-bold transition-colors border border-blue-200 dark:border-blue-700/50"
                         >
-                          <FolderOpen size={14} className="text-blue-600" />
+                          <FolderOpen size={14} className="text-blue-600 dark:text-blue-400" />
                           <span>{language === 'ar' ? 'فتح الماتريال' : 'Open Material'}</span>
                           <ExternalLink size={12} />
                         </a>
@@ -216,35 +216,37 @@ export const CoursesPage: React.FC = () => {
                         isAdmin ? (
                           <button
                             onClick={() => openEditModal(c)}
-                            className="text-xs text-gray-400 hover:text-blue-600 hover:underline flex items-center gap-1 italic"
+                            className="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:underline flex items-center gap-1 italic cursor-pointer"
                           >
-                            <span>+ {language === 'ar' ? 'إضافة رابط' : 'Add Link'}</span>
+                            <Plus size={13} />
+                            <span>{language === 'ar' ? 'إضافة رابط' : 'Add Link'}</span>
                           </button>
                         ) : (
-                          <span className="text-xs text-gray-400 italic">
-                            {language === 'ar' ? 'غير متوفر حالياً' : 'Not available'}
-                          </span>
+                          <span className="text-xs text-gray-400 dark:text-gray-600 italic">{language === 'ar' ? 'غير متوفر' : 'Not available'}</span>
                         )
                       )}
                     </td>
 
                     {/* Topics Covered */}
-                    <td className="p-4 text-gray-600">
+                    <td className="p-4 text-gray-600 dark:text-gray-300">
                       {topics.length > 0 ? (
-                        <div className="flex flex-wrap gap-1.5">
-                          {topics.map((t, tidx) => (
+                        <div className="flex flex-wrap gap-1.5 max-w-md">
+                          {topics.slice(0, 3).map((topic, i) => (
                             <span 
-                              key={tidx}
-                              className="bg-gray-100 text-gray-800 text-xs px-2.5 py-0.5 rounded-md font-medium border border-gray-200"
+                              key={i} 
+                              className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 dark:bg-white/[0.08] text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-white/[0.1]"
                             >
-                              {t}
+                              {topic.trim()}
                             </span>
                           ))}
+                          {topics.length > 3 && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-white/[0.04]">
+                              +{topics.length - 3} {language === 'ar' ? 'محاور أخرى' : 'more'}
+                            </span>
+                          )}
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-400 italic">
-                          {language === 'ar' ? 'لم يتم تحديد محاور تفصيلية بعد' : 'No specific topics listed yet'}
-                        </span>
+                        <span className="text-xs text-gray-400 dark:text-gray-600 italic">{language === 'ar' ? 'لم تُحدد محاور بعد' : 'No topics specified'}</span>
                       )}
                     </td>
 

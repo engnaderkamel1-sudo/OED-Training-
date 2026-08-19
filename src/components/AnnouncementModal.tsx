@@ -70,16 +70,16 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, o
     <div className="fixed inset-0 bg-black/60 z-[99999] flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-md rounded-xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className={`flex justify-between items-center p-4 border-b border-gray-200 ${isGlobal ? 'bg-red-50' : 'bg-blue-50'}`}>
+        <div className={`flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700 ${isGlobal ? 'bg-red-50 dark:bg-red-950/40' : 'bg-blue-50 dark:bg-blue-950/40'}`}>
           <div className="flex items-center gap-2">
-            {isGlobal ? <Globe className="text-red-600" size={20} /> : <Megaphone className="text-blue-600" size={20} />}
-            <h2 className={`text-lg font-bold ${isGlobal ? 'text-red-900' : 'text-blue-900'}`}>
+            {isGlobal ? <Globe className="text-red-600 dark:text-red-400" size={20} /> : <Megaphone className="text-blue-600 dark:text-blue-400" size={20} />}
+            <h2 className={`text-lg font-bold ${isGlobal ? 'text-red-900 dark:text-red-200' : 'text-blue-900 dark:text-blue-200'}`}>
               {isGlobal 
                 ? (language === 'ar' ? 'إرسال إعلان عام للجميع' : 'Send Global Broadcast') 
                 : (language === 'ar' ? `إعلان: ${session?.courseTitle}` : `Announcement: ${session?.courseTitle}`)}
             </h2>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition-colors">
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -87,14 +87,14 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, o
         {step === 'compose' ? (
           <div className="p-4 flex flex-col gap-4">
             {isGlobal && (
-              <div className="bg-red-100 border border-red-200 text-red-800 px-3 py-2 rounded text-sm flex items-start gap-2">
+              <div className="bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700/50 text-red-800 dark:text-red-300 px-3 py-2 rounded-lg text-sm flex items-start gap-2">
                 <AlertTriangle size={16} className="mt-0.5 shrink-0" />
                 <p>{language === 'ar' ? 'هذا الإعلان سيصل لجميع المستخدمين في النظام.' : 'This message will reach ALL users in the system.'}</p>
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">
                 {language === 'ar' ? 'قوالب جاهزة (اختياري)' : 'Templates (Optional)'}
               </label>
               <div className="flex flex-wrap gap-2">
@@ -102,7 +102,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, o
                   <button 
                     key={i} 
                     onClick={() => handleTemplateClick(i)}
-                    className="text-xs font-medium bg-gray-100 border border-gray-200 hover:bg-gray-200 text-gray-700 px-2 py-1.5 rounded transition-colors"
+                    className="text-xs font-medium bg-gray-100 dark:bg-white/[0.08] border border-gray-200 dark:border-white/[0.1] hover:bg-gray-200 dark:hover:bg-white/[0.12] text-gray-700 dark:text-gray-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
                   >
                     {tpl.label}
                   </button>
@@ -111,7 +111,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, o
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
                 {language === 'ar' ? 'عنوان الإعلان' : 'Announcement Title'}
               </label>
               <input
@@ -119,12 +119,12 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, o
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder={language === 'ar' ? 'مثال: إشعار هام...' : 'e.g. Important Notice...'}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-shadow"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-shadow bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
                 {language === 'ar' ? 'نص الرسالة (يمكنك الكتابة بحرية)' : 'Message Body (Custom Message)'} <span className="text-red-500">*</span>
               </label>
               <textarea
@@ -133,7 +133,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, o
                 required
                 rows={4}
                 placeholder={language === 'ar' ? 'اكتب رسالتك هنا...' : 'Type your custom message here...'}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none transition-shadow"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none transition-shadow bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>

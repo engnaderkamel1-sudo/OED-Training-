@@ -9,17 +9,17 @@ import {
 } from 'lucide-react';
 
 const CATEGORIES: { value: SuggestionCategory; icon: React.FC<any>; color: string }[] = [
-  { value: 'ui',      icon: Sparkles,  color: 'text-purple-600 bg-purple-50 border-purple-200' },
-  { value: 'course',  icon: BookOpen,  color: 'text-blue-600 bg-blue-50 border-blue-200' },
-  { value: 'bug',     icon: Bug,       color: 'text-red-600 bg-red-50 border-red-200' },
-  { value: 'general', icon: Lightbulb, color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  { value: 'ui',      icon: Sparkles,  color: 'text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700/50' },
+  { value: 'course',  icon: BookOpen,  color: 'text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700/50' },
+  { value: 'bug',     icon: Bug,       color: 'text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700/50' },
+  { value: 'general', icon: Lightbulb, color: 'text-amber-600 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700/50' },
 ];
 
 const STATUS_CONFIG: Record<SuggestionStatus, { label_en: string; label_ar: string; color: string; icon: React.FC<any> }> = {
-  pending:   { label_en: 'Pending',       label_ar: 'قيد الانتظار', color: 'text-gray-600 bg-gray-100 border-gray-300',    icon: Clock },
-  reviewing: { label_en: 'Under Review',  label_ar: 'قيد الدراسة', color: 'text-blue-700 bg-blue-50 border-blue-200',    icon: AlertCircle },
-  done:      { label_en: 'Done',          label_ar: 'تم',           color: 'text-green-700 bg-green-50 border-green-200', icon: CheckCircle },
-  rejected:  { label_en: 'Rejected',      label_ar: 'مرفوض',        color: 'text-red-700 bg-red-50 border-red-200',       icon: XCircle },
+  pending:   { label_en: 'Pending',       label_ar: 'قيد الانتظار', color: 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/[0.08] border-gray-300 dark:border-white/[0.15]', icon: Clock },
+  reviewing: { label_en: 'Under Review',  label_ar: 'قيد الدراسة', color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700/50',    icon: AlertCircle },
+  done:      { label_en: 'Done',          label_ar: 'تم',           color: 'text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700/50', icon: CheckCircle },
+  rejected:  { label_en: 'Rejected',      label_ar: 'مرفوض',        color: 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700/50',       icon: XCircle },
 };
 
 // Message templates for each status change

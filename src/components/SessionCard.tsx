@@ -111,20 +111,20 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   // DYNAMIC STYLING LOGIC
   // ==========================================
 
-  let cardClasses = "p-5 rounded-lg shadow-sm border transition-all flex flex-col justify-between h-full relative group ";
+  let cardClasses = "p-5 rounded-xl shadow-sm border transition-all flex flex-col justify-between h-full relative group ";
   
   if (isCancelled) {
     // Admin Cancelled State
-    cardClasses += "bg-gray-100 border-gray-300 opacity-60 grayscale";
+    cardClasses += "bg-gray-100 dark:bg-white/[0.04] border-gray-300 dark:border-white/[0.1] opacity-75 grayscale";
   } else if (!isAdminView && isUnregistered) {
     // Trainee Unregistered State
-    cardClasses += "bg-orange-50/40 border-amber-200 opacity-50";
+    cardClasses += "bg-orange-50/40 dark:bg-orange-950/20 border-amber-200 dark:border-amber-900/40 opacity-75";
   } else if (isCompleted) {
     // Completed/Finalized State
-    cardClasses += "bg-emerald-50/50 border-emerald-300";
+    cardClasses += "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-900/40";
   } else {
     // Default Active State
-    cardClasses += "bg-white border-gray-200 hover:border-[#002D62]/30 hover:shadow-md";
+    cardClasses += "bg-white dark:bg-[#13223F] border-gray-200 dark:border-white/[0.12] hover:border-[#002D62]/40 dark:hover:border-[#70B2FF]/50 hover:shadow-md";
   }
 
   return (
@@ -133,25 +133,25 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       <div>
         {/* Header & Badges */}
         <div className="flex justify-between items-start mb-3 gap-2 flex-wrap">
-          <h3 className={`font-bold text-lg leading-tight ${isCancelled ? 'text-gray-500 line-through' : 'text-[#002D62]'}`}>
+          <h3 className={`font-bold text-lg leading-tight ${isCancelled ? 'text-gray-500 line-through' : 'text-[#002D62] dark:text-[#70B2FF]'}`}>
             <DataField>{session.courseTitle}</DataField>
-            {isCancelled && <span className="text-red-600 font-bold ml-2"> ({t('cancelled')})</span>}
+            {isCancelled && <span className="text-red-600 dark:text-red-400 font-bold ml-2"> ({t('cancelled')})</span>}
           </h3>
           
           <div className="flex items-center gap-1.5 flex-wrap">
             {session.sessionNumber && (
-              <span className="text-xs bg-blue-50 text-[#002D62] px-2 py-0.5 rounded font-semibold border border-blue-200 shadow-sm">
+              <span className="text-xs bg-blue-50 dark:bg-blue-900/30 text-[#002D62] dark:text-blue-300 px-2 py-0.5 rounded font-semibold border border-blue-200 dark:border-blue-700/50 shadow-sm">
                 {session.sessionNumber === 'sessionOne' ? t('sessionOne') : session.sessionNumber === 'sessionTwo' ? t('sessionTwo') : session.sessionNumber === 'sessionThree' ? t('sessionThree') : session.sessionNumber}
               </span>
             )}
             {isCancelled && (
-              <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold border border-red-200 shadow-sm flex items-center gap-1">
+              <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-0.5 rounded font-bold border border-red-200 dark:border-red-700/50 shadow-sm flex items-center gap-1">
                 <Ban size={12} />
                 {t('cancelled')}
               </span>
             )}
             {isCompleted && (
-              <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-bold border border-emerald-200 shadow-sm flex items-center gap-1">
+              <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-700/50 shadow-sm flex items-center gap-1">
                 <CheckCircle size={12} />
                 {language === 'ar' ? 'مكتملة' : 'Completed'}
               </span>
@@ -160,34 +160,34 @@ export const SessionCard: React.FC<SessionCardProps> = ({
         </div>
 
         {/* Session Details */}
-        <div className="space-y-2.5 text-sm text-gray-600">
+        <div className="space-y-2.5 text-sm text-gray-700 dark:text-gray-300">
           <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-[#002D62] opacity-70 shrink-0" />
+            <Calendar className="h-4 w-4 text-[#002D62] dark:text-[#70B2FF] opacity-80 shrink-0" />
             <span className="font-medium">
               {session.startDate === session.endDate || !session.endDate
                 ? <DataField>{session.startDate}</DataField>
-                : <><DataField>{session.startDate}</DataField> <span className="text-gray-400 text-xs mx-1">{language === 'ar' ? 'Ã˜Â¥Ã™â€žÃ™â€°' : 'to'}</span> <DataField>{session.endDate}</DataField></>
+                : <><DataField>{session.startDate}</DataField> <span className="text-gray-400 dark:text-gray-500 text-xs mx-1">{language === 'ar' ? 'إلى' : 'to'}</span> <DataField>{session.endDate}</DataField></>
               }
             </span>
           </div>
           
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-[#002D62] opacity-70 shrink-0" />
+            <Clock className="h-4 w-4 text-[#002D62] dark:text-[#70B2FF] opacity-80 shrink-0" />
             <span><DataField>{session.startTime}</DataField></span>
           </div>
           
           <div className="flex items-start gap-2">
-            <MapPin className="h-4 w-4 text-[#002D62] opacity-70 shrink-0 mt-0.5" />
+            <MapPin className="h-4 w-4 text-[#002D62] dark:text-[#70B2FF] opacity-80 shrink-0 mt-0.5" />
             <span className="leading-snug"><DataField>{session.location}</DataField></span>
           </div>
 
           <div className="flex items-start gap-2">
-            <Users className="h-4 w-4 text-[#002D62] opacity-70 shrink-0 mt-0.5" />
+            <Users className="h-4 w-4 text-[#002D62] dark:text-[#70B2FF] opacity-80 shrink-0 mt-0.5" />
             <div className="flex flex-col">
               <span className="leading-snug"><DataField>{session.targetParticipants}</DataField></span>
               {isAdminView && (
-                <span className="text-xs font-bold text-emerald-700 mt-1 bg-emerald-50 px-2 py-0.5 rounded self-start border border-emerald-100">
-                  {attendeesCount} {language === 'ar' ? 'Ã™â€¦Ã˜Â³Ã˜Â¬Ã™â€žÃ™Å Ã™â€ ' : 'registered'}
+                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 mt-1 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded self-start border border-emerald-100 dark:border-emerald-700/50">
+                  {attendeesCount} {language === 'ar' ? 'مسجلين' : 'registered'}
                 </span>
               )}
             </div>

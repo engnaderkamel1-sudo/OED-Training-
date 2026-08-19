@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context';
 import { mockCourses } from '../data';
 import { ExternalLink, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag, Megaphone, Radio, Volume2, Sparkles } from 'lucide-react';
@@ -95,12 +95,12 @@ export const TraineeDashboard: React.FC = () => {
   const [registeredCourseIds, setRegisteredCourseIds] = useState<string[]>([]);
   const [actionToast, setActionToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
-  // تعريف متغير الألوان
+  // Unified Dark/Light Mode Palette
   const isDark = theme === 'dark'; 
-  const bgColor = isDark ? '#1e293b' : 'transparent';
-  const cardColor = isDark ? '#334155' : '#ffffff';
-  const borderColor = isDark ? '#475569' : '#e5e7eb';
-  const textColor = isDark ? '#f8fafc' : '#1f2937';
+  const bgColor = isDark ? '#0A1324' : 'transparent';
+  const cardColor = isDark ? '#13223F' : '#FFFFFF';
+  const borderColor = isDark ? 'rgba(255, 255, 255, 0.12)' : '#E2E8F0';
+  const textColor = isDark ? '#F1F5F9' : '#0D1B2A';
 
   const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
     try {

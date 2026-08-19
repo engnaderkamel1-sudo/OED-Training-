@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { X, Printer } from 'lucide-react';
 import { UpcomingSession } from '../types';
 
@@ -29,7 +29,7 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({ session, onClose, lang
         </div>
 
         <div className="p-8 flex flex-col items-center">
-          <p className="text-center text-gray-600 mb-6 font-medium">
+          <p className="text-center text-gray-600 dark:text-gray-300 mb-6 font-medium">
             {language === 'ar' 
               ? 'اجعل المتدربين يمسحون هذا الكود لتسجيل حضورهم تلقائياً' 
               : 'Have trainees scan this code to automatically register their attendance'}
@@ -40,21 +40,21 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({ session, onClose, lang
           </div>
 
           <div className="text-center mb-6">
-            <h3 className="font-bold text-lg text-[#002D62]">{session.courseTitle}</h3>
-            <p className="text-gray-500">Session ID: {session.sessionNumber || session.id.substring(0,6)}</p>
+            <h3 className="font-bold text-lg text-[#002D62] dark:text-[#70B2FF]">{session.courseTitle}</h3>
+            <p className="text-gray-500 dark:text-gray-400">Session ID: {session.sessionNumber || session.id.substring(0,6)}</p>
           </div>
 
           <div className="flex gap-4 w-full">
             <button
               onClick={handlePrint}
-              className="flex-1 bg-[#FFC000] text-[#002D62] py-3 rounded font-bold hover:bg-yellow-500 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-[#FFC000] text-[#002D62] py-3 rounded-lg font-bold hover:bg-yellow-500 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
             >
               <Printer size={20} />
               {language === 'ar' ? 'طباعة الكود' : 'Print QR'}
             </button>
             <button
               onClick={onClose}
-              className="flex-1 bg-gray-200 text-gray-800 py-3 rounded font-bold hover:bg-gray-300 transition-colors"
+              className="flex-1 bg-gray-200 dark:bg-white/[0.08] text-gray-800 dark:text-gray-200 py-3 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-white/[0.12] transition-colors cursor-pointer"
             >
               {language === 'ar' ? 'إغلاق' : 'Close'}
             </button>

@@ -133,23 +133,23 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
   return (
     <div className="fixed inset-0 bg-black/60 z-[99999] flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-3xl rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
-        <div className="flex justify-between items-center p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-[#002D62]">
+        <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold text-[#002D62] dark:text-[#70B2FF]">
             {language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-red-600 transition-colors">
+          <button onClick={onClose} className="text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
             <X size={24} />
           </button>
         </div>
 
         <div className="p-6 flex flex-col gap-6 overflow-y-auto">
-          <div className="flex gap-4 items-center bg-gray-50 p-4 rounded border border-gray-200">
+          <div className="flex gap-4 items-center bg-gray-50 dark:bg-[#0E1A32] p-4 rounded-xl border border-gray-200 dark:border-gray-700">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">{language === 'ar' ? 'الشهر' : 'Month'}</label>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{language === 'ar' ? 'الشهر' : 'Month'}</label>
               <select 
                 value={selectedMonth} 
                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                className="border border-gray-300 rounded px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#002D62]"
+                className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-[#002D62]"
               >
                 {(language === 'ar' ? monthsAr : monthsEn).map((m, i) => (
                   <option key={i} value={i}>{m}</option>
@@ -157,11 +157,11 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
               </select>
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">{language === 'ar' ? 'السنة' : 'Year'}</label>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">{language === 'ar' ? 'السنة' : 'Year'}</label>
               <select 
                 value={selectedYear} 
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="border border-gray-300 rounded px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#002D62]"
+                className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-[#002D62]"
               >
                 {years.map(y => (
                   <option key={y} value={y}>{y}</option>
@@ -171,21 +171,21 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
           </div>
 
           <div>
-            <h3 className="font-bold text-gray-800 mb-3 flex justify-between items-center">
+            <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-3 flex justify-between items-center">
               <span>{language === 'ar' ? 'الجلسات المكتملة' : 'Completed Sessions'}</span>
-              <span className="text-sm bg-[#002D62] text-white px-2 py-1 rounded">
+              <span className="text-sm bg-[#002D62] text-white px-2.5 py-1 rounded-md font-semibold">
                 {aggregatedCourses.filter(c => selectedCourseIds.has(c.id)).length} {language === 'ar' ? 'محدد' : 'Selected'}
               </span>
             </h3>
             
             {aggregatedCourses.length === 0 ? (
-              <div className="text-center p-8 bg-gray-50 border border-dashed rounded text-gray-500">
+              <div className="text-center p-8 bg-gray-50 dark:bg-white/[0.03] border border-dashed border-gray-300 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400">
                 {language === 'ar' ? 'لا توجد جلسات مكتملة في هذا الشهر.' : 'No completed sessions found for this month.'}
               </div>
             ) : (
-              <div className="border border-gray-200 rounded overflow-hidden">
+              <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
                 <table className="w-full text-left text-sm">
-                  <thead className="bg-gray-100">
+                  <thead className="bg-gray-100 dark:bg-[#0A1324] text-gray-700 dark:text-gray-200">
                     <tr>
                       <th className="p-3 w-10 text-center">
                         <input 
@@ -205,7 +205,7 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
                   </thead>
                   <tbody>
                     {aggregatedCourses.map((course, idx) => (
-                      <tr key={course.id} className={`border-t border-gray-100 hover:bg-gray-50 ${!selectedCourseIds.has(course.id) ? 'opacity-50 bg-gray-50' : ''}`}>
+                      <tr key={course.id} className={`border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.04] ${!selectedCourseIds.has(course.id) ? 'opacity-50 bg-gray-50 dark:bg-transparent' : ''}`}>
                         <td className="p-3 text-center">
                           <input 
                             type="checkbox" 
@@ -214,9 +214,9 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
                             className="w-4 h-4 cursor-pointer"
                           />
                         </td>
-                        <td className="p-3 font-medium text-gray-800">{course.name}</td>
-                        <td className="p-3 text-gray-600">{course.participants}</td>
-                        <td className="p-3 text-center font-bold text-[#002D62]">{course.count}</td>
+                        <td className="p-3 font-medium text-gray-800 dark:text-gray-100">{course.name}</td>
+                        <td className="p-3 text-gray-600 dark:text-gray-300">{course.participants}</td>
+                        <td className="p-3 text-center font-bold text-[#002D62] dark:text-[#70B2FF]">{course.count}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -226,14 +226,14 @@ export const MonthlyReportModal: React.FC<MonthlyReportModalProps> = ({ onClose,
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 rounded-b-xl">
-          <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded font-bold text-gray-700 hover:bg-gray-100 transition-colors">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0E1A32] flex justify-end gap-3 rounded-b-xl">
+          <button onClick={onClose} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors">
             {language === 'ar' ? 'إلغاء' : 'Cancel'}
           </button>
           <button 
             onClick={handleCopyToClipboard}
             disabled={selectedCourseIds.size === 0}
-            className="bg-[#002D62] text-white px-6 py-2 rounded font-bold flex items-center gap-2 hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            className="bg-[#002D62] text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
           >
             <Mail size={18} />
             {language === 'ar' ? 'نسخ التقرير للإيميل' : 'Copy Report to Email'}

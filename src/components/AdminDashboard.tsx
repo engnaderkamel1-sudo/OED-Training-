@@ -1,4 +1,4 @@
-﻿import { FirebaseUsageModal } from './FirebaseUsageModal';
+import { FirebaseUsageModal } from './FirebaseUsageModal';
 import { EditRecordModal } from './EditRecordModal';
 import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
@@ -88,15 +88,15 @@ export const AdminDashboard: React.FC = () => {
     reactivateSession, cleanedData, loginLogs, currentView, setCurrentView, addAnnouncement, theme
   } = useAppContext();
 
-  // Dark Mode Palette
+  // Unified Dark/Light Mode Palette (Orascom Brand Theme)
   const isDark = theme === 'dark';
-  const bgColor = isDark ? '#1e293b' : 'transparent'; 
-  const cardColor = isDark ? '#334155' : '#ffffff'; 
-  const borderColor = isDark ? '#475569' : '#e5e7eb'; 
-  const textColor = isDark ? '#f8fafc' : '#1f2937'; 
-  const textMuted = isDark ? '#cbd5e1' : '#6b7280'; 
-  const tableHeaderBg = isDark ? '#1e293b' : '#f9fafb';
-  const inputBg = isDark ? '#0f172a' : '#ffffff';
+  const bgColor = isDark ? '#0A1324' : 'transparent'; 
+  const cardColor = isDark ? '#13223F' : '#FFFFFF'; 
+  const borderColor = isDark ? 'rgba(255, 255, 255, 0.12)' : '#E2E8F0'; 
+  const textColor = isDark ? '#F1F5F9' : '#0D1B2A'; 
+  const textMuted = isDark ? '#94A3B8' : '#475569'; 
+  const tableHeaderBg = isDark ? '#060F1E' : '#002D62';
+  const inputBg = isDark ? '#0D1A33' : '#FFFFFF';
 
   const UserAvatarWithName = ({ user }: { user: User }) => (
     <div className="flex items-center gap-3">

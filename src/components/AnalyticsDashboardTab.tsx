@@ -216,79 +216,79 @@ export const AnalyticsDashboardTab = () => {
       {cleanedData.length > 0 && (
         <>
           {/* Filters Bar */}
-          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 print:hidden">
+          <div className="bg-white dark:bg-[#13223F] p-5 rounded-xl shadow-sm border border-gray-200 dark:border-white/[0.12] print:hidden">
             <div className="flex flex-col md:flex-row gap-4 items-end">
               <div className="flex-1 w-full relative">
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('اسم الدورة', 'Course Name')}</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('اسم الدورة', 'Course Name')}</label>
                 <div className="relative">
                   <select 
                     value={courseFilter}
                     onChange={e => setCourseFilter(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white appearance-none pr-8"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100 appearance-none pr-8"
                   >
                     <option value="">{t('الكل', 'All Courses')}</option>
                     {uniqueCourses.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
-                  {courseFilter && <button onClick={() => setCourseFilter('')} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"><XCircle size={14} /></button>}
+                  {courseFilter && <button onClick={() => setCourseFilter('')} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"><XCircle size={14} /></button>}
                 </div>
               </div>
               <div className="flex-1 w-full relative">
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('القسم', 'Department')}</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('القسم', 'Department')}</label>
                 <div className="relative">
                   <select 
                     value={deptFilter}
                     onChange={e => setDeptFilter(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white appearance-none pr-8"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100 appearance-none pr-8"
                   >
                     <option value="">{t('الكل', 'All Departments')}</option>
                     {uniqueDepts.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
-                  {deptFilter && <button onClick={() => setDeptFilter('')} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"><XCircle size={14} /></button>}
+                  {deptFilter && <button onClick={() => setDeptFilter('')} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"><XCircle size={14} /></button>}
                 </div>
               </div>
               <div className="flex-1 w-full relative">
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('المسمى الوظيفي', 'Role')}</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('المسمى الوظيفي', 'Role')}</label>
                 <div className="relative">
                   <select 
                     value={roleFilter}
                     onChange={e => setRoleFilter(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white appearance-none pr-8"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100 appearance-none pr-8"
                   >
                     <option value="">{t('الكل', 'All Roles')}</option>
                     {uniqueRoles.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
-                  {roleFilter && <button onClick={() => setRoleFilter('')} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"><XCircle size={14} /></button>}
+                  {roleFilter && <button onClick={() => setRoleFilter('')} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"><XCircle size={14} /></button>}
                 </div>
               </div>
               <div className="flex-1 w-full relative min-w-[140px]">
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('من تاريخ', 'From Date')}</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('من تاريخ', 'From Date')}</label>
                 <div className="relative">
                   <input 
                     type="date"
                     value={fromDateFilter}
                     onChange={e => setFromDateFilter(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white pr-8"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100 pr-8"
                   />
-                  {fromDateFilter && <button onClick={() => setFromDateFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 bg-white"><XCircle size={14} /></button>}
+                  {fromDateFilter && <button onClick={() => setFromDateFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"><XCircle size={14} /></button>}
                 </div>
-                {fromDateFilter && <div className="text-[10px] text-[#002D62] font-semibold mt-0.5">{formatDateToStandard(fromDateFilter)}</div>}
+                {fromDateFilter && <div className="text-[10px] text-[#002D62] dark:text-[#70B2FF] font-semibold mt-0.5">{formatDateToStandard(fromDateFilter)}</div>}
               </div>
               <div className="flex-1 w-full relative min-w-[140px]">
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('إلى تاريخ', 'To Date')}</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('إلى تاريخ', 'To Date')}</label>
                 <div className="relative">
                   <input 
                     type="date"
                     value={toDateFilter}
                     onChange={e => setToDateFilter(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white pr-8"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100 pr-8"
                   />
-                  {toDateFilter && <button onClick={() => setToDateFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 bg-white"><XCircle size={14} /></button>}
+                  {toDateFilter && <button onClick={() => setToDateFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"><XCircle size={14} /></button>}
                 </div>
-                {toDateFilter && <div className="text-[10px] text-[#002D62] font-semibold mt-0.5">{formatDateToStandard(toDateFilter)}</div>}
+                {toDateFilter && <div className="text-[10px] text-[#002D62] dark:text-[#70B2FF] font-semibold mt-0.5">{formatDateToStandard(toDateFilter)}</div>}
               </div>
               <button
                 onClick={clearFilters}
-                className="flex items-center justify-center bg-gray-100 text-gray-700 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors w-full md:w-auto"
+                className="flex items-center justify-center bg-gray-100 dark:bg-white/[0.08] text-gray-700 dark:text-gray-200 px-4 py-2 rounded-lg border border-gray-300 dark:border-white/[0.15] hover:bg-gray-200 dark:hover:bg-white/[0.12] transition-colors w-full md:w-auto font-medium"
               >
                 <RefreshCw size={16} className="mr-2 rtl:ml-2 rtl:mr-0" />
                 {t('مسح', 'Clear Filters')}
@@ -326,23 +326,23 @@ export const AnalyticsDashboardTab = () => {
           </div>
 
           {/* Data Table */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden print:hidden">
-            <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-              <h3 className="font-bold text-gray-800">{t('البيانات', 'Filtered Data')}</h3>
+          <div className="bg-white dark:bg-[#13223F] rounded-xl shadow-sm border border-gray-200 dark:border-white/[0.12] overflow-hidden print:hidden">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0E1A32] flex justify-between items-center">
+              <h3 className="font-bold text-gray-800 dark:text-gray-100">{t('البيانات', 'Filtered Data')}</h3>
               <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-[#002D62] bg-blue-50 px-3 py-1 rounded-full">
+                <span className="text-sm font-semibold text-[#002D62] dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full border border-blue-200 dark:border-blue-700/50">
                   {filteredData.length} {t('سجل', 'records')}
                 </span>
                 <button 
                   onClick={handlePrint} 
-                  className="bg-[#002D62] text-white px-3 py-1.5 rounded flex items-center gap-1.5 shadow hover:bg-blue-900 transition-colors text-sm font-medium"
+                  className="bg-[#002D62] text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow hover:bg-blue-900 transition-colors text-sm font-medium"
                 >
                   <Printer size={16} />
                   {language === 'ar' ? 'طباعة التقرير' : 'Print Report'}
                 </button>
                 <button 
                   onClick={handleDownloadPDF} 
-                  className="bg-emerald-700 text-white px-3 py-1.5 rounded flex items-center gap-1.5 shadow hover:bg-emerald-800 transition-colors text-sm font-medium"
+                  className="bg-emerald-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow hover:bg-emerald-800 transition-colors text-sm font-medium"
                 >
                   <Download size={16} />
                   {language === 'ar' ? 'تحميل PDF' : 'Download PDF'}
@@ -351,8 +351,8 @@ export const AnalyticsDashboardTab = () => {
             </div>
             <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
               <table className="w-full text-left border-collapse text-sm">
-                <thead className="sticky top-0 bg-gray-100 shadow-sm z-10">
-                  <tr className="border-b border-gray-200 text-gray-700">
+                <thead className="sticky top-0 bg-gray-100 dark:bg-[#0A1324] shadow-sm z-10">
+                  <tr className="border-b border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200">
                     <th className="p-3 font-semibold">{t('الرقم الوظيفي', 'HR Code')}</th>
                     <th className="p-3 font-semibold">{t('الاسم', 'Name')}</th>
                     <th className="p-3 font-semibold">{t('المسمى الوظيفي', 'Role')}</th>
@@ -366,24 +366,22 @@ export const AnalyticsDashboardTab = () => {
                 </thead>
                 <tbody>
                   {filteredData.map(r => {
-                    console.log('Rendering record (Analytics):', r);
                     return (
-                      <tr key={r.id} className="border-b last:border-0 hover:bg-gray-50">
-                        <td className="p-3 font-medium text-gray-800"><DataField>{r.hrCode}</DataField></td>
-                        <td className="p-3 font-medium text-[#002D62]"><DataField>{r.name}</DataField></td>
-                        <td className="p-3 text-gray-600"><DataField>{r.role}</DataField></td>
-                        <td className="p-3 text-gray-600"><DataField>{r.department}</DataField></td>
-                        <td className="p-3 text-gray-800"><DataField>{r.courseName}</DataField></td>
-                        <td className="p-3 text-gray-600"><DataField>{r.raw?.['Course Duration'] || r.duration}</DataField></td>
-                        <td className="p-3 text-gray-600"><DataField>{r.raw?.['Attended Days'] || r.attendedDays}</DataField></td>
-                        <td className="p-3 font-bold text-gray-800"><DataField>{formatScore(r.raw?.['Score'] || r.score)}</DataField></td>
-                        <td className="p-3 text-gray-500"><DataField>{formatDateToStandard(r.date)}</DataField></td>
+                      <tr key={r.id} className="border-b dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-white/[0.04]">
+                        <td className="p-3 font-medium text-gray-800 dark:text-gray-100"><DataField>{r.hrCode}</DataField></td>
+                        <td className="p-3 font-medium text-[#002D62] dark:text-[#70B2FF]"><DataField>{r.name}</DataField></td>
+                        <td className="p-3 text-gray-600 dark:text-gray-300"><DataField>{r.role}</DataField></td>
+                        <td className="p-3 text-gray-600 dark:text-gray-300"><DataField>{r.department}</DataField></td>
+                        <td className="p-3 text-gray-800 dark:text-gray-100"><DataField>{r.courseName}</DataField></td>
+                        <td className="p-3 text-gray-600 dark:text-gray-300"><DataField>{r.duration}</DataField></td>
+                        <td className="p-3 text-gray-600 dark:text-gray-300"><DataField>{r.attendedDays}</DataField></td>
+                        <td className="p-3 font-bold text-gray-800 dark:text-gray-100"><DataField>{formatScore(r.score)}</DataField></td>
+                        <td className="p-3 text-gray-600 dark:text-gray-300"><DataField>{formatDateToStandard(r.date)}</DataField></td>
                       </tr>
                     );
-                  })}
                   {filteredData.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-8 text-center text-gray-500 font-medium">
+                      <td colSpan={9} className="p-8 text-center text-gray-500 dark:text-gray-400 font-medium">
                         {t('لا توجد بيانات مطابقة للبحث.', 'No data matches the current filters.')}
                       </td>
                     </tr>
