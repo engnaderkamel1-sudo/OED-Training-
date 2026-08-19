@@ -5,7 +5,7 @@ import {
   Calendar, Clock, MapPin, Users, Ban, 
   RotateCcw, Edit2, Bell, AlertTriangle, 
   CheckCircle, FileText, QrCode, ScanLine, MessageSquare,
-  FileText, QrCode, ScanLine, MessageSquare, XCircle, Megaphone
+  XCircle, Megaphone, X, Phone, Mail, UserCheck
 } from 'lucide-react';
 import { DataField } from './DataField';
 
@@ -44,12 +44,14 @@ export const SessionCard: React.FC<SessionCardProps> = ({
 }) => {
   const [debugMsg, setDebugMsg] = React.useState<string>("");
   const [confirmAction, setConfirmAction] = React.useState<'cancel' | 'unregister' | null>(null);
+  const [showAttendeesModal, setShowAttendeesModal] = React.useState<boolean>(false);
   const { 
     cancelSession, 
     reactivateSession, 
     unregisterTrainee, 
     registerTrainee, 
     user, 
+    users,
     language, 
     t 
   } = useAppContext();
@@ -61,6 +63,14 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   const isRegistered = session.registeredUsers?.includes(userCode) || registeredCourseIds.includes(session.id);
   const isUnregistered = session.unregisteredUsers?.includes(userCode);
   const attendeesCount = session.registeredUsers?.length || 0;
+
+  const registeredTrainees = (users || []).filter(u => 
+    u && (
+      (session.registeredUsers || []).includes(u.hrCode) || 
+      (session.registeredUsers || []).includes(u.id) ||
+      (session.registeredUsers || []).includes(`HR${u.id}`)
+    )
+  );
 
   // ==========================================
   // SIMPLE CLICK-ONLY HANDLERS (No onPointerDown)
@@ -186,9 +196,15 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             <div className="flex flex-col">
               <span className="leading-snug"><DataField>{session.targetParticipants}</DataField></span>
               {isAdminView && (
-                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 mt-1 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded self-start border border-emerald-100 dark:border-emerald-700/50">
-                  {attendeesCount} {language === 'ar' ? 'مسجلين' : 'registered'}
-                </span>
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAttendeesModal(true); }}
+                  className="text-xs font-bold text-emerald-700 dark:text-emerald-300 mt-1 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-lg self-start border border-emerald-200 dark:border-emerald-700/50 hover:bg-emerald-100 dark:hover:bg-emerald-800/40 transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:scale-105"
+                  title={language === 'ar' ? 'عرض قائمة المسجلين' : 'View Registered Attendees'}
+                >
+                  <Users size={13} className="text-emerald-600 dark:text-emerald-400" />
+                  <span>{attendeesCount} {language === 'ar' ? 'مسجلين (استعراض 👁️)' : 'registered (View 👁️)'}</span>
+                </button>
               )}
             </div>
           </div>
@@ -407,6 +423,129 @@ export const SessionCard: React.FC<SessionCardProps> = ({
         )}
       </div>
     </div>
+      {showAttendeesModal && (
+        <div 
+          className="fixed inset-0 bg-black/70 backdrop-blur-xs z-[99999] flex items-center justify-center p-4 cursor-pointer animate-fade-in"
+          onClick={() => setShowAttendeesModal(false)}
+        >
+          <div 
+            className="w-full max-w-xl bg-white dark:bg-[#0F1E36] rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-slate-700 flex flex-col max-h-[85vh] cursor-default animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="bg-[#002D62] text-white px-6 py-4 flex justify-between items-center border-b border-blue-900/40">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-[#FFC000] text-[#002D62] rounded-xl font-bold">
+                  <Users size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base sm:text-lg leading-tight">
+                    {language === 'ar' ? 'المتدربون المسجلون في الدورة' : 'Registered Attendees'}
+                  </h3>
+                  <p className="text-xs text-blue-200 mt-0.5 font-medium truncate max-w-[320px]">
+                    {session.courseTitle} ({session.sessionNumber || 'Session 1'})
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAttendeesModal(false)}
+                className="text-gray-300 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Attendees List */}
+            <div className="p-5 overflow-y-auto space-y-3 flex-1">
+              <div className="flex items-center justify-between pb-2 border-b dark:border-slate-800">
+                <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+                  {language === 'ar' ? 'إجمالي الحضور المؤكدين:' : 'Total Confirmed Attendees:'}
+                </span>
+                <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                  {registeredTrainees.length} {language === 'ar' ? 'متدرب' : 'Trainees'}
+                </span>
+              </div>
+
+              {registeredTrainees.length === 0 ? (
+                <div className="text-center py-10 text-gray-400 text-xs sm:text-sm">
+                  {language === 'ar' ? 'لم يسجل أي متدرب في هذه الجلسة حتى الآن' : 'No trainees have registered for this session yet'}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {registeredTrainees.map((trainee, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-800/60 flex items-center justify-between gap-3 shadow-2xs hover:bg-blue-50/50 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-[#002D62] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-xs border border-white/20">
+                          {trainee.profileImageUrl ? (
+                            <img src={trainee.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span>{trainee.name?.slice(0, 2).toUpperCase() || 'TR'}</span>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white truncate">
+                            {trainee.name}
+                          </h4>
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-0.5">
+                            <span className="font-mono font-bold text-[#002D62] dark:text-[#FFC000]">{trainee.hrCode}</span>
+                            <span>•</span>
+                            <span className="truncate">{trainee.department || 'General'}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right rtl:text-left shrink-0">
+                        {trainee.phone && (
+                          <a
+                            href={`tel:${trainee.phone}`}
+                            className="text-xs font-semibold text-blue-600 dark:text-blue-400 block hover:underline"
+                            dir="ltr"
+                          >
+                            {trainee.phone}
+                          </a>
+                        )}
+                        {trainee.email && (
+                          <span className="text-[10px] text-gray-400 block truncate max-w-[150px]">
+                            {trainee.email}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/80 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAttendeesModal(false);
+                  if (onPrintRegisterRequest) onPrintRegisterRequest(session);
+                }}
+                className="px-4 py-2 bg-[#FFC000] hover:bg-yellow-500 text-[#002D62] font-black rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              >
+                <FileText size={14} />
+                <span>{language === 'ar' ? 'طباعة كشف الحضور (PDF)' : 'Print Register (PDF)'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowAttendeesModal(false)}
+                className="px-5 py-2 bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 text-gray-800 dark:text-gray-200 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                {language === 'ar' ? 'إغلاق' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {debugMsg && (
         <div id="debugBox" style={{position:'fixed', bottom:'5px', left:'5px', background:'black', color:'lime', fontSize:'12px', padding:'5px', zIndex:99999, borderRadius:'5px'}}>
           {debugMsg}

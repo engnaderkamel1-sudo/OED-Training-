@@ -229,11 +229,14 @@ export const AdminDashboard: React.FC = () => {
   const [selectedUserToEdit, setSelectedUserToEdit] = useState<User | null>(null);
   const [activeUsersSearchTerm, setActiveUsersSearchTerm] = useState("");
   const [activeUsersLimit, setActiveUsersLimit] = useState<number | 'all'>(10);
+  const [isFullReportView, setIsFullReportView] = useState(false);
 
   const handleExecuteRecordsSearch = async (fetchAll = false) => {
     if (fetchAll) {
+      setIsFullReportView(true);
       await fetchTrainingRecords();
     } else {
+      setIsFullReportView(false);
       await fetchTrainingRecords({
         hrCode: searchHrCode.trim() || undefined,
         name: searchTrainee.trim() || undefined,
@@ -911,6 +914,7 @@ It is my pleasure to announce the beginning of the following course:
     setFromDateFilter(""); 
     setToDateFilter(""); 
     setRecords([]);
+    setIsFullReportView(false);
   };
 
   const getAdminReportOptions = (): ReportOptions => {
@@ -1047,7 +1051,7 @@ It is my pleasure to announce the beginning of the following course:
   const hasActiveFilters = Boolean((searchHrCode && searchHrCode.trim()) || (searchTrainee && searchTrainee.trim()) || searchDepartment || selectedCourseFilter || fromDateFilter || toDateFilter);
 
   const filteredRecords = useMemo(() => {
-    if (!hasActiveFilters && !recordsLoaded) return [];
+    if (!hasActiveFilters && !isFullReportView) return [];
     return records.filter((r) => {
       const user = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}` || u.name?.toLowerCase() === r.userId?.toLowerCase());
       if (searchHrCode && searchHrCode.trim()) {
@@ -1080,10 +1084,10 @@ It is my pleasure to announce the beginning of the following course:
       }
       return true;
     });
-  }, [hasActiveFilters, recordsLoaded, records, users, searchHrCode, searchTrainee, searchDepartment, selectedCourseFilter, fromDateFilter, toDateFilter]);
+  }, [hasActiveFilters, isFullReportView, records, users, searchHrCode, searchTrainee, searchDepartment, selectedCourseFilter, fromDateFilter, toDateFilter]);
 
   const kpiStats = useMemo(() => {
-    if (filteredRecords.length === 0 && !hasActiveFilters && !recordsLoaded) {
+    if (filteredRecords.length === 0 && !hasActiveFilters && !isFullReportView) {
       return {
         totalCourses: globalKPIs.totalCourses || courses.length,
         totalSessions: globalKPIs.totalSessions || upcomingSessions.length,
@@ -1577,13 +1581,6 @@ It is my pleasure to announce the beginning of the following course:
                       <PlusCircle size={16} />
                       <span>{language === "ar" ? "إضافة حضور يدوي" : "Add Record"}</span>
                     </button>
-
-                    {hasActiveFilters && (
-                      <button onClick={handleClearAllFilters} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer animate-fade-in">
-                        <RotateCcw size={14} className="text-red-600 dark:text-red-400" />
-                        <span>{language === "ar" ? "إلغاء الفلترة" : "Clear Filters"}</span>
-                      </button>
-                    )}
                   </div>
                 </div>
 
