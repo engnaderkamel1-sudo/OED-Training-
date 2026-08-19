@@ -60,7 +60,7 @@ export const TopNav: React.FC = () => {
 
   return (
     <>
-      <nav className="bg-[#002D62] dark:bg-[#1e293b] border-b border-transparent dark:border-slate-700 text-white shadow-md sticky top-0 z-50 print:hidden relative">
+      <nav className="bg-[#002D62] dark:bg-[#0D1B33] border-b border-transparent dark:border-b-[#FFC000]/30 text-white shadow-md sticky top-0 z-50 print:hidden relative">
         <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             
@@ -110,7 +110,7 @@ export const TopNav: React.FC = () => {
             <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0 z-50">
               <button
                 onClick={toggleTheme}
-                className="theme-toggle p-1.5 sm:p-2 text-white"
+                className="theme-toggle p-1.5 sm:p-2 text-white cursor-pointer"
                 aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
               >
                 {theme === 'light' ? (
@@ -124,7 +124,7 @@ export const TopNav: React.FC = () => {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-1.5 sm:gap-2 px-1 sm:px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                    className="flex items-center gap-1.5 sm:gap-2 px-1 sm:px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
                   >
                     {user.profileImageUrl ? (
                       <img 
@@ -149,16 +149,16 @@ export const TopNav: React.FC = () => {
 
                   {dropdownOpen && (
                     <div 
-                      className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl overflow-hidden animate-fadeIn z-[99999]"
+                      className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl overflow-hidden animate-fadeIn z-[99999] border"
                       style={{ 
-                        backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
-                        border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`
+                        backgroundColor: theme === 'dark' ? '#193158' : '#ffffff',
+                        borderColor: theme === 'dark' ? 'rgba(148, 190, 255, 0.22)' : '#e2e8f0'
                       }}
                     >
                       <button 
                         onClick={openProfile}
-                        className="w-full text-left rtl:text-right px-4 py-3 border-b hover:bg-black/5 dark:hover:bg-slate-700 transition-colors group flex items-center justify-between"
-                        style={{ borderColor: theme === 'dark' ? '#334155' : '#e2e8f0' }}
+                        className="w-full text-left rtl:text-right px-4 py-3 border-b hover:bg-black/5 dark:hover:bg-white/[0.08] transition-colors group flex items-center justify-between cursor-pointer"
+                        style={{ borderColor: theme === 'dark' ? 'rgba(148, 190, 255, 0.15)' : '#e2e8f0' }}
                         title="Go to My Profile"
                       >
                         <div>
@@ -170,12 +170,12 @@ export const TopNav: React.FC = () => {
                           </p>
                           <p 
                             className="text-xs mt-1" 
-                            style={{ color: theme === 'dark' ? '#cbd5e1' : '#4a5568' }}
+                            style={{ color: theme === 'dark' ? '#C8DBF6' : '#4a5568' }}
                           >
                             {user.hrCode || 'N/A'} • {user.department || 'N/A'}
                           </p>
                         </div>
-                        <UserCircle size={18} className="text-gray-400 group-hover:text-[#002D62] dark:group-hover:text-blue-400 transition-colors" />
+                        <UserCircle size={18} className="text-gray-400 group-hover:text-[#002D62] dark:group-hover:text-blue-300 transition-colors" />
                       </button>
                       
                       <button

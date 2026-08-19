@@ -90,13 +90,13 @@ export const AdminDashboard: React.FC = () => {
 
   // Unified Dark/Light Mode Palette (Orascom Brand Theme)
   const isDark = theme === 'dark';
-  const bgColor = isDark ? '#0A1324' : 'transparent'; 
-  const cardColor = isDark ? '#13223F' : '#FFFFFF'; 
-  const borderColor = isDark ? 'rgba(255, 255, 255, 0.12)' : '#E2E8F0'; 
-  const textColor = isDark ? '#F1F5F9' : '#0D1B2A'; 
-  const textMuted = isDark ? '#94A3B8' : '#475569'; 
-  const tableHeaderBg = isDark ? '#060F1E' : '#002D62';
-  const inputBg = isDark ? '#0D1A33' : '#FFFFFF';
+  const bgColor = isDark ? '#0F1E36' : 'transparent'; 
+  const cardColor = isDark ? '#193158' : '#FFFFFF'; 
+  const borderColor = isDark ? 'rgba(148, 190, 255, 0.22)' : '#E2E8F0'; 
+  const textColor = isDark ? '#FFFFFF' : '#0D1B2A'; 
+  const textMuted = isDark ? '#C8DBF6' : '#475569'; 
+  const tableHeaderBg = isDark ? '#132543' : '#002D62';
+  const inputBg = isDark ? '#132543' : '#FFFFFF';
 
   const UserAvatarWithName = ({ user }: { user: User }) => (
     <div className="flex items-center gap-3">

@@ -97,10 +97,10 @@ export const TraineeDashboard: React.FC = () => {
 
   // Unified Dark/Light Mode Palette
   const isDark = theme === 'dark'; 
-  const bgColor = isDark ? '#0A1324' : 'transparent';
-  const cardColor = isDark ? '#13223F' : '#FFFFFF';
-  const borderColor = isDark ? 'rgba(255, 255, 255, 0.12)' : '#E2E8F0';
-  const textColor = isDark ? '#F1F5F9' : '#0D1B2A';
+  const bgColor = isDark ? '#0F1E36' : 'transparent';
+  const cardColor = isDark ? '#193158' : '#FFFFFF';
+  const borderColor = isDark ? 'rgba(148, 190, 255, 0.22)' : '#E2E8F0';
+  const textColor = isDark ? '#FFFFFF' : '#0D1B2A';
 
   const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
     try {
@@ -351,7 +351,7 @@ export const TraineeDashboard: React.FC = () => {
             <div 
               className="rounded-2xl p-6 text-white shadow-md relative overflow-hidden border"
               style={{ 
-                background: isDark ? 'linear-gradient(to right, #1e293b, #334155)' : 'linear-gradient(to right, #002D62, #0a3f82)',
+                background: isDark ? 'linear-gradient(to right, #162B4D, #1E3A66)' : 'linear-gradient(to right, #002D62, #0a3f82)',
                 borderColor: borderColor
               }}
             >
@@ -398,14 +398,14 @@ export const TraineeDashboard: React.FC = () => {
               >
                 <div 
                   className="p-3 rounded-xl shrink-0"
-                  style={{ backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : '#eff6ff', color: isDark ? '#60a5fa' : '#002D62' }}
+                  style={{ backgroundColor: isDark ? 'rgba(59, 130, 246, 0.25)' : '#eff6ff', color: isDark ? '#85C0FF' : '#002D62' }}
                 >
                   <Calendar size={24} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>{t('totalCourses')}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: isDark ? '#C8DBF6' : '#475569' }}>{t('totalCourses')}</p>
                   <p className="text-2xl font-black mt-0.5" style={{ color: textColor }}>{totalCourses}</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: isDark ? '#64748b' : '#9ca3af' }}>{language === 'ar' ? 'دورات مكتملة وموثقة' : 'Completed course records'}</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: isDark ? '#9BB8DF' : '#64748b' }}>{language === 'ar' ? 'دورات مكتملة وموثقة' : 'Completed course records'}</p>
                 </div>
               </div>
 
@@ -415,14 +415,14 @@ export const TraineeDashboard: React.FC = () => {
               >
                 <div 
                   className="p-3 rounded-xl shrink-0"
-                  style={{ backgroundColor: isDark ? 'rgba(245, 158, 11, 0.2)' : '#fffbeb', color: '#FFC000' }}
+                  style={{ backgroundColor: isDark ? 'rgba(245, 158, 11, 0.25)' : '#fffbeb', color: '#FFC000' }}
                 >
                   <CheckCircle size={24} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>{t('averageScore')}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: isDark ? '#C8DBF6' : '#475569' }}>{t('averageScore')}</p>
                   <p className="text-2xl font-black mt-0.5" style={{ color: textColor }}>{averageScore}%</p>
-                  
+                  <p className="text-[11px] mt-0.5" style={{ color: isDark ? '#9BB8DF' : '#64748b' }}>{language === 'ar' ? 'متوسط الدرجات' : 'Overall score performance'}</p>
                 </div>
               </div>
 
@@ -432,14 +432,14 @@ export const TraineeDashboard: React.FC = () => {
               >
                 <div 
                   className="p-3 rounded-xl shrink-0"
-                  style={{ backgroundColor: isDark ? 'rgba(16, 185, 129, 0.2)' : '#ecfdf5', color: isDark ? '#34d399' : '#059669' }}
+                  style={{ backgroundColor: isDark ? 'rgba(16, 185, 129, 0.25)' : '#ecfdf5', color: isDark ? '#34d399' : '#059669' }}
                 >
                   <Clock size={24} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>{language === 'ar' ? 'ساعات الحضور' : 'Training Hours'}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: isDark ? '#C8DBF6' : '#475569' }}>{language === 'ar' ? 'ساعات الحضور' : 'Training Hours'}</p>
                   <p className="text-2xl font-black mt-0.5" style={{ color: isDark ? '#6ee7b7' : '#047857' }}>{totalCourses * 8}h</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: isDark ? '#64748b' : '#9ca3af' }}>{language === 'ar' ? 'ساعات تدريب فني معتمدة' : 'Accredited technical hours'}</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: isDark ? '#9BB8DF' : '#64748b' }}>{language === 'ar' ? 'ساعات تدريب فني معتمدة' : 'Accredited technical hours'}</p>
                 </div>
               </div>
             </div>
@@ -455,18 +455,18 @@ export const TraineeDashboard: React.FC = () => {
               >
                 <h3 
                   className="font-bold text-base flex items-center gap-2"
-                  style={{ color: isDark ? '#60a5fa' : '#002D62' }}
+                  style={{ color: isDark ? '#85C0FF' : '#002D62' }}
                 >
                   <Calendar size={18} className="text-[#FFC000]" />
-                  <span>{language === 'ar' ? 'سجل الدورات المكتملة وتواريخ الحضور' : 'Completed Courses & Attendance History'}</span>
+                  <span>{language === 'ar' ? 'سجل الدورات المكتملة وتاريخ الحضور' : 'Completed Courses & Attendance History'}</span>
                 </h3>
-                <span className="text-xs font-bold" style={{ color: isDark ? '#94a3b8' : '#9ca3af' }}>
-                  {userRecords.length} {language === 'ar' ? 'سجل' : 'Records'}
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: isDark ? '#132543' : '#eff6ff', color: isDark ? '#85C0FF' : '#002D62' }}>
+                  {userRecords.length} {language === 'ar' ? 'سجلات' : 'Records'}
                 </span>
               </div>
 
               {userRecords.length === 0 ? (
-                <div className="text-center py-8 text-sm" style={{ color: isDark ? '#94a3b8' : '#9ca3af' }}>
+                <div className="text-center py-8 text-sm" style={{ color: isDark ? '#9BB8DF' : '#9ca3af' }}>
                   {language === 'ar' ? 'لا توجد سجلات تدريب تاريخية مسجلة بعد' : 'No training records found yet'}
                 </div>
               ) : (
@@ -482,7 +482,7 @@ export const TraineeDashboard: React.FC = () => {
                         key={r.id} 
                         className="p-4 rounded-xl border shadow-sm transition-all flex flex-col justify-between"
                         style={{ 
-                          backgroundColor: isDark ? 'rgba(30, 41, 59, 0.5)' : '#f9fafb',
+                          backgroundColor: isDark ? 'rgba(19, 37, 67, 0.7)' : '#f9fafb',
                           borderColor: borderColor 
                         }}
                       >
@@ -490,15 +490,15 @@ export const TraineeDashboard: React.FC = () => {
                           <div className="flex justify-between items-start gap-2 mb-2">
                             <span 
                               className="font-bold text-sm leading-snug"
-                              style={{ color: isDark ? '#93c5fd' : '#002D62' }}
+                              style={{ color: isDark ? '#FFFFFF' : '#002D62' }}
                             >
                               <DataField>{course?.title || r.courseName || 'Technical Course'}</DataField>
                             </span>
                             <span 
                               className="text-[11px] font-mono px-2 py-0.5 rounded-md border shrink-0"
                               style={{ 
-                                backgroundColor: isDark ? '#1e293b' : '#ffffff', 
-                                color: isDark ? '#cbd5e1' : '#6b7280', 
+                                backgroundColor: isDark ? '#132543' : '#ffffff', 
+                                color: isDark ? '#C8DBF6' : '#6b7280', 
                                 borderColor: borderColor 
                               }}
                             >
@@ -511,25 +511,21 @@ export const TraineeDashboard: React.FC = () => {
                           className="flex justify-between items-center pt-2 mt-2 border-t text-xs"
                           style={{ borderColor: borderColor }}
                         >
-                          <span style={{ color: isDark ? '#cbd5e1' : '#6b7280' }}>
+                          <span style={{ color: isDark ? '#C8DBF6' : '#6b7280' }}>
                             {t('attendedDays')}: <strong style={{ color: textColor }}>{attendedDaysStr} / {totalDaysStr}</strong>
                           </span>
                           <span 
                             className="font-bold px-2 py-0.5 rounded-md text-[11px]"
                             style={{
                               backgroundColor: scoreVal >= 85 
-                                ? (isDark ? 'rgba(16, 185, 129, 0.15)' : '#d1fae5') 
-                                : scoreVal >= 70 
-                                  ? (isDark ? 'rgba(59, 130, 246, 0.15)' : '#dbeafe') 
-                                  : (isDark ? 'rgba(245, 158, 11, 0.15)' : '#fef3c7'),
+                                ? (isDark ? 'rgba(16, 185, 129, 0.25)' : '#dcfce7')
+                                : (isDark ? 'rgba(59, 130, 246, 0.25)' : '#dbeafe'),
                               color: scoreVal >= 85 
-                                ? (isDark ? '#34d399' : '#065f46') 
-                                : scoreVal >= 70 
-                                  ? (isDark ? '#60a5fa' : '#1e40af') 
-                                  : (isDark ? '#fbbf24' : '#92400e')
+                                ? (isDark ? '#34d399' : '#15803d') 
+                                : (isDark ? '#85C0FF' : '#1d4ed8'),
                             }}
                           >
-                            {t('score')}: {formatScore(scoreVal)}
+                            {language === 'ar' ? 'النتيجة:' : 'Score:'} {scoreVal}%
                           </span>
                         </div>
                       </div>
