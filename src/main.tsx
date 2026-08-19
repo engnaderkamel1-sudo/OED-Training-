@@ -4,31 +4,36 @@ import App from './App.tsx';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
 
-// Auto-update Service Worker instantly on deployment detection
+let isRefreshing = false;
+
+// Auto-update Service Worker safely and smoothly (strictly once per update)
 const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
-    // Force immediate activation of the new build
-    updateSW(true);
+    if (!isRefreshing) {
+      isRefreshing = true;
+      updateSW(true);
+    }
   },
   onOfflineReady() {
     console.log('App ready for offline use.');
   },
 });
 
-// Periodic and on-focus update checks
+// Periodic check (every 5 mins) & on-focus check with 60s throttling
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  window.addEventListener('focus', () => {
+  let lastChecked = Date.now();
+  
+  const checkForUpdate = () => {
+    if (Date.now() - lastChecked < 60 * 1000) return;
+    lastChecked = Date.now();
     navigator.serviceWorker.getRegistration().then((reg) => {
-      if (reg) reg.update();
-    });
-  });
+      if (reg) reg.update().catch(() => {});
+    }).catch(() => {});
+  };
 
-  setInterval(() => {
-    navigator.serviceWorker.getRegistration().then((reg) => {
-      if (reg) reg.update();
-    });
-  }, 2 * 60 * 1000);
+  window.addEventListener('focus', checkForUpdate);
+  setInterval(checkForUpdate, 5 * 60 * 1000);
 }
 
 createRoot(document.getElementById('root')!).render(
