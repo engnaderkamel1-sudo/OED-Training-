@@ -816,10 +816,9 @@ export const TraineeDashboard: React.FC = () => {
           )}
         </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 print:hidden">
         {/* Request a Course & Course Evaluation - Only for Admin */}
         {user?.role === 'admin' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fadeIn">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fadeIn print:hidden">
             {/* Request a Course */}
             <section 
               className="p-6 rounded-lg shadow border"
@@ -870,6 +869,8 @@ export const TraineeDashboard: React.FC = () => {
                 {t('goToForm')} <ExternalLink size={18} className="ml-2 rtl:mr-2 rtl:ml-0" />
               </a>
             </section>
+          </div>
+        )}
           </div>
         )}
         
