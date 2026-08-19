@@ -1118,23 +1118,23 @@ export const AdminDashboard: React.FC = () => {
                   <div className="overflow-x-auto border rounded-lg shadow-sm print:hidden" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                     <table className="w-full text-left border-collapse text-sm">
                       <thead>
-                        <tr className="border-b text-white" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
-                          <th className="p-3">
-                            <div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</div>
+                        <tr className="border-b text-white" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
+                          <th className="p-3" style={{ color: '#FFFFFF' }}>
+                            <div className="font-bold mb-2 drop-shadow-xs" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الكود الوظيفي" : "HR Code"}</div>
                             <div className="relative">
                               <input type="text" value={searchHrCode} onChange={(e) => setSearchHrCode(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#FFC000] pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} placeholder={language === "ar" ? "تصفية..." : "Filter..."} />
                               {searchHrCode && <button onClick={() => setSearchHrCode("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                             </div>
                           </th>
-                          <th className="p-3">
-                            <div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "الاسم" : "Name"}</div>
+                          <th className="p-3" style={{ color: '#FFFFFF' }}>
+                            <div className="font-bold mb-2 drop-shadow-xs" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الاسم" : "Name"}</div>
                             <div className="relative">
                               <input type="text" value={searchTrainee} onChange={(e) => setSearchTrainee(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#FFC000] pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} placeholder={language === "ar" ? "تصفية..." : "Filter..."} />
                               {searchTrainee && <button onClick={() => setSearchTrainee("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                             </div>
                           </th>
-                          <th className="p-3">
-                            <div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "القسم" : "Department"}</div>
+                          <th className="p-3" style={{ color: '#FFFFFF' }}>
+                            <div className="font-bold mb-2 drop-shadow-xs" style={{ color: '#FFFFFF' }}>{language === "ar" ? "القسم" : "Department"}</div>
                             <div className="relative">
                               <select value={searchDepartment} onChange={(e) => setSearchDepartment(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#FFC000] appearance-none pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}>
                                 <option value="">{language === "ar" ? "الكل" : "All"}</option>
@@ -1143,8 +1143,8 @@ export const AdminDashboard: React.FC = () => {
                               {searchDepartment && <button onClick={() => setSearchDepartment("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                             </div>
                           </th>
-                          <th className="p-3">
-                            <div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "الدورة التدريبية" : "Course Name"}</div>
+                          <th className="p-3" style={{ color: '#FFFFFF' }}>
+                            <div className="font-bold mb-2 drop-shadow-xs" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الدورة التدريبية" : "Course Name"}</div>
                             <div className="relative">
                               <select value={selectedCourseFilter} onChange={(e) => setSelectedCourseFilter(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#FFC000] appearance-none pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}>
                                 <option value="">{language === "ar" ? "الكل" : "All"}</option>
@@ -1153,11 +1153,11 @@ export const AdminDashboard: React.FC = () => {
                               {selectedCourseFilter && <button onClick={() => setSelectedCourseFilter("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                             </div>
                           </th>
-                          <th className="p-3 align-top"><div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "المدة" : "Duration"}</div></th>
-                          <th className="p-3 align-top"><div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "أيام الحضور" : "Attended Days"}</div></th>
-                          <th className="p-3 align-top"><div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "الدرجة" : "Score"}</div></th>
-                          <th className="p-3 align-top min-w-[140px]">
-                            <div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "التاريخ" : "Date"}</div>
+                          <th className="p-3 align-top" style={{ color: '#FFFFFF' }}><div className="font-bold mb-2 drop-shadow-xs" style={{ color: '#FFFFFF' }}>{language === "ar" ? "المدة" : "Duration"}</div></th>
+                          <th className="p-3 align-top" style={{ color: '#FFFFFF' }}><div className="font-bold mb-2 drop-shadow-xs" style={{ color: '#FFFFFF' }}>{language === "ar" ? "أيام الحضور" : "Attended Days"}</div></th>
+                          <th className="p-3 align-top" style={{ color: '#FFFFFF' }}><div className="font-bold mb-2 drop-shadow-xs" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الدرجة" : "Score"}</div></th>
+                          <th className="p-3 align-top min-w-[140px]" style={{ color: '#FFFFFF' }}>
+                            <div className="font-bold mb-2 drop-shadow-xs" style={{ color: '#FFFFFF' }}>{language === "ar" ? "التاريخ" : "Date"}</div>
                             <div className="flex flex-col gap-2">
                               <div className="relative">
                                 <input type="date" value={fromDateFilter} onChange={(e) => setFromDateFilter(e.target.value)} className="w-full border rounded px-2 py-1 text-xs focus:ring-[#FFC000] pr-6" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} title={language === "ar" ? "من تاريخ" : "From Date"} />
@@ -1169,7 +1169,7 @@ export const AdminDashboard: React.FC = () => {
                               </div>
                             </div>
                           </th>
-                          <th className="p-3 align-top"><div className="font-bold mb-2 text-white drop-shadow-xs">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
+                          <th className="p-3 align-top" style={{ color: '#FFFFFF' }}><div className="font-bold mb-2 drop-shadow-xs" style={{ color: '#FFFFFF' }}>{language === "ar" ? "إجراءات" : "Actions"}</div></th>
                         </tr>
                       </thead>
                       <tbody>
