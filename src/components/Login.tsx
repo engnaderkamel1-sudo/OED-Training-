@@ -10,6 +10,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "fire
 import { doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { getLoginMeta, getLocationFromIP } from "../utils/loginUtils";
+import { APP_VERSION } from "../version";
 
 export const Login: React.FC = () => {
   const { t, language, setUser, users, setUsers, uniqueDepartments, addLoginLog } = useAppContext();
@@ -673,6 +674,19 @@ export const Login: React.FC = () => {
             </div>
           </form>
         )}
+      </div>
+
+      {/* Official Enterprise System & Developer Credit */}
+      <div className="mt-6 text-center text-xs space-y-1 z-10 px-4">
+        <p className="font-bold text-[#002D62] dark:text-blue-200">
+          {APP_VERSION.creditLine}
+        </p>
+        <p className="text-[11px] text-gray-500 dark:text-gray-400">
+          {APP_VERSION.systemName} • {APP_VERSION.systemFullName} • v{APP_VERSION.version}
+        </p>
+        <p className="text-[10px] text-gray-400 dark:text-gray-500">
+          {APP_VERSION.copyright}
+        </p>
       </div>
 
       {showForgotPassword && <ForgotPasswordModal onClose={() => setShowForgotPassword(false)} />}

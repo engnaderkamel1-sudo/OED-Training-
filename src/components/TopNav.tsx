@@ -5,17 +5,20 @@ import {
   Moon, 
   Sun, 
   ChevronDown,
-  UserCircle 
+  UserCircle,
+  Info
 } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AboutModal } from './AboutModal';
 
 export const TopNav: React.FC = () => {
   const { user, language, setUser, theme, toggleTheme, setCurrentView } = useAppContext();
   const isDark = theme === 'dark';
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isLogoExpanded, setIsLogoExpanded] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -109,9 +112,19 @@ export const TopNav: React.FC = () => {
 
             {/* الجزء الأيمن: القائمة المنسدلة والدارك مود */}
             <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0 z-50">
+              {/* About System Quick Button */}
+              <button
+                onClick={() => setAboutOpen(true)}
+                className="p-1.5 sm:p-2 text-white hover:text-[#FFC000] transition-colors cursor-pointer rounded-lg hover:bg-white/10"
+                title={language === 'ar' ? 'عن المنظومة' : 'About System'}
+                aria-label="About System"
+              >
+                <Info size={18} />
+              </button>
+
               <button
                 onClick={toggleTheme}
-                className="theme-toggle p-1.5 sm:p-2 text-white cursor-pointer"
+                className="theme-toggle p-1.5 sm:p-2 text-white cursor-pointer hover:bg-white/10 rounded-lg transition-colors"
                 aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
               >
                 {theme === 'light' ? (
@@ -204,6 +217,27 @@ export const TopNav: React.FC = () => {
                         <span>{language === 'ar' ? 'الملف الشخصي' : 'My Profile'}</span>
                       </button>
 
+                      {/* About System Button in Dropdown */}
+                      <button
+                        onClick={() => {
+                          setAboutOpen(true);
+                          setDropdownOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer"
+                        style={{
+                          color: isDark ? '#FFFFFF' : '#1E293B',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : '#F0F7FF';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <Info size={18} style={{ color: '#FFC000' }} className="shrink-0" />
+                        <span>{language === 'ar' ? 'عن المنظومة' : 'About System'}</span>
+                      </button>
+
                       {/* Logout Button */}
                       <button
                         onClick={handleLogout}
@@ -260,6 +294,11 @@ export const TopNav: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* About System Modal */}
+      {aboutOpen && (
+        <AboutModal onClose={() => setAboutOpen(false)} />
+      )}
     </>
   );
 };

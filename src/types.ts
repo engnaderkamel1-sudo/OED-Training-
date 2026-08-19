@@ -85,6 +85,7 @@ export interface UpcomingSession {
   startDate: string;
   endDate: string;
   sessionNumber: string;
+  sessionIteration?: string;
   startTime: string;
   location: string;
   targetParticipants: string;

@@ -179,6 +179,7 @@ export const AdminDashboard: React.FC = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [sessionNumber, setSessionNumber] = useState("");
+  const [sessionIteration, setSessionIteration] = useState("1");
   const [location, setLocation] = useState("Training Room - Central Workshop, Kattamya");
   const [startTime, setStartTime] = useState("09:00");
   const [targetParticipants, setTargetParticipants] = useState("");
@@ -199,6 +200,7 @@ export const AdminDashboard: React.FC = () => {
   const [reviewModalSession, setReviewModalSession] = useState<{
     courseTitle: string;
     sessionNumber: string;
+    sessionIteration: string;
     startDate: string;
     endDate: string;
     startTime: string;
@@ -529,6 +531,33 @@ export const AdminDashboard: React.FC = () => {
     return num + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]) + " Session";
   };
 
+  // Helper to compute next global session number automatically
+  const getNextGlobalSessionNumber = () => {
+    const numbers = upcomingSessions
+      .map(s => parseInt(s.sessionNumber, 10))
+      .filter(n => !isNaN(n) && n > 0);
+    
+    if (numbers.length === 0) {
+      return "1";
+    }
+    const maxNum = Math.max(...numbers);
+    return String(maxNum + 1);
+  };
+
+  // Helper to compute next iteration for a specific course
+  const getNextCourseIteration = (courseIdOrTitle: string) => {
+    if (!courseIdOrTitle) return "1";
+    const courseSessions = upcomingSessions.filter(
+      s => s.courseId === courseIdOrTitle || s.courseTitle === courseIdOrTitle
+    );
+    const iters = courseSessions
+      .map(s => parseInt(s.sessionIteration || s.sessionNumber, 10))
+      .filter(n => !isNaN(n) && n > 0);
+    
+    if (iters.length === 0) return "1";
+    return String(Math.max(...iters) + 1);
+  };
+
   const handleCreateSession = (e: React.FormEvent) => {
     e.preventDefault();
     const foundCourse = dynamicCourses.find((c) => c.id === selectedCourseId);
@@ -539,6 +568,7 @@ export const AdminDashboard: React.FC = () => {
     setReviewModalSession({
       courseTitle,
       sessionNumber,
+      sessionIteration: sessionIteration || "1",
       startDate,
       endDate,
       startTime,
@@ -552,7 +582,7 @@ export const AdminDashboard: React.FC = () => {
 
   const handleConfirmAndPublishSession = () => {
     if (!reviewModalSession) return;
-    const { courseTitle, sessionNumber, startDate, endDate, startTime, location, targetParticipants, toEmails: toStr, ccEmails: ccStr, isEditing } = reviewModalSession;
+    const { courseTitle, sessionNumber, sessionIteration: iter, startDate, endDate, startTime, location, targetParticipants, toEmails: toStr, ccEmails: ccStr, isEditing } = reviewModalSession;
 
     // 1. Save TO & CC emails automatically for future sessions
     if (toStr) localStorage.setItem('oed_saved_to_emails_v2', toStr.trim());
@@ -570,6 +600,7 @@ export const AdminDashboard: React.FC = () => {
           startDate, 
           endDate, 
           sessionNumber, 
+          sessionIteration: iter,
           startTime, 
           location, 
           targetParticipants, 
@@ -588,6 +619,7 @@ export const AdminDashboard: React.FC = () => {
         startDate, 
         endDate, 
         sessionNumber, 
+        sessionIteration: iter,
         startTime, 
         location, 
         targetParticipants, 
@@ -620,7 +652,7 @@ export const AdminDashboard: React.FC = () => {
         const cleanTo = extractCleanEmails(toStr);
         const cleanCc = extractCleanEmails(ccStr);
 
-        const sessionOrdinal = sessionNumber ? getSessionOrdinalText(sessionNumber) : '';
+        const sessionOrdinal = iter ? getSessionOrdinalText(iter) : (sessionNumber ? getSessionOrdinalText(sessionNumber) : '1st Session');
         const subject = sessionOrdinal 
           ? `Course Announcement ( ${courseTitle} - ${sessionOrdinal} )`
           : `Course Announcement ( ${courseTitle} )`;
@@ -648,11 +680,14 @@ It is my pleasure to announce the beginning of the following course:
       alert(t("sessionPublished"));
     }
 
+    const nextSessionNum = String((parseInt(sessionNumber, 10) || 0) + 1);
+
     setReviewModalSession(null);
     setSelectedCourseId(""); 
     setStartDate(""); 
     setEndDate(""); 
-    setSessionNumber(""); 
+    setSessionNumber(parseInt(nextSessionNum, 10) > 1 ? nextSessionNum : getNextGlobalSessionNumber()); 
+    setSessionIteration("1");
     setLocation(DEFAULT_LOCATION); 
     setStartTime(DEFAULT_START_TIME); 
     setTargetParticipants(""); 
@@ -665,6 +700,7 @@ It is my pleasure to announce the beginning of the following course:
     setStartDate(session.startDate || ""); 
     setEndDate(session.endDate || ""); 
     setSessionNumber(session.sessionNumber || ""); 
+    setSessionIteration(session.sessionIteration || "1");
     setLocation(session.location || DEFAULT_LOCATION); 
     setStartTime(session.startTime || DEFAULT_START_TIME); 
     setTargetParticipants(session.targetParticipants || ""); 
@@ -681,6 +717,7 @@ It is my pleasure to announce the beginning of the following course:
     setStartDate(""); 
     setEndDate(""); 
     setSessionNumber(""); 
+    setSessionIteration("1");
     setLocation(DEFAULT_LOCATION); 
     setStartTime(DEFAULT_START_TIME); 
     setTargetParticipants(""); 
@@ -1501,7 +1538,22 @@ It is my pleasure to announce the beginning of the following course:
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="md:col-span-2">
                           <label className="block text-sm font-medium mb-1" style={{ color: textMuted }}>{language === "ar" ? "اسم الدورة" : "Course Name"}</label>
-                          <select required value={selectedCourseId} onChange={(e) => setSelectedCourseId(e.target.value)} className="w-full border rounded px-3 py-2 focus:ring-[#002D62]" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}>
+                          <select 
+                            required 
+                            value={selectedCourseId} 
+                            onChange={(e) => {
+                              const selected = e.target.value;
+                              setSelectedCourseId(selected);
+                              if (!editingSessionId) {
+                                setSessionIteration(getNextCourseIteration(selected));
+                                if (!sessionNumber || sessionNumber === "") {
+                                  setSessionNumber(getNextGlobalSessionNumber());
+                                }
+                              }
+                            }} 
+                            className="w-full border rounded px-3 py-2 focus:ring-[#002D62]" 
+                            style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
+                          >
                             <option value="">{language === "ar" ? "اختر الدورة" : "Select Course"}</option>
                             {dynamicCourses.map((c) => <option key={c.id} value={c.title}>{c.title}</option>)}
                           </select>
@@ -1515,8 +1567,39 @@ It is my pleasure to announce the beginning of the following course:
                           <input type="date" required value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full border rounded px-3 py-2 focus:ring-[#002D62]" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium mb-1" style={{ color: textMuted }}>{language === "ar" ? "رقم الجلسة" : "Session Number"}</label>
-                          <input type="number" required value={sessionNumber} onChange={(e) => setSessionNumber(e.target.value)} className="w-full border rounded px-3 py-2 focus:ring-[#002D62]" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} />
+                          <label className="block text-sm font-medium mb-1" style={{ color: textMuted }}>
+                            {language === "ar" ? "متسلسل الدورة (لإعلان الإيميل)" : "Course Iteration (for Email)"}
+                          </label>
+                          <input 
+                            type="number" 
+                            min="1"
+                            required 
+                            value={sessionIteration} 
+                            onChange={(e) => setSessionIteration(e.target.value)} 
+                            placeholder="e.g. 1, 2, 3"
+                            className="w-full border rounded px-3 py-2 focus:ring-[#002D62]" 
+                            style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                          />
+                          <span className="text-[10px] block mt-0.5 text-blue-500 font-bold">
+                            {sessionIteration ? `➜ ${getSessionOrdinalText(sessionIteration)}` : ''}
+                          </span>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1" style={{ color: textMuted }}>
+                            {language === "ar" ? "رقم السيشن في السجل العام" : "Global Session Number"}
+                          </label>
+                          <input 
+                            type="number" 
+                            required 
+                            value={sessionNumber} 
+                            onChange={(e) => setSessionNumber(e.target.value)} 
+                            placeholder="e.g. 100"
+                            className="w-full border rounded px-3 py-2 focus:ring-[#002D62]" 
+                            style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                          />
+                          <span className="text-[10px] block mt-0.5 text-gray-500">
+                            {language === "ar" ? "الرقم التسلسلي في سجل التدريب العام (مثلاً 100)" : "Global sequence in records (e.g. 100)"}
+                          </span>
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-1" style={{ color: textMuted }}>{language === "ar" ? "وقت البدء" : "Start Time"}</label>
@@ -1950,9 +2033,14 @@ It is my pleasure to announce the beginning of the following course:
                   <span className="font-black text-lg text-[#002D62] dark:text-[#93C5FD]">
                     {reviewModalSession.courseTitle}
                   </span>
-                  <span className="bg-[#FFC000] text-[#001D42] font-black text-xs px-2.5 py-1 rounded-lg shadow-2xs">
-                    {reviewModalSession.sessionNumber ? getSessionOrdinalText(reviewModalSession.sessionNumber) : '1st Session'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-[#FFC000] text-[#001D42] font-black text-xs px-2.5 py-1 rounded-lg shadow-2xs">
+                      {reviewModalSession.sessionIteration ? getSessionOrdinalText(reviewModalSession.sessionIteration) : '1st Session'}
+                    </span>
+                    <span className="bg-blue-100 dark:bg-blue-900 text-[#002D62] dark:text-blue-200 font-mono font-bold text-xs px-2 py-1 rounded-lg">
+                      #{reviewModalSession.sessionNumber || 'N/A'}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" style={{ color: textColor }}>
@@ -2021,7 +2109,7 @@ It is my pleasure to announce the beginning of the following course:
 
 It is my pleasure to announce the beginning of the following course:
 
-•	Course Name : ${reviewModalSession.courseTitle}${reviewModalSession.sessionNumber ? `\n•	Session : ${getSessionOrdinalText(reviewModalSession.sessionNumber)}` : ''}
+•	Course Name : ${reviewModalSession.courseTitle}${reviewModalSession.sessionIteration ? `\n•	Session : ${getSessionOrdinalText(reviewModalSession.sessionIteration)}` : (reviewModalSession.sessionNumber ? `\n•	Session : ${getSessionOrdinalText(reviewModalSession.sessionNumber)}` : '')}
 •	Start Date: ${formatFullEmailDate(reviewModalSession.startDate)}  
 •	End Date: ${formatFullEmailDate(reviewModalSession.endDate)}${reviewModalSession.startTime ? `\n•	Time: ${reviewModalSession.startTime}` : ''}${reviewModalSession.location ? `\n•	Location: ${reviewModalSession.location}` : ''}`}
                 </div>
