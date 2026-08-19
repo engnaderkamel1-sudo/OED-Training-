@@ -149,47 +149,38 @@ export const TopNav: React.FC = () => {
 
                   {dropdownOpen && (
                     <div 
-                      className="absolute right-0 rtl:right-auto rtl:left-0 mt-2.5 w-64 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn z-[99999] border p-2 bg-white dark:bg-[#1E3A68] border-gray-200 dark:border-blue-400/30 backdrop-blur-md"
+                      className="absolute right-0 rtl:right-auto rtl:left-0 mt-2.5 w-64 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn z-[99999] border p-2 bg-[#0D1F3C] border-blue-400/30"
                     >
-                      {/* User Info Header / Quick Profile Access */}
-                      <button 
-                        onClick={openProfile}
-                        className="w-full text-left rtl:text-right p-3 rounded-xl hover:bg-blue-50/80 dark:hover:bg-[#284C85] transition-all group flex items-center justify-between cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-400/20"
-                        title="Go to My Profile"
-                      >
-                        <div className="flex-1 min-w-0 pr-2 rtl:pr-0 rtl:pl-2">
-                          <p className="text-sm font-black text-gray-900 dark:text-white truncate group-hover:text-[#002D62] dark:group-hover:text-[#FFC000] transition-colors">
-                            {user.name || 'User'}
-                          </p>
-                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                            <span className="bg-blue-100 dark:bg-blue-900/80 text-[#002D62] dark:text-[#93C5FD] px-1.5 py-0.5 rounded font-mono font-bold text-[11px] border border-blue-200 dark:border-blue-700/50">
-                              {user.hrCode || 'N/A'}
-                            </span>
-                            <span className="text-xs text-gray-600 dark:text-[#D1E2FF] font-medium truncate">
-                              • {user.department || 'General'}
-                            </span>
-                          </div>
+                      {/* User Info Header (Static, Clean, High Contrast) */}
+                      <div className="p-3 rounded-xl bg-[#091527] border border-blue-500/20 mb-2">
+                        <p className="text-base font-black text-white truncate">
+                          {user.name || 'User'}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          <span className="bg-[#FFC000] text-[#001D42] px-2 py-0.5 rounded font-mono font-black text-xs shadow-xs">
+                            {user.hrCode || 'N/A'}
+                          </span>
+                          <span className="text-xs text-[#C8DBF6] font-semibold truncate">
+                            {user.department || 'General'}
+                          </span>
                         </div>
-                        <UserCircle size={22} className="text-[#002D62] dark:text-[#FFC000] shrink-0 opacity-80 group-hover:opacity-100 transition-opacity" />
-                      </button>
-
-                      <div className="my-1.5 border-t border-gray-100 dark:border-blue-400/20" />
+                      </div>
 
                       {/* My Profile Button */}
                       <button
                         onClick={openProfile}
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs md:text-sm font-bold text-gray-700 dark:text-gray-100 hover:bg-blue-50/80 dark:hover:bg-[#284C85] transition-colors cursor-pointer"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-white hover:bg-white/10 transition-colors cursor-pointer"
                       >
-                        <UserCircle size={17} className="text-[#002D62] dark:text-[#93C5FD]" />
+                        <UserCircle size={18} className="text-[#FFC000] shrink-0" />
                         <span>{language === 'ar' ? 'الملف الشخصي' : 'My Profile'}</span>
                       </button>
 
                       {/* Logout Button */}
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs md:text-sm font-bold text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer mt-0.5"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/15 transition-colors cursor-pointer mt-1"
                       >
-                        <LogOut size={17} className="text-red-600 dark:text-red-400" />
+                        <LogOut size={18} className="text-red-400 shrink-0" />
                         <span>{language === 'ar' ? 'تسجيل الخروج' : 'Logout'}</span>
                       </button>
                     </div>
