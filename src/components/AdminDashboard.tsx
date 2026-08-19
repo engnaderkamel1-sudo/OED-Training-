@@ -183,6 +183,9 @@ export const AdminDashboard: React.FC = () => {
   const [startTime, setStartTime] = useState("");
   const [targetParticipants, setTargetParticipants] = useState("");
   const [feedbackLink, setFeedbackLink] = useState("");
+  const [additionalCcEmails, setAdditionalCcEmails] = useState<string>(() => {
+    return localStorage.getItem('oed_saved_cc_emails') || '';
+  });
   const [resourceLink, setResourceLink] = useState("");
   const [selectedCourseForResource, setSelectedCourseForResource] = useState(mockCourses[0]?.id || "");
   const [showUsageModal, setShowUsageModal] = useState(false);
@@ -461,20 +464,56 @@ export const AdminDashboard: React.FC = () => {
     e.preventDefault();
     const foundCourse = dynamicCourses.find((c) => c.id === selectedCourseId);
     const courseTitle = foundCourse?.title || selectedCourseId;
+
+    // Save CC emails automatically to localStorage for future sessions
+    if (additionalCcEmails && additionalCcEmails.trim() !== '') {
+      localStorage.setItem('oed_saved_cc_emails', additionalCcEmails.trim());
+    }
+
+    const ccListArray = additionalCcEmails
+      .split(/[,;\n]/)
+      .map(e => e.trim())
+      .filter(e => e.includes('@'));
+
     if (editingSessionId) {
       const existing = upcomingSessions.find((s) => s.id === editingSessionId);
       if (existing) {
         updateUpcomingSession({
-          ...existing, courseId: selectedCourseId, courseTitle: courseTitle, startDate, endDate, sessionNumber, startTime, location, targetParticipants, feedbackLink: feedbackLink.trim() || undefined, feedbackEnabled: false,
+          ...existing, 
+          courseId: selectedCourseId, 
+          courseTitle: courseTitle, 
+          startDate, 
+          endDate, 
+          sessionNumber, 
+          startTime, 
+          location, 
+          targetParticipants, 
+          feedbackLink: feedbackLink.trim() || undefined, 
+          feedbackEnabled: false,
+          additionalNotificationEmails: ccListArray
         });
         alert(t("sessionUpdated"));
       }
       setEditingSessionId(null);
     } else {
       const newSession: UpcomingSession = {
-        id: `session_${Date.now()}`, courseId: selectedCourseId, courseTitle: courseTitle, startDate, endDate, sessionNumber, startTime, location, targetParticipants, feedbackLink: feedbackLink.trim() || undefined, feedbackEnabled: false, registeredUsers: [], createdAt: new Date().toISOString(),
+        id: `session_${Date.now()}`, 
+        courseId: selectedCourseId, 
+        courseTitle: courseTitle, 
+        startDate, 
+        endDate, 
+        sessionNumber, 
+        startTime, 
+        location, 
+        targetParticipants, 
+        feedbackLink: feedbackLink.trim() || undefined, 
+        feedbackEnabled: false, 
+        registeredUsers: [], 
+        createdAt: new Date().toISOString(),
+        additionalNotificationEmails: ccListArray
       };
       addUpcomingSession(newSession);
+
       const targetAudienceUsers = users.filter((u) => {
         if (!targetParticipants || targetParticipants === "mixed" || targetParticipants === "all") return true;
         const roleInfo = `${u.jobRole || ""} ${u.role || ""} ${u.department || ""}`.toLowerCase();
@@ -490,16 +529,92 @@ export const AdminDashboard: React.FC = () => {
       addAnnouncement({
         id: `ann_${Date.now()}`, sessionId: newSession.id, courseName: courseTitle, title: language === "ar" ? `دورة جديدة: ${courseTitle}` : `New Session: ${courseTitle}`, message: `${courseTitle} - ${startDate}`, date: new Date().toISOString(), author: "Admin", isGlobal: true, targetAudience: targetParticipants,
       });
+
+      // --- AUTOMATIC EMAIL TRIGGER VIA OUTLOOK / CORPORATE MAIL CLIENT ---
+      try {
+        const targetEmails = targetAudienceUsers
+          .filter(u => u.email && u.email.trim().includes('@'))
+          .map(u => u.email!.trim());
+
+        const toField = targetEmails.join('; ');
+        const ccField = ccListArray.join('; ');
+
+        // Helper to format date as "Sunday, 06 September 2026"
+        const formatFullEmailDate = (dateStr: string) => {
+          if (!dateStr) return '';
+          const d = new Date(dateStr);
+          if (isNaN(d.getTime())) return dateStr;
+          return d.toLocaleDateString('en-US', {
+            weekday: 'long',
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric'
+          });
+        };
+
+        // Helper for session ordinal (1st Session, 2nd Session, etc.)
+        const getSessionOrdinalText = (numStr: string) => {
+          const num = parseInt(numStr, 10);
+          if (isNaN(num)) return numStr ? `Session ${numStr}` : '';
+          const suffixes = ["th", "st", "nd", "rd"];
+          const v = num % 100;
+          return num + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]) + " Session";
+        };
+
+        const sessionOrdinal = sessionNumber ? getSessionOrdinalText(sessionNumber) : '';
+        const subject = sessionOrdinal 
+          ? `Course Announcement ( ${courseTitle} - ${sessionOrdinal} )`
+          : `Course Announcement ( ${courseTitle} )`;
+
+        const emailBody = `Dear Gents,
+
+It is my pleasure to announce the beginning of the following course:
+
+•	Course Name : ${courseTitle}${sessionOrdinal ? `\n•	Session : ${sessionOrdinal}` : ''}
+•	Start Date: ${formatFullEmailDate(startDate)}  
+•	End Date: ${formatFullEmailDate(endDate)}${startTime ? `\n•	Time: ${startTime}` : ''}${location ? `\n•	Location: ${location}` : ''}`;
+
+        const mailtoLink = `mailto:${encodeURIComponent(toField)}?cc=${encodeURIComponent(ccField)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
+        
+        // Open user's official Outlook / Mail client automatically with pre-filled content!
+        window.location.href = mailtoLink;
+      } catch (mailErr) {
+        console.error("Error opening mail client:", mailErr);
+      }
+
       alert(t("sessionPublished"));
     }
     setSelectedCourseId(""); setStartDate(""); setEndDate(""); setSessionNumber(""); setLocation(""); setStartTime(""); setTargetParticipants(""); setFeedbackLink("");
   };
 
   const handleStartEdit = (session: UpcomingSession) => {
-    setEditingSessionId(session.id); setSelectedCourseId(session.courseId || session.courseTitle); setStartDate(session.startDate || ""); setEndDate(session.endDate || ""); setSessionNumber(session.sessionNumber || ""); setLocation(session.location || ""); setStartTime(session.startTime || ""); setTargetParticipants(session.targetParticipants || ""); setFeedbackLink(session.feedbackLink || ""); window.scrollTo({ top: 300, behavior: "smooth" });
+    setEditingSessionId(session.id); 
+    setSelectedCourseId(session.courseId || session.courseTitle); 
+    setStartDate(session.startDate || ""); 
+    setEndDate(session.endDate || ""); 
+    setSessionNumber(session.sessionNumber || ""); 
+    setLocation(session.location || ""); 
+    setStartTime(session.startTime || ""); 
+    setTargetParticipants(session.targetParticipants || ""); 
+    setFeedbackLink(session.feedbackLink || ""); 
+    if (session.additionalNotificationEmails && session.additionalNotificationEmails.length > 0) {
+      setAdditionalCcEmails(session.additionalNotificationEmails.join(', '));
+    }
+    window.scrollTo({ top: 300, behavior: "smooth" });
   };
 
-  const handleCancelEdit = () => { setEditingSessionId(null); setSelectedCourseId(""); setStartDate(""); setEndDate(""); setSessionNumber(""); setLocation(""); setStartTime(""); setTargetParticipants(""); setFeedbackLink(""); };
+  const handleCancelEdit = () => { 
+    setEditingSessionId(null); 
+    setSelectedCourseId(""); 
+    setStartDate(""); 
+    setEndDate(""); 
+    setSessionNumber(""); 
+    setLocation(""); 
+    setStartTime(""); 
+    setTargetParticipants(""); 
+    setFeedbackLink(""); 
+    setAdditionalCcEmails(localStorage.getItem('oed_saved_cc_emails') || '');
+  };
 
   const handleSendReminder = (sessionId: string, reminderType: "Standard" | "Final" = "Standard") => {
     const session = upcomingSessions.find((s) => s.id === sessionId);
@@ -1346,6 +1461,36 @@ export const AdminDashboard: React.FC = () => {
                             <option value="technicians">{language === "ar" ? "الفنيين" : "Technicians"}</option>
                             <option value="mixed">{language === "ar" ? "مختلط (الجميع)" : "Mixed"}</option>
                           </select>
+                        </div>
+
+                        {/* CC & Coordination Emails Section */}
+                        <div className="md:col-span-2 p-4 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-[#132543]/60 space-y-2">
+                          <div className="flex items-center justify-between flex-wrap gap-1">
+                            <label className="text-sm font-bold flex items-center gap-1.5" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>
+                              <Mail size={16} className="text-[#FFC000]" />
+                              <span>{language === "ar" ? "إيميلات إضافية للإشعار والتنسيق (CC)" : "Coordination & CC Notification Emails"}</span>
+                            </label>
+                            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                              {language === 'ar' ? 'مثل: الشؤون الإدارية لتجهيز القاعة' : 'e.g. Admin Affairs for Hall Setup'}
+                            </span>
+                          </div>
+                          <textarea
+                            rows={2}
+                            value={additionalCcEmails}
+                            onChange={(e) => {
+                              setAdditionalCcEmails(e.target.value);
+                              localStorage.setItem('oed_saved_cc_emails', e.target.value);
+                            }}
+                            placeholder="admin.affairs@orascom.com, logistics@orascom.com, ..."
+                            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#002D62] outline-none font-mono"
+                            style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
+                            dir="ltr"
+                          />
+                          <p className="text-[11px] text-gray-500 dark:text-blue-200/80">
+                            {language === 'ar' 
+                              ? '💾 يتم حفظ هذه الإيميلات تلقائياً للدورات القادمة، وسيتم فتح مسودة الإيميل في برنامج Outlook تلقائياً ببيانات الدورة فور نشرها.' 
+                              : '💾 Saved automatically for future sessions. Email draft in Outlook will open automatically with pre-filled details upon publishing.'}
+                          </p>
                         </div>
                       </div>
                       <div className="flex gap-2 mt-6">
