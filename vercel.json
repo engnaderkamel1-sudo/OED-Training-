@@ -1,11 +1,23 @@
 {
+  "rewrites": [
+    { "source": "/((?!assets/|app-icon\\.jpg|orascom-logo\\.png|favicon\\.ico|sw\\.js|workbox-.*\\.js).*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
-      "source": "/(.*\\.html)",
+      "source": "/(index\\.html|sw\\.js|manifest\\.webmanifest|)",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
+          "value": "no-cache, no-store, must-revalidate, max-age=0"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
         }
       ]
     }

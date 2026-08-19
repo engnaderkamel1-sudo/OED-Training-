@@ -12,7 +12,13 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['app-icon.jpg'], // تم تغيير اسم الصورة هنا
+        includeAssets: ['app-icon.jpg', 'orascom-logo.png'],
+        workbox: {
+          skipWaiting: true,
+          clientsClaim: true,
+          cleanupOutdatedCaches: true,
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg}']
+        },
         manifest: {
           name: 'OED TTMS (Technical Training Management System)',
           short_name: 'OED-TTMS',
@@ -22,21 +28,21 @@ export default defineConfig(() => {
           display: 'standalone',
           icons: [
             {
-              src: 'app-icon.jpg', // هنا خلينا السيستم يقرا صورتك الجديدة
+              src: 'app-icon.jpg',
               sizes: '192x192',
-              type: 'image/jpeg', // اتغيرت لـ jpeg
+              type: 'image/jpeg',
               purpose: 'any maskable'
             },
             {
-              src: 'app-icon.jpg', // نفس الصورة للمقاس الأكبر
+              src: 'app-icon.jpg',
               sizes: '512x512',
-              type: 'image/jpeg', // اتغيرت لـ jpeg
+              type: 'image/jpeg',
               purpose: 'any maskable'
             }
           ]
         },
         devOptions: {
-          enabled: true
+          enabled: false
         }
       })
     ],

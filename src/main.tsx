@@ -1,15 +1,34 @@
-import {StrictMode} from 'react';
-import {createRoot} from 'react-dom/client';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { registerSW } from 'virtual:pwa-register';
 
-// مسح أي Service Worker قديم وإلغاء تسجيله لتجنب مشكلة الكاش (الريفريش مرتين)
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    for (let registration of registrations) {
-      registration.unregister();
-    }
+// Auto-update Service Worker instantly on deployment detection
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    // Force immediate activation of the new build
+    updateSW(true);
+  },
+  onOfflineReady() {
+    console.log('App ready for offline use.');
+  },
+});
+
+// Periodic and on-focus update checks
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  window.addEventListener('focus', () => {
+    navigator.serviceWorker.getRegistration().then((reg) => {
+      if (reg) reg.update();
+    });
   });
+
+  setInterval(() => {
+    navigator.serviceWorker.getRegistration().then((reg) => {
+      if (reg) reg.update();
+    });
+  }, 2 * 60 * 1000);
 }
 
 createRoot(document.getElementById('root')!).render(
