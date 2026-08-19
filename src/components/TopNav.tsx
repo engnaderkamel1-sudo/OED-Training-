@@ -149,40 +149,66 @@ export const TopNav: React.FC = () => {
 
                   {dropdownOpen && (
                     <div 
-                      className="absolute right-0 rtl:right-auto rtl:left-0 mt-2.5 w-64 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn z-[99999] border p-2.5 bg-white dark:bg-[#0D1E38] border-gray-200 dark:border-blue-400/40"
+                      className="absolute right-0 rtl:right-auto rtl:left-0 mt-2.5 w-64 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn z-[99999] border p-2.5 backdrop-blur-md"
+                      style={{
+                        backgroundColor: isDark ? '#0D1E38' : '#FFFFFF',
+                        borderColor: isDark ? 'rgba(148, 190, 255, 0.4)' : '#E2E8F0',
+                        boxShadow: '0 20px 35px -5px rgba(0, 0, 0, 0.25), 0 10px 15px -5px rgba(0, 0, 0, 0.1)'
+                      }}
                     >
                       {/* User Info Header (Prominent Elevated Box - Light & Dark) */}
-                      <div className="p-3.5 rounded-xl bg-blue-50/80 dark:bg-gradient-to-br dark:from-[#1E4277] dark:to-[#142B4E] border border-blue-200/80 dark:border-blue-400/50 shadow-xs mb-2">
-                        <p className="text-base font-black text-[#002D62] dark:text-white truncate">
+                      <div 
+                        className="p-3.5 rounded-xl border shadow-xs mb-2"
+                        style={{
+                          backgroundColor: isDark ? '#193158' : '#F0F6FF',
+                          borderColor: isDark ? 'rgba(148, 190, 255, 0.3)' : '#BFDBFE',
+                        }}
+                      >
+                        <p 
+                          className="text-base font-black truncate"
+                          style={{ color: isDark ? '#FFFFFF' : '#002D62' }}
+                        >
                           {user.name || 'User'}
                         </p>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           <span className="bg-[#FFC000] text-[#001D42] px-2 py-0.5 rounded-md font-mono font-black text-xs shadow-xs">
                             {user.hrCode || 'N/A'}
                           </span>
-                          <span className="text-xs text-gray-600 dark:text-[#E2EDFF] font-bold truncate">
+                          <span 
+                            className="text-xs font-bold truncate"
+                            style={{ color: isDark ? '#C8DBF6' : '#475569' }}
+                          >
                             {user.department || 'General'}
                           </span>
                         </div>
                       </div>
 
-                      <div className="my-1.5 border-t border-gray-100 dark:border-blue-400/20" />
+                      <div className="my-1.5 border-t" style={{ borderColor: isDark ? 'rgba(148, 190, 255, 0.15)' : '#F1F5F9' }} />
 
                       {/* My Profile Button */}
                       <button
                         onClick={openProfile}
-                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-gray-800 dark:text-white hover:bg-blue-50 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer"
+                        style={{
+                          color: isDark ? '#FFFFFF' : '#1E293B',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : '#F0F7FF';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
                       >
-                        <UserCircle size={18} className="text-[#002D62] dark:text-[#FFC000] shrink-0" />
+                        <UserCircle size={18} style={{ color: isDark ? '#FFC000' : '#002D62' }} className="shrink-0" />
                         <span>{language === 'ar' ? 'الملف الشخصي' : 'My Profile'}</span>
                       </button>
 
                       {/* Logout Button */}
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 transition-colors cursor-pointer mt-0.5"
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-500/15 transition-colors cursor-pointer mt-0.5"
                       >
-                        <LogOut size={18} className="text-red-600 dark:text-red-400 shrink-0" />
+                        <LogOut size={18} className="text-red-500 shrink-0" />
                         <span>{language === 'ar' ? 'تسجيل الخروج' : 'Logout'}</span>
                       </button>
                     </div>

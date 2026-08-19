@@ -1464,13 +1464,19 @@ It is my pleasure to announce the beginning of the following course:
                         </div>
 
                         {/* CC & Coordination Emails Section */}
-                        <div className="md:col-span-2 p-4 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-[#132543]/60 space-y-2">
+                        <div 
+                          className="md:col-span-2 p-4 rounded-xl border space-y-2 transition-colors"
+                          style={{
+                            backgroundColor: isDark ? '#162B4D' : '#F0F6FF',
+                            borderColor: isDark ? 'rgba(148, 190, 255, 0.35)' : '#BFDBFE',
+                          }}
+                        >
                           <div className="flex items-center justify-between flex-wrap gap-1">
                             <label className="text-sm font-bold flex items-center gap-1.5" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>
                               <Mail size={16} className="text-[#FFC000]" />
                               <span>{language === "ar" ? "إيميلات إضافية للإشعار والتنسيق (CC)" : "Coordination & CC Notification Emails"}</span>
                             </label>
-                            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                            <span className="text-[11px] font-medium" style={{ color: isDark ? '#C8DBF6' : '#64748B' }}>
                               {language === 'ar' ? 'مثل: الشؤون الإدارية لتجهيز القاعة' : 'e.g. Admin Affairs for Hall Setup'}
                             </span>
                           </div>
@@ -1483,10 +1489,14 @@ It is my pleasure to announce the beginning of the following course:
                             }}
                             placeholder="admin.affairs@orascom.com, logistics@orascom.com, ..."
                             className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#002D62] outline-none font-mono"
-                            style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
+                            style={{ 
+                              backgroundColor: inputBg, 
+                              borderColor: borderColor, 
+                              color: textColor 
+                            }}
                             dir="ltr"
                           />
-                          <p className="text-[11px] text-gray-500 dark:text-blue-200/80">
+                          <p className="text-[11px] font-medium" style={{ color: isDark ? '#93C5FD' : '#475569' }}>
                             {language === 'ar' 
                               ? '💾 يتم حفظ هذه الإيميلات تلقائياً للدورات القادمة، وسيتم فتح مسودة الإيميل في برنامج Outlook تلقائياً ببيانات الدورة فور نشرها.' 
                               : '💾 Saved automatically for future sessions. Email draft in Outlook will open automatically with pre-filled details upon publishing.'}
