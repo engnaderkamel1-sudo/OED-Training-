@@ -182,6 +182,23 @@ export const Login: React.FC = () => {
         }
       }
 
+      // Auto-elevate Master Admin Accounts (Eng. Nader Reda / HR 830557 / Admin)
+      const isMasterAdmin = 
+        foundUser.hrCode === '830557' || 
+        foundUser.hrCode?.toLowerCase() === 'admin' ||
+        foundUser.email?.toLowerCase().includes('nader.reda') ||
+        foundUser.email?.toLowerCase().includes('eng.naderkamel1');
+
+      if (isMasterAdmin) {
+        foundUser.role = 'admin';
+        foundUser.status = 'approved';
+        try {
+          await setDoc(doc(db, "users", foundUser.id), { role: 'admin', status: 'approved' }, { merge: true });
+        } catch (e) {
+          console.warn("Failed to persist admin role in Firestore:", e);
+        }
+      }
+
       if (foundUser.status === "pending") {
         setError(language === "ar" ? "حسابك قيد المراجعة ولم يتم تفعيله بعد" : "Your account is pending approval");
       } else if (foundUser.status === "rejected") {

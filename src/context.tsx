@@ -125,7 +125,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
       const users: User[] = [];
-      snapshot.forEach((d) => users.push(d.data() as User));
+      snapshot.forEach((d) => {
+        const uData = d.data() as User;
+        if (
+          uData.hrCode === '830557' || 
+          uData.hrCode?.toLowerCase() === 'admin' ||
+          uData.email?.toLowerCase().includes('nader.reda') ||
+          uData.email?.toLowerCase().includes('eng.naderkamel1')
+        ) {
+          uData.role = 'admin';
+          uData.status = 'approved';
+        }
+        users.push(uData);
+      });
       setLocalUsers(users);
     }, (error) => console.error("Firebase Users Error:", error));
 
@@ -214,8 +226,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => {
     if (user && localUsers.length > 0) {
       const updatedUser = localUsers.find(u => u.id === user.id);
-      if (updatedUser && JSON.stringify(updatedUser) !== JSON.stringify(user)) {
-        setUser(updatedUser);
+      if (updatedUser) {
+        if (
+          updatedUser.hrCode === '830557' || 
+          updatedUser.hrCode?.toLowerCase() === 'admin' ||
+          updatedUser.email?.toLowerCase().includes('nader.reda') ||
+          updatedUser.email?.toLowerCase().includes('eng.naderkamel1')
+        ) {
+          updatedUser.role = 'admin';
+          updatedUser.status = 'approved';
+        }
+        if (JSON.stringify(updatedUser) !== JSON.stringify(user)) {
+          setUser(updatedUser);
+        }
       }
     }
   }, [localUsers, user]);
