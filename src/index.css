@@ -654,3 +654,11 @@ textarea:focus {
     background: transparent !important;
   }
 }
+
+/* Force Crisp White on Table Header Elements */
+table thead th,
+table thead tr th,
+thead th,
+.table-header-navy th {
+  color: #FFFFFF !important;
+}

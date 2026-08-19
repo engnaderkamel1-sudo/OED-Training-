@@ -1,10 +1,11 @@
 import { FirebaseUsageModal } from './FirebaseUsageModal';
 import { EditRecordModal } from './EditRecordModal';
+import { EditUserModal } from './EditUserModal';
 import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save } from "lucide-react";
+import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
@@ -224,6 +225,8 @@ export const AdminDashboard: React.FC = () => {
   const [fromDateFilter, setFromDateFilter] = useState("");
   const [toDateFilter, setToDateFilter] = useState("");
   const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [selectedUserToEdit, setSelectedUserToEdit] = useState<User | null>(null);
 
   // -- STATE FOR SYSTEM VERSION CONTROL (ADMIN ONLY) --
   const [versionInput, setVersionInput] = useState(systemVersion || '1.0.0');
@@ -1001,33 +1004,69 @@ It is my pleasure to announce the beginning of the following course:
                 </div>
                 <div className="flex-1 overflow-x-auto">
                   
+                  {/* Search Bar for Users */}
+                  <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
+                    <div className="relative flex-1 min-w-[260px] max-w-md">
+                      <Search size={16} className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        value={userSearchTerm}
+                        onChange={(e) => setUserSearchTerm(e.target.value)}
+                        placeholder={language === 'ar' ? 'البحث بالاسم أو الكود الوظيفي أو الإيميل...' : 'Search by name, HR Code, or email...'}
+                        className="w-full pl-9 rtl:pl-3 rtl:pr-9 pr-8 py-2 rounded-xl border text-sm font-medium focus:ring-2 focus:ring-[#002D62] outline-none shadow-2xs transition-all"
+                        style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
+                      />
+                      {userSearchTerm && (
+                        <button
+                          onClick={() => setUserSearchTerm("")}
+                          className="absolute right-2.5 rtl:right-auto rtl:left-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded-full cursor-pointer"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                    {userSearchTerm && (
+                      <div className="text-xs font-semibold px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        {language === 'ar' ? `نتائج البحث: "${userSearchTerm}"` : `Filtered by: "${userSearchTerm}"`}
+                      </div>
+                    )}
+                  </div>
+                  
                   {userManagementTab === 'pending' && (
                     <div>
                       <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "طلبات معلقة" : "Pending Users"}</h2>
-                      {pendingUsers.length > 0 ? (
+                      {pendingUsers.filter(u => {
+                        if (!userSearchTerm.trim()) return true;
+                        const term = userSearchTerm.trim().toLowerCase();
+                        return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
+                      }).length > 0 ? (
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الاسم" : "Name"}</th>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "القسم" : "Department"}</th>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الصلاحية" : "Role"}</th>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "التاريخ" : "Date"}</th>
-                              <th className="p-3 align-top text-white font-bold tracking-wide"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الاسم" : "Name"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "القسم" : "Department"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الصلاحية" : "Role"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "التاريخ" : "Date"}</th>
+                              <th className="p-3 align-top text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
                             </tr>
                           </thead>
                           <tbody>
-                            {pendingUsers.map((u) => (
+                            {pendingUsers.filter(u => {
+                              if (!userSearchTerm.trim()) return true;
+                              const term = userSearchTerm.trim().toLowerCase();
+                              return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
+                            }).map((u) => (
                               <tr key={u.id} className="border-b transition-colors" style={{ borderColor: borderColor, color: textColor }}>
                                 {editingUserId === u.id ? (
                                   <>
                                     <td className="p-3"><input type="text" value={editFormData.hrCode || ""} onChange={(e) => setEditFormData({ ...editFormData, hrCode: e.target.value })} className="border rounded px-2 py-1 w-24" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} /></td>
                                     <td className="p-3"><input type="text" value={editFormData.name || ""} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} className="border rounded px-2 py-1 w-32" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} /></td>
                                     <td className="p-3"><input type="text" value={editFormData.department || ""} onChange={(e) => setEditFormData({ ...editFormData, department: e.target.value })} className="border rounded px-2 py-1 w-32" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} /></td>
-                                    <td className="p-3"><select value={editFormData.role || "trainee"} onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value as Role })} className="border rounded px-2 py-1" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}><option value="trainee">Trainee</option><option value="supervisor">Supervisor</option><option value="manager">Manager</option><option value="admin">Admin</option></select></td>
+                                    <td className="p-3"><select value={editFormData.role || "trainee"} onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value as Role })} className="border rounded px-2 py-1 font-bold" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}><option value="trainee">Trainee</option><option value="supervisor">Supervisor</option><option value="manager">Manager</option><option value="admin">Admin</option></select></td>
                                     <td className="p-3"><DataField>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "N/A"}</DataField></td>
                                     <td className="p-3 flex gap-2">
-                                      <button onClick={() => handleSaveUserEdit(u.id)} className="text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded">Save</button>
+                                      <button onClick={() => handleSaveUserEdit(u.id)} className="text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded font-bold">Save</button>
                                       <button onClick={() => setEditingUserId(null)} className="text-gray-600 bg-gray-50 dark:text-gray-300 dark:bg-gray-800 px-3 py-1 rounded">Cancel</button>
                                     </td>
                                   </>
@@ -1039,9 +1078,9 @@ It is my pleasure to announce the beginning of the following course:
                                     <td className="p-3"><DataField>{u.role}</DataField></td>
                                     <td className="p-3"><DataField>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "N/A"}</DataField></td>
                                     <td className="p-3 flex gap-2">
-                                      <button onClick={() => handleApprove(u.id)} className="flex items-center text-green-600 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded hover:opacity-80">{language === "ar" ? "موافق" : "Approve"}</button>
-                                      <button onClick={() => { setEditingUserId(u.id); setEditFormData(u); }} className="flex items-center text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded hover:opacity-80">{language === "ar" ? "تعديل" : "Edit"}</button>
-                                      <button onClick={() => handleReject(u.id)} className="flex items-center text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded hover:opacity-80">{language === "ar" ? "رفض" : "Reject"}</button>
+                                      <button onClick={() => handleApprove(u.id)} className="flex items-center text-green-600 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded hover:opacity-80 font-bold">{language === "ar" ? "موافق" : "Approve"}</button>
+                                      <button onClick={() => setSelectedUserToEdit(u)} className="flex items-center text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded hover:opacity-80 font-bold">{language === "ar" ? "تعديل" : "Edit"}</button>
+                                      <button onClick={() => handleReject(u.id)} className="flex items-center text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded hover:opacity-80 font-bold">{language === "ar" ? "رفض" : "Reject"}</button>
                                     </td>
                                   </>
                                 )}
@@ -1059,18 +1098,26 @@ It is my pleasure to announce the beginning of the following course:
                   {userManagementTab === 'updates' && (
                     <div>
                       <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "طلبات تعديل البيانات" : "Pending Data Updates"}</h2>
-                      {usersWithPendingUpdates.length > 0 ? (
+                      {usersWithPendingUpdates.filter(u => {
+                        if (!userSearchTerm.trim()) return true;
+                        const term = userSearchTerm.trim().toLowerCase();
+                        return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term);
+                      }).length > 0 ? (
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الاسم" : "Name"}</th>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "التعديل المطلوب" : "Requested Change"}</th>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "وقت الطلب" : "Requested At"}</th>
-                              <th className="p-3 align-top text-white font-bold tracking-wide"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الاسم" : "Name"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "التعديل المطلوب" : "Requested Change"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "وقت الطلب" : "Requested At"}</th>
+                              <th className="p-3 align-top text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
                             </tr>
                           </thead>
                           <tbody>
-                            {usersWithPendingUpdates.map((u) => (
+                            {usersWithPendingUpdates.filter(u => {
+                              if (!userSearchTerm.trim()) return true;
+                              const term = userSearchTerm.trim().toLowerCase();
+                              return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term);
+                            }).map((u) => (
                               <tr key={u.id} className="border-b transition-colors" style={{ borderColor: borderColor, color: textColor }}>
                                 <td className="p-3"><UserAvatarWithName user={u} /></td>
                                 <td className="p-3">
@@ -1127,7 +1174,7 @@ It is my pleasure to announce the beginning of the following course:
                                 <td className="p-3 flex flex-wrap gap-2">
                                   {editingUpdateUserId === u.id ? (
                                     <>
-                                      <button onClick={() => handleSaveUpdateEdit(u)} className="flex items-center text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded hover:opacity-80">
+                                      <button onClick={() => handleSaveUpdateEdit(u)} className="flex items-center text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded hover:opacity-80 font-bold">
                                         <Save size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "حفظ" : "Save"}
                                       </button>
                                       <button onClick={() => setEditingUpdateUserId(null)} className="flex items-center text-gray-600 bg-gray-50 dark:text-gray-300 dark:bg-gray-800 px-3 py-1 rounded hover:opacity-80">
@@ -1136,13 +1183,13 @@ It is my pleasure to announce the beginning of the following course:
                                     </>
                                   ) : (
                                     <>
-                                      <button onClick={() => handleApproveUpdate(u)} className="flex items-center text-green-600 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded hover:opacity-80">
+                                      <button onClick={() => handleApproveUpdate(u)} className="flex items-center text-green-600 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded hover:opacity-80 font-bold">
                                         <CheckCircle size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "موافق" : "Approve"}
                                       </button>
-                                      <button onClick={() => { setEditingUpdateUserId(u.id); setUpdateEditFormData({ hrCode: u.pendingUpdates?.hrCode, email: u.pendingUpdates?.email }); }} className="flex items-center text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded hover:opacity-80">
+                                      <button onClick={() => { setEditingUpdateUserId(u.id); setUpdateEditFormData({ hrCode: u.pendingUpdates?.hrCode, email: u.pendingUpdates?.email }); }} className="flex items-center text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded hover:opacity-80 font-bold">
                                         <Edit2 size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "تعديل" : "Edit"}
                                       </button>
-                                      <button onClick={() => handleRejectUpdate(u)} className="flex items-center text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded hover:opacity-80">
+                                      <button onClick={() => handleRejectUpdate(u)} className="flex items-center text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded hover:opacity-80 font-bold">
                                         <X size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "رفض" : "Reject"}
                                       </button>
                                     </>
@@ -1162,18 +1209,26 @@ It is my pleasure to announce the beginning of the following course:
                   {userManagementTab === 'processed_updates' && (
                     <div>
                       <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "سجل التعديلات المكتملة" : "Processed Data Updates"}</h2>
-                      {processedUpdatesList.length > 0 ? (
+                      {processedUpdatesList.filter(item => {
+                        if (!userSearchTerm.trim()) return true;
+                        const term = userSearchTerm.trim().toLowerCase();
+                        return (item.user.name || '').toLowerCase().includes(term) || (item.user.hrCode || '').toLowerCase().includes(term) || (item.user.email || '').toLowerCase().includes(term);
+                      }).length > 0 ? (
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الاسم" : "Name"}</th>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "التعديل الذي طُلب" : "Requested Change"}</th>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الحالة" : "Status"}</th>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "وقت التنفيذ" : "Processed At"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الاسم" : "Name"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "التعديل الذي طُلب" : "Requested Change"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الحالة" : "Status"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "وقت التنفيذ" : "Processed At"}</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {processedUpdatesList.map((item, index) => (
+                            {processedUpdatesList.filter(item => {
+                              if (!userSearchTerm.trim()) return true;
+                              const term = userSearchTerm.trim().toLowerCase();
+                              return (item.user.name || '').toLowerCase().includes(term) || (item.user.hrCode || '').toLowerCase().includes(term) || (item.user.email || '').toLowerCase().includes(term);
+                            }).map((item, index) => (
                               <tr key={`${item.user.id}_${index}`} className="border-b transition-colors" style={{ borderColor: borderColor, color: textColor }}>
                                 <td className="p-3"><UserAvatarWithName user={item.user} /></td>
                                 <td className="p-3">
@@ -1215,156 +1270,112 @@ It is my pleasure to announce the beginning of the following course:
                   {userManagementTab === 'processed' && (
                     <div>
                       <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "طلبات مراجعة" : "Processed Requests"}</h2>
-                      {users.filter(u => (u.status === "approved" || u.status === "rejected") && u.createdAt).length > 0 ? (
+                      {users.filter(u => (u.status === "approved" || u.status === "rejected") && u.createdAt).filter(u => {
+                        if (!userSearchTerm.trim()) return true;
+                        const term = userSearchTerm.trim().toLowerCase();
+                        return (
+                          (u.name || '').toLowerCase().includes(term) ||
+                          (u.hrCode || '').toLowerCase().includes(term) ||
+                          (u.email || '').toLowerCase().includes(term) ||
+                          (u.phone || '').toLowerCase().includes(term) ||
+                          (u.department || '').toLowerCase().includes(term) ||
+                          (u.role || '').toLowerCase().includes(term)
+                        );
+                      }).length > 0 ? (
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الاسم" : "Name"}</th>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "القسم" : "Department"}</th>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الصلاحية" : "Role"}</th>
-                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الحالة" : "Status"}</th>
-                              <th className="p-3 align-top text-white font-bold tracking-wide"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الاسم" : "Name"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "القسم" : "Department"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الصلاحية" : "Role"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الحالة" : "Status"}</th>
+                              <th className="p-3 align-top text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
                             </tr>
                           </thead>
                           <tbody>
-                            {users.filter(u => (u.status === "approved" || u.status === "rejected") && u.createdAt).map((u) => (
-                              <tr key={u.id} className="border-b transition-colors" style={{ borderColor: borderColor, color: textColor }}>
-                                {editingUserId === u.id ? (
-                                  <>
-                                    <td className="p-3">
-                                      <input 
-                                        type="text" 
-                                        value={editFormData.hrCode || ""} 
-                                        onChange={(e) => setEditFormData({ ...editFormData, hrCode: e.target.value })} 
-                                        className="border rounded px-2 py-1 w-24 text-sm" 
-                                        style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
-                                      />
-                                    </td>
-                                    <td className="p-3">
-                                      <input 
-                                        type="text" 
-                                        value={editFormData.name || ""} 
-                                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} 
-                                        className="border rounded px-2 py-1 w-32 text-sm" 
-                                        style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
-                                      />
-                                    </td>
-                                    <td className="p-3">
-                                      <input 
-                                        type="text" 
-                                        value={editFormData.department || ""} 
-                                        onChange={(e) => setEditFormData({ ...editFormData, department: e.target.value })} 
-                                        className="border rounded px-2 py-1 w-32 text-sm" 
-                                        style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
-                                      />
-                                    </td>
-                                    <td className="p-3">
-                                      <select 
-                                        value={editFormData.role || "trainee"} 
-                                        onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value as Role })} 
-                                        className="border rounded px-2 py-1 text-sm font-bold" 
-                                        style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
-                                      >
-                                        <option value="trainee">Trainee (متدرب)</option>
-                                        <option value="supervisor">Supervisor (مشرف)</option>
-                                        <option value="manager">Manager (مدير)</option>
-                                        <option value="admin">Admin (أدمن)</option>
-                                      </select>
-                                    </td>
-                                    <td className="p-3">
-                                      <select 
-                                        value={editFormData.status || "approved"} 
-                                        onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as any })} 
-                                        className="border rounded px-2 py-1 text-sm font-bold" 
-                                        style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
-                                      >
-                                        <option value="approved">Approved (مقبول)</option>
-                                        <option value="pending">Pending (معلق)</option>
-                                        <option value="rejected">Rejected (مرفوض)</option>
-                                      </select>
-                                    </td>
-                                    <td className="p-3 flex gap-2">
-                                      <button 
-                                        onClick={() => handleSaveUserEdit(u.id)} 
-                                        className="text-green-600 bg-green-50 dark:bg-green-900/30 px-3 py-1.5 rounded font-bold text-xs flex items-center gap-1 hover:opacity-80 cursor-pointer"
-                                      >
-                                        <Save size={14} /> {language === "ar" ? "حفظ" : "Save"}
-                                      </button>
-                                      <button 
-                                        onClick={() => setEditingUserId(null)} 
-                                        className="text-gray-600 bg-gray-50 dark:text-gray-300 dark:bg-gray-800 px-3 py-1.5 rounded text-xs hover:opacity-80 cursor-pointer"
-                                      >
-                                        {language === "ar" ? "إلغاء" : "Cancel"}
-                                      </button>
-                                    </td>
-                                  </>
-                                ) : (
-                                  <>
-                                    <td className="p-3"><DataField>{u.hrCode}</DataField></td>
-                                    <td className="p-3"><UserAvatarWithName user={u} /></td>
-                                    <td className="p-3"><DataField>{u.department}</DataField></td>
-                                    <td className="p-3">
-                                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                                        u.role === 'admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-300 dark:border-purple-700' :
-                                        u.role === 'manager' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700' :
-                                        u.role === 'supervisor' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700' :
-                                        'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
-                                      }`}>
-                                        {u.role === 'admin' ? '🛡️ Admin' : u.role === 'manager' ? '👔 Manager' : u.role === 'supervisor' ? '👷 Supervisor' : '🎓 Trainee'}
-                                      </span>
-                                    </td>
-                                    <td className="p-3">
-                                      <span className={`px-2 py-1 rounded text-xs font-bold ${u.status === "approved" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
-                                        {u.status === "approved" ? (language === "ar" ? "مقبول" : "Approved") : (language === "ar" ? "مرفوض" : "Rejected")}
-                                      </span>
-                                    </td>
-                                    <td className="p-3 flex gap-2">
-                                      <button 
-                                        onClick={() => { setEditingUserId(u.id); setEditFormData(u); }} 
-                                        className="flex items-center gap-1 text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded hover:opacity-80 text-xs font-semibold cursor-pointer"
-                                      >
-                                        <Edit2 size={13} /> {language === "ar" ? "تعديل" : "Edit"}
-                                      </button>
-                                      <button 
-                                        onClick={() => handleDeleteUser(u.id)} 
-                                        className="flex items-center gap-1 text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded hover:opacity-80 text-xs font-semibold cursor-pointer"
-                                      >
-                                        <Trash2 size={13} /> {language === "ar" ? "حذف" : "Delete"}
-                                      </button>
-                                    </td>
-                                  </>
-                                )}
+                            {users.filter(u => (u.status === "approved" || u.status === "rejected") && u.createdAt).filter(u => {
+                              if (!userSearchTerm.trim()) return true;
+                              const term = userSearchTerm.trim().toLowerCase();
+                              return (
+                                (u.name || '').toLowerCase().includes(term) ||
+                                (u.hrCode || '').toLowerCase().includes(term) ||
+                                (u.email || '').toLowerCase().includes(term) ||
+                                (u.phone || '').toLowerCase().includes(term) ||
+                                (u.department || '').toLowerCase().includes(term) ||
+                                (u.role || '').toLowerCase().includes(term)
+                              );
+                            }).map((u) => (
+                                <td className="p-3"><DataField>{u.hrCode}</DataField></td>
+                                <td className="p-3"><UserAvatarWithName user={u} /></td>
+                                <td className="p-3"><DataField>{u.department}</DataField></td>
+                                <td className="p-3">
+                                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                                    u.role === 'admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-300 dark:border-purple-700' :
+                                    u.role === 'manager' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700' :
+                                    u.role === 'supervisor' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700' :
+                                    'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
+                                  }`}>
+                                    {u.role === 'admin' ? '🛡️ Admin' : u.role === 'manager' ? '👔 Manager' : u.role === 'supervisor' ? '👷 Supervisor' : '🎓 Trainee'}
+                                  </span>
+                                </td>
+                                <td className="p-3">
+                                  <span className={`px-2 py-1 rounded text-xs font-bold ${u.status === "approved" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
+                                    {u.status === "approved" ? (language === "ar" ? "مقبول" : "Approved") : (language === "ar" ? "مرفوض" : "Rejected")}
+                                  </span>
+                                </td>
+                                <td className="p-3 flex gap-2">
+                                  <button 
+                                    onClick={() => setSelectedUserToEdit(u)} 
+                                    className="flex items-center gap-1.5 text-blue-600 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 px-3.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border border-blue-200 dark:border-blue-800 shadow-2xs"
+                                  >
+                                    <Edit2 size={13} /> {language === "ar" ? "تعديل الصلاحيات" : "Edit"}
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteUser(u.id)} 
+                                    className="flex items-center gap-1.5 text-red-600 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/60 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border border-red-200 dark:border-red-800 shadow-2xs"
+                                  >
+                                    <Trash2 size={13} /> {language === "ar" ? "حذف" : "Delete"}
+                                  </button>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       ) : (
-                        <p style={{ color: textMuted }}>{language === "ar" ? "لا توجد طلبات معالجة." : "No processed requests."}</p>
+                        <p style={{ color: textMuted }}>{language === "ar" ? "لا توجد طلبات مطابقة." : "No matching requests found."}</p>
                       )}
                     </div>
                   )}
                   {userManagementTab === 'deleted' && (
                     <div>
                       <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "متدربين محذوفين" : "Deleted Trainees"}</h2>
-                      {users.filter(u => u.status === "deleted").length > 0 ? (
+                      {users.filter(u => u.status === "deleted").filter(u => {
+                        if (!userSearchTerm.trim()) return true;
+                        const term = userSearchTerm.trim().toLowerCase();
+                        return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
+                      }).length > 0 ? (
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
-                              <th className="p-3 text-white">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
-                              <th className="p-3 text-white">{language === "ar" ? "الاسم" : "Name"}</th>
-                              <th className="p-3 text-white">{language === "ar" ? "القسم" : "Department"}</th>
-                              <th className="p-3 align-top text-white"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الاسم" : "Name"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "القسم" : "Department"}</th>
+                              <th className="p-3 align-top text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
                             </tr>
                           </thead>
                           <tbody>
-                            {users.filter(u => u.status === "deleted").map(u => (
+                            {users.filter(u => u.status === "deleted").filter(u => {
+                              if (!userSearchTerm.trim()) return true;
+                              const term = userSearchTerm.trim().toLowerCase();
+                              return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
+                            }).map(u => (
                               <tr key={u.id} className="border-b opacity-80" style={{ backgroundColor: isDark ? 'rgba(153, 27, 27, 0.1)' : '#fef2f2', borderColor: borderColor, color: textColor }}>
                                 <td className="p-3">{u.hrCode}</td>
                                 <td className="p-3"><UserAvatarWithName user={u} /></td>
                                 <td className="p-3">{u.department}</td>
                                 <td className="p-3">
-                                  <button onClick={() => handleRestoreUser(u.id)} className="text-green-600 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded hover:opacity-80">
+                                  <button onClick={() => handleRestoreUser(u.id)} className="text-green-600 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded hover:opacity-80 font-bold">
                                     {language === "ar" ? "استرجاع" : "Restore"}
                                   </button>
                                 </td>
@@ -2423,6 +2434,7 @@ It is my pleasure to announce the beginning of the following course:
         </div>
       )}
       {showMonthlyReport && <MonthlyReportModal onClose={() => setShowMonthlyReport(false)} records={records} upcomingSessions={upcomingSessions} />}
+      {selectedUserToEdit && <EditUserModal user={selectedUserToEdit} onClose={() => setSelectedUserToEdit(null)} />}
     </div>
   );
 };
