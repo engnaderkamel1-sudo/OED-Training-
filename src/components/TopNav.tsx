@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export const TopNav: React.FC = () => {
   const { user, language, setUser, theme, toggleTheme, setCurrentView } = useAppContext();
+  const isDark = theme === 'dark';
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isLogoExpanded, setIsLogoExpanded] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

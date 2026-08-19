@@ -19,7 +19,7 @@ import { ActivityLogsView } from './components/ActivityLogsView';
 import { Loader2 } from 'lucide-react';
 import { auth, db, messaging } from './firebase';
 import { getToken, onMessage } from 'firebase/messaging';
-import { doc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,7 +48,7 @@ const AppContent: React.FC = () => {
             });
             if (currentToken && currentToken !== user.fcmToken) {
               const userRef = doc(db, 'users', user.id);
-              await updateDoc(userRef, { fcmToken: currentToken });
+              await setDoc(userRef, { fcmToken: currentToken }, { merge: true });
             }
           }
         } catch (error) {

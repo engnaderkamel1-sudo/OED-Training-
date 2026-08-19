@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, RefreshCw, X } from 'lucide-react';
 import { useAppContext } from '../context';
 
@@ -61,17 +61,20 @@ export const UpdateNotificationBanner: React.FC = () => {
     };
   }, [initialScriptSrc]);
 
+  const [isUpdating, setIsUpdating] = useState(false);
+
   if (!hasUpdate || isDismissed) return null;
 
   const handleUpdate = () => {
+    setIsUpdating(true);
     window.location.reload();
   };
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[999999] w-[92%] max-w-md shadow-2xl">
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[999999] w-[92%] max-w-md shadow-2xl animate-bounce-short">
       <div className="bg-gradient-to-r from-[#002D62] via-[#0b3b7b] to-[#002D62] text-white p-3.5 rounded-2xl border-2 border-[#FFC000] flex items-center justify-between gap-3 shadow-xl backdrop-blur-md">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-[#FFC000] text-[#001D42] flex items-center justify-center shrink-0 shadow-sm animate-pulse">
+          <div className="w-8 h-8 rounded-full bg-[#FFC000] text-[#001D42] flex items-center justify-center shrink-0 shadow-sm">
             <Sparkles size={18} />
           </div>
           <div>
@@ -79,7 +82,7 @@ export const UpdateNotificationBanner: React.FC = () => {
               {language === 'ar' ? 'يتوفر تحديث جديد للنظام!' : 'New Update Available!'}
             </p>
             <p className="text-[11px] text-blue-200">
-              {language === 'ar' ? 'اضغط لتطبيق أحدث الميزات فوراً' : 'Click to apply latest changes'}
+              {language === 'ar' ? 'اضغط على الزر لتطبيق الميزات الجديدة' : 'Click the button to apply new changes'}
             </p>
           </div>
         </div>
@@ -87,10 +90,20 @@ export const UpdateNotificationBanner: React.FC = () => {
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleUpdate}
-            className="bg-[#FFC000] hover:bg-yellow-400 text-[#001D42] font-black text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 active:scale-95"
+            disabled={isUpdating}
+            className="bg-[#FFC000] hover:bg-yellow-400 text-[#001D42] font-black text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-75"
           >
-            <RefreshCw size={13} className="animate-spin" />
-            <span>{language === 'ar' ? 'تحديث الآن' : 'Update Now'}</span>
+            {isUpdating ? (
+              <>
+                <RefreshCw size={13} className="animate-spin" />
+                <span>{language === 'ar' ? 'جاري التحميل...' : 'Updating...'}</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw size={13} />
+                <span>{language === 'ar' ? 'تحديث الآن' : 'Update Now'}</span>
+              </>
+            )}
           </button>
           <button
             onClick={() => setIsDismissed(true)}
