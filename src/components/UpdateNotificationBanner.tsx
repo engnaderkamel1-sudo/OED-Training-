@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, RefreshCw, X } from 'lucide-react';
 import { useAppContext } from '../context';
 
@@ -6,43 +6,64 @@ export const UpdateNotificationBanner: React.FC = () => {
   const { language } = useAppContext();
   const [hasUpdate, setHasUpdate] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
-  const [initialScriptSrc, setInitialScriptSrc] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const initialScriptRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // 1. Capture currently active script bundle name
-    const currentScript = Array.from(document.querySelectorAll('script[src]'))
-      .map((s) => s.getAttribute('src'))
-      .find((src) => src && (src.includes('/assets/') || src.includes('src/main.tsx')));
+    // Helper to find the actual app bundle script tag (not SheetJS or QR CDN scripts)
+    const findAppScript = (docOrHtml: Document | string): string | null => {
+      if (typeof docOrHtml !== 'string') {
+        const scripts = Array.from(docOrHtml.querySelectorAll('script[src]'));
+        for (const s of scripts) {
+          const src = s.getAttribute('src') || '';
+          if (src.includes('/assets/') || src.includes('src/main.tsx')) {
+            return src;
+          }
+        }
+        return null;
+      }
 
-    if (currentScript) {
-      setInitialScriptSrc(currentScript);
+      // Regex matching for HTML text string
+      const matches = Array.from(docOrHtml.matchAll(/<script[^>]+src=["']([^"']+)["']/gi));
+      for (const m of matches) {
+        const src = m[1] || '';
+        if (src.includes('/assets/') || src.includes('src/main.tsx')) {
+          return src;
+        }
+      }
+      return null;
+    };
+
+    // 1. Capture the initial script bundle running in the current page
+    const currentAppScript = findAppScript(document);
+    if (currentAppScript) {
+      initialScriptRef.current = currentAppScript;
     }
 
     const checkForUpdates = async () => {
       try {
-        // Fetch fresh index.html bypassing cache
-        const res = await fetch(`/index.html?v=${Date.now()}`, {
+        const res = await fetch(`/index.html?t=${Date.now()}`, {
           cache: 'no-store',
           headers: { 'Cache-Control': 'no-cache, no-store' }
         });
         if (!res.ok) return;
         const html = await res.text();
 
-        // Extract script tag from fresh index.html
-        const match = html.match(/<script[^>]+src=["']([^"']+)["']/i);
-        if (match && match[1]) {
-          const freshScriptSrc = match[1];
-          if (initialScriptSrc && freshScriptSrc !== initialScriptSrc) {
-            setHasUpdate(true);
-          }
+        const freshScript = findAppScript(html);
+        if (
+          initialScriptRef.current && 
+          freshScript && 
+          freshScript !== initialScriptRef.current
+        ) {
+          setHasUpdate(true);
         }
       } catch (e) {
         // Silent catch for network hiccups
       }
     };
 
-    // Check periodically every 2 minutes
-    const interval = setInterval(checkForUpdates, 120000);
+    // Check periodically every 2.5 minutes
+    const interval = setInterval(checkForUpdates, 150000);
 
     // Check when user refocuses the tab / window
     const handleVisibilityChange = () => {
@@ -59,15 +80,14 @@ export const UpdateNotificationBanner: React.FC = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', checkForUpdates);
     };
-  }, [initialScriptSrc]);
-
-  const [isUpdating, setIsUpdating] = useState(false);
+  }, []);
 
   if (!hasUpdate || isDismissed) return null;
 
   const handleUpdate = () => {
     setIsUpdating(true);
-    window.location.reload();
+    // Hard reload with cache busting query to guarantee fresh assets
+    window.location.href = window.location.pathname + '?v=' + Date.now();
   };
 
   return (

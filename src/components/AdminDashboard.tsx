@@ -189,11 +189,11 @@ export const AdminDashboard: React.FC = () => {
   const DEFAULT_CC_EMAILS = `Akram Amir <Akram.Amir@orascom.com>; Yasser Elsaied <Yasser.Elsaied@orascom.com>; Alaa Mohamed Dawoud Mansour <Alaa.Mohamed@orascom.com>; Amr Abdelkhalek <Amr.Abdelkhalek@orascom.com>; Athanassious Armya <Athanassious.Armya@orascom.com>; Ehab Wasfy <Ehab.Wasfy@orascom.com>; Emad Magdy Naguib Fahmy <Emad.Magdy@orascom.com>; Ibrahim Ahmed Eltayeb <Ibrahim.Eltayeb@orascom.com>; Mahmoud Morsi <Mahmoud.Morsi@orascom.com>; Mina Fekry <Mina.Fekry@orascom.com>; Mohamed Abd Elhai Abd Elaal <Mohamed.Elhai@orascom.com>; Mohamed Essam <Mohamed.Essam@orascom.com>; Mohamed Samir <Mohamed.Samir@orascom.com>; Mostafa Abdelatif <Mostafa.Abdelatif@orascom.com>; Peter Attia <Peter.Attia@orascom.com>; Rimon Ayad Daoud <Rimon.Ayad@orascom.com>; Milad Fouad <Milad.Fouad@orascom.com>; Samir Moen <Samir.Moen@orascom.com>; Samy Aziz Saleh <Samy.Aziz@orascom.com>; Amr Zoair <Amr.Zoair@orascom.com>; Ragy Ibrahim Adib <Ragy.Ibrahim@orascom.com>; Sherif Elmasry <Sherif.Elmasry@orascom.com>; Amr Hammed <Amr.Hammed@orascom.com>; Mohammed Mustafa <Mohamed.Mustafa@orascom.com>; Mohamed Abdalla Ali Hafiz <Mohamed.Hafiz@orascom.com>; Bishoy Shenoda <Bishoy.Shenoda@orascom.com>; Albert John <Albert.John@orascom.com>; Mina Magdy Ghattas Saad <Mina.Saad@orascom.com>; Mostafa Kamal <Mostafa.Kamal@orascom.com>; Sherif Elmasry <Sherif.Elmasry@orascom.com>; Mena Reda <mena.reda@orascom.com>`;
 
   const [toEmails, setToEmails] = useState<string>(() => {
-    return localStorage.getItem('oed_saved_to_emails') || DEFAULT_TO_EMAILS;
+    return localStorage.getItem('oed_saved_to_emails_v2') || DEFAULT_TO_EMAILS;
   });
 
   const [ccEmails, setCcEmails] = useState<string>(() => {
-    return localStorage.getItem('oed_saved_cc_emails') || DEFAULT_CC_EMAILS;
+    return localStorage.getItem('oed_saved_cc_emails_v2') || DEFAULT_CC_EMAILS;
   });
 
   const [reviewModalSession, setReviewModalSession] = useState<{
@@ -555,8 +555,8 @@ export const AdminDashboard: React.FC = () => {
     const { courseTitle, sessionNumber, startDate, endDate, startTime, location, targetParticipants, toEmails: toStr, ccEmails: ccStr, isEditing } = reviewModalSession;
 
     // 1. Save TO & CC emails automatically for future sessions
-    if (toStr) localStorage.setItem('oed_saved_to_emails', toStr.trim());
-    if (ccStr) localStorage.setItem('oed_saved_cc_emails', ccStr.trim());
+    if (toStr) localStorage.setItem('oed_saved_to_emails_v2', toStr.trim());
+    if (ccStr) localStorage.setItem('oed_saved_cc_emails_v2', ccStr.trim());
 
     const ccListArray = ccStr.split(/[;,\n]+/).map(e => e.trim()).filter(e => e.includes('@'));
 
@@ -685,8 +685,8 @@ It is my pleasure to announce the beginning of the following course:
     setStartTime(DEFAULT_START_TIME); 
     setTargetParticipants(""); 
     setFeedbackLink(""); 
-    setCcEmails(localStorage.getItem('oed_saved_cc_emails') || DEFAULT_CC_EMAILS);
-    setToEmails(localStorage.getItem('oed_saved_to_emails') || DEFAULT_TO_EMAILS);
+    setCcEmails(localStorage.getItem('oed_saved_cc_emails_v2') || DEFAULT_CC_EMAILS);
+    setToEmails(localStorage.getItem('oed_saved_to_emails_v2') || DEFAULT_TO_EMAILS);
   };
 
   const handleSendReminder = (sessionId: string, reminderType: "Standard" | "Final" = "Standard") => {
@@ -1549,16 +1549,28 @@ It is my pleasure to announce the beginning of the following course:
                               <Mail size={16} className="text-[#FFC000]" />
                               <span>{language === "ar" ? "قائمة الإرسال الأساسية (To)" : "Primary Recipients (To)"}</span>
                             </label>
-                            <span className="text-[11px] font-medium" style={{ color: isDark ? '#C8DBF6' : '#64748B' }}>
-                              {language === 'ar' ? 'المجموعات والمهندسين المستهدفين' : 'Target groups & engineers'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] font-medium" style={{ color: isDark ? '#C8DBF6' : '#64748B' }}>
+                                {language === 'ar' ? 'المجموعات والمهندسين المستهدفين' : 'Target groups & engineers'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setToEmails(DEFAULT_TO_EMAILS);
+                                  localStorage.setItem('oed_saved_to_emails_v2', DEFAULT_TO_EMAILS);
+                                }}
+                                className="text-[10px] font-bold text-blue-600 dark:text-blue-300 hover:underline cursor-pointer bg-white/60 dark:bg-white/10 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700"
+                              >
+                                {language === 'ar' ? '🔄 استعادة الافتراضي' : '🔄 Reset to Default'}
+                              </button>
+                            </div>
                           </div>
                           <textarea
                             rows={2}
                             value={toEmails}
                             onChange={(e) => {
                               setToEmails(e.target.value);
-                              localStorage.setItem('oed_saved_to_emails', e.target.value);
+                              localStorage.setItem('oed_saved_to_emails_v2', e.target.value);
                             }}
                             placeholder="EQ-Maintenance Engineers-OC <EQ-MaintenanceEngineers-OC@orascom.com>; ..."
                             className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-[#002D62] outline-none font-mono"
@@ -1584,16 +1596,28 @@ It is my pleasure to announce the beginning of the following course:
                               <Mail size={16} className="text-[#FFC000]" />
                               <span>{language === "ar" ? "قائمة النسخة الإضافية والتنسيق (CC)" : "Coordination & CC Notification Emails"}</span>
                             </label>
-                            <span className="text-[11px] font-medium" style={{ color: isDark ? '#C8DBF6' : '#64748B' }}>
-                              {language === 'ar' ? 'الشؤون الإدارية ومدراء الأقسام' : 'Admin affairs & managers'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] font-medium" style={{ color: isDark ? '#C8DBF6' : '#64748B' }}>
+                                {language === 'ar' ? 'الشؤون الإدارية ومدراء الأقسام' : 'Admin affairs & managers'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCcEmails(DEFAULT_CC_EMAILS);
+                                  localStorage.setItem('oed_saved_cc_emails_v2', DEFAULT_CC_EMAILS);
+                                }}
+                                className="text-[10px] font-bold text-blue-600 dark:text-blue-300 hover:underline cursor-pointer bg-white/60 dark:bg-white/10 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700"
+                              >
+                                {language === 'ar' ? '🔄 استعادة الافتراضي' : '🔄 Reset to Default'}
+                              </button>
+                            </div>
                           </div>
                           <textarea
                             rows={3}
                             value={ccEmails}
                             onChange={(e) => {
                               setCcEmails(e.target.value);
-                              localStorage.setItem('oed_saved_cc_emails', e.target.value);
+                              localStorage.setItem('oed_saved_cc_emails_v2', e.target.value);
                             }}
                             placeholder="Akram.Amir@orascom.com; Yasser.Elsaied@orascom.com; ..."
                             className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-[#002D62] outline-none font-mono"
