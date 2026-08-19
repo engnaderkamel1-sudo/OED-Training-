@@ -1,25 +1,20 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context';
 import { User } from '../types';
-import { Upload, Save, Loader2, User as UserIcon, Mail, Phone, Building, Briefcase, Hash, Info, Clock } from 'lucide-react';
-import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { db, auth } from '../firebase';
-import { updateEmail, verifyBeforeUpdateEmail, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { Upload, Save, Loader2, User as UserIcon, Mail, Phone, Building, Briefcase, Hash, Lock, ShieldCheck } from 'lucide-react';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { DataField } from './DataField';
 
 export const ProfilePage: React.FC = () => {
   const { user, setUser, users, setUsers, language, t } = useAppContext();
   const [isEditing, setIsEditing] = useState(false);
 
-  // Edit State
+  // Editable fields
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [department, setDepartment] = useState(user?.department || '');
   const [profileImage, setProfileImage] = useState<string | undefined>(user?.profileImageUrl);
-  
-  // New Edit State for HR Code and Email
-  const [hrCode, setHrCode] = useState(user?.hrCode || '');
-  const [email, setEmail] = useState(user?.email || '');
   
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
@@ -32,8 +27,6 @@ export const ProfilePage: React.FC = () => {
       setPhone(user.phone || '');
       setDepartment(user.department);
       setProfileImage(user.profileImageUrl);
-      setHrCode(user.hrCode || '');
-      setEmail(user.email || '');
     }
   }, [user, isEditing]);
 
@@ -89,127 +82,59 @@ export const ProfilePage: React.FC = () => {
       return;
     }
 
-    if (!hrCode.trim()) {
-      setError(language === 'ar' ? 'الكود الوظيفي مطلوب' : 'HR Code is required');
-      return;
-    }
-
     setIsSaving(true);
     try {
-      const cleanHrCode = enforceEnglish(hrCode).trim();
-      let cleanEmail = email.trim().toLowerCase();
-      
-      // Auto complete domain if entered without @orascom.com for official accounts
-      if (cleanEmail && !cleanEmail.includes('@') && !user.isGuest) {
-        cleanEmail = `${cleanEmail}@orascom.com`;
-      }
-
-      const isHrCodeChanged = cleanHrCode !== user.hrCode;
-      const isEmailChanged = cleanEmail !== (user.email || '').toLowerCase();
-      
-      const requiresHrApproval = !user.isGuest && isHrCodeChanged;
-
-      let updateData: any = {
-        name: enforceEnglish(name),
+      const updateData = {
+        name: enforceEnglish(name).trim(),
         phone: phone.trim(),
         department: department.trim(),
-        email: cleanEmail,
         profileImageUrl: profileImage || null
       };
 
-      // 1. Update Firebase Auth Primary Identifier
-      if (isEmailChanged && cleanEmail) {
-        if (auth.currentUser) {
-          try {
-            // Re-authenticate first to bypass requires-recent-login security restriction
-            if (user.password && auth.currentUser.email) {
-              try {
-                const credential = EmailAuthProvider.credential(auth.currentUser.email, user.password);
-                await reauthenticateWithCredential(auth.currentUser, credential);
-              } catch (reauthErr) {
-                console.warn('Re-authentication before updateEmail skipped:', reauthErr);
-              }
-            }
-            await updateEmail(auth.currentUser, cleanEmail);
-          } catch (authErr: any) {
-            console.warn('Direct updateEmail failed, trying verifyBeforeUpdateEmail:', authErr);
-            try {
-              if (typeof verifyBeforeUpdateEmail === 'function') {
-                await verifyBeforeUpdateEmail(auth.currentUser, cleanEmail);
-              }
-            } catch (vErr) {
-              console.error('verifyBeforeUpdateEmail error:', vErr);
-            }
-          }
-        }
-      }
+      // 1. Direct write to Firestore in 1 atomic write (0 reads)
+      await setDoc(doc(db, 'users', user.id), updateData, { merge: true });
 
-      // 2. HR Code Approval Logic
-      if (user.isGuest) {
-        if (isHrCodeChanged) updateData.hrCode = cleanHrCode;
-        setSuccess(language === 'ar' ? 'تم حفظ وتحديث البيانات في فايربيز بنجاح!' : 'Profile updated successfully in Firebase!');
-      } else {
-        if (requiresHrApproval) {
-          updateData.pendingUpdates = {
-            hrCode: cleanHrCode,
-            requestedAt: new Date().toISOString()
-          };
-          setSuccess(language === 'ar' ? 'تم تحديث البريد الإلكتروني بنجاح، وتعديل الكود الوظيفي قيد مراجعة الإدارة.' : 'Email updated successfully. HR Code change is pending admin approval.');
-        } else {
-          setSuccess(language === 'ar' ? 'تم حفظ وتحديث البيانات بنجاح في فايربيز!' : 'Profile updated successfully in Firebase!');
-        }
-      }
-
-      // Remove undefined values to prevent Firestore serialization errors
-      const sanitizedData = Object.fromEntries(
-        Object.entries(updateData).filter(([_, v]) => v !== undefined)
-      );
-
-      // 3. Save directly to doc(db, 'users', user.id) with merge (1 write, 0 reads)
-      await setDoc(doc(db, 'users', user.id), sanitizedData, { merge: true });
-
-      // 4. Update local context & localStorage immediately
+      // 2. Update local context & localStorage immediately
       const updatedUser: User = {
         ...user,
-        ...updateData,
-        ...(requiresHrApproval ? {
-          pendingUpdates: updateData.pendingUpdates
-        } : {})
+        ...updateData
       };
       setUser(updatedUser);
-      localStorage.setItem('oed_training_user', JSON.stringify(updatedUser));
+      try {
+        localStorage.setItem('oed_training_user', JSON.stringify(updatedUser));
+      } catch (e) {}
+      
       if (setUsers && Array.isArray(users)) {
         setUsers(users.map((u) => u && u.id === user.id ? updatedUser : u));
       }
       
+      setSuccess(language === 'ar' ? 'تم حفظ وتحديث بيانات الملف الشخصي بنجاح!' : 'Profile updated successfully!');
       setIsEditing(false);
       setTimeout(() => setSuccess(''), 4000);
     } catch (err: any) {
       console.error("Profile update error:", err);
-      setError(err.message || (language === 'ar' ? 'حدث خطأ أثناء حفظ البيانات في فايربيز' : 'Failed to update profile in Firebase'));
+      setError(err.message || (language === 'ar' ? 'حدث خطأ أثناء حفظ البيانات' : 'Failed to update profile'));
     } finally {
       setIsSaving(false);
     }
   };
 
-  const hasPendingUpdates = user.pendingUpdates && user.pendingUpdates.hrCode;
-
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-gray-100 dark:border-slate-800 overflow-hidden transition-colors">
         {/* Header Cover */}
-        <div className="h-32 bg-[#002D62] w-full relative">
+        <div className="h-32 bg-gradient-to-r from-[#002D62] to-[#0A4D9E] w-full relative">
           <div className="absolute -bottom-12 left-8 rtl:left-auto rtl:right-8">
-            <div className="w-24 h-24 bg-white rounded-full p-1 shadow-md">
-              <div className="w-full h-full bg-gray-100 rounded-full flex items-center justify-center overflow-hidden relative group">
+            <div className="w-24 h-24 bg-white dark:bg-slate-800 rounded-full p-1 shadow-md">
+              <div className="w-full h-full bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center overflow-hidden relative group">
                 {profileImage ? (
                   <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <UserIcon size={40} className="text-gray-400" />
+                  <UserIcon size={40} className="text-gray-400 dark:text-gray-300" />
                 )}
                 
                 {isEditing && (
-                  <label className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                  <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
                     <Upload className="text-white h-5 w-5 mb-1" />
                     <span className="text-[10px] text-white font-semibold">{language === 'ar' ? 'تغيير' : 'Change'}</span>
                     <input type="file" accept="image/png, image/jpeg, image/jpg" className="hidden" onChange={handleImageUpload} />
@@ -222,7 +147,7 @@ export const ProfilePage: React.FC = () => {
             {!isEditing && (
               <button 
                 onClick={() => setIsEditing(true)}
-                className="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded text-sm font-semibold transition-colors backdrop-blur-sm"
+                className="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors backdrop-blur-sm cursor-pointer shadow-xs"
               >
                 {language === 'ar' ? 'تعديل البيانات' : 'Edit Profile'}
               </button>
@@ -231,26 +156,14 @@ export const ProfilePage: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="pt-16 px-8 pb-8">
-          {/* Pending Approval Banner */}
-          {!isEditing && hasPendingUpdates && (
-            <div className="bg-orange-50 border border-orange-200 text-orange-700 p-3 rounded-lg mb-6 flex items-center gap-3 shadow-sm">
-              <Clock className="w-5 h-5 text-orange-500 shrink-0" />
-              <div className="text-sm font-medium">
-                {language === 'ar' 
-                  ? 'يوجد طلب تعديل (للكود الوظيفي) قيد المراجعة حالياً من قبل إدارة التدريب.' 
-                  : 'A request to modify your HR Code is currently pending admin approval.'}
-              </div>
-            </div>
-          )}
-
+        <div className="pt-16 px-6 sm:px-8 pb-8">
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-md mb-6 text-sm border border-red-200 font-medium">
+            <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 p-3 rounded-xl mb-6 text-xs sm:text-sm border border-red-200 dark:border-red-800 font-medium">
               {error}
             </div>
           )}
           {success && (
-            <div className="bg-emerald-50 text-emerald-600 p-3 rounded-md mb-6 text-sm border border-emerald-200 font-medium">
+            <div className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 p-3 rounded-xl mb-6 text-xs sm:text-sm border border-emerald-200 dark:border-emerald-800 font-medium">
               {success}
             </div>
           )}
@@ -259,69 +172,71 @@ export const ProfilePage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-6">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900"><DataField>{user.name}</DataField></h1>
-                  <p className="text-[#002D62] font-semibold">{user.jobRole || (user.role === 'trainee' ? t('trainee') : user.role)}</p>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white"><DataField>{user.name}</DataField></h1>
+                  <p className="text-[#002D62] dark:text-[#FFC000] font-semibold mt-0.5">{user.jobRole || (user.role === 'trainee' ? t('trainee') : user.role)}</p>
                   {user.isGuest && (
-                    <span className="inline-block mt-2 px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full">
+                    <span className="inline-block mt-2 px-2.5 py-0.5 bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 text-xs font-bold rounded-full border border-orange-200">
                       {language === 'ar' ? 'حساب مؤقت' : 'Temporary Account'}
                     </span>
                   )}
                 </div>
                 
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 text-gray-600">
+                  <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                     <Hash className="text-gray-400" size={18} />
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider">{t('hrCode')}</p>
-                      <p className="font-medium">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold tracking-wider">{t('hrCode')}</p>
+                      <p className="font-bold text-gray-900 dark:text-white">
                         <DataField>{user.hrCode}</DataField>
-                        {user.pendingUpdates?.hrCode && <span className="text-xs text-orange-500 font-bold ml-2 rtl:mr-2 rtl:ml-0">(قيد المراجعة)</span>}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3 text-gray-600">
+                  <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                     <Mail className="text-gray-400" size={18} />
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider">{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</p>
-                      <p className="font-medium">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold tracking-wider">{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
                         <DataField>{user.email || 'N/A'}</DataField>
                       </p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3 text-gray-600">
+                  <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                     <Phone className="text-gray-400" size={18} />
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider">{t('phone')}</p>
-                      <p className="font-medium" dir="ltr"><DataField>{user.phone || 'N/A'}</DataField></p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold tracking-wider">{t('phone')}</p>
+                      <p className="font-medium text-gray-900 dark:text-white" dir="ltr"><DataField>{user.phone || 'N/A'}</DataField></p>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-gray-50 p-6 rounded-lg border border-gray-100 h-fit space-y-4">
-                <h3 className="font-bold text-gray-800 border-b pb-2">{language === 'ar' ? 'معلومات العمل' : 'Work Information'}</h3>
+              <div className="bg-gray-50 dark:bg-slate-800/60 p-6 rounded-xl border border-gray-100 dark:border-slate-700/60 h-fit space-y-4">
+                <h3 className="font-bold text-gray-800 dark:text-white border-b dark:border-slate-700 pb-2">{language === 'ar' ? 'معلومات العمل والوظيفة' : 'Work Information'}</h3>
                 
-                <div className="flex items-center gap-3 text-gray-600">
+                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                   <Building className="text-[#FFC000]" size={18} />
                   <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider">{t('department')}</p>
-                    <p className="font-medium"><DataField>{user.department}</DataField></p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold tracking-wider">{t('department')}</p>
+                    <p className="font-medium text-gray-900 dark:text-white"><DataField>{user.department}</DataField></p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-gray-600">
+                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                   <Briefcase className="text-[#FFC000]" size={18} />
                   <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider">{language === 'ar' ? 'الدور' : 'Role'}</p>
-                    <p className="font-medium capitalize">{user.role}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold tracking-wider">{language === 'ar' ? 'الدور في النظام' : 'System Role'}</p>
+                    <p className="font-medium capitalize text-gray-900 dark:text-white">{user.role}</p>
                   </div>
                 </div>
                 
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-xs text-gray-500">{language === 'ar' ? 'معرّف النظام' : 'System ID'}</p>
-                  <p className="text-xs font-mono text-gray-400 break-all">{user.id}</p>
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                  <span>{language === 'ar' ? 'حالة الحساب' : 'Account Status'}</span>
+                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <ShieldCheck size={14} />
+                    <span>{language === 'ar' ? 'موثق ومعتمد' : 'Verified'}</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -329,80 +244,80 @@ export const ProfilePage: React.FC = () => {
             <form onSubmit={handleSave} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {language === 'ar' ? 'الاسم' : 'Name'}
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {language === 'ar' ? 'الاسم الكامل' : 'Full Name'}
                   </label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(enforceEnglish(e.target.value))}
-                    className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-[#002D62] outline-none"
+                    className="w-full border dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-[#002D62] outline-none text-xs sm:text-sm"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {language === 'ar' ? 'القسم' : 'Department'}
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {language === 'ar' ? 'القسم / الإدارة' : 'Department'}
                   </label>
                   <input
                     type="text"
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
-                    className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-[#002D62] outline-none"
+                    className="w-full border dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-[#002D62] outline-none text-xs sm:text-sm"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {language === 'ar' ? 'رقم التليفون' : 'Phone'}
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {language === 'ar' ? 'رقم التليفون' : 'Phone Number'}
                   </label>
-                  <div className="flex border rounded overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62]" dir="ltr">
-                    <span className="bg-gray-100 px-3 py-2 border-r text-gray-600 font-medium">+2</span>
+                  <div className="flex border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62]" dir="ltr">
+                    <span className="bg-gray-100 dark:bg-slate-700 px-3.5 py-2.5 border-r dark:border-slate-600 text-gray-600 dark:text-gray-300 font-bold text-xs">+2</span>
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                      className="w-full px-3 py-2 outline-none"
+                      className="w-full px-3 py-2 outline-none bg-transparent text-gray-900 dark:text-white text-xs sm:text-sm font-medium"
                       placeholder="010xxxxxxxx"
                     />
                   </div>
                 </div>
-                
-                <div className="md:col-span-2 space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <div className="flex items-start gap-2 mb-2">
-                    <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                    <p className="text-sm text-gray-600 font-medium">
-                      {user.isGuest 
-                        ? (language === 'ar' ? 'تحديث الكود الوظيفي والبريد الإلكتروني سيتم حفظه فوراً لحسابك المؤقت.' : 'Updating HR Code and Email will be saved immediately for your temporary account.')
-                        : (language === 'ar' ? 'لن يتم تعديل الكود الوظيفي إلا بعد الرجوع لموافقة مشرف النظام (الإيميل يتحدث فوراً).' : 'HR Code will not be modified without the approval of the system admin (Email updates immediately).')}
+
+                {/* Permanent Read-Only Identifiers Banner */}
+                <div className="md:col-span-2 space-y-3 bg-gray-50 dark:bg-slate-800/60 p-4 rounded-xl border border-gray-200 dark:border-slate-700">
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <p className="text-xs text-gray-600 dark:text-gray-300 font-semibold">
+                      {language === 'ar' 
+                        ? 'الرقم الوظيفي والبريد الإلكتروني معرّفات أساسية ثابتة ولا يمكن تعديلها.' 
+                        : 'HR Code and Email are official permanent account identifiers and cannot be changed.'}
                     </p>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {t('hrCode')}
+                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                        {t('hrCode')} (🔒 {language === 'ar' ? 'ثابت' : 'Fixed'})
                       </label>
                       <input
                         type="text"
-                        value={hrCode}
-                        onChange={(e) => setHrCode(enforceEnglish(e.target.value))}
-                        className={`w-full border rounded px-3 py-2 focus:ring-2 focus:ring-[#002D62] outline-none ${!user.isGuest ? 'bg-white' : ''}`}
+                        value={user.hrCode}
+                        disabled
+                        className="w-full border dark:border-slate-700 bg-gray-100 dark:bg-slate-800/90 text-gray-500 dark:text-gray-400 rounded-xl px-3.5 py-2 cursor-not-allowed text-xs sm:text-sm font-bold font-mono"
                         dir="ltr"
-                        required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {language === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                        {language === 'ar' ? 'البريد الإلكتروني' : 'Email'} (🔒 {language === 'ar' ? 'ثابت' : 'Fixed'})
                       </label>
                       <input
                         type="email"
-                        value={email}
-                        onChange={(e) => setEmail(enforceEnglish(e.target.value))}
-                        className={`w-full border rounded px-3 py-2 focus:ring-2 focus:ring-[#002D62] outline-none ${!user.isGuest ? 'bg-white' : ''}`}
+                        value={user.email || ''}
+                        disabled
+                        className="w-full border dark:border-slate-700 bg-gray-100 dark:bg-slate-800/90 text-gray-500 dark:text-gray-400 rounded-xl px-3.5 py-2 cursor-not-allowed text-xs sm:text-sm font-medium"
                         dir="ltr"
                       />
                     </div>
@@ -410,16 +325,14 @@ export const ProfilePage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-6 border-t flex justify-end gap-3">
+              <div className="pt-6 border-t dark:border-slate-700 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => {
                     setIsEditing(false);
                     setProfileImage(user.profileImageUrl);
-                    setHrCode(user.hrCode);
-                    setEmail(user.email || '');
                   }}
-                  className="px-6 py-2 border border-gray-300 rounded text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                  className="px-5 py-2 border border-gray-300 dark:border-slate-700 rounded-xl text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-slate-800 text-xs sm:text-sm transition-colors cursor-pointer"
                   disabled={isSaving}
                 >
                   {language === 'ar' ? 'إلغاء' : 'Cancel'}
@@ -427,12 +340,12 @@ export const ProfilePage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="bg-[#002D62] text-white px-8 py-2 rounded font-bold hover:bg-blue-900 transition-colors flex items-center gap-2 disabled:opacity-70 shadow-sm"
+                  className="bg-[#002D62] hover:bg-blue-900 text-white px-7 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 disabled:opacity-70 shadow-md text-xs sm:text-sm cursor-pointer"
                 >
                   {isSaving ? (
-                    <Loader2 size={18} className="animate-spin" />
+                    <Loader2 size={16} className="animate-spin" />
                   ) : (
-                    <Save size={18} />
+                    <Save size={16} />
                   )}
                   <span>{language === 'ar' ? 'حفظ التعديلات' : 'Save Changes'}</span>
                 </button>

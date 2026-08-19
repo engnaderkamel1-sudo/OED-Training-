@@ -903,7 +903,15 @@ It is my pleasure to announce the beginning of the following course:
     e.preventDefault(); alert(`Shared ${resourceLink} with attendees.`); setResourceLink("");
   };
 
-  const handleClearAllFilters = () => { setSearchHrCode(""); setSearchTrainee(""); setSearchDepartment(""); setSelectedCourseFilter(""); setFromDateFilter(""); setToDateFilter(""); };
+  const handleClearAllFilters = () => { 
+    setSearchHrCode(""); 
+    setSearchTrainee(""); 
+    setSearchDepartment(""); 
+    setSelectedCourseFilter(""); 
+    setFromDateFilter(""); 
+    setToDateFilter(""); 
+    setRecords([]);
+  };
 
   const getAdminReportOptions = (): ReportOptions => {
     return {

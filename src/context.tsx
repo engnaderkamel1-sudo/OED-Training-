@@ -70,6 +70,8 @@ interface AppContextType {
     totalTechnicians: number;
     totalOperators: number;
   };
+  isQuotaExhausted: boolean;
+  dismissQuotaAlert: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -144,6 +146,35 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [debugRole, setDebugRole] = useState<Role>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [isQuotaExhausted, setIsQuotaExhausted] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem('oed_quota_exhausted_time');
+      if (stored) {
+        const time = parseInt(stored, 10);
+        if (Date.now() - time < 8 * 60 * 60 * 1000) return true;
+      }
+    } catch (e) {}
+    return false;
+  });
+
+  const checkQuotaError = (error: any) => {
+    if (!error) return;
+    const msg = String(error.message || error.code || error).toLowerCase();
+    if (msg.includes('resource-exhausted') || msg.includes('quota') || msg.includes('limit') || error.code === 'resource-exhausted') {
+      setIsQuotaExhausted(true);
+      try {
+        localStorage.setItem('oed_quota_exhausted_time', Date.now().toString());
+      } catch (e) {}
+    }
+  };
+
+  const dismissQuotaAlert = () => {
+    setIsQuotaExhausted(false);
+    try {
+      localStorage.removeItem('oed_quota_exhausted_time');
+    } catch (e) {}
+  };
+
   useEffect(() => {
     setIsLoading(true);
 
@@ -161,33 +192,48 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         users.push(uData);
       });
       setLocalUsers(users);
-    }, (error) => console.error("Firebase Users Error:", error));
+    }, (error) => {
+      checkQuotaError(error);
+      console.error("Firebase Users Error:", error);
+    });
 
     const unsubCourses = onSnapshot(collection(db, "courses"), (snapshot) => {
       const crs: Course[] = [];
       snapshot.forEach((d) => crs.push(d.data() as Course));
       setFirebaseCoursesState(crs);
-    }, (error) => console.error("Firebase Courses Error:", error));
+    }, (error) => {
+      checkQuotaError(error);
+      console.error("Firebase Courses Error:", error);
+    });
 
     const unsubSessions = onSnapshot(collection(db, "sessions"), (snapshot) => {
       const sessions: UpcomingSession[] = [];
       snapshot.forEach((d) => sessions.push(d.data() as UpcomingSession));
       setUpcomingSessionsState(sessions);
-    }, (error) => console.error("Firebase Sessions Error:", error));
+    }, (error) => {
+      checkQuotaError(error);
+      console.error("Firebase Sessions Error:", error);
+    });
 
     const unsubAnnouncements = onSnapshot(collection(db, "announcements"), (snapshot) => {
       const ann: SystemAnnouncement[] = [];
       snapshot.forEach((d) => ann.push(d.data() as SystemAnnouncement));
       ann.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setAnnouncementsState(ann);
-    }, (error) => console.error("Firebase Announcements Error:", error));
+    }, (error) => {
+      checkQuotaError(error);
+      console.error("Firebase Announcements Error:", error);
+    });
 
     const unsubSuggestions = onSnapshot(collection(db, "suggestions"), (snapshot) => {
       const sugs: Suggestion[] = [];
       snapshot.forEach((d) => sugs.push(d.data() as Suggestion));
       sugs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setSuggestionsState(sugs);
-    }, (error) => console.error("Firebase Suggestions Error:", error));
+    }, (error) => {
+      checkQuotaError(error);
+      console.error("Firebase Suggestions Error:", error);
+    });
 
     const unsubVersion = onSnapshot(doc(db, "systemSettings", "appConfig"), (docSnap) => {
       if (docSnap.exists()) {
@@ -196,7 +242,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           setSystemVersionState(data.version);
         }
       }
-    }, (error) => console.warn("Firebase AppConfig Error:", error));
+    }, (error) => {
+      checkQuotaError(error);
+      console.warn("Firebase AppConfig Error:", error);
+    });
 
     const unsubKPIs = onSnapshot(doc(db, "systemSettings", "globalKPIs"), (docSnap) => {
       if (docSnap.exists()) {
@@ -216,7 +265,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           } catch (e) {}
         }
       }
-    }, (error) => console.warn("Firebase globalKPIs Error:", error));
+    }, (error) => {
+      checkQuotaError(error);
+      console.warn("Firebase globalKPIs Error:", error);
+    });
 
     try {
       const storedFileName = localStorage.getItem('oed_training_filename');
@@ -698,6 +750,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       recordsLoaded,
       fetchTrainingRecords,
       globalKPIs,
+      isQuotaExhausted,
+      dismissQuotaAlert,
     }}>
       <div dir={language === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${language === 'ar' ? 'font-arabic' : 'font-sans'}`}>
         {children}

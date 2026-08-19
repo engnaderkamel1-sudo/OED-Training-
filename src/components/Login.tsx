@@ -280,6 +280,11 @@ export const Login: React.FC = () => {
         ? email.trim().toLowerCase() + "@orascom.com" 
         : email.trim().toLowerCase(); 
       
+      if (!profileImage) {
+        setError(language === "ar" ? "الصورة الشخصية إجبارية لإتمام إنشاء الحساب، يرجى رفع صورتك أولاً." : "Profile photo is required to create an account. Please upload your photo.");
+        return;
+      }
+
       if (!name || !department || !password || !email.trim()) {
         setError(language === "ar" ? "الرجاء ملء جميع الحقول المطلوبة" : "Please fill all required fields");
         return;
@@ -573,14 +578,27 @@ export const Login: React.FC = () => {
             </button>
 
             <div className="flex flex-col items-center mb-4">
-              <label className="relative cursor-pointer w-20 h-20 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden hover:border-[#002D62] transition-colors">
+              <label className={`relative cursor-pointer w-24 h-24 rounded-full border-2 border-dashed ${profileImage ? 'border-emerald-500 shadow-md ring-2 ring-emerald-200' : 'border-amber-400 bg-amber-50/50 hover:border-[#002D62]'} flex items-center justify-center overflow-hidden transition-all group`}>
                 {profileImage ? (
                   <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="text-center p-2"><span className="text-[10px] font-bold text-gray-500">{language === "ar" ? "صورتك" : "Photo"}</span></div>
+                  <div className="text-center p-2 flex flex-col items-center justify-center">
+                    <UserPlus size={22} className="text-amber-600 mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-extrabold text-amber-800 leading-tight">
+                      {language === "ar" ? "ارفع صورتك *" : "Upload Photo *"}
+                    </span>
+                  </div>
                 )}
-                <input type="file" accept="image/png, image/jpeg" className="hidden" onChange={handleImageUpload} />
+                <input type="file" accept="image/png, image/jpeg, image/jpg" className="hidden" onChange={handleImageUpload} />
               </label>
+              <span className={`text-[11px] font-bold mt-1.5 flex items-center gap-1 ${profileImage ? 'text-emerald-600' : 'text-red-500'}`}>
+                <span>{profileImage ? '✓' : '*'}</span>
+                <span>
+                  {profileImage 
+                    ? (language === 'ar' ? 'تم اختيار الصورة بنجاح' : 'Photo Selected') 
+                    : (language === 'ar' ? 'الصورة الشخصية إجبارية للتسجيل' : 'Profile Photo is Mandatory')}
+                </span>
+              </span>
             </div>
 
             <div>

@@ -24,6 +24,7 @@ import { signOut } from 'firebase/auth';
 import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UpdateNotificationBanner } from './components/UpdateNotificationBanner';
+import { QuotaExhaustedBanner } from './components/QuotaExhaustedBanner';
 
 const AppContent: React.FC = () => {
   const { user, isLoading, t, currentView, language, setUser } = useAppContext();
@@ -229,6 +230,7 @@ const AppContent: React.FC = () => {
         }}
       />
       <TopNav />
+      <QuotaExhaustedBanner />
       <UpdateNotificationBanner />
       {/* الكلاسات الأساسية للتطبيق */}
       <div className="flex min-h-[calc(100vh-4rem)] relative print:bg-white print:min-h-0 transition-colors duration-300">
