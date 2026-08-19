@@ -149,27 +149,29 @@ export const TopNav: React.FC = () => {
 
                   {dropdownOpen && (
                     <div 
-                      className="absolute right-0 rtl:right-auto rtl:left-0 mt-2.5 w-64 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn z-[99999] border p-2 bg-[#0D1F3C] border-blue-400/30"
+                      className="absolute right-0 rtl:right-auto rtl:left-0 mt-2.5 w-64 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn z-[99999] border p-2.5 bg-[#0D1E38] border-blue-400/40"
                     >
-                      {/* User Info Header (Static, Clean, High Contrast) */}
-                      <div className="p-3 rounded-xl bg-[#091527] border border-blue-500/20 mb-2">
-                        <p className="text-base font-black text-white truncate">
+                      {/* User Info Header (Prominent Elevated Box) */}
+                      <div className="p-3.5 rounded-xl bg-gradient-to-br from-[#1E4277] to-[#142B4E] border border-blue-400/50 shadow-md mb-2">
+                        <p className="text-base font-black text-white truncate drop-shadow-xs">
                           {user.name || 'User'}
                         </p>
-                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                          <span className="bg-[#FFC000] text-[#001D42] px-2 py-0.5 rounded font-mono font-black text-xs shadow-xs">
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <span className="bg-[#FFC000] text-[#001D42] px-2 py-0.5 rounded-md font-mono font-black text-xs shadow-xs">
                             {user.hrCode || 'N/A'}
                           </span>
-                          <span className="text-xs text-[#C8DBF6] font-semibold truncate">
+                          <span className="text-xs text-[#E2EDFF] font-bold truncate">
                             {user.department || 'General'}
                           </span>
                         </div>
                       </div>
 
+                      <div className="my-1.5 border-t border-blue-400/20" />
+
                       {/* My Profile Button */}
                       <button
                         onClick={openProfile}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-white hover:bg-white/10 transition-colors cursor-pointer"
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-white hover:bg-white/10 transition-colors cursor-pointer"
                       >
                         <UserCircle size={18} className="text-[#FFC000] shrink-0" />
                         <span>{language === 'ar' ? 'الملف الشخصي' : 'My Profile'}</span>
@@ -178,7 +180,7 @@ export const TopNav: React.FC = () => {
                       {/* Logout Button */}
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/15 transition-colors cursor-pointer mt-1"
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/15 transition-colors cursor-pointer mt-0.5"
                       >
                         <LogOut size={18} className="text-red-400 shrink-0" />
                         <span>{language === 'ar' ? 'تسجيل الخروج' : 'Logout'}</span>
