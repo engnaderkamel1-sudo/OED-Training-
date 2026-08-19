@@ -15,10 +15,10 @@
  */
 
 export const APP_VERSION = {
-  version: "3.2.0",
+  version: "3.2.1",
   releaseName: "Enterprise Edition",
   buildDate: "August 2026",
-  buildTimestamp: "2026-08-19 15:30",
+  buildTimestamp: "2026-08-19 15:35",
   
   // Official Developer & Designer Credits
   creditLine: "Designed & Developed by Eng. Nader Reda | OED Technical Training",

@@ -28,8 +28,14 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ onClos
     try {
       // Find target user by HR Code, Email, or Phone
       let targetEmail = '';
+      let fallbackEmail = '';
+
       if (q.includes('@')) {
         targetEmail = q;
+        const matchedUser = users.find(u => u.email?.toLowerCase() === q || u.hrCode?.toLowerCase() === q.split('@')[0]);
+        if (matchedUser) {
+          fallbackEmail = matchedUser.hrCode ? `${matchedUser.hrCode.toLowerCase()}@orascom.com` : '';
+        }
       } else {
         const user = users.find(
           (u) =>
@@ -41,6 +47,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ onClos
 
         if (user && user.email) {
           targetEmail = user.email;
+          fallbackEmail = user.hrCode ? `${user.hrCode.toLowerCase()}@orascom.com` : '';
         } else if (!user) {
           // If no user found and typed alphanumeric HR code
           targetEmail = `${q}@orascom.com`;
@@ -56,15 +63,24 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ onClos
         }
       }
 
-      // Send Password Reset directly via Firebase Auth
-      await sendPasswordResetEmail(auth, targetEmail);
+      // Send Password Reset via Firebase Auth with smart fallback
+      try {
+        await sendPasswordResetEmail(auth, targetEmail);
+      } catch (firstErr: any) {
+        if (firstErr.code === 'auth/user-not-found' && fallbackEmail && fallbackEmail !== targetEmail) {
+          await sendPasswordResetEmail(auth, fallbackEmail);
+          targetEmail = fallbackEmail;
+        } else {
+          throw firstErr;
+        }
+      }
 
       setIsDone(true);
       setMessage({
         type: 'success',
         text: language === 'ar' 
-          ? `تم إرسال رابط استعادة كلمة المرور بنجاح إلى البريد الإلكتروني المسجل. يرجى تفقد صندوق الوارد.` 
-          : `Password reset link has been successfully sent to the registered email. Please check your inbox.`
+          ? `تم إرسال رابط استعادة كلمة المرور بنجاح إلى: (${targetEmail}). يرجى تفقد صندوق الوارد.` 
+          : `Password reset link has been successfully sent to: (${targetEmail}). Please check your inbox.`
       });
     } catch (err: any) {
       console.error("Error sending reset email:", err);

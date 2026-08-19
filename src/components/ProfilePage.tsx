@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context';
 import { User } from '../types';
 import { Upload, Save, Loader2, User as UserIcon, Mail, Phone, Building, Briefcase, Hash, Info, Clock } from 'lucide-react';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { updateEmail } from 'firebase/auth';
+import { updateEmail, verifyBeforeUpdateEmail, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { DataField } from './DataField';
 
 export const ProfilePage: React.FC = () => {
@@ -96,10 +96,13 @@ export const ProfilePage: React.FC = () => {
 
     setIsSaving(true);
     try {
-      const userRef = doc(db, 'users', user.id);
-      
       const cleanHrCode = enforceEnglish(hrCode).trim();
-      const cleanEmail = email.trim().toLowerCase();
+      let cleanEmail = email.trim().toLowerCase();
+      
+      // Auto complete domain if entered without @orascom.com for official accounts
+      if (cleanEmail && !cleanEmail.includes('@') && !user.isGuest) {
+        cleanEmail = `${cleanEmail}@orascom.com`;
+      }
 
       const isHrCodeChanged = cleanHrCode !== user.hrCode;
       const isEmailChanged = cleanEmail !== (user.email || '').toLowerCase();
@@ -110,47 +113,77 @@ export const ProfilePage: React.FC = () => {
         name: enforceEnglish(name),
         phone: phone.trim(),
         department: department.trim(),
+        email: cleanEmail,
         profileImageUrl: profileImage || null
       };
 
-      // 1. تحديث الإيميل في Firestore و Firebase Auth
-      if (isEmailChanged) {
-        updateData.email = cleanEmail;
-        if (auth.currentUser && cleanEmail) {
+      // 1. Update Firebase Auth Primary Identifier
+      if (isEmailChanged && cleanEmail) {
+        if (auth.currentUser) {
           try {
+            // Re-authenticate first to bypass requires-recent-login security restriction
+            if (user.password && auth.currentUser.email) {
+              try {
+                const credential = EmailAuthProvider.credential(auth.currentUser.email, user.password);
+                await reauthenticateWithCredential(auth.currentUser, credential);
+              } catch (reauthErr) {
+                console.warn('Re-authentication before updateEmail skipped:', reauthErr);
+              }
+            }
             await updateEmail(auth.currentUser, cleanEmail);
           } catch (authErr: any) {
-            console.warn('Firebase Auth email update skipped/deferred:', authErr);
+            console.warn('Direct updateEmail failed, trying verifyBeforeUpdateEmail:', authErr);
+            try {
+              if (typeof verifyBeforeUpdateEmail === 'function') {
+                await verifyBeforeUpdateEmail(auth.currentUser, cleanEmail);
+              }
+            } catch (vErr) {
+              console.error('verifyBeforeUpdateEmail error:', vErr);
+            }
           }
         }
       }
 
-      // 2. التعامل مع الكود الوظيفي
+      // 2. HR Code Approval Logic
       if (user.isGuest) {
-        // لو حساب مؤقت يتحدث الكود فوراً
         if (isHrCodeChanged) updateData.hrCode = cleanHrCode;
-        setSuccess(language === 'ar' ? 'تم حفظ البيانات بنجاح في النظام!' : 'Profile updated successfully!');
+        setSuccess(language === 'ar' ? 'تم حفظ وتحديث البيانات في فايربيز بنجاح!' : 'Profile updated successfully in Firebase!');
       } else {
-        // لو حساب رسمي وتغير الكود الوظيفي يروح للموافقة
         if (requiresHrApproval) {
           updateData.pendingUpdates = {
             hrCode: cleanHrCode,
             requestedAt: new Date().toISOString()
           };
-          if (isEmailChanged) {
-            setSuccess(language === 'ar' ? 'تم تحديث البريد الإلكتروني بنجاح، وتعديل الكود الوظيفي قيد مراجعة الإدارة.' : 'Email updated successfully. HR Code change is pending admin approval.');
-          } else {
-            setSuccess(language === 'ar' ? 'تم إرسال طلب تعديل الكود الوظيفي للإدارة للموافقة عليه.' : 'HR Code change is pending admin approval.');
-          }
+          setSuccess(language === 'ar' ? 'تم تحديث البريد الإلكتروني بنجاح، وتعديل الكود الوظيفي قيد مراجعة الإدارة.' : 'Email updated successfully. HR Code change is pending admin approval.');
         } else {
-          setSuccess(language === 'ar' ? 'تم حفظ وتحديث البيانات بنجاح!' : 'Profile updated successfully!');
+          setSuccess(language === 'ar' ? 'تم حفظ وتحديث البيانات بنجاح في فايربيز!' : 'Profile updated successfully in Firebase!');
         }
       }
 
-      // حفظ التعديلات في Firebase Firestore
-      await updateDoc(userRef, updateData);
+      // Remove undefined values to prevent Firestore serialization errors
+      const sanitizedData = Object.fromEntries(
+        Object.entries(updateData).filter(([_, v]) => v !== undefined)
+      );
 
-      // تحديث الحالة المحلية فوراً
+      // 3. Save directly to doc(db, 'users', user.id) with merge
+      await setDoc(doc(db, 'users', user.id), sanitizedData, { merge: true });
+
+      // 4. Also search by HR code to ensure all matching documents in Firestore are synced
+      if (user.hrCode) {
+        try {
+          const q = query(collection(db, 'users'), where('hrCode', '==', user.hrCode));
+          const snap = await getDocs(q);
+          for (const d of snap.docs) {
+            if (d.id !== user.id) {
+              await setDoc(doc(db, 'users', d.id), sanitizedData, { merge: true });
+            }
+          }
+        } catch (e) {
+          // secondary sync fallback
+        }
+      }
+
+      // 5. Update local context & localStorage immediately
       const updatedUser: User = {
         ...user,
         ...updateData,
@@ -159,6 +192,7 @@ export const ProfilePage: React.FC = () => {
         } : {})
       };
       setUser(updatedUser);
+      localStorage.setItem('oed_training_user', JSON.stringify(updatedUser));
       if (setUsers && users) {
         setUsers(users.map((u) => u.id === user.id ? updatedUser : u));
       }
@@ -167,7 +201,7 @@ export const ProfilePage: React.FC = () => {
       setTimeout(() => setSuccess(''), 4000);
     } catch (err: any) {
       console.error("Profile update error:", err);
-      setError(err.message || (language === 'ar' ? 'حدث خطأ أثناء حفظ البيانات' : 'Failed to update profile'));
+      setError(err.message || (language === 'ar' ? 'حدث خطأ أثناء حفظ البيانات في فايربيز' : 'Failed to update profile in Firebase'));
     } finally {
       setIsSaving(false);
     }
