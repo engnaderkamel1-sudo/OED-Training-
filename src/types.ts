@@ -97,6 +97,7 @@ export interface UpcomingSession {
   reminderLog?: ReminderLogItem[];
   feedbackLink?: string;
   feedbackEnabled?: boolean;
+  additionalNotificationEmails?: string[];
 }
 
 export interface CleanedRecord {
