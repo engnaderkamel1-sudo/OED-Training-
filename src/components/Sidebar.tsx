@@ -134,27 +134,27 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
-      <div className="fixed top-20 left-0 rtl:left-auto rtl:right-0 w-6 h-20 z-[9999] print:hidden group">
+      <div className="fixed top-20 left-0 rtl:left-auto rtl:right-0 z-[9999] print:hidden">
         <div 
           className={`
-            absolute top-0 transition-all duration-300 ease-in-out flex flex-col items-center gap-0.5
+            transition-all duration-300 ease-in-out
             ${isOpen 
-              ? 'left-4 rtl:left-auto rtl:right-4' 
-              : '-left-8 group-hover:left-4 rtl:left-auto rtl:-right-8 rtl:group-hover:right-4 opacity-60 group-hover:opacity-100'
+              ? 'translate-x-3 rtl:-translate-x-3' 
+              : 'translate-x-1.5 hover:translate-x-2.5 rtl:-translate-x-1.5 rtl:hover:-translate-x-2.5'
             }
           `}
         >
           <button
             onClick={() => { setIsOpen(!isOpen); setIsNudging(false); }}
             className={`
-              bg-[#002D62] dark:bg-[#0a1628] text-white p-3 rounded-full shadow-xl
-              hover:bg-blue-800 dark:hover:bg-[#132040] transition-all active:scale-95
-              border-2 border-[#FFC000] dark:border-[#FFC000]/60
+              bg-[#002D62] dark:bg-[#0A1628] text-white p-2.5 rounded-full shadow-lg
+              hover:bg-blue-900 dark:hover:bg-[#132040] transition-all active:scale-95
+              border-2 border-[#FFC000] dark:border-[#FFC000]/80 cursor-pointer flex items-center justify-center
               ${isNudging && !isOpen ? 'menu-nudge' : ''}
             `}
             aria-label={isOpen ? 'Close menu' : 'Open menu'}
           >
-            {isOpen ? <X size={22} strokeWidth={2.5} /> : <Menu size={22} strokeWidth={2.5} />}
+            {isOpen ? <X size={20} strokeWidth={2.5} /> : <Menu size={20} strokeWidth={2.5} />}
           </button>
         </div>
       </div>
