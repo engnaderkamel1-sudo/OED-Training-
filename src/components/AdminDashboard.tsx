@@ -1306,6 +1306,7 @@ It is my pleasure to announce the beginning of the following course:
                                 (u.role || '').toLowerCase().includes(term)
                               );
                             }).map((u) => (
+                              <tr key={u.id} className="border-b transition-colors" style={{ borderColor: borderColor, color: textColor }}>
                                 <td className="p-3"><DataField>{u.hrCode}</DataField></td>
                                 <td className="p-3"><UserAvatarWithName user={u} /></td>
                                 <td className="p-3"><DataField>{u.department}</DataField></td>
