@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Mail } from 'lucide-react';
+﻿import React, { useState } from 'react';
+import { X, Mail, Edit3, Check, Loader2 } from 'lucide-react';
 import { APP_VERSION } from '../version';
 import { useAppContext } from '../context';
 
@@ -8,8 +8,31 @@ interface AboutModalProps {
 }
 
 export const AboutModal: React.FC<AboutModalProps> = ({ onClose }) => {
-  const { language, theme, systemVersion } = useAppContext();
+  const { user, language, theme, systemVersion, updateSystemVersion } = useAppContext();
   const isDark = theme === 'dark';
+
+  const [isEditingVersion, setIsEditingVersion] = useState(false);
+  const [newVersionInput, setNewVersionInput] = useState(systemVersion || APP_VERSION.version);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const handleSaveVersion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newVersionInput.trim()) return;
+    setIsSaving(true);
+    try {
+      await updateSystemVersion(newVersionInput.trim());
+      setSaveSuccess(true);
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setIsEditingVersion(false);
+      }, 1500);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fadeIn">
@@ -42,9 +65,48 @@ export const AboutModal: React.FC<AboutModalProps> = ({ onClose }) => {
                 <h3 className="font-black text-xl text-white tracking-tight">
                   {APP_VERSION.systemName}
                 </h3>
-                <span className="bg-[#FFC000] text-[#001D42] font-mono font-black text-xs px-2.5 py-0.5 rounded-full shadow-2xs">
-                  v{systemVersion || APP_VERSION.version}
-                </span>
+                
+                {!isEditingVersion ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="bg-[#FFC000] text-[#001D42] font-mono font-black text-xs px-2.5 py-0.5 rounded-full shadow-2xs">
+                      v{systemVersion || APP_VERSION.version}
+                    </span>
+                    {user?.role === 'admin' && (
+                      <button
+                        onClick={() => { setIsEditingVersion(true); setNewVersionInput(systemVersion || APP_VERSION.version); }}
+                        className="p-1 rounded text-[#FFC000] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                        title={language === 'ar' ? 'تعديل رقم الإصدار (خاص بالمسؤول)' : 'Edit Version (Admin Only)'}
+                      >
+                        <Edit3 size={14} />
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <form onSubmit={handleSaveVersion} className="flex items-center gap-1.5 bg-black/40 p-1 rounded-lg">
+                    <span className="text-white text-xs font-mono font-bold">v</span>
+                    <input
+                      type="text"
+                      value={newVersionInput}
+                      onChange={(e) => setNewVersionInput(e.target.value)}
+                      className="w-16 px-1.5 py-0.5 text-xs font-mono font-bold text-white bg-white/20 rounded border border-white/40 focus:outline-none focus:ring-1 focus:ring-[#FFC000]"
+                      autoFocus
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSaving}
+                      className="p-1 bg-[#FFC000] text-[#001D42] rounded hover:bg-yellow-400 transition-colors cursor-pointer"
+                    >
+                      {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingVersion(false)}
+                      className="p-1 text-gray-300 hover:text-white rounded transition-colors cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </form>
+                )}
               </div>
               <p className="text-xs text-[#FFC000] font-bold mt-0.5">
                 {APP_VERSION.systemFullName}
@@ -73,27 +135,27 @@ export const AboutModal: React.FC<AboutModalProps> = ({ onClose }) => {
             </p>
           </div>
 
-          {/* Developer & Management Card */}
+          {/* Developer & Management Card (Subtle & Discreet) */}
           <div 
-            className="p-4 rounded-xl border relative overflow-hidden shadow-xs"
+            className="p-3 rounded-xl border relative overflow-hidden"
             style={{ 
-              backgroundColor: isDark ? '#142746' : '#FAF8F5', 
-              borderColor: isDark ? '#FFC000/30' : '#FDE68A'
+              backgroundColor: isDark ? '#101F38' : '#F8FAFC', 
+              borderColor: isDark ? 'rgba(148, 190, 255, 0.15)' : '#E2E8F0'
             }}
           >
-            <p className="text-xs font-bold text-[#002D62] dark:text-[#FFC000] leading-snug">
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-normal leading-normal">
               {APP_VERSION.creditLine}
             </p>
 
-            <div className="mt-3 flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-amber-200/50 dark:border-blue-900/50">
+            <div className="mt-2 flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-blue-900/40">
               <a 
                 href={`mailto:${APP_VERSION.contactEmail}`}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-[#93C5FD] hover:underline"
+                className="inline-flex items-center gap-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-[#93C5FD] hover:underline"
               >
-                <Mail size={13} />
+                <Mail size={12} />
                 <span>{APP_VERSION.contactEmail}</span>
               </a>
-              <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400">
+              <span className="text-[9px] font-mono text-gray-400 dark:text-gray-500">
                 Build {APP_VERSION.buildTimestamp}
               </span>
             </div>

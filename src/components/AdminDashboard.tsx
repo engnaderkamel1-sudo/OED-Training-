@@ -1535,8 +1535,69 @@ It is my pleasure to announce the beginning of the following course:
           )}
 
           {/* ADMIN TOOLS TAB */}
-          {["tools", "tools_manage", "tools_create", "tools_reports", "tools_logs", "tools_usage"].includes(currentView) && (
+          {["tools", "tools_manage", "tools_create", "tools_reports", "tools_logs", "tools_usage", "system_version"].includes(currentView) && (
             <div className="space-y-12">
+              {currentView === "system_version" && (
+                <div className="border rounded-2xl p-6 shadow-sm transition-all" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                  <div className="flex items-center justify-between flex-wrap gap-3 mb-6 pb-4 border-b" style={{ borderColor: borderColor }}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-[#FFC000] text-[#001D42] flex items-center justify-center font-black text-lg shadow-sm">
+                        v
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-[#002D62] dark:text-[#93C5FD]">
+                          {language === "ar" ? "إدارة وتعديل رقم إصدار المنظومة" : "System Version Management"}
+                        </h2>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {language === "ar" ? "تعديل رقم الإصدار المعتمد للمنظومة وحفظه في Firebase وتعميمه على جميع المستخدمين" : "Update and broadcast official release version across the system"}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="bg-blue-100 dark:bg-blue-900/60 text-[#002D62] dark:text-blue-200 font-mono font-bold text-sm px-4 py-1 rounded-full border border-blue-200 dark:border-blue-700">
+                      {language === 'ar' ? 'الإصدار النشط:' : 'Active Version:'} v{systemVersion}
+                    </span>
+                  </div>
+
+                  {versionSuccessToast && (
+                    <div className="bg-green-50 dark:bg-green-900/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 text-sm font-bold p-3.5 rounded-xl mb-4 flex items-center gap-2 animate-fadeIn">
+                      <CheckCircle size={18} />
+                      <span>{language === 'ar' ? `تم حفظ وتعميم الإصدار الجديد (v${systemVersion}) بنجاح على مستوى النظام!` : `System version updated to v${systemVersion} successfully!`}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSaveSystemVersion} className="max-w-md space-y-4">
+                    <div>
+                      <label className="block text-sm font-bold mb-1.5" style={{ color: textColor }}>
+                        {language === "ar" ? "رقم الإصدار الجديد (New Version Number)" : "New Version Number"}
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-3 rtl:left-auto rtl:right-3 flex items-center text-gray-400 font-mono font-bold text-base">
+                          v
+                        </span>
+                        <input 
+                          type="text" 
+                          required 
+                          value={versionInput} 
+                          onChange={(e) => setVersionInput(e.target.value)} 
+                          placeholder="1.0.0" 
+                          className="w-full border rounded-xl pl-8 rtl:pl-3 rtl:pr-8 pr-3 py-3 text-base font-mono font-bold focus:ring-2 focus:ring-[#002D62]" 
+                          style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                        />
+                      </div>
+                    </div>
+
+                    <button 
+                      type="submit" 
+                      disabled={isSavingVersion || versionInput.trim() === systemVersion}
+                      className="w-full bg-[#002D62] hover:bg-blue-900 disabled:opacity-50 text-white font-bold text-sm py-3 px-6 rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      {isSavingVersion ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                      <span>{language === "ar" ? "حفظ وتعميم رقم الإصدار" : "Save & Broadcast Version"}</span>
+                    </button>
+                  </form>
+                </div>
+              )}
+
               {["tools", "tools_manage"].includes(currentView) && (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -21,7 +21,8 @@ import {
   History, 
   Activity, 
   MessageSquare,
-  ShieldAlert
+  ShieldAlert,
+  Tag
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -122,6 +123,7 @@ export const Sidebar: React.FC = () => {
       subLinks: [
         { id: 'tools_usage', label: 'Firebase Quota', icon: Activity },
         { id: 'activityLogs', label: 'Activity Logs', icon: FileText },
+        { id: 'system_version', label: language === 'ar' ? 'إصدار المنظومة' : 'System Version', icon: Tag },
       ]
     },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
