@@ -294,16 +294,16 @@ export const Login: React.FC = () => {
       let targetUserId = `u${users.length + 1}_${Date.now()}`;
       
       const existingPhone = users.find((u) => u.phone === phone);
-      if (existingPhone && !existingPhone.isShadowAccount && !existingPhone.id.startsWith("derived_")) {
+      if (existingPhone && !existingPhone.isShadowAccount && !String(existingPhone.id || '').startsWith("derived_")) {
         setError(language === "ar" ? "رقم الهاتف مسجل بالفعل" : "Phone number already exists");
         return;
       }
 
       if (registerMode === 'official') {
-        const existingHrCodeUser = users.find((u) => u.hrCode.toLowerCase() === cleanHrCode.toLowerCase());
+        const existingHrCodeUser = users.find((u) => u.hrCode && u.hrCode.toLowerCase() === cleanHrCode.toLowerCase());
         if (existingHrCodeUser) {
           // If it's a real account, reject.
-          if (!existingHrCodeUser.isShadowAccount && !existingHrCodeUser.id.startsWith("derived_")) {
+          if (!existingHrCodeUser.isShadowAccount && !String(existingHrCodeUser.id || '').startsWith("derived_")) {
             setError(language === "ar" ? "الكود الوظيفي مسجل بالفعل" : "HR Code already exists");
             return;
           } else {
@@ -314,7 +314,7 @@ export const Login: React.FC = () => {
       }
 
       const existingEmail = users.find((u) => u.email?.toLowerCase() === fullEmail);
-      if (existingEmail && !existingEmail.isShadowAccount && !existingEmail.id.startsWith("derived_")) {
+      if (existingEmail && !existingEmail.isShadowAccount && !String(existingEmail.id || '').startsWith("derived_")) {
         setError(language === "ar" ? "البريد الإلكتروني مسجل بالفعل" : "Email already exists");
         return;
       }

@@ -45,7 +45,7 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
   const [period, setPeriod] = useState<'daily' | 'monthly'>('daily');
 
   // 1. FILTER REAL REGISTERED ACCOUNTS ONLY
-  const realUsers = users.filter(u => !u.id.startsWith('derived_'));
+  const realUsers = users.filter(u => u && u.id && !String(u.id).startsWith('derived_'));
   const realApprovedUsers = realUsers.filter(u => u.status === 'approved' || !u.status);
   const realPendingUsers = realUsers.filter(u => u.status === 'pending');
   const realEngineers = realUsers.filter(u => (u.jobRole || u.role || '').toLowerCase().includes('engineer'));

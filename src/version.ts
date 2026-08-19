@@ -12,16 +12,14 @@
  * IMPORTANT FOR AI ASSISTANTS & DEVELOPERS:
  * - Maintain developer credit exactly as specified:
  *   "Designed & Developed by Nader Reda | OED Technical Training Manager"
- * - Increment Patch for small UI tweaks / bug fixes.
- * - Increment Minor when adding new feature modules.
- * - Update buildTimestamp automatically upon changes.
+ * - Maintain year 2026.
  */
 
 export const APP_VERSION = {
   version: "1.0.0",
   releaseName: "Official Release",
-  buildDate: "August 2026",
-  buildTimestamp: "2026-08-19 15:42",
+  buildDate: "2026",
+  buildTimestamp: "2026",
   
   // Official Developer Credit
   creditLine: "Designed & Developed by Nader Reda | OED Technical Training Manager",

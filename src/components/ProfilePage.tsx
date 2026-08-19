@@ -193,8 +193,8 @@ export const ProfilePage: React.FC = () => {
       };
       setUser(updatedUser);
       localStorage.setItem('oed_training_user', JSON.stringify(updatedUser));
-      if (setUsers && users) {
-        setUsers(users.map((u) => u.id === user.id ? updatedUser : u));
+      if (setUsers && Array.isArray(users)) {
+        setUsers(users.map((u) => u && u.id === user.id ? updatedUser : u));
       }
       
       setIsEditing(false);

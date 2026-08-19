@@ -141,6 +141,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const users: User[] = [];
       snapshot.forEach((d) => {
         const uData = d.data() as User;
+        if (!uData.id) {
+          uData.id = d.id;
+        }
         if (uData.hrCode?.toLowerCase() === 'admin' || uData.id === 'admin') {
           uData.role = 'admin';
           uData.status = 'approved';

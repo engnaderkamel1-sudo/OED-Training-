@@ -135,29 +135,33 @@ export const AboutModal: React.FC<AboutModalProps> = ({ onClose }) => {
             </p>
           </div>
 
-          {/* Developer & Management Card (Subtle & Discreet) */}
+          {/* Contact & Developer Line (Discreet & Under Email) */}
           <div 
-            className="p-3 rounded-xl border relative overflow-hidden"
+            className="p-3.5 rounded-xl border relative overflow-hidden space-y-2"
             style={{ 
               backgroundColor: isDark ? '#101F38' : '#F8FAFC', 
               borderColor: isDark ? 'rgba(148, 190, 255, 0.15)' : '#E2E8F0'
             }}
           >
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-normal leading-normal">
-              {APP_VERSION.creditLine}
-            </p>
-
-            <div className="mt-2 flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-blue-900/40">
+            {/* Top row: Email and Year 2026 */}
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <a 
                 href={`mailto:${APP_VERSION.contactEmail}`}
-                className="inline-flex items-center gap-1.5 text-[11px] font-normal text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-[#93C5FD] hover:underline"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-[#93C5FD] hover:underline"
               >
-                <Mail size={12} />
+                <Mail size={13} />
                 <span>{APP_VERSION.contactEmail}</span>
               </a>
-              <span className="text-[9px] font-mono text-gray-400 dark:text-gray-500">
-                Build {APP_VERSION.buildTimestamp}
+              <span className="text-[10px] font-mono text-gray-400 dark:text-gray-500">
+                2026
               </span>
+            </div>
+
+            {/* Bottom row: Credit Line (under email and small/discreet) */}
+            <div className="pt-1.5 border-t border-gray-200/60 dark:border-blue-900/40">
+              <p className="text-[9px] text-gray-400 dark:text-gray-500 font-normal leading-tight">
+                {APP_VERSION.creditLine}
+              </p>
             </div>
           </div>
         </div>
