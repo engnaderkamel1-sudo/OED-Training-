@@ -357,24 +357,65 @@ export const AdminDashboard: React.FC = () => {
   mockRequests.forEach((req) => { tnaCounts[req.requestedTopic] = (tnaCounts[req.requestedTopic] || 0) + 1; });
   const tnaData = Object.entries(tnaCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
 
-  const handleApprove = (id: string) => {
-    setUsers(users.map((u) => (u.id === id ? { ...u, status: "approved", hasUnreadNotifications: true } : u)));
-    const approvedUser = users.find(u => u.id === id);
-    if (approvedUser && approvedUser.fcmToken) {
-      sendPushNotification(language === "ar" ? "تمت الموافقة" : "Account Approved", language === "ar" ? "تم تفعيل حسابك" : "Account activated", [approvedUser.fcmToken]);
+  const handleApprove = async (id: string) => {
+    try {
+      await setDoc(doc(db, "users", id), { status: "approved", hasUnreadNotifications: true }, { merge: true });
+      setUsers(users.map((u) => (u.id === id ? { ...u, status: "approved", hasUnreadNotifications: true } : u)));
+      const approvedUser = users.find(u => u.id === id);
+      if (approvedUser && approvedUser.fcmToken) {
+        sendPushNotification(language === "ar" ? "تمت الموافقة" : "Account Approved", language === "ar" ? "تم تفعيل حسابك" : "Account activated", [approvedUser.fcmToken]);
+      }
+      alert(language === "ar" ? "تم قبول المتدرب وتفعيل حسابه بنجاح!" : "Account approved and activated!");
+    } catch (e: any) {
+      console.error(e);
+      alert("Error approving user: " + e.message);
     }
-    alert(language === "ar" ? "تم قبول المتدرب" : "Approved!");
   };
 
-  const handleReject = (id: string) => { setUsers(users.map((u) => (u.id === id ? { ...u, status: "rejected", hasUnreadNotifications: true } : u))); };
+  const handleReject = async (id: string) => {
+    try {
+      await setDoc(doc(db, "users", id), { status: "rejected", hasUnreadNotifications: true }, { merge: true });
+      setUsers(users.map((u) => (u.id === id ? { ...u, status: "rejected", hasUnreadNotifications: true } : u)));
+    } catch (e: any) {
+      console.error(e);
+    }
+  };
   
-  const handleDeleteUser = (id: string) => {
-    if (confirm(language === "ar" ? "تأكيد الحذف؟" : "Confirm delete?")) {
-      setUsers(users.map((u) => (u.id === id ? { ...u, status: "deleted" } : u)));
+  const handleDeleteUser = async (id: string) => {
+    if (confirm(language === "ar" ? "هل أنت متأكد من حذف هذا الحساب؟" : "Confirm delete account?")) {
+      try {
+        await setDoc(doc(db, "users", id), { status: "deleted" }, { merge: true });
+        setUsers(users.map((u) => (u.id === id ? { ...u, status: "deleted" } : u)));
+      } catch (e: any) {
+        console.error(e);
+      }
     }
   };
 
-  const handleRestoreUser = (id: string) => { setUsers(users.map((u) => (u.id === id ? { ...u, status: "approved", hasUnreadNotifications: true } : u))); };
+  const handleRestoreUser = async (id: string) => {
+    try {
+      await setDoc(doc(db, "users", id), { status: "approved", hasUnreadNotifications: true }, { merge: true });
+      setUsers(users.map((u) => (u.id === id ? { ...u, status: "approved", hasUnreadNotifications: true } : u)));
+    } catch (e: any) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveUserEdit = async (userId: string) => {
+    try {
+      const sanitized = Object.fromEntries(
+        Object.entries(editFormData).filter(([_, v]) => v !== undefined)
+      );
+      await setDoc(doc(db, "users", userId), sanitized, { merge: true });
+      setUsers(users.map((u) => u.id === userId ? { ...u, ...editFormData } : u));
+      setEditingUserId(null);
+      setEditFormData({});
+      alert(language === "ar" ? "تم حفظ وتحديث بيانات وصلاحيات الحساب بنجاح في فايربيز!" : "User profile and permissions updated successfully in Firebase!");
+    } catch (e: any) {
+      console.error("Error saving user edits:", e);
+      alert("Error saving user edits: " + e.message);
+    }
+  };
 
   // -- APPROVE / REJECT DATA UPDATES WITH HISTORY --
   const handleApproveUpdate = async (user: User) => {
@@ -966,13 +1007,13 @@ It is my pleasure to announce the beginning of the following course:
                       {pendingUsers.length > 0 ? (
                         <table className="w-full text-left border-collapse">
                           <thead>
-                            <tr className="border-b" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: textMuted }}>
-                              <th className="p-3">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
-                              <th className="p-3">{language === "ar" ? "الاسم" : "Name"}</th>
-                              <th className="p-3">{language === "ar" ? "القسم" : "Department"}</th>
-                              <th className="p-3">{language === "ar" ? "الصلاحية" : "Role"}</th>
-                              <th className="p-3">{language === "ar" ? "التاريخ" : "Date"}</th>
-                              <th className="p-3 align-top"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
+                            <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الاسم" : "Name"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "القسم" : "Department"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الصلاحية" : "Role"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "التاريخ" : "Date"}</th>
+                              <th className="p-3 align-top text-white font-bold tracking-wide"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -983,10 +1024,10 @@ It is my pleasure to announce the beginning of the following course:
                                     <td className="p-3"><input type="text" value={editFormData.hrCode || ""} onChange={(e) => setEditFormData({ ...editFormData, hrCode: e.target.value })} className="border rounded px-2 py-1 w-24" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} /></td>
                                     <td className="p-3"><input type="text" value={editFormData.name || ""} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} className="border rounded px-2 py-1 w-32" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} /></td>
                                     <td className="p-3"><input type="text" value={editFormData.department || ""} onChange={(e) => setEditFormData({ ...editFormData, department: e.target.value })} className="border rounded px-2 py-1 w-32" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} /></td>
-                                    <td className="p-3"><select value={editFormData.role || "trainee"} onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value as Role })} className="border rounded px-2 py-1" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}><option value="trainee">Trainee</option><option value="manager">Manager</option><option value="admin">Admin</option></select></td>
+                                    <td className="p-3"><select value={editFormData.role || "trainee"} onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value as Role })} className="border rounded px-2 py-1" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}><option value="trainee">Trainee</option><option value="supervisor">Supervisor</option><option value="manager">Manager</option><option value="admin">Admin</option></select></td>
                                     <td className="p-3"><DataField>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "N/A"}</DataField></td>
                                     <td className="p-3 flex gap-2">
-                                      <button onClick={() => { setUsers(users.map((user) => user.id === u.id ? { ...user, ...editFormData } : user)); setEditingUserId(null); }} className="text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded">Save</button>
+                                      <button onClick={() => handleSaveUserEdit(u.id)} className="text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded">Save</button>
                                       <button onClick={() => setEditingUserId(null)} className="text-gray-600 bg-gray-50 dark:text-gray-300 dark:bg-gray-800 px-3 py-1 rounded">Cancel</button>
                                     </td>
                                   </>
@@ -1021,11 +1062,11 @@ It is my pleasure to announce the beginning of the following course:
                       {usersWithPendingUpdates.length > 0 ? (
                         <table className="w-full text-left border-collapse">
                           <thead>
-                            <tr className="border-b" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: textMuted }}>
-                              <th className="p-3">{language === "ar" ? "الاسم" : "Name"}</th>
-                              <th className="p-3">{language === "ar" ? "التعديل المطلوب" : "Requested Change"}</th>
-                              <th className="p-3">{language === "ar" ? "وقت الطلب" : "Requested At"}</th>
-                              <th className="p-3 align-top"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
+                            <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الاسم" : "Name"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "التعديل المطلوب" : "Requested Change"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "وقت الطلب" : "Requested At"}</th>
+                              <th className="p-3 align-top text-white font-bold tracking-wide"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1064,7 +1105,7 @@ It is my pleasure to announce the beginning of the following course:
                                   ) : (
                                     <div>
                                       {u.pendingUpdates?.hrCode && (
-                                        <div className="mb-2">
+                                        <div className="mb-1">
                                           <span className="text-xs text-gray-500 block">{language === "ar" ? "الكود الوظيفي:" : "HR Code:"}</span>
                                           <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.hrCode}</span>
                                           <span className="font-bold text-green-600">➔ {u.pendingUpdates.hrCode}</span>
@@ -1124,11 +1165,11 @@ It is my pleasure to announce the beginning of the following course:
                       {processedUpdatesList.length > 0 ? (
                         <table className="w-full text-left border-collapse">
                           <thead>
-                            <tr className="border-b" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: textMuted }}>
-                              <th className="p-3">{language === "ar" ? "الاسم" : "Name"}</th>
-                              <th className="p-3">{language === "ar" ? "التعديل الذي طُلب" : "Requested Change"}</th>
-                              <th className="p-3">{language === "ar" ? "الحالة" : "Status"}</th>
-                              <th className="p-3">{language === "ar" ? "وقت التنفيذ" : "Processed At"}</th>
+                            <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الاسم" : "Name"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "التعديل الذي طُلب" : "Requested Change"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الحالة" : "Status"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "وقت التنفيذ" : "Processed At"}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1178,31 +1219,122 @@ It is my pleasure to announce the beginning of the following course:
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
-                              <th className="p-3 text-white">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
-                              <th className="p-3 text-white">{language === "ar" ? "الاسم" : "Name"}</th>
-                              <th className="p-3 text-white">{language === "ar" ? "القسم" : "Department"}</th>
-                              <th className="p-3 text-white">{language === "ar" ? "الحالة" : "Status"}</th>
-                              <th className="p-3 align-top text-white"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الاسم" : "Name"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "القسم" : "Department"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الصلاحية" : "Role"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide">{language === "ar" ? "الحالة" : "Status"}</th>
+                              <th className="p-3 align-top text-white font-bold tracking-wide"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
                             </tr>
                           </thead>
                           <tbody>
                             {users.filter(u => (u.status === "approved" || u.status === "rejected") && u.createdAt).map((u) => (
                               <tr key={u.id} className="border-b transition-colors" style={{ borderColor: borderColor, color: textColor }}>
-                                <td className="p-3"><DataField>{u.hrCode}</DataField></td>
-                                <td className="p-3"><UserAvatarWithName user={u} /></td>
-                                <td className="p-3"><DataField>{u.department}</DataField></td>
-                                <td className="p-3">
-                                  <span className={`px-2 py-1 rounded text-sm font-semibold ${u.status === "approved" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
-                                    {u.status === "approved" ? (language === "ar" ? "مقبول" : "Approved") : (language === "ar" ? "مرفوض" : "Rejected")}
-                                  </span>
-                                </td>
-                                <td className="p-3 flex gap-2">
-                                  {u.status === "approved" && (
-                                    <button onClick={() => handleDeleteUser(u.id)} className="text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded hover:opacity-80">
-                                      {language === "ar" ? "حذف" : "Delete"}
-                                    </button>
-                                  )}
-                                </td>
+                                {editingUserId === u.id ? (
+                                  <>
+                                    <td className="p-3">
+                                      <input 
+                                        type="text" 
+                                        value={editFormData.hrCode || ""} 
+                                        onChange={(e) => setEditFormData({ ...editFormData, hrCode: e.target.value })} 
+                                        className="border rounded px-2 py-1 w-24 text-sm" 
+                                        style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                                      />
+                                    </td>
+                                    <td className="p-3">
+                                      <input 
+                                        type="text" 
+                                        value={editFormData.name || ""} 
+                                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} 
+                                        className="border rounded px-2 py-1 w-32 text-sm" 
+                                        style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                                      />
+                                    </td>
+                                    <td className="p-3">
+                                      <input 
+                                        type="text" 
+                                        value={editFormData.department || ""} 
+                                        onChange={(e) => setEditFormData({ ...editFormData, department: e.target.value })} 
+                                        className="border rounded px-2 py-1 w-32 text-sm" 
+                                        style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                                      />
+                                    </td>
+                                    <td className="p-3">
+                                      <select 
+                                        value={editFormData.role || "trainee"} 
+                                        onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value as Role })} 
+                                        className="border rounded px-2 py-1 text-sm font-bold" 
+                                        style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
+                                      >
+                                        <option value="trainee">Trainee (متدرب)</option>
+                                        <option value="supervisor">Supervisor (مشرف)</option>
+                                        <option value="manager">Manager (مدير)</option>
+                                        <option value="admin">Admin (أدمن)</option>
+                                      </select>
+                                    </td>
+                                    <td className="p-3">
+                                      <select 
+                                        value={editFormData.status || "approved"} 
+                                        onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as any })} 
+                                        className="border rounded px-2 py-1 text-sm font-bold" 
+                                        style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
+                                      >
+                                        <option value="approved">Approved (مقبول)</option>
+                                        <option value="pending">Pending (معلق)</option>
+                                        <option value="rejected">Rejected (مرفوض)</option>
+                                      </select>
+                                    </td>
+                                    <td className="p-3 flex gap-2">
+                                      <button 
+                                        onClick={() => handleSaveUserEdit(u.id)} 
+                                        className="text-green-600 bg-green-50 dark:bg-green-900/30 px-3 py-1.5 rounded font-bold text-xs flex items-center gap-1 hover:opacity-80 cursor-pointer"
+                                      >
+                                        <Save size={14} /> {language === "ar" ? "حفظ" : "Save"}
+                                      </button>
+                                      <button 
+                                        onClick={() => setEditingUserId(null)} 
+                                        className="text-gray-600 bg-gray-50 dark:text-gray-300 dark:bg-gray-800 px-3 py-1.5 rounded text-xs hover:opacity-80 cursor-pointer"
+                                      >
+                                        {language === "ar" ? "إلغاء" : "Cancel"}
+                                      </button>
+                                    </td>
+                                  </>
+                                ) : (
+                                  <>
+                                    <td className="p-3"><DataField>{u.hrCode}</DataField></td>
+                                    <td className="p-3"><UserAvatarWithName user={u} /></td>
+                                    <td className="p-3"><DataField>{u.department}</DataField></td>
+                                    <td className="p-3">
+                                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                                        u.role === 'admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-300 dark:border-purple-700' :
+                                        u.role === 'manager' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700' :
+                                        u.role === 'supervisor' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700' :
+                                        'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
+                                      }`}>
+                                        {u.role === 'admin' ? '🛡️ Admin' : u.role === 'manager' ? '👔 Manager' : u.role === 'supervisor' ? '👷 Supervisor' : '🎓 Trainee'}
+                                      </span>
+                                    </td>
+                                    <td className="p-3">
+                                      <span className={`px-2 py-1 rounded text-xs font-bold ${u.status === "approved" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
+                                        {u.status === "approved" ? (language === "ar" ? "مقبول" : "Approved") : (language === "ar" ? "مرفوض" : "Rejected")}
+                                      </span>
+                                    </td>
+                                    <td className="p-3 flex gap-2">
+                                      <button 
+                                        onClick={() => { setEditingUserId(u.id); setEditFormData(u); }} 
+                                        className="flex items-center gap-1 text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded hover:opacity-80 text-xs font-semibold cursor-pointer"
+                                      >
+                                        <Edit2 size={13} /> {language === "ar" ? "تعديل" : "Edit"}
+                                      </button>
+                                      <button 
+                                        onClick={() => handleDeleteUser(u.id)} 
+                                        className="flex items-center gap-1 text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded hover:opacity-80 text-xs font-semibold cursor-pointer"
+                                      >
+                                        <Trash2 size={13} /> {language === "ar" ? "حذف" : "Delete"}
+                                      </button>
+                                    </td>
+                                  </>
+                                )}
                               </tr>
                             ))}
                           </tbody>
@@ -2008,7 +2140,7 @@ It is my pleasure to announce the beginning of the following course:
                   {loginLogs && loginLogs.length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm text-left rtl:text-right" style={{ color: textMuted }}>
-                        <thead className="text-xs uppercase border-b" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: textColor }}>
+                        <thead className="text-xs uppercase border-b text-white font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
                           <tr>
                             <th className="px-6 py-3">{language === "ar" ? "الاسم" : "Name"}</th>
                             <th className="px-6 py-3">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
