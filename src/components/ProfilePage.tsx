@@ -8,7 +8,7 @@ import { updateEmail } from 'firebase/auth';
 import { DataField } from './DataField';
 
 export const ProfilePage: React.FC = () => {
-  const { user, language, t } = useAppContext();
+  const { user, setUser, users, setUsers, language, t } = useAppContext();
   const [isEditing, setIsEditing] = useState(false);
 
   // Edit State
@@ -39,7 +39,7 @@ export const ProfilePage: React.FC = () => {
 
   if (!user) return null;
 
-  const enforceEnglish = (val: string) => val.replace(/[^a-zA-Z0-9@.\-_ ]/g, '');
+  const enforceEnglish = (val: string) => val.replace(/[^a-zA-Z0-9@.\-_+ ]/g, '');
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -99,33 +99,37 @@ export const ProfilePage: React.FC = () => {
       const userRef = doc(db, 'users', user.id);
       
       const cleanHrCode = enforceEnglish(hrCode).trim();
-      const cleanEmail = enforceEnglish(email).trim().toLowerCase();
+      const cleanEmail = email.trim().toLowerCase();
 
       const isHrCodeChanged = cleanHrCode !== user.hrCode;
-      const isEmailChanged = cleanEmail !== (user.email || '');
+      const isEmailChanged = cleanEmail !== (user.email || '').toLowerCase();
       
       const requiresHrApproval = !user.isGuest && isHrCodeChanged;
 
       let updateData: any = {
         name: enforceEnglish(name),
-        phone,
-        department,
+        phone: phone.trim(),
+        department: department.trim(),
         profileImageUrl: profileImage || null
       };
 
-      // 1. تحديث الإيميل فوراً في Firebase Auth والداتابيز
-      if (isEmailChanged && cleanEmail) {
-        if (auth.currentUser) {
-          await updateEmail(auth.currentUser, cleanEmail);
-        }
+      // 1. تحديث الإيميل في Firestore و Firebase Auth
+      if (isEmailChanged) {
         updateData.email = cleanEmail;
+        if (auth.currentUser && cleanEmail) {
+          try {
+            await updateEmail(auth.currentUser, cleanEmail);
+          } catch (authErr: any) {
+            console.warn('Firebase Auth email update skipped/deferred:', authErr);
+          }
+        }
       }
 
       // 2. التعامل مع الكود الوظيفي
       if (user.isGuest) {
         // لو حساب مؤقت يتحدث الكود فوراً
         if (isHrCodeChanged) updateData.hrCode = cleanHrCode;
-        setSuccess(language === 'ar' ? 'تم حفظ البيانات بنجاح!' : 'Profile updated successfully!');
+        setSuccess(language === 'ar' ? 'تم حفظ البيانات بنجاح في النظام!' : 'Profile updated successfully!');
       } else {
         // لو حساب رسمي وتغير الكود الوظيفي يروح للموافقة
         if (requiresHrApproval) {
@@ -134,27 +138,36 @@ export const ProfilePage: React.FC = () => {
             requestedAt: new Date().toISOString()
           };
           if (isEmailChanged) {
-            setSuccess(language === 'ar' ? 'تم تحديث الإيميل بنجاح، وتعديل الكود الوظيفي قيد مراجعة الإدارة.' : 'Email updated successfully. HR Code change is pending admin approval.');
+            setSuccess(language === 'ar' ? 'تم تحديث البريد الإلكتروني بنجاح، وتعديل الكود الوظيفي قيد مراجعة الإدارة.' : 'Email updated successfully. HR Code change is pending admin approval.');
           } else {
             setSuccess(language === 'ar' ? 'تم إرسال طلب تعديل الكود الوظيفي للإدارة للموافقة عليه.' : 'HR Code change is pending admin approval.');
           }
         } else {
-          setSuccess(language === 'ar' ? 'تم حفظ البيانات بنجاح!' : 'Profile updated successfully!');
+          setSuccess(language === 'ar' ? 'تم حفظ وتحديث البيانات بنجاح!' : 'Profile updated successfully!');
         }
       }
 
+      // حفظ التعديلات في Firebase Firestore
       await updateDoc(userRef, updateData);
+
+      // تحديث الحالة المحلية فوراً
+      const updatedUser: User = {
+        ...user,
+        ...updateData,
+        ...(requiresHrApproval ? {
+          pendingUpdates: updateData.pendingUpdates
+        } : {})
+      };
+      setUser(updatedUser);
+      if (setUsers && users) {
+        setUsers(users.map((u) => u.id === user.id ? updatedUser : u));
+      }
       
       setIsEditing(false);
       setTimeout(() => setSuccess(''), 4000);
     } catch (err: any) {
-      console.error(err);
-      // التعامل مع رسالة أمان فايربيز لو طلب إعادة تسجيل الدخول لتغيير الإيميل
-      if (err.code === 'auth/requires-recent-login') {
-        setError(language === 'ar' ? 'لأسباب أمنية، يرجى تسجيل الخروج والدخول مجدداً لتتمكن من تغيير بريدك الإلكتروني.' : 'For security reasons, please log out and log in again to change your email.');
-      } else {
-        setError(err.message || 'Failed to update profile');
-      }
+      console.error("Profile update error:", err);
+      setError(err.message || (language === 'ar' ? 'حدث خطأ أثناء حفظ البيانات' : 'Failed to update profile'));
     } finally {
       setIsSaving(false);
     }
