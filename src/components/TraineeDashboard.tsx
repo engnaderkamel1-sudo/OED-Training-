@@ -647,19 +647,11 @@ export const TraineeDashboard: React.FC = () => {
                       onClick={() => markNotifAsRead(notif.id)}
                       className="p-4 rounded-xl border flex flex-col justify-between transition-all cursor-pointer relative shadow-sm"
                       style={{
-                        backgroundColor: !isRead 
-                          ? isFinal 
-                            ? (isDark ? 'rgba(180, 83, 9, 0.15)' : 'rgba(255, 251, 235, 0.9)')
-                            : notif.type === 'Global'
-                              ? (isDark ? 'rgba(185, 28, 28, 0.15)' : 'rgba(254, 242, 242, 0.9)')
-                              : notif.type === 'Announcement'
-                                ? (isDark ? 'rgba(126, 34, 206, 0.15)' : 'rgba(250, 245, 255, 0.9)')
-                                : (isDark ? 'rgba(29, 78, 216, 0.15)' : 'rgba(239, 246, 255, 0.9)')
-                          : (isDark ? '#1e293b' : 'rgba(249, 250, 251, 0.7)'),
-                        borderColor: !isRead
-                          ? isFinal ? (isDark ? '#d97706' : '#fcd34d') : notif.type === 'Global' ? (isDark ? '#ef4444' : '#fca5a5') : notif.type === 'Announcement' ? (isDark ? '#a855f7' : '#d8b4fe') : (isDark ? '#3b82f6' : '#93c5fd')
+                        backgroundColor: cardColor,
+                        borderColor: !isRead 
+                          ? (notif.type === 'Global' ? 'rgba(239, 68, 68, 0.4)' : isFinal ? 'rgba(245, 158, 11, 0.4)' : 'rgba(59, 130, 246, 0.4)')
                           : borderColor,
-                        opacity: isRead ? 0.85 : 1
+                        opacity: isRead ? 0.75 : 1
                       }}
                     >
                       <div className="space-y-2">
@@ -668,9 +660,21 @@ export const TraineeDashboard: React.FC = () => {
                             <span 
                               className="text-[11px] font-bold px-2.5 py-1 rounded-lg border uppercase tracking-wider flex items-center gap-1.5 shadow-2xs"
                               style={{
-                                backgroundColor: isFinal ? (isDark ? '#78350f' : '#fde68a') : notif.type === 'Global' ? (isDark ? '#7f1d1d' : '#fecaca') : notif.type === 'Announcement' ? (isDark ? '#581c87' : '#e9d5ff') : (isDark ? 'rgba(30,58,138,0.5)' : '#bfdbfe'),
-                                color: isFinal ? (isDark ? '#fef3c7' : '#451a03') : notif.type === 'Global' ? (isDark ? '#fee2e2' : '#450a0a') : notif.type === 'Announcement' ? (isDark ? '#f3e8ff' : '#3b0764') : (isDark ? '#dbeafe' : '#172554'),
-                                borderColor: isFinal ? (isDark ? '#d97706' : '#fbbf24') : notif.type === 'Global' ? (isDark ? '#dc2626' : '#f87171') : notif.type === 'Announcement' ? (isDark ? '#9333ea' : '#c084fc') : (isDark ? '#3b82f6' : '#93c5fd')
+                                backgroundColor: isFinal 
+                                  ? (isDark ? 'rgba(245, 158, 11, 0.15)' : '#fef3c7') 
+                                  : notif.type === 'Global' 
+                                    ? (isDark ? 'rgba(239, 68, 68, 0.15)' : '#fee2e2') 
+                                    : (isDark ? 'rgba(59, 130, 246, 0.15)' : '#eff6ff'),
+                                color: isFinal 
+                                  ? (isDark ? '#fcd34d' : '#92400e') 
+                                  : notif.type === 'Global' 
+                                    ? (isDark ? '#fca5a5' : '#991b1b') 
+                                    : (isDark ? '#93c5fd' : '#1e40af'),
+                                borderColor: isFinal 
+                                  ? (isDark ? 'rgba(245, 158, 11, 0.3)' : '#fde68a') 
+                                  : notif.type === 'Global' 
+                                    ? (isDark ? 'rgba(239, 68, 68, 0.3)' : '#fecaca') 
+                                    : (isDark ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe')
                               }}
                             >
                               {notif.type === 'Global' && <Radio size={13} className="animate-pulse" />}
@@ -696,9 +700,13 @@ export const TraineeDashboard: React.FC = () => {
 
                           <span 
                             className="text-[11px] font-medium flex items-center gap-1 px-2 py-0.5 rounded-md border"
-                            style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.8)', color: isDark ? '#cbd5e1' : '#6b7280', borderColor: isDark ? '#475569' : 'rgba(229,231,235,0.6)' }}
+                            style={{ 
+                              backgroundColor: isDark ? '#132543' : '#ffffff', 
+                              color: isDark ? '#C8DBF6' : '#6b7280', 
+                              borderColor: borderColor 
+                            }}
                           >
-                            <Clock size={11} style={{ color: isDark ? '#94a3b8' : '#9ca3af' }} />
+                            <Clock size={11} style={{ color: isDark ? '#9BB8DF' : '#9ca3af' }} />
                             <span>{formatNotificationDate(notif.timestamp, language)}</span>
                           </span>
                         </div>
@@ -706,12 +714,16 @@ export const TraineeDashboard: React.FC = () => {
                         {notif.type === 'Announcement' || notif.type === 'Global' ? (
                           <div 
                             className="mt-2 p-3.5 rounded-xl text-sm border shadow-xs"
-                            style={{ backgroundColor: isDark ? '#1e293b' : 'rgba(255,255,255,0.9)', borderColor: isDark ? '#475569' : '#e5e7eb', color: textColor }}
+                            style={{ 
+                              backgroundColor: isDark ? '#132543' : '#f8fafc', 
+                              borderColor: borderColor, 
+                              color: textColor 
+                            }}
                           >
                             {notif.title && (
                               <div 
                                 className="font-bold text-base mb-1 flex items-center gap-1.5"
-                                style={{ color: isDark ? '#60a5fa' : '#002D62' }}
+                                style={{ color: isDark ? '#FFFFFF' : '#002D62' }}
                               >
                                 <Sparkles size={14} className="text-[#FFC000]" />
                                 <span>{notif.title}</span>
@@ -722,61 +734,51 @@ export const TraineeDashboard: React.FC = () => {
                             </div>
                             {notif.author && (
                               <div 
-                                className="text-[11px] mt-2.5 pt-1.5 border-t font-semibold flex items-center gap-1"
-                                style={{ color: isDark ? '#94a3b8' : '#6b7280', borderColor: borderColor }}
+                                className="mt-2 pt-2 border-t text-[11px] flex items-center gap-1"
+                                style={{ 
+                                  borderColor: borderColor, 
+                                  color: isDark ? '#9BB8DF' : '#64748b' 
+                                }}
                               >
-                                <span>{language === 'ar' ? 'بواسطة المسؤول:' : 'By Admin:'}</span>
-                                <span style={{ color: textColor }}>{notif.author}</span>
+                                <span>{language === 'ar' ? 'المرسل:' : 'By Admin:'}</span>
+                                <strong className="font-semibold" style={{ color: isDark ? '#C8DBF6' : '#334155' }}>
+                                  {notif.author}
+                                </strong>
                               </div>
                             )}
                           </div>
                         ) : (
                           <div 
-                            className="mt-1 p-3.5 rounded-xl border shadow-xs space-y-1.5"
-                            style={{ backgroundColor: isDark ? '#1e293b' : 'rgba(255,255,255,0.9)', borderColor: borderColor }}
+                            className="mt-2 p-3.5 rounded-xl text-sm border shadow-xs"
+                            style={{ 
+                              backgroundColor: isDark ? '#132543' : '#f8fafc', 
+                              borderColor: borderColor, 
+                              color: textColor 
+                            }}
                           >
-                            <h4 className="font-bold text-base" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>
-                              <DataField>{notif.courseTitle}</DataField>
-                            </h4>
-
-                            <div className="text-xs space-y-1" style={{ color: isDark ? '#cbd5e1' : '#4b5563' }}>
-                              <p className="flex items-center gap-1.5 font-medium">
-                                <Calendar size={13} className="text-amber-500 shrink-0" />
-                                <span>{formatDateToStandard(notif.startDate)} {notif.endDate ? ` - ${formatDateToStandard(notif.endDate)}` : ''} {notif.startTime ? ` • ${notif.startTime}` : ''}</span>
-                              </p>
-                              {notif.location && (
-                                <p className="flex items-center gap-1.5">
-                                  <MapPin size={13} className="text-red-500 shrink-0" />
-                                  <span>{t('location')}: <span className="font-semibold" style={{ color: textColor }}>{notif.location}</span></span>
-                                </p>
-                              )}
-                              {notif.targetParticipants && (
-                                <p className="flex items-center gap-1.5 text-[11px]">
-                                  <Tag size={12} className="text-blue-500 shrink-0" />
-                                  <span>{t('targetParticipants')}: {notif.targetParticipants === 'engineers' ? t('engineers') : notif.targetParticipants === 'technicians' ? t('technicians') : t('mixed')}</span>
-                                </p>
-                              )}
+                            <div 
+                              className="font-bold text-base mb-1"
+                              style={{ color: isDark ? '#FFFFFF' : '#002D62' }}
+                            >
+                              {notif.courseTitle}
+                            </div>
+                            <div className="flex flex-col gap-1 text-xs" style={{ color: isDark ? '#C8DBF6' : '#4b5563' }}>
+                              <span>📅 {notif.date} ({notif.time})</span>
+                              <span>📍 {notif.location}</span>
                             </div>
                           </div>
                         )}
                       </div>
 
-                      {!isRead && (
-                        <div 
-                          className="mt-3 pt-2 border-t flex justify-end"
-                          style={{ borderColor: isDark ? '#475569' : 'rgba(229,231,235,0.7)' }}
+                      <div className="mt-3 pt-2 flex justify-end items-center border-t" style={{ borderColor: borderColor }}>
+                        <span 
+                          className="text-[11px] font-bold flex items-center gap-1 hover:underline"
+                          style={{ color: isRead ? (isDark ? '#64748b' : '#9ca3af') : (isDark ? '#85C0FF' : '#002D62') }}
                         >
-                          <button 
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); markNotifAsRead(notif.id); }}
-                            className="text-[11px] px-3 py-1 rounded-lg border font-bold transition-all flex items-center gap-1.5 shadow-2xs hover:shadow-xs cursor-pointer hover:opacity-80"
-                            style={{ backgroundColor: isDark ? '#334155' : '#ffffff', borderColor: isDark ? '#3b82f6' : '#d1d5db', color: isDark ? '#e2e8f0' : '#374151' }}
-                          >
-                            <CheckCircle size={13} style={{ color: isDark ? '#34d399' : '#059669' }} />
-                            <span>{language === 'ar' ? 'تعليم كمقروء' : 'Mark as read'}</span>
-                          </button>
-                        </div>
-                      )}
+                          <Check size={12} />
+                          <span>{isRead ? (language === 'ar' ? 'تمت القراءة' : 'Read') : (language === 'ar' ? 'تحديد كمقروء' : 'Mark as read')}</span>
+                        </span>
+                      </div>
                     </div>
                   );
                 })}

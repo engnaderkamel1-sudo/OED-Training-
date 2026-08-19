@@ -263,9 +263,30 @@ aside {
   color: #7A90B0 !important;
 }
 
-/* In dark mode, Navy text becomes Bright Accent Blue */
+/* In dark mode, Navy text becomes Bright Accent Blue EXCEPT when inside Gold/Yellow elements */
 [data-theme="dark"] .text-\[\#002D62\] {
-  color: #70B2FF !important;
+  color: #85C0FF;
+}
+
+/* Buttons and elements on Gold/Yellow backgrounds MUST ALWAYS have dark navy text */
+.bg-\[\#FFC000\],
+[data-theme="dark"] .bg-\[\#FFC000\],
+[data-theme="dark"] button.bg-\[\#FFC000\],
+.bg-amber-400, .bg-yellow-400, .bg-yellow-500,
+[data-theme="dark"] .bg-amber-400,
+[data-theme="dark"] .bg-yellow-400,
+[data-theme="dark"] .bg-yellow-500 {
+  color: #0A1324 !important;
+}
+
+.bg-\[\#FFC000\] *,
+[data-theme="dark"] .bg-\[\#FFC000\] *,
+[data-theme="dark"] button.bg-\[\#FFC000\] *,
+.bg-yellow-400 *, .bg-yellow-500 *, .bg-amber-400 *,
+[data-theme="dark"] .bg-yellow-400 *,
+[data-theme="dark"] .bg-yellow-500 *,
+[data-theme="dark"] .bg-amber-400 * {
+  color: #0A1324 !important;
 }
 
 /* In dark mode, Gold stays luminous */
@@ -276,7 +297,7 @@ aside {
 [data-theme="dark"] h1, [data-theme="dark"] h2,
 [data-theme="dark"] h3, [data-theme="dark"] h4,
 [data-theme="dark"] h5, [data-theme="dark"] h6 {
-  color: #F1F5F9;
+  color: #FFFFFF;
 }
 
 /* ============================================

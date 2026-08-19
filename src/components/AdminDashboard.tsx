@@ -1349,7 +1349,7 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex gap-2 mt-6">
-                        <button type="submit" className="flex-1 bg-[#FFC000] text-[#002D62] font-bold py-3 px-6 rounded hover:bg-yellow-500 transition-colors">
+                        <button type="submit" className="flex-1 bg-[#FFC000] text-[#001D42] font-black py-3 px-6 rounded-xl hover:bg-yellow-500 transition-colors shadow-md cursor-pointer">
                           {editingSessionId ? (language === "ar" ? "تحديث الجلسة" : "Update Session") : (language === "ar" ? "نشر التنبيه" : "Publish & Push")}
                         </button>
                         {editingSessionId && (
@@ -1423,16 +1423,16 @@ export const AdminDashboard: React.FC = () => {
 
                     <div>
                       <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
-                        <h2 className="text-2xl font-bold border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>{language === "ar" ? "إدارة البيانات والنسخ الاحتياطي" : "Data Management & Backup"}</h2>
+                        <h2 className="text-2xl font-bold border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0" style={{ color: isDark ? '#FFFFFF' : '#002D62' }}>{language === "ar" ? "إدارة البيانات والنسخ الاحتياطي" : "Data Management & Backup"}</h2>
                         <div className="flex flex-wrap gap-2">
                           {user?.role === 'admin' && (
                             <>
-                              <button onClick={() => setShowGlobalAnnouncement(true)} className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"><Globe size={18} />{language === 'ar' ? 'إعلان عام' : 'Global Broadcast'}</button>
-                              <button onClick={() => setShowAnnouncementManager("GLOBAL")} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"><Megaphone size={18} />{language === 'ar' ? 'إدارة الإعلانات' : 'Manage Announcements'}</button>
+                              <button onClick={() => setShowGlobalAnnouncement(true)} className="flex items-center gap-2 bg-white dark:bg-[#132543] border border-red-500/40 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40 px-3.5 py-2 rounded-xl font-bold transition-colors shadow-sm text-xs md:text-sm cursor-pointer"><Globe size={16} className="text-red-600 dark:text-red-400" />{language === 'ar' ? 'إعلان عام' : 'Global Broadcast'}</button>
+                              <button onClick={() => setShowAnnouncementManager("GLOBAL")} className="flex items-center gap-2 bg-white dark:bg-[#132543] border border-blue-400/40 text-[#002D62] dark:text-[#85C0FF] hover:bg-blue-50 dark:hover:bg-blue-900/30 px-3.5 py-2 rounded-xl font-bold transition-colors shadow-sm text-xs md:text-sm cursor-pointer"><Megaphone size={16} className="text-blue-600 dark:text-blue-400" />{language === 'ar' ? 'إدارة الإعلانات' : 'Manage Announcements'}</button>
                             </>
                           )}
-                          <button onClick={() => setShowMonthlyReport(true)} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm" style={{ backgroundColor: isDark ? '#2563eb' : '#002D62' }}><Mail size={18} />{language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}</button>
-                          <button onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm"><Download size={18} />{language === 'ar' ? 'نسخ احتياطي للبيانات' : 'Backup Data'}</button>
+                          <button onClick={() => setShowMonthlyReport(true)} className="flex items-center gap-2 bg-[#002D62] hover:bg-blue-900 text-white border border-blue-400/20 px-3.5 py-2 rounded-xl font-bold transition-colors shadow-sm text-xs md:text-sm cursor-pointer"><Mail size={16} />{language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}</button>
+                          <button onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])} className="flex items-center gap-2 bg-white dark:bg-[#132543] border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 px-3.5 py-2 rounded-xl font-bold transition-colors shadow-sm text-xs md:text-sm cursor-pointer"><Download size={16} className="text-emerald-600 dark:text-emerald-400" />{language === 'ar' ? 'نسخ احتياطي للبيانات' : 'Backup Data'}</button>
                         </div>
                       </div>
                       <p className="mb-6" style={{ color: textMuted }}>
@@ -1457,7 +1457,7 @@ export const AdminDashboard: React.FC = () => {
                           <div className="w-full rounded-full h-2.5" style={{ backgroundColor: tableHeaderBg }}><div className="h-2.5 rounded-full transition-all duration-300" style={{ width: `${syncProgress}%`, backgroundColor: isDark ? '#3b82f6' : '#002D62' }}></div></div>
                         </div>
                       )}
-                      <button onClick={handleSyncData} disabled={!syncLink.trim() || isSyncing} className={`w-full font-bold py-3 px-6 rounded-lg transition-colors flex justify-center items-center ${!syncLink.trim() || isSyncing ? "opacity-50 cursor-not-allowed" : "bg-[#FFC000] text-[#002D62] hover:bg-yellow-500 shadow"}`}>
+                      <button onClick={handleSyncData} disabled={!syncLink.trim() || isSyncing} className={`w-full font-black py-3 px-6 rounded-lg transition-colors flex justify-center items-center ${!syncLink.trim() || isSyncing ? "opacity-50 cursor-not-allowed" : "bg-[#FFC000] text-[#001D42] hover:bg-yellow-500 shadow cursor-pointer"}`}>
                         <RefreshCw size={18} className={`mr-2 rtl:ml-2 rtl:mr-0 ${isSyncing ? "animate-spin" : ""}`} />
                         {isSyncing ? (language === "ar" ? "جاري المزامنة..." : "Syncing...") : (language === "ar" ? "مزامنة من OneDrive" : "Sync from OneDrive")}
                       </button>
