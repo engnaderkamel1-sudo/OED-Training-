@@ -264,20 +264,25 @@ export const Login: React.FC = () => {
         email: fullEmail,
         department,
         role: accessRole,
-        jobRole: jobRole,
+        jobRole: jobRole || '',
         status: "pending",
         createdAt: new Date().toISOString(),
         managerEmails: formattedManagerEmails,
         password: password,
-        profileImageUrl: profileImage,
+        profileImageUrl: profileImage || '',
         isGuest: registerMode === 'temporary', 
-        guestExpiryDate: registerMode === 'temporary' ? expiryDate.toISOString() : undefined,
+        guestExpiryDate: registerMode === 'temporary' ? expiryDate.toISOString() : '',
         isShadowAccount: false // Remove shadow flag since it's a real account now
       } as any; 
 
+      // Remove any possible undefined values for Firebase Firestore compliance
+      const cleanUserDoc = Object.fromEntries(
+        Object.entries(newUser).filter(([_, v]) => v !== undefined)
+      );
+
       // Save to Firebase and update local state
       try {
-        await setDoc(doc(db, "users", targetUserId), newUser);
+        await setDoc(doc(db, "users", targetUserId), cleanUserDoc);
         // Filter out the old shadow account (if any) and push the new user
         setUsers(prev => [...prev.filter(u => u.id !== targetUserId), newUser]);
         
