@@ -11,30 +11,43 @@ export default defineConfig(() => {
       react(),
       tailwindcss(),
       VitePWA({
-        registerType: 'prompt',
-        injectRegister: null,
-        includeAssets: ['app-icon.jpg', 'orascom-logo.png'],
+        registerType: 'autoUpdate',
+        injectRegister: 'auto',
+        includeAssets: ['app-icon.jpg', 'icon-192x192.png', 'icon-512x512.png', 'orascom-logo.png'],
         manifest: {
+          id: '/?v=6',
           name: 'OED TTMS (Technical Training Management System)',
           short_name: 'OED-TTMS',
           description: 'Orascom Equipment Department Technical Training Management System',
           theme_color: '#002D62',
-          background_color: '#ffffff',
+          background_color: '#002D62',
           display: 'standalone',
+          orientation: 'portrait',
           icons: [
             {
-              src: 'app-icon.jpg',
+              src: '/app-icon.jpg?v=6',
               sizes: '192x192',
               type: 'image/jpeg',
               purpose: 'any maskable'
             },
             {
-              src: 'app-icon.jpg',
+              src: '/icon-192x192.png?v=6',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any maskable'
+            },
+            {
+              src: '/icon-512x512.png?v=6',
               sizes: '512x512',
-              type: 'image/jpeg',
+              type: 'image/png',
               purpose: 'any maskable'
             }
           ]
+        },
+        workbox: {
+          cleanupOutdatedCaches: true,
+          skipWaiting: true,
+          clientsClaim: true,
         },
         devOptions: {
           enabled: false
