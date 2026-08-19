@@ -936,7 +936,7 @@ It is my pleasure to announce the beginning of the following course:
     if (!file) return;
     setSyncFile(file);
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
         const ab = evt.target?.result;
         const wb = XLSX.read(ab, { type: "array", cellDates: true });
