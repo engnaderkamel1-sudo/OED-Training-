@@ -89,7 +89,6 @@ export const Sidebar: React.FC = () => {
 
   const getTraineeLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'coursesCatalog', label: 'Courses Catalog', icon: BookOpen },
     { id: 'newCourses', label: 'Available Courses', icon: CalendarDays },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
@@ -97,7 +96,6 @@ export const Sidebar: React.FC = () => {
 
   const getManagerLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'coursesCatalog', label: 'Courses Catalog', icon: BookOpen },
     { id: 'userManagement', label: 'User Requests', icon: Users },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
   ];
@@ -122,7 +120,6 @@ export const Sidebar: React.FC = () => {
       label: 'System Monitoring', 
       icon: ShieldAlert,
       subLinks: [
-        { id: 'tools_logs', label: 'Login History', icon: History },
         { id: 'tools_usage', label: 'Firebase Quota', icon: Activity },
         { id: 'activityLogs', label: 'Activity Logs', icon: FileText },
       ]

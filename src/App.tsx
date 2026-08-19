@@ -257,7 +257,7 @@ const AppContent: React.FC = () => {
           >
             {!activeRole && <Login />}
             {activeRole && currentView === 'profile' && <ProfilePage />}
-            {activeRole && currentView === 'coursesCatalog' && <CoursesPage />}
+            {activeRole === 'admin' && currentView === 'coursesCatalog' && <CoursesPage />}
             {activeRole && currentView === 'suggestions' && <SuggestionsPage />}
             
             {activeRole === 'admin' && currentView === 'activityLogs' && (

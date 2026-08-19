@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context';
 import { mockCourses } from '../data';
-import { ExternalLink, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag, Megaphone, Radio, Volume2, Sparkles } from 'lucide-react';
+import { ExternalLink, Check, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag, Megaphone, Radio, Volume2, Sparkles } from 'lucide-react';
 
 // Web Audio API Sound Chime
 export const playNotificationSound = () => {
@@ -817,57 +817,59 @@ export const TraineeDashboard: React.FC = () => {
         </section>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 print:hidden">
-          {/* Request a Course */}
-          <section 
-            className="p-6 rounded-lg shadow border"
-            style={{ backgroundColor: cardColor, borderColor: isDark ? '#475569' : 'transparent' }}
-          >
-            <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{t('requestCourse')}</h2>
-            <form onSubmit={handleRequestSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: isDark ? '#cbd5e1' : '#374151' }}>{t('courseTopic')}</label>
-                <input 
-                  type="text" 
-                  value={requestedTopic}
-                  onChange={(e) => setRequestedTopic(e.target.value)}
-                  className="w-full border rounded px-3 py-2 outline-none focus:ring-2"
-                  style={{ 
-                    backgroundColor: isDark ? '#1e293b' : '#ffffff',
-                    borderColor: borderColor,
-                    color: textColor,
-                    '--tw-ring-color': isDark ? '#3b82f6' : '#002D62'
-                  } as any}
-                  placeholder="e.g. Advanced Excel"
-                  required
-                />
-              </div>
-              <button 
-                type="submit"
-                className="bg-[#FFC000] text-[#002D62] font-bold py-2 px-4 rounded hover:bg-yellow-500 transition-colors w-full"
-              >
-                {t('submitRequest')}
-              </button>
-              {requestSent && <p className="text-green-600 dark:text-emerald-400 text-sm mt-2">Request submitted successfully!</p>}
-            </form>
-          </section>
-
-          {/* Course Evaluation */}
-          <section 
-            className="p-6 rounded-lg shadow border flex flex-col justify-center items-center text-center"
-            style={{ backgroundColor: cardColor, borderColor: isDark ? '#475569' : 'transparent' }}
-          >
-            <h2 className="text-xl font-semibold mb-2" style={{ color: textColor }}>{t('courseEvaluation')}</h2>
-            <p className="text-sm mb-6" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>{t('evaluationDesc')}</p>
-            <a 
-              href="#" 
-              onClick={(e) => { e.preventDefault(); alert('Redirecting to MS Forms...'); }}
-              className="inline-flex items-center justify-center font-bold py-3 px-6 rounded-lg transition-colors"
-              style={{ backgroundColor: isDark ? '#3b82f6' : '#002D62', color: '#ffffff' }}
+        {/* Request a Course & Course Evaluation - Only for Admin */}
+        {user?.role === 'admin' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fadeIn">
+            {/* Request a Course */}
+            <section 
+              className="p-6 rounded-lg shadow border"
+              style={{ backgroundColor: cardColor, borderColor: isDark ? '#475569' : 'transparent' }}
             >
-              {t('goToForm')} <ExternalLink size={18} className="ml-2 rtl:mr-2 rtl:ml-0" />
-            </a>
-          </section>
-          </div>
+              <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{t('requestCourse')}</h2>
+              <form onSubmit={handleRequestSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: isDark ? '#cbd5e1' : '#374151' }}>{t('courseTopic')}</label>
+                  <input 
+                    type="text" 
+                    value={requestedTopic}
+                    onChange={(e) => setRequestedTopic(e.target.value)}
+                    className="w-full border rounded px-3 py-2 outline-none focus:ring-2"
+                    style={{ 
+                      backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                      borderColor: borderColor,
+                      color: textColor,
+                      '--tw-ring-color': isDark ? '#3b82f6' : '#002D62'
+                    } as any}
+                    placeholder="e.g. Advanced Excel"
+                    required
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  className="bg-[#FFC000] text-[#001D42] font-black py-2 px-4 rounded-xl hover:bg-yellow-500 transition-colors w-full shadow-md cursor-pointer"
+                >
+                  {t('submitRequest')}
+                </button>
+                {requestSent && <p className="text-green-600 dark:text-emerald-400 text-sm mt-2">Request submitted successfully!</p>}
+              </form>
+            </section>
+
+            {/* Course Evaluation */}
+            <section 
+              className="p-6 rounded-lg shadow border flex flex-col justify-center items-center text-center"
+              style={{ backgroundColor: cardColor, borderColor: isDark ? '#475569' : 'transparent' }}
+            >
+              <h2 className="text-xl font-semibold mb-2" style={{ color: textColor }}>{t('courseEvaluation')}</h2>
+              <p className="text-sm mb-6" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>{t('evaluationDesc')}</p>
+              <a 
+                href="#" 
+                onClick={(e) => { e.preventDefault(); alert('Redirecting to MS Forms...'); }}
+                className="inline-flex items-center justify-center font-bold py-3 px-6 rounded-lg transition-colors"
+                style={{ backgroundColor: isDark ? '#3b82f6' : '#002D62', color: '#ffffff' }}
+              >
+                {t('goToForm')} <ExternalLink size={18} className="ml-2 rtl:mr-2 rtl:ml-0" />
+              </a>
+            </section>
           </div>
         )}
         

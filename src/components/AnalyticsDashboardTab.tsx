@@ -176,125 +176,34 @@ export const AnalyticsDashboardTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* File Upload Section */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 print:hidden">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">{t('رفع بيانات السجلات (Cleaned Data)', 'Upload Cleaned Data')}</h2>
-        <div className="flex flex-wrap items-center gap-4">
-          <div>
-            <input 
-              type="file" 
-              id="analytics-excel-upload" 
-              accept=".xlsx, .xls"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
-            <label 
-              htmlFor="analytics-excel-upload"
-              className="cursor-pointer bg-[#002D62] text-white px-5 py-2.5 rounded shadow hover:bg-blue-900 transition-colors flex items-center font-medium"
-            >
-              <UploadCloud size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
-              {cleanedData.length > 0 ? t('تحديث ملف Excel', 'Update Excel File') : t('اختر ملف Excel', 'Select Excel File')}
-            </label>
-          </div>
-          {cleanedFileName && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-green-600 bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
-                {cleanedFileName}
-              </span>
-              <button 
-                onClick={clearData}
-                className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded-full transition-colors"
-                title={t('مسح البيانات', 'Clear Data')}
-              >
-                <XCircle size={18} />
-              </button>
-            </div>
-          )}
+      {/* Dynamic KPI Summary Bar */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 print:hidden">
+        <div className="bg-white dark:bg-[#193158] p-5 rounded-xl border border-gray-200 dark:border-white/[0.12] shadow-sm flex flex-col items-center justify-center text-center">
+          <Calendar className="text-[#FFC000] mb-2" size={28} />
+          <span className="text-xs text-gray-500 dark:text-[#9BB8DF] font-semibold mb-1 uppercase tracking-wider">{t('إجمالي انعقاد الدورات', 'Total Sessions')}</span>
+          <span className="text-2xl font-bold text-[#002D62] dark:text-[#FFFFFF]">{kpis.totalSessions}</span>
+        </div>
+        <div className="bg-white dark:bg-[#193158] p-5 rounded-xl border border-gray-200 dark:border-white/[0.12] shadow-sm flex flex-col items-center justify-center text-center">
+          <Users className="text-green-600 dark:text-green-400 mb-2" size={28} />
+          <span className="text-xs text-gray-500 dark:text-[#9BB8DF] font-semibold mb-1 uppercase tracking-wider">{t('إجمالي المتدربين', 'Total Participants')}</span>
+          <span className="text-2xl font-bold text-[#002D62] dark:text-[#FFFFFF]">{kpis.totalParticipants}</span>
+        </div>
+        <div className="bg-white dark:bg-[#193158] p-5 rounded-xl border border-gray-200 dark:border-white/[0.12] shadow-sm flex flex-col items-center justify-center text-center">
+          <HardHat className="text-blue-500 dark:text-blue-400 mb-2" size={28} />
+          <span className="text-xs text-gray-500 dark:text-[#9BB8DF] font-semibold mb-1 uppercase tracking-wider">{t('إجمالي المهندسين', 'Total Engineers')}</span>
+          <span className="text-2xl font-bold text-[#002D62] dark:text-[#FFFFFF]">{kpis.totalEngineers}</span>
+        </div>
+        <div className="bg-white dark:bg-[#193158] p-5 rounded-xl border border-gray-200 dark:border-white/[0.12] shadow-sm flex flex-col items-center justify-center text-center">
+          <Wrench className="text-amber-500 dark:text-amber-400 mb-2" size={28} />
+          <span className="text-xs text-gray-500 dark:text-[#9BB8DF] font-semibold mb-1 uppercase tracking-wider">{t('إجمالي الفنيين', 'Total Technicians')}</span>
+          <span className="text-2xl font-bold text-[#002D62] dark:text-[#FFFFFF]">{kpis.totalTechnicians}</span>
+        </div>
+        <div className="bg-white dark:bg-[#193158] p-5 rounded-xl border border-gray-200 dark:border-white/[0.12] shadow-sm flex flex-col items-center justify-center text-center">
+          <Settings className="text-gray-500 dark:text-gray-400 mb-2" size={28} />
+          <span className="text-xs text-gray-500 dark:text-[#9BB8DF] font-semibold mb-1 uppercase tracking-wider">{t('إجمالي المشغلين', 'Total Operators')}</span>
+          <span className="text-2xl font-bold text-[#002D62] dark:text-[#FFFFFF]">{kpis.totalOperators}</span>
         </div>
       </div>
-
-      {cleanedData.length > 0 && (
-        <>
-          {/* Filters Bar */}
-          <div className="bg-white dark:bg-[#13223F] p-5 rounded-xl shadow-sm border border-gray-200 dark:border-white/[0.12] print:hidden">
-            <div className="flex flex-col md:flex-row gap-4 items-end">
-              <div className="flex-1 w-full relative">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('اسم الدورة', 'Course Name')}</label>
-                <div className="relative">
-                  <select 
-                    value={courseFilter}
-                    onChange={e => setCourseFilter(e.target.value)}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100 appearance-none pr-8"
-                  >
-                    <option value="">{t('الكل', 'All Courses')}</option>
-                    {uniqueCourses.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  {courseFilter && <button onClick={() => setCourseFilter('')} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"><XCircle size={14} /></button>}
-                </div>
-              </div>
-              <div className="flex-1 w-full relative">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('القسم', 'Department')}</label>
-                <div className="relative">
-                  <select 
-                    value={deptFilter}
-                    onChange={e => setDeptFilter(e.target.value)}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100 appearance-none pr-8"
-                  >
-                    <option value="">{t('الكل', 'All Departments')}</option>
-                    {uniqueDepts.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                  {deptFilter && <button onClick={() => setDeptFilter('')} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"><XCircle size={14} /></button>}
-                </div>
-              </div>
-              <div className="flex-1 w-full relative">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('المسمى الوظيفي', 'Role')}</label>
-                <div className="relative">
-                  <select 
-                    value={roleFilter}
-                    onChange={e => setRoleFilter(e.target.value)}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100 appearance-none pr-8"
-                  >
-                    <option value="">{t('الكل', 'All Roles')}</option>
-                    {uniqueRoles.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                  {roleFilter && <button onClick={() => setRoleFilter('')} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"><XCircle size={14} /></button>}
-                </div>
-              </div>
-              <div className="flex-1 w-full relative min-w-[140px]">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('من تاريخ', 'From Date')}</label>
-                <div className="relative">
-                  <input 
-                    type="date"
-                    value={fromDateFilter}
-                    onChange={e => setFromDateFilter(e.target.value)}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100 pr-8"
-                  />
-                  {fromDateFilter && <button onClick={() => setFromDateFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"><XCircle size={14} /></button>}
-                </div>
-                {fromDateFilter && <div className="text-[10px] text-[#002D62] dark:text-[#70B2FF] font-semibold mt-0.5">{formatDateToStandard(fromDateFilter)}</div>}
-              </div>
-              <div className="flex-1 w-full relative min-w-[140px]">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('إلى تاريخ', 'To Date')}</label>
-                <div className="relative">
-                  <input 
-                    type="date"
-                    value={toDateFilter}
-                    onChange={e => setToDateFilter(e.target.value)}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100 pr-8"
-                  />
-                  {toDateFilter && <button onClick={() => setToDateFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"><XCircle size={14} /></button>}
-                </div>
-                {toDateFilter && <div className="text-[10px] text-[#002D62] dark:text-[#70B2FF] font-semibold mt-0.5">{formatDateToStandard(toDateFilter)}</div>}
-              </div>
-              <button
-                onClick={clearFilters}
-                className="flex items-center justify-center bg-gray-100 dark:bg-white/[0.08] text-gray-700 dark:text-gray-200 px-4 py-2 rounded-lg border border-gray-300 dark:border-white/[0.15] hover:bg-gray-200 dark:hover:bg-white/[0.12] transition-colors w-full md:w-auto font-medium"
-              >
-                <RefreshCw size={16} className="mr-2 rtl:ml-2 rtl:mr-0" />
-                {t('مسح', 'Clear Filters')}
-              </button>
-            </div>
-          </div>
 
           {/* Dynamic KPI Summary Bar */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 print:hidden">
@@ -457,8 +366,6 @@ export const AnalyticsDashboardTab = () => {
               </div>
             </div>
           </div>
-        </>
-      )}
     </div>
   );
 };

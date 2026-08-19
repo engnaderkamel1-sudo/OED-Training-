@@ -97,15 +97,15 @@ export const ActivityLogsView: React.FC = () => {
                 const isUnknown = locationText === 'Location Unavailable';
 
                 return (
-                  <tr key={log.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-3 font-medium text-gray-500">{formattedTime}</td>
-                    <td className="px-6 py-3 font-bold text-[#002D62]">{log.userName || 'Unknown'}</td>
-                    <td className="px-6 py-3 text-gray-600">{log.hrCode || 'N/A'}</td>
+                  <tr key={log.id} className="hover:bg-blue-50/40 dark:hover:bg-white/[0.06] transition-colors border-b border-gray-100 dark:border-white/[0.08]">
+                    <td className="px-6 py-3 font-medium text-gray-500 dark:text-[#9BB8DF]">{formattedTime}</td>
+                    <td className="px-6 py-3 font-bold text-[#002D62] dark:text-[#FFFFFF]">{log.userName || 'Unknown'}</td>
+                    <td className="px-6 py-3 text-gray-600 dark:text-[#C8DBF6]">{log.hrCode || 'N/A'}</td>
                     <td className="px-6 py-3">{actionBadge}</td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-1.5 text-xs">
-                        <MapPin size={14} className={!isUnknown ? 'text-blue-500' : 'text-gray-400'} />
-                        <span className={!isUnknown ? 'text-gray-700' : 'text-gray-400 italic'}>
+                        <MapPin size={14} className={!isUnknown ? 'text-blue-500 dark:text-blue-400' : 'text-gray-400'} />
+                        <span className={!isUnknown ? 'text-gray-700 dark:text-[#C8DBF6]' : 'text-gray-400 italic'}>
                           {locationText}
                         </span>
                       </div>

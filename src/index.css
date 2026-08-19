@@ -344,9 +344,19 @@ tbody tr:hover td {
   background-color: rgba(255, 255, 255, 0.02) !important;
 }
 
+[data-theme="dark"] tr:hover,
+[data-theme="dark"] tr:hover td,
+[data-theme="dark"] tbody tr:hover,
 [data-theme="dark"] tbody tr:hover td {
-  background-color: rgba(255, 255, 255, 0.055) !important;
+  background-color: rgba(255, 255, 255, 0.07) !important;
+  color: #FFFFFF !important;
 }
+
+[data-theme="dark"] tr:hover td span,
+[data-theme="dark"] tbody tr:hover td span {
+  color: inherit;
+}
+
 
 /* ============================================
    ★★★ STATUS BADGES / CHIPS (Light & Dark) ★★★
