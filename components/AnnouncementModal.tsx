@@ -1,0 +1,187 @@
+import React, { useState } from 'react';
+import { Megaphone, Globe, AlertTriangle, Send, X } from 'lucide-react';
+import { useAppContext } from '../context';
+import { TrainingSession } from '../types';
+
+interface AnnouncementModalProps {
+  session?: TrainingSession | null;
+  onClose: () => void;
+  isGlobal?: boolean;
+}
+
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
+export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({ session, onClose, isGlobal = false }) => {
+  const { language, addAnnouncement, user } = useAppContext();
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
+  const [step, setStep] = useState<'compose' | 'confirm'>('compose');
+
+  const templates = [
+    {
+      label: language === 'ar' ? 'تنبيه بموعد الدورة' : 'Session Reminder',
+      title: language === 'ar' ? 'تنبيه: اقترب موعد الدورة' : 'Reminder: Upcoming Session',
+      message: language === 'ar' ? 'نود تذكيركم بموعد الدورة القادمة. يرجى التأكد من الحضور في الموعد المحدد.' : 'This is a reminder for your upcoming session. Please ensure you attend on time.'
+    },
+    {
+      label: language === 'ar' ? 'تأجيل المحاضرة' : 'Session Postponed',
+      title: language === 'ar' ? 'تأجيل المحاضرة' : 'Lecture Postponed',
+      message: language === 'ar' ? 'نعتذر منكم، تم تأجيل المحاضرة اليوم لظروف طارئة وسيتم تحديد موعد جديد لاحقاً.' : 'We apologize, today\'s lecture has been postponed due to an emergency. A new date will be scheduled.'
+    },
+    {
+      label: language === 'ar' ? 'مراجعة بيانات الحساب' : 'Review Account Data',
+      title: language === 'ar' ? 'تحديث هام: مراجعة البيانات' : 'Important: Review Data',
+      message: language === 'ar' ? 'نرجو منكم مراجعة بيانات الحساب الخاص بكم والتأكد من صحتها.' : 'Please review your account data to ensure it is correct and up to date.'
+    }
+  ];
+
+  const handleTemplateClick = (idx: number) => {
+    setTitle(templates[idx].title);
+    setMessage(templates[idx].message);
+  };
+
+  const handleSend = async () => {
+    if (isGlobal && step === 'compose') {
+      setStep('confirm');
+      return;
+    }
+
+    const newAnnouncement = {
+      id: generateUUID(),
+      sessionId: session?.id,
+      title: title || (language === 'ar' ? 'إعلان' : 'Announcement'),
+      courseName: session?.courseTitle,
+      message,
+      date: new Date().toISOString(),
+      author: user?.name || 'Admin',
+      isGlobal
+    };
+
+    await addAnnouncement(newAnnouncement);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-[99999] flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-md rounded-xl shadow-2xl flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className={`flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700 ${isGlobal ? 'bg-red-50 dark:bg-red-950/40' : 'bg-blue-50 dark:bg-blue-950/40'}`}>
+          <div className="flex items-center gap-2">
+            {isGlobal ? <Globe className="text-red-600 dark:text-red-400" size={20} /> : <Megaphone className="text-blue-600 dark:text-blue-400" size={20} />}
+            <h2 className={`text-lg font-bold ${isGlobal ? 'text-red-900 dark:text-red-200' : 'text-blue-900 dark:text-blue-200'}`}>
+              {isGlobal 
+                ? (language === 'ar' ? 'إرسال إعلان عام للجميع' : 'Send Global Broadcast') 
+                : (language === 'ar' ? `إعلان: ${session?.courseTitle}` : `Announcement: ${session?.courseTitle}`)}
+            </h2>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        {step === 'compose' ? (
+          <div className="p-4 flex flex-col gap-4">
+            {isGlobal && (
+              <div className="bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700/50 text-red-800 dark:text-red-300 px-3 py-2 rounded-lg text-sm flex items-start gap-2">
+                <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+                <p>{language === 'ar' ? 'هذا الإعلان سيصل لجميع المستخدمين في النظام.' : 'This message will reach ALL users in the system.'}</p>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">
+                {language === 'ar' ? 'قوالب جاهزة (اختياري)' : 'Templates (Optional)'}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {templates.map((tpl, i) => (
+                  <button 
+                    key={i} 
+                    onClick={() => handleTemplateClick(i)}
+                    className="text-xs font-medium bg-gray-100 dark:bg-white/[0.08] border border-gray-200 dark:border-white/[0.1] hover:bg-gray-200 dark:hover:bg-white/[0.12] text-gray-700 dark:text-gray-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  >
+                    {tpl.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
+                {language === 'ar' ? 'عنوان الإعلان' : 'Announcement Title'}
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder={language === 'ar' ? 'مثال: إشعار هام...' : 'e.g. Important Notice...'}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-shadow bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
+                {language === 'ar' ? 'نص الرسالة (يمكنك الكتابة بحرية)' : 'Message Body (Custom Message)'} <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+                required
+                rows={4}
+                placeholder={language === 'ar' ? 'اكتب رسالتك هنا...' : 'Type your custom message here...'}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none transition-shadow bg-white dark:bg-[#0D1A33] text-gray-900 dark:text-gray-100"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="p-6 flex flex-col items-center text-center gap-4">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600 animate-pulse">
+              <AlertTriangle size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">
+              {language === 'ar' ? 'تأكيد إرسال الإعلان العام' : 'Confirm Global Broadcast'}
+            </h3>
+            <p className="text-gray-600 text-sm">
+              {language === 'ar' 
+                ? 'أنت على وشك إرسال هذا الإعلان لجميع الموظفين والمتدربين على النظام. سيظهر هذا الإعلان فوراً في لوحات التحكم الخاصة بهم.'
+                : 'You are about to send this announcement to ALL employees and trainees on the system. This will immediately appear on their dashboard.'}
+            </p>
+            <div className="bg-gray-50 border border-gray-200 rounded p-3 w-full text-left mt-2">
+              <div className="font-bold text-gray-800 text-sm mb-1">{title || 'Announcement'}</div>
+              <div className="text-gray-600 text-sm break-words">{message}</div>
+            </div>
+          </div>
+        )}
+
+        <div className="p-4 border-t border-gray-200 flex justify-end gap-3 bg-gray-50">
+          <button 
+            onClick={step === 'confirm' ? () => setStep('compose') : onClose} 
+            className="px-4 py-2 text-sm font-bold text-gray-600 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+          >
+            {step === 'confirm' ? (language === 'ar' ? 'العودة للتعديل' : 'Back to Edit') : (language === 'ar' ? 'إلغاء' : 'Cancel')}
+          </button>
+          <button 
+            onClick={handleSend}
+            disabled={!message.trim()}
+            className={`px-6 py-2 text-sm font-bold text-white rounded flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md ${
+              isGlobal && step === 'compose' ? 'bg-red-600 hover:bg-red-700' : 'bg-[#002D62] hover:bg-blue-900'
+            }`}
+          >
+            {isGlobal && step === 'compose' ? (
+              language === 'ar' ? 'المتابعة للتأكيد' : 'Continue to Confirm'
+            ) : (
+              <>
+                <Send size={16} />
+                {language === 'ar' ? 'تأكيد وإرسال' : 'Confirm & Send'}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
