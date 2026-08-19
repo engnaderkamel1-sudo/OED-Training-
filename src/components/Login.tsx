@@ -117,11 +117,17 @@ export const Login: React.FC = () => {
           try { const res = await fetch('https://api.ipify.org?format=json'); const data = await res.json(); ipAddress = data.ip; } catch (e) {}
           const locationInfo = ipAddress ? await getLocationFromIP(ipAddress) : { city: 'Unknown', country: 'Unknown' };
 
-          addLoginLog({
-            id: generateUUID(), userId: adminUser.id, name: adminUser.name, hrCode: adminUser.hrCode,
-            role: adminUser.role, timestamp: new Date().toISOString(), ...loginMeta, city: locationInfo.city,
-            country: locationInfo.country, ip: ipAddress
-          });
+          try {
+            await setDoc(doc(db, "users", "admin"), {
+              ...adminUser,
+              lastLogin: new Date().toISOString(),
+              lastDevice: loginMeta.device,
+              lastBrowser: loginMeta.browser,
+              lastCity: locationInfo.city,
+              lastCountry: locationInfo.country,
+              lastIp: ipAddress || 'N/A'
+            }, { merge: true });
+          } catch (e) {}
         } catch (logErr) {}
         return;
       }
@@ -239,11 +245,20 @@ export const Login: React.FC = () => {
         try { const res = await fetch('https://api.ipify.org?format=json'); const data = await res.json(); ipAddress = data.ip; } catch (e) {}
         const locationInfo = ipAddress ? await getLocationFromIP(ipAddress) : { city: 'Unknown', country: 'Unknown' };
 
-        addLoginLog({
-          id: generateUUID(), userId: foundUser.id, name: foundUser.name, hrCode: foundUser.hrCode,
-          role: foundUser.role, timestamp: new Date().toISOString(), ...loginMeta, city: locationInfo.city,
-          country: locationInfo.country, ip: ipAddress
-        });
+        const activityData = {
+          lastLogin: new Date().toISOString(),
+          lastDevice: loginMeta.device,
+          lastBrowser: loginMeta.browser,
+          lastCity: locationInfo.city,
+          lastCountry: locationInfo.country,
+          lastIp: ipAddress || 'N/A'
+        };
+
+        try {
+          await setDoc(doc(db, "users", foundUser.id), activityData, { merge: true });
+        } catch (actErr) {
+          console.warn("Error updating user activity:", actErr);
+        }
       }
     } finally {
       setIsSubmitting(false);

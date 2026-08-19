@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { Language, User, Role, Course, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement, LoginLog, Suggestion } from './types';
 import { translations } from './i18n';
-import { collection, onSnapshot, doc, setDoc, writeBatch, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, writeBatch, deleteDoc, getDocs, query, where, limit } from 'firebase/firestore';
 import { db } from './firebase';
 import { APP_VERSION } from './version';
 
@@ -60,6 +60,9 @@ interface AppContextType {
   toggleTheme: () => void;
   systemVersion: string;
   updateSystemVersion: (newVersion: string) => Promise<void>;
+  isFetchingRecords: boolean;
+  recordsLoaded: boolean;
+  fetchTrainingRecords: (filter?: { hrCode?: string; name?: string; department?: string; courseName?: string; fromDate?: string; toDate?: string }) => Promise<CleanedRecord[]>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -165,25 +168,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setUpcomingSessionsState(sessions);
     }, (error) => console.error("Firebase Sessions Error:", error));
 
-    const unsubData = onSnapshot(collection(db, "cleanedData"), (snapshot) => {
-      const data: CleanedRecord[] = [];
-      snapshot.forEach((d) => data.push(d.data() as CleanedRecord));
-      setCleanedDataState(data);
-    }, (error) => console.error("Firebase CleanedData Error:", error));
-
     const unsubAnnouncements = onSnapshot(collection(db, "announcements"), (snapshot) => {
       const ann: SystemAnnouncement[] = [];
       snapshot.forEach((d) => ann.push(d.data() as SystemAnnouncement));
       ann.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setAnnouncementsState(ann);
     }, (error) => console.error("Firebase Announcements Error:", error));
-
-    const unsubLoginLogs = onSnapshot(collection(db, "loginLogs"), (snapshot) => {
-      const logs: LoginLog[] = [];
-      snapshot.forEach((d) => logs.push(d.data() as LoginLog));
-      logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      setLoginLogsState(logs);
-    }, (error) => console.error("Firebase LoginLogs Error:", error));
 
     const unsubSuggestions = onSnapshot(collection(db, "suggestions"), (snapshot) => {
       const sugs: Suggestion[] = [];
@@ -212,13 +202,47 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       unsubUsers();
       unsubCourses();
       unsubSessions();
-      unsubData();
       unsubAnnouncements();
-      unsubLoginLogs();
       unsubSuggestions();
       unsubVersion();
     };
   }, []);
+
+  const [isFetchingRecords, setIsFetchingRecords] = useState(false);
+  const [recordsLoaded, setRecordsLoaded] = useState(false);
+
+  const fetchTrainingRecords = async (filter?: { hrCode?: string; name?: string; department?: string; courseName?: string; fromDate?: string; toDate?: string }) => {
+    setIsFetchingRecords(true);
+    try {
+      let q = collection(db, "cleanedData");
+      const queryConstraints: any[] = [];
+
+      if (filter?.hrCode && filter.hrCode.trim()) {
+        queryConstraints.push(where("hrCode", "==", filter.hrCode.trim()));
+      }
+      if (filter?.department && filter.department.trim()) {
+        queryConstraints.push(where("department", "==", filter.department.trim()));
+      }
+
+      let snapshot;
+      if (queryConstraints.length > 0) {
+        snapshot = await getDocs(query(q, ...queryConstraints));
+      } else {
+        snapshot = await getDocs(query(q, limit(1000)));
+      }
+
+      const data: CleanedRecord[] = [];
+      snapshot.forEach((d) => data.push(d.data() as CleanedRecord));
+      setCleanedDataState(data);
+      setRecordsLoaded(true);
+      return data;
+    } catch (err) {
+      console.error("Error fetching training records:", err);
+      return [];
+    } finally {
+      setIsFetchingRecords(false);
+    }
+  };
 
   const [systemVersion, setSystemVersionState] = useState<string>(APP_VERSION.version);
 
@@ -563,6 +587,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       toggleTheme,
       systemVersion,
       updateSystemVersion,
+      isFetchingRecords,
+      recordsLoaded,
+      fetchTrainingRecords,
     }}>
       <div dir={language === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${language === 'ar' ? 'font-arabic' : 'font-sans'}`}>
         {children}

@@ -35,6 +35,13 @@ export interface User {
     processedAt: string;
     requestedAt?: string;
   }[];
+  // --- نشاط المستخدم وآخر ظهور ---
+  lastLogin?: string;
+  lastDevice?: string;
+  lastBrowser?: string;
+  lastCity?: string;
+  lastCountry?: string;
+  lastIp?: string;
 }
 
 export interface Course {

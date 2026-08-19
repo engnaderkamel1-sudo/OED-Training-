@@ -69,7 +69,24 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
     });
   }
 
-  loginLogs.forEach(log => {
+  (realUsers || []).forEach(u => {
+    if (u.lastLogin) {
+      const logTime = new Date(u.lastLogin).getTime();
+      if (!isNaN(logTime) && (now - logTime) <= THIRTY_MINUTES) {
+        if (!onlineUsersMap.has(u.id)) {
+          const diffMinutes = Math.max(1, Math.round((now - logTime) / 60000));
+          onlineUsersMap.set(u.id, {
+            name: u.name || u.id,
+            hrCode: u.hrCode || '',
+            role: u.role || 'trainee',
+            lastSeen: language === 'ar' ? `منذ ${diffMinutes} دقيقة` : `${diffMinutes}m ago`
+          });
+        }
+      }
+    }
+  });
+
+  (loginLogs || []).forEach(log => {
     if (log.timestamp) {
       const logTime = new Date(log.timestamp).getTime();
       if (!isNaN(logTime) && (now - logTime) <= THIRTY_MINUTES) {

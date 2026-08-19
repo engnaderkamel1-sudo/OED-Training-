@@ -87,7 +87,7 @@ export const AdminDashboard: React.FC = () => {
     t, language, user, users, setUsers, records, setRecords, upcomingSessions,
     setUpcomingSessions, addUpcomingSession, updateUpcomingSession, cancelSession,
     reactivateSession, cleanedData, loginLogs, currentView, setCurrentView, addAnnouncement, theme,
-    systemVersion, updateSystemVersion
+    systemVersion, updateSystemVersion, fetchTrainingRecords, isFetchingRecords, recordsLoaded
   } = useAppContext();
 
   // Unified Dark/Light Mode Palette (Orascom Brand Theme)
@@ -227,6 +227,40 @@ export const AdminDashboard: React.FC = () => {
   const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
   const [userSearchTerm, setUserSearchTerm] = useState("");
   const [selectedUserToEdit, setSelectedUserToEdit] = useState<User | null>(null);
+  const [activeUsersSearchTerm, setActiveUsersSearchTerm] = useState("");
+  const [activeUsersLimit, setActiveUsersLimit] = useState<number | 'all'>(10);
+
+  const handleExecuteRecordsSearch = async (fetchAll = false) => {
+    if (fetchAll) {
+      await fetchTrainingRecords();
+    } else {
+      await fetchTrainingRecords({
+        hrCode: searchHrCode.trim() || undefined,
+        name: searchTrainee.trim() || undefined,
+        department: searchDepartment.trim() || undefined,
+        courseName: selectedCourseFilter.trim() || undefined,
+        fromDate: fromDateFilter || undefined,
+        toDate: toDateFilter || undefined
+      });
+    }
+  };
+
+  const formatTimeAgo = (dateStr?: string) => {
+    if (!dateStr) return language === 'ar' ? 'لم يسجل بعد' : 'Never';
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    if (isNaN(diffMs) || diffMs < 0) return language === 'ar' ? 'الآن' : 'Just now';
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHrs = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHrs / 24);
+
+    if (diffSec < 60) return language === 'ar' ? 'الآن 🟢' : 'Just now 🟢';
+    if (diffMin < 60) return language === 'ar' ? `منذ ${diffMin} دقيقة` : `${diffMin}m ago`;
+    if (diffHrs < 24) return language === 'ar' ? `منذ ${diffHrs} ساعة` : `${diffHrs}h ago`;
+    if (diffDays === 1) return language === 'ar' ? 'أمس' : 'Yesterday';
+    if (diffDays < 7) return language === 'ar' ? `منذ ${diffDays} أيام` : `${diffDays}d ago`;
+    return new Date(dateStr).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB');
+  };
 
   // -- STATE FOR SYSTEM VERSION CONTROL (ADMIN ONLY) --
   const [versionInput, setVersionInput] = useState(systemVersion || '1.0.0');
@@ -1454,6 +1488,43 @@ It is my pleasure to announce the beginning of the following course:
                   </div>
                 </div>
 
+                {/* On-Demand Server Query Action Bar */}
+                <div className="mb-6 p-4 rounded-xl border flex flex-wrap items-center justify-between gap-3 shadow-2xs print:hidden" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      onClick={() => handleExecuteRecordsSearch(false)}
+                      disabled={isFetchingRecords}
+                      className="px-6 py-2.5 bg-[#002D62] hover:bg-[#003d85] text-white font-bold rounded-xl shadow-md transition-all text-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 hover:scale-105 active:scale-95"
+                    >
+                      {isFetchingRecords ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Search size={16} className="text-[#FFC000]" />
+                      )}
+                      <span>{language === 'ar' ? 'بحث وجلب بيانات التقرير' : 'Search & Fetch Records'}</span>
+                    </button>
+                    <button
+                      onClick={() => handleExecuteRecordsSearch(true)}
+                      disabled={isFetchingRecords}
+                      className="px-4 py-2.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-800 dark:text-gray-200 font-semibold rounded-xl border transition-all text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      style={{ borderColor: borderColor }}
+                      title={language === 'ar' ? 'جلب كافة السجلات لتقرير شامل' : 'Fetch all records for full report'}
+                    >
+                      <Database size={14} className="text-blue-500" />
+                      <span>{language === 'ar' ? 'جلب كافة السجلات (تقرير شامل)' : 'Fetch All Records'}</span>
+                    </button>
+                  </div>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={handleClearAllFilters}
+                      className="px-3 py-1.5 text-xs text-red-600 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 rounded-lg flex items-center gap-1 font-semibold transition-colors"
+                    >
+                      <RotateCcw size={13} />
+                      {language === 'ar' ? 'إعادة ضبط الفلتر' : 'Reset Filters'}
+                    </button>
+                  )}
+                </div>
+
                 {selectedCourseFilter && selectedCourseDetails ? (
                   <div className="mb-6 print:hidden">
                     <div className="border rounded-lg p-4 mb-4 flex flex-wrap gap-4 items-center" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
@@ -2145,44 +2216,132 @@ It is my pleasure to announce the beginning of the following course:
               )}
 
               {["tools_logs"].includes(currentView) && (
-                <div className="border rounded-lg p-6 shadow-sm transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                  <h2 className="text-2xl font-bold mb-6 border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0 flex items-center gap-2" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>
-                    <Clock className="text-[#FFC000]" size={24} /> {language === "ar" ? "سجل الدخول" : "Login History"}
-                  </h2>
-                  {loginLogs && loginLogs.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm text-left rtl:text-right" style={{ color: textMuted }}>
-                        <thead className="text-xs uppercase border-b text-white font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
-                          <tr>
-                            <th className="px-6 py-3">{language === "ar" ? "الاسم" : "Name"}</th>
-                            <th className="px-6 py-3">{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
-                            <th className="px-6 py-3">{language === "ar" ? "الصلاحية" : "Role"}</th>
-                            <th className="px-6 py-3">{language === "ar" ? "وقت الدخول" : "Time"}</th>
-                            <th className="px-6 py-3">IP Address</th>
-                            <th className="px-6 py-3">{language === "ar" ? "الموقع" : "Location"}</th>
-                            <th className="px-6 py-3">{language === "ar" ? "الجهاز" : "Device"}</th>
-                            <th className="px-6 py-3">{language === "ar" ? "المتصفح" : "Browser"}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {[...loginLogs].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 50).map(log => (
-                            <tr key={log.id} className="border-b transition-colors hover:opacity-80" style={{ borderColor: borderColor, backgroundColor: cardColor, color: textColor }}>
-                              <td className="px-6 py-4 font-medium">{log.name}</td>
-                              <td className="px-6 py-4">{log.hrCode}</td>
-                              <td className="px-6 py-4 capitalize">{log.role}</td>
-                              <td className="px-6 py-4" dir="ltr">{new Date(log.timestamp).toLocaleString()}</td>
-                              <td className="px-6 py-4 font-mono text-xs">{log.ip || 'N/A'}</td>
-                              <td className="px-6 py-4">{log.country && log.city ? `${log.city}, ${log.country}` : (log.country || log.city || 'N/A')}</td>
-                              <td className="px-6 py-4">{log.device || 'N/A'}</td>
-                              <td className="px-6 py-4">{log.browser || 'N/A'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                <div className="border rounded-xl p-6 shadow-sm transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                  <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0 flex items-center gap-2" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>
+                        <Clock className="text-[#FFC000]" size={24} /> {language === "ar" ? "نشاط المستخدمين وآخر ظهور" : "Active Users & Last Activity"}
+                      </h2>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 rtl:pr-3 rtl:pl-0 pl-3">
+                        {language === "ar" ? "متابعة أحدث المستخدمين النشطين وأجهزتهم ومواقعهم بدون استهلاك قراءات فايربيز" : "Track recent user activity, devices, and locations with zero extra database reads"}
+                      </p>
                     </div>
-                  ) : (
-                    <div className="text-center py-8" style={{ color: textMuted }}>{language === "ar" ? "لا توجد سجلات دخول بعد" : "No login records yet"}</div>
-                  )}
+
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {/* Search by HR Code / Name */}
+                      <div className="relative min-w-[220px]">
+                        <Search size={15} className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          value={activeUsersSearchTerm}
+                          onChange={(e) => setActiveUsersSearchTerm(e.target.value)}
+                          placeholder={language === "ar" ? "البحث بالكود أو الاسم..." : "Search by HR code or name..."}
+                          className="w-full pl-9 rtl:pl-3 rtl:pr-9 pr-7 py-1.5 rounded-lg border text-xs font-medium focus:ring-2 focus:ring-[#002D62] outline-none"
+                          style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
+                        />
+                        {activeUsersSearchTerm && (
+                          <button onClick={() => setActiveUsersSearchTerm("")} className="absolute right-2 rtl:right-auto rtl:left-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <X size={12} />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Display Limit Toggle */}
+                      <div className="flex items-center bg-gray-100 dark:bg-slate-800 rounded-lg p-0.5 border" style={{ borderColor: borderColor }}>
+                        <button
+                          onClick={() => setActiveUsersLimit(10)}
+                          className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${activeUsersLimit === 10 ? 'bg-[#002D62] text-white shadow-xs' : 'text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white'}`}
+                        >
+                          10
+                        </button>
+                        <button
+                          onClick={() => setActiveUsersLimit(25)}
+                          className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${activeUsersLimit === 25 ? 'bg-[#002D62] text-white shadow-xs' : 'text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white'}`}
+                        >
+                          25
+                        </button>
+                        <button
+                          onClick={() => setActiveUsersLimit('all')}
+                          className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${activeUsersLimit === 'all' ? 'bg-[#002D62] text-white shadow-xs' : 'text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white'}`}
+                        >
+                          {language === 'ar' ? 'الكل' : 'All'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const filteredActiveUsers = users
+                      .filter(u => {
+                        if (!activeUsersSearchTerm.trim()) return true;
+                        const term = activeUsersSearchTerm.trim().toLowerCase();
+                        return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
+                      })
+                      .sort((a, b) => new Date(b.lastLogin || b.createdAt || 0).getTime() - new Date(a.lastLogin || a.createdAt || 0).getTime());
+
+                    const displayedUsers = activeUsersLimit === 'all' ? filteredActiveUsers : filteredActiveUsers.slice(0, activeUsersLimit);
+
+                    return displayedUsers.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left rtl:text-right border-collapse">
+                          <thead>
+                            <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "المستخدم" : "User"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الكود الوظيفي" : "HR Code"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الصلاحية" : "Role"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "آخر ظهور" : "Last Activity"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الجهاز والمتصفح" : "Device & Browser"}</th>
+                              <th className="p-3 text-white font-bold tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الموقع والـ IP" : "Location & IP"}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {displayedUsers.map(u => (
+                              <tr key={u.id} className="border-b transition-colors hover:opacity-90" style={{ borderColor: borderColor, color: textColor }}>
+                                <td className="p-3">
+                                  <UserAvatarWithName user={u} />
+                                </td>
+                                <td className="p-3 font-mono font-bold">
+                                  <DataField>{u.hrCode}</DataField>
+                                </td>
+                                <td className="p-3">
+                                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                                    u.role === 'admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-300 dark:border-purple-700' :
+                                    u.role === 'manager' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700' :
+                                    u.role === 'supervisor' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700' :
+                                    'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
+                                  }`}>
+                                    {u.role === 'admin' ? '🛡️ Admin' : u.role === 'manager' ? '👔 Manager' : u.role === 'supervisor' ? '👷 Supervisor' : '🎓 Trainee'}
+                                  </span>
+                                </td>
+                                <td className="p-3">
+                                  <span className="font-semibold text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    {formatTimeAgo(u.lastLogin)}
+                                  </span>
+                                </td>
+                                <td className="p-3 text-xs" style={{ color: textMuted }}>
+                                  <div className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-1">
+                                    {u.lastDevice?.includes('Mobile') || u.lastDevice?.includes('iPhone') || u.lastDevice?.includes('Android') ? '📱' : '💻'}
+                                    {u.lastDevice || 'Desktop'}
+                                  </div>
+                                  <div className="text-[11px] text-gray-400">{u.lastBrowser || 'Web Browser'}</div>
+                                </td>
+                                <td className="p-3 text-xs" style={{ color: textMuted }}>
+                                  <div className="font-medium text-gray-700 dark:text-gray-200 flex items-center gap-1">
+                                    📍 {u.lastCity && u.lastCountry ? `${u.lastCity}, ${u.lastCountry}` : (u.lastCity || u.lastCountry || 'Egypt')}
+                                  </div>
+                                  <div className="font-mono text-[10px] text-gray-400">{u.lastIp || 'N/A'}</div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8" style={{ color: textMuted }}>
+                        {language === "ar" ? "لا توجد نتائج مطابقة لبحث النشاط" : "No matching activity records found"}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
