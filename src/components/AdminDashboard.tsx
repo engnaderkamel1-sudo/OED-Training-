@@ -87,7 +87,7 @@ export const AdminDashboard: React.FC = () => {
     t, language, user, users, setUsers, records, setRecords, upcomingSessions,
     setUpcomingSessions, addUpcomingSession, updateUpcomingSession, cancelSession,
     reactivateSession, cleanedData, loginLogs, currentView, setCurrentView, addAnnouncement, theme,
-    systemVersion, updateSystemVersion, fetchTrainingRecords, isFetchingRecords, recordsLoaded
+    systemVersion, updateSystemVersion, fetchTrainingRecords, isFetchingRecords, recordsLoaded, courses
   } = useAppContext();
 
   // Unified Dark/Light Mode Palette (Orascom Brand Theme)

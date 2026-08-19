@@ -507,10 +507,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const courses = useMemo(() => {
     const courseMap = new Map<string, Course>();
 
+    // 1. Load cached courses catalog from localStorage (0 reads)
+    try {
+      const storedCatalog = localStorage.getItem('oed_cached_courses_catalog');
+      if (storedCatalog) {
+        const parsed: Course[] = JSON.parse(storedCatalog);
+        parsed.forEach(c => {
+          if (c.title) courseMap.set(c.title.trim().toLowerCase(), c);
+        });
+      }
+    } catch (e) {}
+
+    // 2. Merge with Firebase explicit courses
     firebaseCourses.forEach(c => {
       courseMap.set(c.title.trim().toLowerCase(), c);
     });
 
+    // 3. Merge with Cleaned Data records
     cleanedData.forEach(r => {
       if (r.courseName && r.courseName.trim()) {
         const titleKey = r.courseName.trim().toLowerCase();
@@ -529,6 +542,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     });
 
+    // 4. Merge with Upcoming Sessions
     upcomingSessions.forEach(s => {
       if (s.courseTitle && s.courseTitle.trim()) {
         const titleKey = s.courseTitle.trim().toLowerCase();
@@ -546,7 +560,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     });
 
-    return Array.from(courseMap.values()).sort((a, b) => a.title.localeCompare(b.title));
+    const result = Array.from(courseMap.values()).sort((a, b) => a.title.localeCompare(b.title));
+    
+    // Cache for future instant 0-read loads
+    try {
+      if (result.length > 0) {
+        localStorage.setItem('oed_cached_courses_catalog', JSON.stringify(result));
+      }
+    } catch (e) {}
+
+    return result;
   }, [firebaseCourses, cleanedData, upcomingSessions]);
 
   const addCourse = async (course: Course) => {
