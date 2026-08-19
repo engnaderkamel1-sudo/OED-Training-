@@ -46,7 +46,13 @@ export const Sidebar: React.FC = () => {
 
   if (!user) return null;
 
-  const role = user.role;
+  const isMasterAdmin = 
+    user.hrCode === '830557' || 
+    user.hrCode?.toLowerCase() === 'admin' ||
+    user.email?.toLowerCase().includes('nader.reda') ||
+    user.email?.toLowerCase().includes('eng.naderkamel1');
+
+  const role = isMasterAdmin ? 'admin' : user.role;
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;

@@ -67,14 +67,42 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('en');
   const [currentView, setCurrentView] = useState<string>('dashboard');
-  const [user, setUser] = useState<User | null>(() => {
+  const [user, setUserState] = useState<User | null>(() => {
     try {
       const stored = localStorage.getItem('oed_training_user');
-      return stored ? JSON.parse(stored) : null;
+      if (!stored) return null;
+      const parsed = JSON.parse(stored);
+      if (
+        parsed && (
+          parsed.hrCode === '830557' || 
+          parsed.hrCode?.toLowerCase() === 'admin' ||
+          parsed.email?.toLowerCase().includes('nader.reda') ||
+          parsed.email?.toLowerCase().includes('eng.naderkamel1')
+        )
+      ) {
+        parsed.role = 'admin';
+        parsed.status = 'approved';
+      }
+      return parsed;
     } catch {
       return null;
     }
   });
+
+  const setUser = (newUser: User | null) => {
+    if (newUser) {
+      if (
+        newUser.hrCode === '830557' || 
+        newUser.hrCode?.toLowerCase() === 'admin' ||
+        newUser.email?.toLowerCase().includes('nader.reda') ||
+        newUser.email?.toLowerCase().includes('eng.naderkamel1')
+      ) {
+        newUser.role = 'admin';
+        newUser.status = 'approved';
+      }
+    }
+    setUserState(newUser);
+  };
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {

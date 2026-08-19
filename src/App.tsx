@@ -213,7 +213,13 @@ const AppContent: React.FC = () => {
   // ============================================
   // Render
   // ============================================
-  const activeRole = user?.role;
+  const isMasterAdminUser = 
+    user?.hrCode === '830557' || 
+    user?.hrCode?.toLowerCase() === 'admin' ||
+    user?.email?.toLowerCase().includes('nader.reda') ||
+    user?.email?.toLowerCase().includes('eng.naderkamel1');
+
+  const activeRole = isMasterAdminUser ? 'admin' : user?.role;
 
   return (
     <>
