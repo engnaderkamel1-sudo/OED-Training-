@@ -625,44 +625,25 @@ Please log in to register for this session through the OED-TTMS Application.
 
 
   const totalUniqueTrainees = useMemo(() => {
-    const uniqueKeys = new Set<string>();
-
-    // 1. All records from cleanedData / database records
     const allRecords = [...(cleanedData || []), ...(records || [])];
-    allRecords.forEach(r => {
-      const hr = (r.hrCode || '').toString().trim().toLowerCase();
-      const name = ((r as any).name || (r as any).traineeName || r.userId || '').toString().trim().toLowerCase();
-      const identifier = hr && hr !== 'n/a' && hr !== 'undefined' ? hr : name;
-      if (identifier && identifier !== 'n/a' && identifier !== 'undefined' && identifier !== 'unknown' && identifier !== '') {
-        uniqueKeys.add(identifier);
-      }
-    });
-
-    // 2. All registered users/trainees in system
-    (users || []).forEach(u => {
-      if (u && u.status !== 'deleted' && (u.role === 'trainee' || !u.role)) {
-        const hr = (u.hrCode || '').toString().trim().toLowerCase();
-        const identifier = hr && hr !== 'n/a' ? hr : (u.id || u.name || '').toString().trim().toLowerCase();
-        if (identifier && identifier !== 'n/a' && identifier !== '') {
+    
+    // Only calculate from records if actual dataset is loaded in memory
+    if (allRecords.length > 50) {
+      const uniqueKeys = new Set<string>();
+      allRecords.forEach(r => {
+        const hr = (r.hrCode || '').toString().trim().toLowerCase();
+        const name = ((r as any).name || (r as any).traineeName || r.userId || '').toString().trim().toLowerCase();
+        const identifier = hr && hr !== 'n/a' && hr !== 'undefined' ? hr : name;
+        if (identifier && identifier !== 'n/a' && identifier !== 'undefined' && identifier !== 'unknown' && identifier !== '') {
           uniqueKeys.add(identifier);
         }
-      }
-    });
-
-    // 3. Trainees registered across sessions
-    (upcomingSessions || []).forEach(s => {
-      (s.registeredUsers || []).forEach(code => {
-        const c = (code || '').toString().trim().toLowerCase();
-        if (c && c !== 'n/a' && c !== '') uniqueKeys.add(c);
       });
-    });
-
-    if (uniqueKeys.size > 0) {
-      return uniqueKeys.size;
+      if (uniqueKeys.size > 0) return uniqueKeys.size;
     }
 
+    // Baseline official total participants (984)
     return globalKPIs.totalParticipants || 984;
-  }, [cleanedData, records, users, upcomingSessions, globalKPIs]);
+  }, [cleanedData, records, globalKPIs]);
 
   const totalDistinctCourses = useMemo(() => {
     const allRecords = [...(cleanedData || []), ...(records || [])];
