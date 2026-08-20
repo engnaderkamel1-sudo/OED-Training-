@@ -2512,16 +2512,15 @@ Content-Type: text/html; charset="utf-8"
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Card 1: Official Reports Hub */}
                     <div 
-                      className="p-6 rounded-2xl border shadow-sm flex flex-col justify-between transition-all"
-                      style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                      className="p-6 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-[#0F1E36] shadow-sm flex flex-col justify-between transition-all"
                     >
                       <div>
-                        <div className="flex items-center gap-3 mb-4 pb-3 border-b" style={{ borderColor: borderColor }}>
-                          <div className="w-10 h-10 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center font-bold">
+                        <div className="flex items-center gap-3 mb-5 pb-3 border-b border-gray-100 dark:border-slate-800">
+                          <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center font-bold border border-blue-100 dark:border-blue-900/40">
                             <Printer size={20} />
                           </div>
                           <div>
-                            <h3 className="font-bold text-base text-[#002D62] dark:text-[#93C5FD]">
+                            <h3 className="font-bold text-base text-gray-900 dark:text-white">
                               {language === "ar" ? "التقارير وسجلات التدريب الرسمية" : "Official Reports & Records"}
                             </h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -2530,13 +2529,19 @@ Content-Type: text/html; charset="utf-8"
                           </div>
                         </div>
 
-                        <div className="space-y-3">
-                          <div className="p-3.5 rounded-xl border flex items-center justify-between gap-3" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
-                            <div className="flex items-center gap-2.5">
-                              <Calendar size={18} className="text-[#FFC000]" />
-                              <div>
-                                <h4 className="text-xs font-bold" style={{ color: textColor }}>{language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}</h4>
-                                <p className="text-[11px]" style={{ color: textMuted }}>{language === 'ar' ? 'ملخص الدورات والحضور لكل شهر' : 'Monthly training sessions & attendance summary'}</p>
+                        <div className="space-y-3.5">
+                          <div className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/90 dark:bg-slate-800/80 flex items-center justify-between gap-3 shadow-2xs">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 shrink-0">
+                                <Calendar size={18} />
+                              </div>
+                              <div className="min-w-0">
+                                <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
+                                  {language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}
+                                </h4>
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                  {language === 'ar' ? 'ملخص الدورات والحضور لكل شهر' : 'Monthly training sessions & attendance summary'}
+                                </p>
                               </div>
                             </div>
                             <button
@@ -2549,12 +2554,18 @@ Content-Type: text/html; charset="utf-8"
                             </button>
                           </div>
 
-                          <div className="p-3.5 rounded-xl border flex items-center justify-between gap-3" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
-                            <div className="flex items-center gap-2.5">
-                              <Download size={18} className="text-emerald-500" />
-                              <div>
-                                <h4 className="text-xs font-bold" style={{ color: textColor }}>{language === 'ar' ? 'تصدير السجل التدريبي العام (PDF)' : 'Full Training Register (PDF)'}</h4>
-                                <p className="text-[11px]" style={{ color: textMuted }}>{language === 'ar' ? 'كشف شامل لجميع سجلات المتدربين' : 'Comprehensive PDF training register for all trainees'}</p>
+                          <div className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/90 dark:bg-slate-800/80 flex items-center justify-between gap-3 shadow-2xs">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 shrink-0">
+                                <Download size={18} />
+                              </div>
+                              <div className="min-w-0">
+                                <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
+                                  {language === 'ar' ? 'تصدير السجل التدريبي العام (PDF)' : 'Full Training Register (PDF)'}
+                                </h4>
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                  {language === 'ar' ? 'كشف شامل لجميع سجلات المتدربين' : 'Comprehensive PDF training register for all trainees'}
+                                </p>
                               </div>
                             </div>
                             <button
@@ -2574,16 +2585,15 @@ Content-Type: text/html; charset="utf-8"
 
                     {/* Card 2: Cloud Backup & Data Security */}
                     <div 
-                      className="p-6 rounded-2xl border shadow-sm flex flex-col justify-between transition-all"
-                      style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                      className="p-6 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-[#0F1E36] shadow-sm flex flex-col justify-between transition-all"
                     >
                       <div>
-                        <div className="flex items-center gap-3 mb-4 pb-3 border-b" style={{ borderColor: borderColor }}>
-                          <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold">
+                        <div className="flex items-center gap-3 mb-5 pb-3 border-b border-gray-100 dark:border-slate-800">
+                          <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center font-bold border border-emerald-100 dark:border-emerald-900/40">
                             <Database size={20} />
                           </div>
                           <div>
-                            <h3 className="font-bold text-base text-[#002D62] dark:text-[#93C5FD]">
+                            <h3 className="font-bold text-base text-gray-900 dark:text-white">
                               {language === "ar" ? "أمان البيانات والنسخ الاحتياطي" : "Data Safety & Cloud Backup"}
                             </h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -2592,13 +2602,19 @@ Content-Type: text/html; charset="utf-8"
                           </div>
                         </div>
 
-                        <div className="space-y-3">
-                          <div className="p-3.5 rounded-xl border flex items-center justify-between gap-3" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
-                            <div className="flex items-center gap-2.5">
-                              <Sparkles size={18} className="text-emerald-500" />
-                              <div>
-                                <h4 className="text-xs font-bold" style={{ color: textColor }}>{language === 'ar' ? 'نسخ احتياطي فوري متكامل' : 'Instant Full System Backup'}</h4>
-                                <p className="text-[11px]" style={{ color: textMuted }}>{language === 'ar' ? 'تنزيل ملف نسخة احتياطية لكافة المستخدمين والسجلات والجلسات' : 'Download complete backup of users, records & sessions'}</p>
+                        <div className="space-y-3.5">
+                          <div className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/90 dark:bg-slate-800/80 flex items-center justify-between gap-3 shadow-2xs">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 shrink-0">
+                                <Sparkles size={18} />
+                              </div>
+                              <div className="min-w-0">
+                                <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
+                                  {language === 'ar' ? 'نسخ احتياطي فوري متكامل' : 'Instant Full System Backup'}
+                                </h4>
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                  {language === 'ar' ? 'تنزيل ملف نسخة احتياطية لكافة المستخدمين والسجلات والجلسات' : 'Download complete backup of users, records & sessions'}
+                                </p>
                               </div>
                             </div>
                             <button
@@ -2611,12 +2627,18 @@ Content-Type: text/html; charset="utf-8"
                             </button>
                           </div>
 
-                          <div className="p-3.5 rounded-xl border flex items-center justify-between gap-3" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
-                            <div className="flex items-center gap-2.5">
-                              <UploadCloud size={18} className="text-blue-500" />
-                              <div>
-                                <h4 className="text-xs font-bold" style={{ color: textColor }}>{language === 'ar' ? 'استيراد ورفع ملف إكسيل محلي' : 'Import Local Excel File'}</h4>
-                                <p className="text-[11px]" style={{ color: textMuted }}>{syncFile ? syncFile.name : (language === 'ar' ? 'رفع شيت إكسيل لتحديث السجلات' : 'Upload Excel sheet to update records')}</p>
+                          <div className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/90 dark:bg-slate-800/80 flex items-center justify-between gap-3 shadow-2xs">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 shrink-0">
+                                <UploadCloud size={18} />
+                              </div>
+                              <div className="min-w-0">
+                                <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
+                                  {language === 'ar' ? 'استيراد ورفع ملف إكسيل محلي' : 'Import Local Excel File'}
+                                </h4>
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                  {syncFile ? syncFile.name : (language === 'ar' ? 'رفع شيت إكسيل لتحديث السجلات' : 'Upload Excel sheet to update records')}
+                                </p>
                               </div>
                             </div>
                             <label
@@ -2635,16 +2657,15 @@ Content-Type: text/html; charset="utf-8"
 
                   {/* Card 3: Course Materials & Resource Sharing */}
                   <div 
-                    className="p-6 rounded-2xl border shadow-sm transition-all"
-                    style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                    className="p-6 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-[#0F1E36] shadow-sm transition-all"
                   >
-                    <div className="flex items-center justify-between flex-wrap gap-3 mb-4 pb-3 border-b" style={{ borderColor: borderColor }}>
+                    <div className="flex items-center justify-between flex-wrap gap-3 mb-5 pb-3 border-b border-gray-100 dark:border-slate-800">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold">
+                        <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300 flex items-center justify-center font-bold border border-amber-100 dark:border-amber-900/40">
                           <Share2 size={20} />
                         </div>
                         <div>
-                          <h3 className="font-bold text-base text-[#002D62] dark:text-[#93C5FD]">
+                          <h3 className="font-bold text-base text-gray-900 dark:text-white">
                             {language === "ar" ? "مشاركة المواد والمراجع التدريبية (Google Drive)" : "Course Materials & Resource Sharing"}
                           </h3>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -2656,22 +2677,21 @@ Content-Type: text/html; charset="utf-8"
 
                     <form onSubmit={handleShareResource} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                       <div>
-                        <label className="block text-xs font-bold mb-1.5" style={{ color: textColor }}>
+                        <label className="block text-xs font-bold mb-1.5 text-gray-700 dark:text-gray-200">
                           {language === "ar" ? "اختر الدورة التدريبية" : "Select Course"}
                         </label>
                         <select 
                           value={selectedCourseForResource} 
                           onChange={(e) => setSelectedCourseForResource(e.target.value)} 
-                          className="w-full border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#002D62] outline-none" 
+                          className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#002D62] outline-none font-medium" 
                           dir="ltr" 
-                          style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
                         >
                           {dynamicCourses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
                         </select>
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold mb-1.5" style={{ color: textColor }}>
+                        <label className="block text-xs font-bold mb-1.5 text-gray-700 dark:text-gray-200">
                           {language === "ar" ? "رابط مجلد Google Drive / Material" : "Google Drive / Material Link"}
                         </label>
                         <input 
@@ -2680,8 +2700,7 @@ Content-Type: text/html; charset="utf-8"
                           value={resourceLink} 
                           onChange={(e) => setResourceLink(e.target.value)} 
                           placeholder="https://drive.google.com/..." 
-                          className="w-full border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#002D62] outline-none" 
-                          style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                          className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#002D62] outline-none" 
                         />
                       </div>
 
