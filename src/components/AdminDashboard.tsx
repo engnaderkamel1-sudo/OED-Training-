@@ -5,7 +5,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown } from "lucide-react";
+import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
@@ -199,6 +199,31 @@ export const AdminDashboard: React.FC = () => {
     return localStorage.getItem('oed_saved_cc_emails_v2') || DEFAULT_CC_EMAILS;
   });
 
+  const generateEmailBodyTemplate = (cTitle: string, sIter: string, sNum: string, sDate: string, eDate: string, sTime: string, sLoc: string) => {
+    const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://oed-ttms.vercel.app';
+    const sOrdinal = sIter ? getSessionOrdinalText(sIter) : (sNum ? getSessionOrdinalText(sNum) : '1st Session');
+    return `Dear Gents,
+
+It is my pleasure to announce the beginning of the following course:
+
+•	Course Name : ${cTitle || '[Course Name]'}${sOrdinal ? `\n•	Session : ${sOrdinal}` : ''}
+•	Start Date: ${sDate ? formatFullEmailDate(sDate) : '[Start Date]'}  
+•	End Date: ${eDate ? formatFullEmailDate(eDate) : '[End Date]'}${sTime ? `\n•	Time: ${sTime}` : ''}${sLoc ? `\n•	Location: ${sLoc}` : ''}
+
+Registration & Enrollment:
+Please log in to register for this session through the OED-TTMS Application.
+
+* If you face any issues or need assistance with registration, please feel free to reach out.
+
+Best regards,
+
+
+`;
+  };
+
+  const [customEmailBody, setCustomEmailBody] = useState<string>("");
+  const [isEmailBodyManual, setIsEmailBodyManual] = useState(false);
+
   const [reviewModalSession, setReviewModalSession] = useState<{
     courseTitle: string;
     sessionNumber: string;
@@ -210,8 +235,17 @@ export const AdminDashboard: React.FC = () => {
     targetParticipants: string;
     toEmails: string;
     ccEmails: string;
+    emailBody: string;
     isEditing: boolean;
   } | null>(null);
+
+  useEffect(() => {
+    if (!isEmailBodyManual) {
+      const courseObj = courses.find((c) => c.id === selectedCourseId);
+      const cTitle = courseObj ? courseObj.title : "";
+      setCustomEmailBody(generateEmailBodyTemplate(cTitle, sessionIteration, sessionNumber, startDate, endDate, startTime, location));
+    }
+  }, [selectedCourseId, sessionIteration, sessionNumber, startDate, endDate, startTime, location, courses, isEmailBodyManual]);
 
   const [resourceLink, setResourceLink] = useState("");
   const [selectedCourseForResource, setSelectedCourseForResource] = useState(mockCourses[0]?.id || "");
@@ -773,13 +807,14 @@ export const AdminDashboard: React.FC = () => {
       targetParticipants,
       toEmails,
       ccEmails,
+      emailBody: customEmailBody || generateEmailBodyTemplate(courseTitle, sessionIteration, sessionNumber, startDate, endDate, startTime, location),
       isEditing: !!editingSessionId,
     });
   };
 
-  const handleConfirmAndPublishSession = () => {
+  const handleConfirmAndPublishSession = (mode: 'eml' | 'mailto' = 'eml') => {
     if (!reviewModalSession) return;
-    const { courseTitle, sessionNumber, sessionIteration: iter, startDate, endDate, startTime, location, targetParticipants, toEmails: toStr, ccEmails: ccStr, isEditing } = reviewModalSession;
+    const { courseTitle, sessionNumber, sessionIteration: iter, startDate, endDate, startTime, location, targetParticipants, toEmails: toStr, ccEmails: ccStr, emailBody: modalEmailBody, isEditing } = reviewModalSession;
 
     // 1. Save TO & CC emails automatically for future sessions
     if (toStr) localStorage.setItem('oed_saved_to_emails_v2', toStr.trim());
@@ -844,7 +879,7 @@ export const AdminDashboard: React.FC = () => {
         id: `ann_${Date.now()}`, sessionId: newSession.id, courseName: courseTitle, title: language === "ar" ? `دورة جديدة: ${courseTitle}` : `New Session: ${courseTitle}`, message: `${courseTitle} - ${startDate}`, date: new Date().toISOString(), author: "Admin", isGlobal: true, targetAudience: targetParticipants,
       });
 
-      // --- AUTOMATIC EMAIL TRIGGER VIA OUTLOOK WITH CLEAN TO / CC LISTS ---
+      // --- AUTOMATIC EMAIL TRIGGER VIA OUTLOOK WITH CLEAN TO / CC LISTS AND CUSTOM BODY ---
       try {
         const cleanTo = extractCleanEmails(toStr);
         const cleanCc = extractCleanEmails(ccStr);
@@ -854,22 +889,54 @@ export const AdminDashboard: React.FC = () => {
           ? `Course Announcement ( ${courseTitle} - ${sessionOrdinal} )`
           : `Course Announcement ( ${courseTitle} )`;
 
-        // Preserves trailing blank lines for Outlook's automatic signature
-        const emailBody = `Dear Gents,
+        const emailBody = modalEmailBody || customEmailBody;
 
-It is my pleasure to announce the beginning of the following course:
+        if (mode === 'eml') {
+          // Generate official .eml draft file with full HTML and clickable hyperlink
+          const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://oed-ttms.vercel.app';
+          
+          let formattedHtml = emailBody
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\n/g, '<br/>');
 
-•	Course Name : ${courseTitle}${sessionOrdinal ? `\n•	Session : ${sessionOrdinal}` : ''}
-•	Start Date: ${formatFullEmailDate(startDate)}  
-•	End Date: ${formatFullEmailDate(endDate)}${startTime ? `\n•	Time: ${startTime}` : ''}${location ? `\n•	Location: ${location}` : ''}
+          formattedHtml = formattedHtml.replace(
+            /OED-TTMS Application|OED-TTMS Portal|OED-TTMS/gi, 
+            `<a href="${appUrl}" style="color: #002D62; font-weight: bold; text-decoration: underline;">$&</a>`
+          );
 
+          const emlTo = cleanTo.replace(/;/g, ',');
+          const emlCc = cleanCc.replace(/;/g, ',');
 
+          const emlContent = `To: ${emlTo}
+Cc: ${emlCc}
+Subject: ${subject}
+X-Unsent: 1
+Content-Type: text/html; charset="utf-8"
 
-`;
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #1e293b; line-height: 1.6;">
+  ${formattedHtml}
+</body>
+</html>`;
 
-        const mailtoLink = `mailto:${encodeURIComponent(cleanTo)}?cc=${encodeURIComponent(cleanCc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
-        
-        window.location.href = mailtoLink;
+          const blob = new Blob([emlContent], { type: 'message/rfc822' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${courseTitle.replace(/[^a-zA-Z0-9_\u0600-\u06FF]/g, '_')}_Announcement.eml`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        } else {
+          // Standard mailto launcher
+          const mailtoLink = `mailto:${encodeURIComponent(cleanTo)}?cc=${encodeURIComponent(cleanCc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
+          window.location.href = mailtoLink;
+        }
       } catch (mailErr) {
         console.error("Error opening mail client:", mailErr);
       }
@@ -1967,10 +2034,6 @@ It is my pleasure to announce the beginning of the following course:
                     })}
                   </div>
                 </div>
-                <div className="mt-12 border-t pt-8" style={{ borderColor: borderColor }}>
-                  <h3 className="font-bold text-xl mb-6" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>{language === "ar" ? "مخططات متقدمة" : "Advanced Charts"}</h3>
-                  <AnalyticsDashboardTab />
-                </div>
               </div>
             </div>
           )}
@@ -2168,12 +2231,24 @@ It is my pleasure to announce the beginning of the following course:
                               <button
                                 type="button"
                                 onClick={() => {
+                                  setToEmails("");
+                                  localStorage.setItem('oed_saved_to_emails_v2', "");
+                                }}
+                                className="text-[10px] font-bold text-red-600 dark:text-red-400 hover:underline cursor-pointer bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded border border-red-200 dark:border-red-800 flex items-center gap-0.5"
+                              >
+                                <Trash2 size={11} />
+                                <span>{language === 'ar' ? 'مسح الإيميلات' : 'Clear'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
                                   setToEmails(DEFAULT_TO_EMAILS);
                                   localStorage.setItem('oed_saved_to_emails_v2', DEFAULT_TO_EMAILS);
                                 }}
-                                className="text-[10px] font-bold text-blue-600 dark:text-blue-300 hover:underline cursor-pointer bg-white/60 dark:bg-white/10 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700"
+                                className="text-[10px] font-bold text-blue-600 dark:text-blue-300 hover:underline cursor-pointer bg-white/60 dark:bg-white/10 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700 flex items-center gap-0.5"
                               >
-                                {language === 'ar' ? '🔄 استعادة الافتراضي' : '🔄 Reset to Default'}
+                                <RefreshCw size={11} />
+                                <span>{language === 'ar' ? 'استعادة الافتراضي' : 'Reset to Default'}</span>
                               </button>
                             </div>
                           </div>
@@ -2215,12 +2290,24 @@ It is my pleasure to announce the beginning of the following course:
                               <button
                                 type="button"
                                 onClick={() => {
+                                  setCcEmails("");
+                                  localStorage.setItem('oed_saved_cc_emails_v2', "");
+                                }}
+                                className="text-[10px] font-bold text-red-600 dark:text-red-400 hover:underline cursor-pointer bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded border border-red-200 dark:border-red-800 flex items-center gap-0.5"
+                              >
+                                <Trash2 size={11} />
+                                <span>{language === 'ar' ? 'مسح الإيميلات' : 'Clear'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
                                   setCcEmails(DEFAULT_CC_EMAILS);
                                   localStorage.setItem('oed_saved_cc_emails_v2', DEFAULT_CC_EMAILS);
                                 }}
-                                className="text-[10px] font-bold text-blue-600 dark:text-blue-300 hover:underline cursor-pointer bg-white/60 dark:bg-white/10 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700"
+                                className="text-[10px] font-bold text-blue-600 dark:text-blue-300 hover:underline cursor-pointer bg-white/60 dark:bg-white/10 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700 flex items-center gap-0.5"
                               >
-                                {language === 'ar' ? '🔄 استعادة الافتراضي' : '🔄 Reset to Default'}
+                                <RefreshCw size={11} />
+                                <span>{language === 'ar' ? 'استعادة الافتراضي' : 'Reset to Default'}</span>
                               </button>
                             </div>
                           </div>
@@ -2244,6 +2331,56 @@ It is my pleasure to announce the beginning of the following course:
                             {language === 'ar' 
                               ? '💾 يتم حفظ هذه القوائم تلقائياً للدورات القادمة، وستظهر شاشة مراجعة للتأكيد قبل فتح Outlook.' 
                               : '💾 Saved automatically for future sessions. A review dialog will appear before opening Outlook.'}
+                          </p>
+                        </div>
+
+                        {/* Email Body Content Preview & Editor */}
+                        <div 
+                          className="md:col-span-2 p-4 rounded-xl border space-y-2 transition-colors"
+                          style={{
+                            backgroundColor: isDark ? '#192C4B' : '#FFFDF5',
+                            borderColor: isDark ? 'rgba(255, 192, 0, 0.35)' : '#FDE68A',
+                          }}
+                        >
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <label className="text-sm font-bold flex items-center gap-1.5" style={{ color: isDark ? '#FDE68A' : '#92400E' }}>
+                              <FileText size={16} className="text-[#FFC000]" />
+                              <span>{language === "ar" ? "معاينة وتعديل نص ومحتوى الإيميل (Email Body)" : "Email Body Content Preview & Editor"}</span>
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsEmailBodyManual(false);
+                                const courseObj = courses.find((c) => c.id === selectedCourseId);
+                                const cTitle = courseObj ? courseObj.title : "";
+                                setCustomEmailBody(generateEmailBodyTemplate(cTitle, sessionIteration, sessionNumber, startDate, endDate, startTime, location));
+                              }}
+                              className="text-[10px] font-bold text-amber-800 dark:text-amber-300 hover:underline cursor-pointer bg-white/80 dark:bg-white/10 px-2.5 py-1 rounded border border-amber-300 dark:border-amber-700 flex items-center gap-1"
+                            >
+                              <RefreshCw size={11} />
+                              <span>{language === 'ar' ? '🔄 إعادة إنشاء القالب الأصلي' : '🔄 Reset to Template'}</span>
+                            </button>
+                          </div>
+                          <textarea
+                            rows={10}
+                            value={customEmailBody}
+                            onChange={(e) => {
+                              setIsEmailBodyManual(true);
+                              setCustomEmailBody(e.target.value);
+                            }}
+                            placeholder="Dear Gents, ..."
+                            className="w-full border rounded-lg px-3 py-2.5 text-xs focus:ring-2 focus:ring-[#FFC000] outline-none font-mono leading-relaxed"
+                            style={{ 
+                              backgroundColor: inputBg, 
+                              borderColor: borderColor, 
+                              color: textColor 
+                            }}
+                            dir="ltr"
+                          />
+                          <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                            {language === 'ar' 
+                              ? '✨ يحتوي القالب تلقائياً على رابط التطبيق للتسجيل ورسالة الدعم الفني. يمكنك التعديل والإضافة بحرية وسيفتح في Outlook كما كتبته تماماً!' 
+                              : '✨ Automatically includes app link for registration and support note. You can freely edit this content and it will open in Outlook.'}
                           </p>
                         </div>
                       </div>
@@ -2780,40 +2917,44 @@ It is my pleasure to announce the beginning of the following course:
                   {language === 'ar' ? 'معاينة نص الرسالة في Outlook:' : 'Outlook Email Message Preview:'}
                 </label>
                 <div 
-                  className="p-4 rounded-xl border font-sans text-xs whitespace-pre-wrap leading-relaxed shadow-2xs"
+                  className="p-4 rounded-xl border font-sans text-xs whitespace-pre-wrap leading-relaxed shadow-2xs font-mono"
                   style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
                   dir="ltr"
                 >
-{`Dear Gents,
-
-It is my pleasure to announce the beginning of the following course:
-
-•	Course Name : ${reviewModalSession.courseTitle}${reviewModalSession.sessionIteration ? `\n•	Session : ${getSessionOrdinalText(reviewModalSession.sessionIteration)}` : (reviewModalSession.sessionNumber ? `\n•	Session : ${getSessionOrdinalText(reviewModalSession.sessionNumber)}` : '')}
-•	Start Date: ${formatFullEmailDate(reviewModalSession.startDate)}  
-•	End Date: ${formatFullEmailDate(reviewModalSession.endDate)}${reviewModalSession.startTime ? `\n•	Time: ${reviewModalSession.startTime}` : ''}${reviewModalSession.location ? `\n•	Location: ${reviewModalSession.location}` : ''}`}
+                  {reviewModalSession.emailBody}
                 </div>
               </div>
             </div>
 
             {/* Modal Actions */}
             <div 
-              className="p-4 px-6 border-t flex flex-col-reverse sm:flex-row justify-end gap-3 shrink-0"
+              className="p-4 px-6 border-t flex flex-col-reverse sm:flex-row justify-end items-center gap-3 shrink-0 flex-wrap"
               style={{ backgroundColor: isDark ? '#132543' : '#F8FAFC', borderColor: borderColor }}
             >
               <button
                 type="button"
                 onClick={() => setReviewModalSession(null)}
-                className="px-5 py-2.5 border rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 font-bold transition-colors text-sm cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2.5 border rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 font-bold transition-colors text-xs cursor-pointer"
               >
                 {language === 'ar' ? 'الرجوع للتعديل' : 'Back to Edit'}
               </button>
+              
               <button
                 type="button"
-                onClick={handleConfirmAndPublishSession}
-                className="px-6 py-2.5 bg-[#FFC000] hover:bg-yellow-400 text-[#001D42] font-black rounded-xl shadow-md transition-all text-sm flex items-center justify-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
+                onClick={() => handleConfirmAndPublishSession('mailto')}
+                className="w-full sm:w-auto px-4 py-2.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 font-bold rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <Mail size={16} />
-                <span>{language === 'ar' ? 'تأكيد النشر وفتح الإيميل في Outlook' : 'Confirm & Open Outlook'}</span>
+                <Mail size={15} />
+                <span>{language === 'ar' ? 'فتح Outlook المباشر' : 'Direct Mailto'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleConfirmAndPublishSession('eml')}
+                className="w-full sm:w-auto px-6 py-2.5 bg-[#FFC000] hover:bg-yellow-400 text-[#001D42] font-black rounded-xl shadow-md transition-all text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <Sparkles size={16} />
+                <span>{language === 'ar' ? 'نشر وفتح مسودة Outlook المنسقة (.eml) 🚀' : 'Publish & Open Outlook Draft (.eml) 🚀'}</span>
               </button>
             </div>
           </div>
