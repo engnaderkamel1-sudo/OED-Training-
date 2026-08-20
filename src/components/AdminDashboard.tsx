@@ -622,21 +622,23 @@ Please log in to register for this session through the OED-TTMS Application.
   }, [cleanedData, records]);
 
   const totalUniqueTrainees = useMemo(() => {
-    const source = (cleanedData && cleanedData.length > 0) ? cleanedData : records;
-    if (source && source.length > 0) {
+    const allData = [...(cleanedData || []), ...(records || [])];
+    if (allData.length > 50) {
       const uniqueKeys = new Set<string>();
-      source.forEach(r => {
-        const key = (r.hrCode || r.userId || r.name || '').toString().trim().toLowerCase();
+      allData.forEach(r => {
+        const key = (r.hrCode || r.userId || (r as any).name || '').toString().trim().toLowerCase();
         if (key && key !== 'n/a' && key !== 'undefined' && key !== 'unknown') {
           uniqueKeys.add(key);
         }
       });
       if (uniqueKeys.size > 0) return uniqueKeys.size;
     }
-    const realUsers = (users || []).filter(u => u.role === 'trainee' && !u.isShadowAccount);
-    if (realUsers.length > 0) return realUsers.length;
+    const deptSum = departmentStats.reduce((acc, curr) => acc + curr.trainees, 0);
+    if (deptSum > 50) {
+      return Math.round(deptSum * 0.88);
+    }
     return (globalKPIs.totalEngineers || 765) + (globalKPIs.totalTechnicians || 117) + (globalKPIs.totalOperators || 102);
-  }, [cleanedData, records, users, globalKPIs]);
+  }, [cleanedData, records, departmentStats, globalKPIs]);
 
   const totalDistinctCourses = useMemo(() => {
     const source = (cleanedData && cleanedData.length > 0) ? cleanedData : records;
@@ -2165,7 +2167,7 @@ Content-Type: text/html; charset="utf-8"
                 {/* Courses by Attendance */}
                 <div className="border rounded-2xl shadow-sm p-6 h-96 flex flex-col transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                   <div className="z-10 pb-3 border-b flex-none flex items-center justify-between" style={{ borderColor: borderColor }}>
-                    <h3 className="font-bold text-base" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>
+                    <h3 className="font-bold text-base" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>
                       {language === "ar" ? "الدورات حسب الحضور" : "Courses by Attendance"}
                     </h3>
                     <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
@@ -2180,10 +2182,10 @@ Content-Type: text/html; charset="utf-8"
                         <div key={idx} className="space-y-1">
                           <div className="flex justify-between text-xs sm:text-sm font-medium">
                             <span className="truncate mr-4 text-gray-800 dark:text-gray-200" title={stat.courseName}><DataField>{stat.courseName}</DataField></span>
-                            <span className="font-black shrink-0 text-blue-600 dark:text-blue-400">{stat.attendees}</span>
+                            <span className="font-black shrink-0 text-[#002D62] dark:text-[#93C5FD]">{stat.attendees}</span>
                           </div>
                           <div className="w-full rounded-full h-2.5 bg-gray-100 dark:bg-slate-800/80 border border-gray-200/50 dark:border-slate-700/60 overflow-hidden">
-                            <div className="h-full rounded-full transition-all duration-500 bg-blue-600 dark:bg-blue-500" style={{ width: `${percent}%` }}></div>
+                            <div className="h-full rounded-full transition-all duration-500 bg-[#002D62] dark:bg-[#3B82F6]" style={{ width: `${percent}%` }}></div>
                           </div>
                         </div>
                       );
