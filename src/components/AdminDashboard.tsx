@@ -6,7 +6,7 @@ import { useAppContext } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment, collection, getDocs, writeBatch } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { EmailAuthProvider, reauthenticateWithCredential, signInWithEmailAndPassword } from 'firebase/auth';
-import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check } from "lucide-react";
+import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
