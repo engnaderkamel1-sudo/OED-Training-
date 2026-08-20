@@ -3,7 +3,7 @@ import { useAppContext } from '../context';
 import { UpcomingSession } from '../types';
 import { 
   Calendar, Clock, MapPin, Users, Ban, 
-  RotateCcw, Edit2, Bell, AlertTriangle, 
+  RotateCcw, Edit2, Bell, BellRing, AlertTriangle, 
   CheckCircle, FileText, QrCode, ScanLine, MessageSquare,
   XCircle, Megaphone, X, Phone, Mail, UserCheck
 } from 'lucide-react';
@@ -13,7 +13,7 @@ interface SessionCardProps {
   session: UpcomingSession;
   isAdminView?: boolean;
   onEdit?: (session: UpcomingSession) => void;
-  onSendReminder?: (sessionId: string, type: 'Standard' | 'Final') => void;
+  onSendReminder?: (sessionId: string, type: 'Standard' | 'Final' | 'Attendance') => void;
   onAnnounceRequest?: (session: UpcomingSession) => void;
   onManageAnnouncementsRequest?: (sessionId: string) => void;
   onFinalizeRequest?: (session: UpcomingSession) => void;
@@ -21,6 +21,7 @@ interface SessionCardProps {
   onShowQR?: (session: UpcomingSession) => void;
   onScanQR?: (session: UpcomingSession) => void;
   onManualAttendanceRequest?: (session: UpcomingSession) => void;
+  onAttendanceReminderRequest?: (session: UpcomingSession) => void;
   onToggleFeedback?: (session: UpcomingSession) => void;
   registeredCourseIds?: string[];
   onRegister?: (session: UpcomingSession) => void;
@@ -39,6 +40,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   onShowQR,
   onScanQR,
   onManualAttendanceRequest,
+  onAttendanceReminderRequest,
   onToggleFeedback,
   registeredCourseIds = [],
   onRegister,
@@ -368,6 +370,20 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   title={t('finalReminder')}
                 >
                   <AlertTriangle size={15} />
+                </button>
+                <button 
+                  type="button"
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    e.stopPropagation(); 
+                    if (onAttendanceReminderRequest) onAttendanceReminderRequest(session);
+                    else if (onSendReminder) onSendReminder(session.id, 'Attendance'); 
+                  }}
+                  className="cursor-pointer bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-[#001D42] text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105"
+                  title={language === 'ar' ? 'إرسال تنبيه مخصص لتسجيل الحضور' : 'Send Attendance Reminder'}
+                >
+                  <BellRing size={14} className="text-[#001D42] animate-bounce" />
+                  <span>{language === 'ar' ? 'تنبيه الحضور 🔔' : 'Attendance Alert 🔔'}</span>
                 </button>
                 <button 
                   type="button"

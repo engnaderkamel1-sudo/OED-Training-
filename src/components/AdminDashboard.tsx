@@ -23,8 +23,10 @@ import { TrainingRegisterPreviewModal } from "./TrainingRegisterPreviewModal";
 import { EditSessionModal } from "./EditSessionModal";
 import { AnalyticsDashboardTab } from "./AnalyticsDashboardTab";
 import { ManualAttendanceModal } from "./ManualAttendanceModal";
+import { AttendanceReminderModal } from "./AttendanceReminderModal";
 import { importFromOneDrive } from "../utils/dataSync";
 import { exportCloudBackup } from "../utils/exportUtils";
+import { isSessionActiveNow, sendNativePushNotification } from "../utils/sessionTimeUtils";
 
 declare const XLSX: any;
 
@@ -518,6 +520,7 @@ Please log in to register for this session through the OED-TTMS Application.
   const [announcingSession, setAnnouncingSession] = useState<UpcomingSession | null>(null);
   const [qrSession, setQrSession] = useState<UpcomingSession | null>(null);
   const [manualAttendanceSession, setManualAttendanceSession] = useState<UpcomingSession | null>(null);
+  const [attendanceReminderSession, setAttendanceReminderSession] = useState<UpcomingSession | null>(null);
   const [previewRegisterSession, setPreviewRegisterSession] = useState<UpcomingSession | null>(null);
   const [sessionToEditDirectly, setSessionToEditDirectly] = useState<UpcomingSession | null>(null);
   const [syncProgress, setSyncProgress] = useState(0);
@@ -532,6 +535,45 @@ Please log in to register for this session through the OED-TTMS Application.
       console.error("Error updating manual attendance:", err);
       setUpcomingSessions(prev => prev.map(s => s.id === sessionId ? { ...s, registeredUsers: selectedUserCodes } : s));
     }
+  };
+
+  const handleSendAttendanceReminderCustom = async (sessionId: string, targetHrCodes: string[], customMessage: string) => {
+    const session = upcomingSessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    const now = new Date();
+    const timestamp = `${formatDateToStandard(now.toISOString().split("T")[0])} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const newLogItem: ReminderLogItem = { 
+      id: `rem_att_${Date.now()}`, 
+      type: 'Attendance', 
+      timestamp 
+    };
+
+    const updatedSession: UpcomingSession = { 
+      ...session, 
+      reminderLog: [...(session.reminderLog || []), newLogItem] 
+    };
+
+    try {
+      await updateDoc(doc(db, 'sessions', sessionId), {
+        reminderLog: updatedSession.reminderLog
+      });
+    } catch (e) {}
+
+    setUpcomingSessions(prev => prev.map(s => s.id === sessionId ? updatedSession : s));
+    playNotificationSound();
+
+    sendNativePushNotification(
+      language === 'ar' ? '🟢 تذكير الحضور (خلال ساعة)' : '🟢 Attendance Reminder (1 Hour)',
+      { body: customMessage }
+    );
+
+    setReminderToast(
+      language === 'ar' 
+        ? `تم إرسال تنبيه الحضور (${targetHrCodes.length} متدرب) بنجاح! 🔔` 
+        : `Attendance alert sent to (${targetHrCodes.length} trainees)! 🔔`
+    );
+    setTimeout(() => setReminderToast(null), 4500);
   };
   
   const pendingUsers = users.filter((u) => u.status === "pending");
@@ -1266,18 +1308,34 @@ Content-Type: text/html; charset="utf-8"
     setToEmails(localStorage.getItem('oed_saved_to_emails_v2') || DEFAULT_TO_EMAILS);
   };
 
-  const handleSendReminder = (sessionId: string, reminderType: "Standard" | "Final" = "Standard") => {
+  const handleSendReminder = (sessionId: string, reminderType: "Standard" | "Final" | "Attendance" = "Standard") => {
     const session = upcomingSessions.find((s) => s.id === sessionId);
     if (!session) return;
     const now = new Date();
     const timestamp = `${formatDateToStandard(now.toISOString().split("T")[0])} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
     const newLogItem: ReminderLogItem = { id: `rem_${Date.now()}`, type: reminderType, timestamp };
     const updatedSession: UpcomingSession = { ...session, reminderLog: [...(session.reminderLog || []), newLogItem] };
-    const validTokens = users.filter(u => u.fcmToken).map(u => u.fcmToken as string);
-    if (validTokens.length > 0) {
-      sendPushNotification(language === "ar" ? "تنبيه دورة" : "Course Alert", `Reminder for ${session.courseTitle}`, validTokens);
+    
+    playNotificationSound();
+
+    if (reminderType === 'Attendance') {
+      sendNativePushNotification(
+        language === 'ar' ? '🟢 تذكير تسجيل الحضور اليوم' : '🟢 Daily Attendance Reminder',
+        {
+          body: language === 'ar'
+            ? `تنبيه: يرجى مسح رمز الـ QR لتسجيل حضورك في دورة [${session.courseTitle}] قبل الساعة 4:00 مساءً.`
+            : `Please scan the QR code to record your attendance in [${session.courseTitle}] before 4:00 PM.`
+        }
+      );
+      setReminderToast(language === 'ar' ? `تم إرسال تنبيه تسجيل الحضور لدورة [${session.courseTitle}] بنجاح! 🔔` : `Attendance reminder sent for [${session.courseTitle}]! 🔔`);
+    } else {
+      const validTokens = users.filter(u => u.fcmToken).map(u => u.fcmToken as string);
+      if (validTokens.length > 0) {
+        sendPushNotification(language === "ar" ? "تنبيه دورة" : "Course Alert", `Reminder for ${session.courseTitle}`, validTokens);
+      }
+      setReminderToast(`Alert sent for [${session.courseTitle}]!`);
     }
-    setReminderToast(`Alert sent for [${session.courseTitle}]!`);
+
     updateUpcomingSession(updatedSession);
     setActiveReminderDropdown(null);
     setTimeout(() => setReminderToast(null), 4500);
@@ -1508,19 +1566,30 @@ Content-Type: text/html; charset="utf-8"
   const selectedCourseDetails = selectedCourseFilter ? dynamicCourses.find((c) => c.id === selectedCourseFilter) : null;
   const courseSessions: string[] = selectedCourseDetails ? Array.from(new Set(filteredRecords.map((r) => r.attendanceDate))) : [];
 
-  // Admin Automated Attendance Reminder: Sessions active today before 4:00 PM (16:00)
+  // Admin Automated Attendance Reminder: ONLY sessions actively running right now (Course Date + Start Time until 4:00 PM)
   const adminActiveTodaySessions = useMemo(() => {
-    const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    const currentHour = now.getHours();
-
-    return (upcomingSessions || []).filter(s => {
-      if (s.isDeleted || s.status === 'Cancelled' || s.status === 'Completed') return false;
-      const sStart = s.startDate || todayStr;
-      const sEnd = s.endDate || s.startDate || todayStr;
-      return (todayStr >= sStart && todayStr <= sEnd) && currentHour < 16;
-    });
+    return (upcomingSessions || []).filter(s => isSessionActiveNow(s));
   }, [upcomingSessions]);
+
+  // Trigger Native Push Notification on Admin Device
+  useEffect(() => {
+    if (adminActiveTodaySessions.length > 0) {
+      const activeSession = adminActiveTodaySessions[0];
+      const notifiedKey = `admin_notif_${activeSession.id}_${new Date().toISOString().split('T')[0]}`;
+      if (!sessionStorage.getItem(notifiedKey)) {
+        sessionStorage.setItem(notifiedKey, 'true');
+        sendNativePushNotification(
+          language === 'ar' ? '🔔 تذكير بدء الدورة والتحضير' : '🔔 Session Attendance Reminder',
+          {
+            body: language === 'ar'
+              ? `بدأت الآن دورة [${activeSession.courseTitle}]. يرجى فتح رمز الـ QR وعرضه على الشاشة للمتدربين.`
+              : `Session [${activeSession.courseTitle}] is live! Open QR code to project for trainees.`,
+            tag: notifiedKey
+          }
+        );
+      }
+    }
+  }, [adminActiveTodaySessions, language]);
 
   return (
     <div className="min-h-screen pb-12 transition-colors duration-300" style={{ backgroundColor: bgColor }}>
@@ -2821,6 +2890,7 @@ Content-Type: text/html; charset="utf-8"
                               onPrintRegisterRequest={(session) => setPreviewRegisterSession(session)} 
                               onShowQR={setQrSession} 
                               onManualAttendanceRequest={setManualAttendanceSession}
+                              onAttendanceReminderRequest={setAttendanceReminderSession}
                               onToggleFeedback={handleToggleFeedback} 
                             />
                           </li>
@@ -3598,6 +3668,15 @@ Content-Type: text/html; charset="utf-8"
           allUsers={users}
           onClose={() => setManualAttendanceSession(null)}
           onSaveAttendance={handleSaveManualAttendance}
+          language={language}
+        />
+      )}
+      {attendanceReminderSession && (
+        <AttendanceReminderModal
+          session={attendanceReminderSession}
+          allUsers={users}
+          onClose={() => setAttendanceReminderSession(null)}
+          onSendCustomReminder={handleSendAttendanceReminderCustom}
           language={language}
         />
       )}

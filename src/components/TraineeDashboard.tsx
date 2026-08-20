@@ -3,6 +3,7 @@ import { useAppContext } from '../context';
 import { mockCourses } from '../data';
 import { ExternalLink, Check, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag, Megaphone, Radio, Volume2, Sparkles, QrCode } from 'lucide-react';
 import { QRScannerModal } from './QRScannerModal';
+import { isSessionActiveNow, sendNativePushNotification } from '../utils/sessionTimeUtils';
 
 // Web Audio API Sound Chime
 export const playNotificationSound = () => {
@@ -135,19 +136,33 @@ export const TraineeDashboard: React.FC = () => {
   
   const activeUpcomingSessions = upcomingSessions.filter(s => !s.isDeleted && s.status !== 'Cancelled');
 
-  // Automated Attendance Window: Sessions active today for this trainee before 4:00 PM (16:00)
+  // Automated Attendance Window: ONLY sessions actively running right now (Course Date + Start Time until 4:00 PM)
   const activeTodaySessions = useMemo(() => {
-    const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    const currentHour = now.getHours();
-
     return activeUpcomingSessions.filter(session => {
       const isRegistered = session.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(session.id);
-      const sStart = session.startDate || todayStr;
-      const sEnd = session.endDate || session.startDate || todayStr;
-      return isRegistered && (todayStr >= sStart && todayStr <= sEnd) && currentHour < 16;
+      return isRegistered && isSessionActiveNow(session);
     });
   }, [activeUpcomingSessions, user?.hrCode, registeredCourseIds]);
+
+  // Trigger Native Push Notification on Trainee Mobile
+  useEffect(() => {
+    if (activeTodaySessions.length > 0) {
+      const activeSession = activeTodaySessions[0];
+      const notifiedKey = `trainee_notif_${activeSession.id}_${new Date().toISOString().split('T')[0]}`;
+      if (!sessionStorage.getItem(notifiedKey)) {
+        sessionStorage.setItem(notifiedKey, 'true');
+        sendNativePushNotification(
+          language === 'ar' ? '🟢 تذكير الحضور المباشر' : '🟢 Live Attendance Reminder',
+          {
+            body: language === 'ar'
+              ? `بدأت الآن جلسة تسجيل الحضور لدورة [${activeSession.courseTitle}]. يرجى مسح رمز الـ QR قبل الساعة 4:00 مساءً.`
+              : `Attendance is now OPEN for [${activeSession.courseTitle}]. Please scan the QR code before 4:00 PM.`,
+            tag: notifiedKey
+          }
+        );
+      }
+    }
+  }, [activeTodaySessions, language]);
 
   // حساب الأيام المتبقية للحساب المؤقت
   const remainingDays = useMemo(() => {
@@ -174,35 +189,26 @@ export const TraineeDashboard: React.FC = () => {
       return true;
     };
 
-    // Automated Attendance Window Notification (From Session Start until 4:00 PM)
-    const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    const currentHour = now.getHours();
-
     activeUpcomingSessions.forEach(session => {
       const isRegistered = session.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(session.id);
-      if (isRegistered) {
-        const sStart = session.startDate || todayStr;
-        const sEnd = session.endDate || session.startDate || todayStr;
-
-        // If today is within course dates and before 4:00 PM (16:00)
-        if (todayStr >= sStart && todayStr <= sEnd && currentHour < 16) {
-          list.push({
-            id: `attendance_live_${session.id}_${todayStr}`,
-            sessionId: session.id,
-            courseTitle: session.courseTitle,
-            startDate: session.startDate,
-            endDate: session.endDate,
-            startTime: session.startTime || '09:00',
-            location: session.location,
-            type: 'Announcement',
-            title: language === 'ar' ? '🟢 جلسة تسجيل الحضور نشطة الآن' : '🟢 Attendance Check-in is Active Now',
-            message: language === 'ar' 
-              ? `بدأت جلسة تسجيل الحضور لدورة [${session.courseTitle}]. يرجى مسح رمز الـ QR داخل القاعة قبل الساعة 4:00 مساءً.`
-              : `Attendance check-in is now OPEN for [${session.courseTitle}]. Please scan the QR code before 4:00 PM.`,
-            timestamp: new Date().toISOString()
-          });
-        }
+      
+      // Automated Attendance Window Notification (Active only when course is running right now)
+      if (isRegistered && isSessionActiveNow(session)) {
+        list.push({
+          id: `attendance_live_${session.id}`,
+          sessionId: session.id,
+          courseTitle: session.courseTitle,
+          startDate: session.startDate,
+          endDate: session.endDate,
+          startTime: session.startTime || '09:00',
+          location: session.location,
+          type: 'Announcement',
+          title: language === 'ar' ? '🟢 جلسة تسجيل الحضور نشطة الآن' : '🟢 Attendance Check-in is Active Now',
+          message: language === 'ar' 
+            ? `بدأت جلسة تسجيل الحضور لدورة [${session.courseTitle}]. يرجى مسح رمز الـ QR داخل القاعة قبل الساعة 4:00 مساءً.`
+            : `Attendance check-in is now OPEN for [${session.courseTitle}]. Please scan the QR code before 4:00 PM.`,
+          timestamp: new Date().toISOString()
+        });
       }
 
       if (isRegistered || isTargetMatch(session.targetParticipants)) {
@@ -1185,13 +1191,23 @@ export const TraineeDashboard: React.FC = () => {
               setShowScannerModal(false);
               const userCode = user?.hrCode || 'trainee';
               const targetId = activeSessionForScanner?.id || scannedSessionId;
-              registerTrainee(targetId, userCode);
-              
-              if (!registeredCourseIds.includes(targetId)) {
-                setRegisteredCourseIds(prev => [...prev, targetId]);
+              const targetSession = upcomingSessions.find(s => s.id === targetId) || activeSessionForScanner;
+              const cTitle = targetSession?.courseTitle || 'Technical Course';
+
+              const isAlreadyRegistered = targetSession?.registeredUsers?.includes(userCode) || registeredCourseIds.includes(targetId);
+
+              if (isAlreadyRegistered) {
+                const alreadyMsg = language === 'ar'
+                  ? `ℹ️ لقد تم تسجيل حضورك بالفعل مسبقاً في دورة [${cTitle}]! ✓`
+                  : `ℹ️ You have already recorded your attendance in [${cTitle}]! ✓`;
+                setActionToast({ message: alreadyMsg, type: 'info' });
+                setTimeout(() => setActionToast(null), 5000);
+                return;
               }
 
-              const cTitle = activeSessionForScanner?.courseTitle || 'Technical Course';
+              registerTrainee(targetId, userCode);
+              setRegisteredCourseIds(prev => [...prev, targetId]);
+
               const toastMsg = language === 'ar'
                 ? `🎉 تم تسجيل حضورك بنجاح في دورة [${cTitle}]!`
                 : `🎉 Your attendance has been successfully recorded for [${cTitle}]!`;

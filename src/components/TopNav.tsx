@@ -265,6 +265,34 @@ export const TopNav: React.FC = () => {
                         <span>{language === 'ar' ? 'عن المنظومة' : 'About System'}</span>
                       </button>
 
+                      {/* Enable Push Notifications Button */}
+                      <button
+                        onClick={async () => {
+                          if (typeof window !== 'undefined' && 'Notification' in window) {
+                            const perm = await Notification.requestPermission();
+                            if (perm === 'granted') {
+                              alert(language === 'ar' ? '✅ تم تفعيل إشعارات الهاتف بنجاح! ستصلك التنبيهات مع بدء الدورات.' : '✅ Mobile Push Notifications Enabled Successfully!');
+                            } else {
+                              alert(language === 'ar' ? '⚠️ يرجى السماح بالإشعارات من إعدادات المتصفح.' : '⚠️ Please allow notifications in browser settings.');
+                            }
+                          }
+                          setDropdownOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer"
+                        style={{
+                          color: isDark ? '#FFFFFF' : '#1E293B',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : '#F0F7FF';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <Bell size={18} className="text-emerald-500 shrink-0" />
+                        <span>{language === 'ar' ? 'تفعيل إشعارات الهاتف 🔔' : 'Enable Push Notifications 🔔'}</span>
+                      </button>
+
                       {/* Logout Button */}
                       <button
                         onClick={handleLogout}
