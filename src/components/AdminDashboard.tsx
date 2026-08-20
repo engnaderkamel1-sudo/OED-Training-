@@ -20,6 +20,7 @@ import { AnnouncementManagerModal } from "./AnnouncementManagerModal";
 import { QRCodeModal } from "./QRCodeModal";
 import { MonthlyReportModal } from "./MonthlyReportModal";
 import { TrainingRegisterPreviewModal } from "./TrainingRegisterPreviewModal";
+import { EditSessionModal } from "./EditSessionModal";
 import { AnalyticsDashboardTab } from "./AnalyticsDashboardTab";
 import { importFromOneDrive } from "../utils/dataSync";
 import { exportCloudBackup } from "../utils/exportUtils";
@@ -514,6 +515,7 @@ Please log in to register for this session through the OED-TTMS Application.
   const [announcingSession, setAnnouncingSession] = useState<UpcomingSession | null>(null);
   const [qrSession, setQrSession] = useState<UpcomingSession | null>(null);
   const [previewRegisterSession, setPreviewRegisterSession] = useState<UpcomingSession | null>(null);
+  const [sessionToEditDirectly, setSessionToEditDirectly] = useState<UpcomingSession | null>(null);
   const [syncProgress, setSyncProgress] = useState(0);
   const [syncSuccess, setSyncSuccess] = useState(false);
   
@@ -1129,20 +1131,7 @@ Content-Type: text/html; charset="utf-8"
   };
 
   const handleStartEdit = (session: UpcomingSession) => {
-    setEditingSessionId(session.id); 
-    setSelectedCourseId(session.courseId || session.courseTitle); 
-    setStartDate(session.startDate || ""); 
-    setEndDate(session.endDate || ""); 
-    setSessionNumber(session.sessionNumber || ""); 
-    setSessionIteration(session.sessionIteration || "1");
-    setLocation(session.location || DEFAULT_LOCATION); 
-    setStartTime(session.startTime || DEFAULT_START_TIME); 
-    setTargetParticipants(session.targetParticipants || ""); 
-    setFeedbackLink(session.feedbackLink || ""); 
-    if (session.additionalNotificationEmails && session.additionalNotificationEmails.length > 0) {
-      setCcEmails(session.additionalNotificationEmails.join('; '));
-    }
-    window.scrollTo({ top: 300, behavior: "smooth" });
+    setSessionToEditDirectly(session);
   };
 
   const handleCancelEdit = () => { 
@@ -3309,6 +3298,7 @@ Content-Type: text/html; charset="utf-8"
       )}
       {showMonthlyReport && <MonthlyReportModal onClose={() => setShowMonthlyReport(false)} records={records} upcomingSessions={upcomingSessions} cleanedData={cleanedData || []} users={users || []} />}
       {previewRegisterSession && <TrainingRegisterPreviewModal session={previewRegisterSession} onClose={() => setPreviewRegisterSession(null)} users={users} records={records} cleanedData={cleanedData || []} />}
+      {sessionToEditDirectly && <EditSessionModal session={sessionToEditDirectly} onClose={() => setSessionToEditDirectly(null)} />}
       {selectedUserToEdit && <EditUserModal user={selectedUserToEdit} onClose={() => setSelectedUserToEdit(null)} />}
 
       {/* ========================================================= */}

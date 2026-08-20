@@ -330,15 +330,6 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   <span>{language === 'ar' ? '📝 تعديل الدرجات والتقييم' : 'Edit Grades & Attendance'}</span>
                 </button>
 
-                <button 
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onEdit) onEdit(session); }}
-                  className="cursor-pointer bg-white dark:bg-slate-800 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 border border-gray-300 dark:border-slate-600 text-xs px-3 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-xs"
-                  title={language === 'ar' ? 'تعديل بيانات الدورة' : 'Edit Session Details'}
-                >
-                  <Edit2 size={13} className="text-gray-600 dark:text-gray-300" />
-                  <span>{t('edit')}</span>
-                </button>
 
                 <button 
                   type="button"

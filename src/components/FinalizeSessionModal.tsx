@@ -234,13 +234,13 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
 
               <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-xl">
                 <table className="w-full text-left border-collapse text-sm whitespace-nowrap">
-                  <thead className="bg-gray-100 dark:bg-[#0A1324] border-b border-gray-200 dark:border-gray-700">
-                    <tr className="text-gray-700 dark:text-gray-200">
-                      <th className="p-3 font-semibold">{language === 'ar' ? 'الاسم' : 'Name'}</th>
-                      <th className="p-3 font-semibold">{language === 'ar' ? 'القسم' : 'Department'}</th>
-                      <th className="p-3 font-semibold w-32 text-center">{language === 'ar' ? 'أيام الحضور' : 'Attended Days'}</th>
-                      <th className="p-3 font-semibold w-32 text-center">{language === 'ar' ? 'النتيجة %' : 'Score %'}</th>
-                      <th className="p-3 font-semibold w-24 text-center">{language === 'ar' ? 'الحالة' : 'Status'}</th>
+                  <thead className="bg-[#002D62] dark:bg-[#0A1324] text-white border-b border-blue-900 dark:border-gray-700">
+                    <tr>
+                      <th className="p-3.5 font-bold text-white text-xs sm:text-sm">{language === 'ar' ? 'الاسم' : 'Name'}</th>
+                      <th className="p-3.5 font-bold text-white text-xs sm:text-sm">{language === 'ar' ? 'القسم' : 'Department'}</th>
+                      <th className="p-3.5 font-bold text-white text-xs sm:text-sm w-32 text-center">{language === 'ar' ? 'أيام الحضور' : 'Attended Days'}</th>
+                      <th className="p-3.5 font-bold text-white text-xs sm:text-sm w-32 text-center">{language === 'ar' ? 'النتيجة %' : 'Score %'}</th>
+                      <th className="p-3.5 font-bold text-white text-xs sm:text-sm w-24 text-center">{language === 'ar' ? 'الحالة' : 'Status'}</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -1,4 +1,4 @@
-﻿importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 
 const firebaseConfig = {
@@ -31,7 +31,7 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification.title || 'OED-TTMS';
   const notificationOptions = {
     body: payload.notification.body || '',
-    icon: '/app-icon.jpg?v=5'
+    icon: '/app-icon-v8.png'
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);

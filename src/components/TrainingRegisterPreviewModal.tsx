@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Printer, Save, FileText, Plus, Trash2, Check, Download, AlertCircle } from 'lucide-react';
 import { UpcomingSession, User, TrainingRecord, CleanedRecord } from '../types';
 import { useAppContext } from '../context';
@@ -373,37 +373,45 @@ export const TrainingRegisterPreviewModal: React.FC<TrainingRegisterPreviewModal
     `;
   };
 
-  // Print PDF using html2pdf
+  // Print PDF using native vector engine and fallback
   const handlePrintPDF = async () => {
     setIsPrinting(true);
     const html = generatePrintableHTML();
-    const fileName = `Training_Register_${courseTitle.replace(/[^a-zA-Z0-9_\u0600-\u06FF]/g, '_')}.pdf`;
-
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = '210mm';
-    container.style.background = '#ffffff';
-    container.innerHTML = html;
-    document.body.appendChild(container);
 
     try {
-      const opt = {
-        margin: 8,
-        filename: fileName,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true, 
-          logging: false,
-          windowWidth: 1024 
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-      await html2pdf().set(opt).from(container).save();
+      // 1. Create a hidden iframe for 100% reliable, zero-blank native PDF print
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow?.document || iframe.contentDocument;
+      if (doc) {
+        doc.open();
+        doc.write(html);
+        doc.close();
+
+        setTimeout(() => {
+          try {
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+          } catch (e) {
+            console.error(e);
+          } finally {
+            setTimeout(() => {
+              if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+              }
+            }, 1000);
+          }
+        }, 250);
+      }
     } catch (err) {
-      console.error('PDF export error:', err);
+      console.error('Print error:', err);
       // Fallback: Open print window
       const printWindow = window.open('', '_blank');
       if (printWindow) {
@@ -413,9 +421,6 @@ export const TrainingRegisterPreviewModal: React.FC<TrainingRegisterPreviewModal
         printWindow.print();
       }
     } finally {
-      if (document.body.contains(container)) {
-        document.body.removeChild(container);
-      }
       setIsPrinting(false);
     }
   };
