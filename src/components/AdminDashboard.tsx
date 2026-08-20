@@ -466,6 +466,8 @@ Please log in to register for this session through the OED-TTMS Application.
 
   // -- STATE FOR MANUAL RECORD ADDITION --
   const [showManualAddModal, setShowManualAddModal] = useState(false);
+  const [customDeptMode, setCustomDeptMode] = useState(false);
+  const [customCourseMode, setCustomCourseMode] = useState(false);
   const [manualRecord, setManualRecord] = useState({ hrCode: "", traineeName: "", department: "", courseId: "", score: "", duration: "1", attendedDays: "1", date: "" });
 
   const handleFinalizeSession = async (newRecords: TrainingRecord[]) => {
@@ -619,20 +621,38 @@ Please log in to register for this session through the OED-TTMS Application.
   }, [courses, upcomingSessions, cleanedData, records]);
 
   const dynamicDepartments = useMemo(() => {
-    const depts = new Set<string>();
-    
-    DEFAULT_DEPARTMENT_STATS.forEach(d => depts.add(d.department));
-    depts.add("Technical Office");
-    depts.add("Procurement");
-    depts.add("Civil Works");
+    const depts = new Set<string>([
+      "Heavy Machinery",
+      "Workshop",
+      "Asphalt Plant",
+      "Fleet Management",
+      "Crushing Operations",
+      "Maintenance",
+      "Technical Office",
+      "Procurement",
+      "Civil Works",
+      "ORC - Katamia - Workshop",
+      "OC - Katamia - Workshop",
+      "ORC - Workshop",
+      "OC - Workshop",
+      "ORC - Projects",
+      "OC - Projects",
+      "OCF - Projects",
+      "TBM - Civil Team",
+      "OCF - Abu Rawash - Workshop",
+      "EL Sokhna - Workshop",
+      "El Alamein - Workshop",
+      "Concrete Plant",
+      "ORC - Construction Manager"
+    ]);
 
     (users || []).forEach(u => {
-      if (u.department) depts.add(u.department.trim());
+      if (u.department && u.department.trim()) depts.add(u.department.trim());
     });
 
     const allRecords = [...(cleanedData || []), ...(records || [])];
     allRecords.forEach(r => {
-      if (r.department) depts.add(r.department.trim());
+      if (r.department && r.department.trim()) depts.add(r.department.trim());
     });
 
     return Array.from(depts).filter(Boolean).sort();
@@ -865,62 +885,76 @@ Please log in to register for this session through the OED-TTMS Application.
   // -- MANUAL ADD RECORD SUBMIT LOGIC --
   const handleManualRecordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!manualRecord.hrCode || !manualRecord.courseId || !manualRecord.date) {
-      alert("Missing required fields"); return;
+    const cleanHrCode = (manualRecord.hrCode || '').toString().trim();
+    const cleanCourse = (manualRecord.courseId || '').toString().trim();
+    const cleanDate = (manualRecord.date || '').toString().trim();
+
+    if (!cleanHrCode || !cleanCourse || !cleanDate) {
+      alert(language === 'ar' ? 'يرجى ملء جميع الحقول الإلزامية (الكود، الدورة، التاريخ)' : "Missing required fields (HR Code, Course, Date)");
+      return;
     }
     
     try {
-      let targetUserId = manualRecord.hrCode;
+      let targetUserId = cleanHrCode;
       
-      // Check if user exists (Real or Shadow)
-      const existingUser = users.find(u => u.hrCode.toLowerCase() === manualRecord.hrCode.toLowerCase());
+      // Check if user exists safely (preventing undefined toLowerCase crash)
+      const existingUser = users.find(u => (u.hrCode || u.id || '').toString().toLowerCase() === cleanHrCode.toLowerCase());
       
       if (!existingUser) {
         // Create Shadow Account
         const newShadowId = `derived_${Date.now()}`;
         const newShadowUser: User = {
           id: newShadowId,
-          hrCode: manualRecord.hrCode,
-          name: manualRecord.traineeName || `Trainee ${manualRecord.hrCode}`,
+          hrCode: cleanHrCode,
+          name: manualRecord.traineeName || `Trainee ${cleanHrCode}`,
           department: manualRecord.department || "General",
           role: "trainee",
           status: "approved",
           phone: "00000000000",
-          isShadowAccount: true, // Flag it as shadow
+          isShadowAccount: true,
           createdAt: new Date().toISOString()
         };
         await setDoc(doc(db, "users", newShadowId), newShadowUser);
-        setUsers([...users, newShadowUser]);
-        targetUserId = newShadowId; // Use the derived ID for the record
+        setUsers(prev => [...prev, newShadowUser]);
+        targetUserId = newShadowId;
       } else {
-        targetUserId = existingUser.id; // Use existing ID
+        targetUserId = existingUser.id;
       }
 
-      const courseName = dynamicCourses.find(c => c.id === manualRecord.courseId)?.title || manualRecord.courseId;
+      const courseName = dynamicCourses.find(c => c.id === cleanCourse || c.title === cleanCourse)?.title || cleanCourse;
+      let finalScore = (manualRecord.score || '').trim();
+      if (finalScore && !finalScore.includes('%') && !isNaN(Number(finalScore))) {
+        finalScore = `${finalScore}%`;
+      }
 
       const newRecord: TrainingRecord = {
         id: `rec_manual_${Date.now()}`,
         userId: targetUserId,
-        hrCode: manualRecord.hrCode,
-        courseId: manualRecord.courseId,
+        hrCode: cleanHrCode,
+        traineeName: manualRecord.traineeName || existingUser?.name || `Trainee ${cleanHrCode}`,
+        department: manualRecord.department || existingUser?.department || "General",
+        courseId: cleanCourse,
         courseName: courseName,
-        score: manualRecord.score || "N/A",
-        attendanceDate: manualRecord.date,
-        totalDays: manualRecord.duration,
-        daysAttended: manualRecord.attendedDays,
+        score: finalScore || "N/A",
+        attendanceDate: cleanDate,
+        totalDays: manualRecord.duration || "1",
+        daysAttended: manualRecord.attendedDays || "1",
         raw: {
-          "Attended Days": manualRecord.attendedDays,
-          "Score": manualRecord.score
+          "HR Code": cleanHrCode,
+          "Trainee Name": manualRecord.traineeName || existingUser?.name || `Trainee ${cleanHrCode}`,
+          "Department": manualRecord.department || existingUser?.department || "General",
+          "Attended Days": manualRecord.attendedDays || "1",
+          "Score": finalScore || "N/A"
         }
-      } as any; // Cast as any because traineeName/department might be required in your specific logic
+      } as any;
 
-      // Add to cleanedData directly for simplicity, or just setRecords
+      // Add to cleanedData in Firestore
       await setDoc(doc(db, "cleanedData", newRecord.id), newRecord);
-      setRecords([...records, newRecord]);
+      setRecords(prev => [newRecord, ...prev]);
 
       // Automatically update global KPIs summary in Firestore
       try {
-        const u = users.find(u => u.hrCode === manualRecord.hrCode || u.id === targetUserId);
+        const u = users.find(u => (u.hrCode || u.id || '').toString().toLowerCase() === cleanHrCode.toLowerCase());
         const roleStr = `${u?.jobRole || ''} ${u?.department || ''} ${manualRecord.department || ''}`.toLowerCase();
         let eng = 0, tech = 0, op = 0;
         if (roleStr.includes('eng') || roleStr.includes('مهندس')) eng = 1;
@@ -935,8 +969,10 @@ Please log in to register for this session through the OED-TTMS Application.
         });
       } catch (kpiErr) {}
       
-      alert(language === 'ar' ? 'تم إضافة السجل وتحديث الإجماليات بنجاح!' : 'Record added and totals updated successfully!');
+      alert(language === 'ar' ? 'تم إضافة السجل بنجاح!' : 'Record added successfully!');
       setShowManualAddModal(false);
+      setCustomDeptMode(false);
+      setCustomCourseMode(false);
       setManualRecord({ hrCode: "", traineeName: "", department: "", courseId: "", score: "", duration: "1", attendedDays: "1", date: "" });
 
     } catch (err: any) {
@@ -3157,34 +3193,89 @@ Content-Type: text/html; charset="utf-8"
                   <input type="text" placeholder={language === "ar" ? "اسم المتدرب..." : "Trainee name..."} value={manualRecord.traineeName} onChange={(e) => setManualRecord({...manualRecord, traineeName: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "القسم (اختر أو اكتب)" : "Department"}</label>
-                  <input
-                    list="departments-datalist"
-                    type="text"
-                    placeholder={language === "ar" ? "اختر أو اكتب القسم..." : "Select or type department..."}
-                    value={manualRecord.department}
-                    onChange={(e) => setManualRecord({...manualRecord, department: e.target.value})}
-                    className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                  />
-                  <datalist id="departments-datalist">
-                    {dynamicDepartments.map(d => <option key={d} value={d} />)}
-                  </datalist>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{language === "ar" ? "القسم" : "Department"}</label>
+                    <button
+                      type="button"
+                      onClick={() => setCustomDeptMode(!customDeptMode)}
+                      className="text-[11px] font-bold text-blue-600 dark:text-[#FFC000] hover:underline cursor-pointer"
+                    >
+                      {customDeptMode ? (language === 'ar' ? 'اختر من القائمة' : 'Select from list') : (language === 'ar' ? '✏️ كتابة قسم آخر' : '✏️ Type custom')}
+                    </button>
+                  </div>
+                  {customDeptMode ? (
+                    <input
+                      type="text"
+                      placeholder={language === "ar" ? "اكتب اسم القسم الجديد..." : "Type custom department..."}
+                      value={manualRecord.department}
+                      onChange={(e) => setManualRecord({...manualRecord, department: e.target.value})}
+                      className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white font-semibold"
+                      autoFocus
+                    />
+                  ) : (
+                    <select
+                      value={manualRecord.department}
+                      onChange={(e) => {
+                        if (e.target.value === '__custom__') {
+                          setCustomDeptMode(true);
+                          setManualRecord({...manualRecord, department: ''});
+                        } else {
+                          setManualRecord({...manualRecord, department: e.target.value});
+                        }
+                      }}
+                      className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                    >
+                      <option value="">{language === "ar" ? "اختر القسم..." : "Select Department..."}</option>
+                      {dynamicDepartments.map(d => <option key={d} value={d}>{d}</option>)}
+                      <option value="__custom__" className="font-bold text-blue-600 dark:text-[#FFC000]">
+                        {language === "ar" ? "➕ كتابة قسم آخر مخصص..." : "➕ + Custom Department..."}
+                      </option>
+                    </select>
+                  )}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "الدورة التدريبية * (اختر أو اكتب)" : "Course Name *"}</label>
-                <input
-                  required
-                  list="courses-datalist"
-                  type="text"
-                  placeholder={language === "ar" ? "اختر أو اكتب اسم الدورة التدريبية..." : "Select or type course title..."}
-                  value={manualRecord.courseId}
-                  onChange={(e) => setManualRecord({...manualRecord, courseId: e.target.value})}
-                  className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                />
-                <datalist id="courses-datalist">
-                  {dynamicCourses.map(c => <option key={c.id} value={c.title} />)}
-                </datalist>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{language === "ar" ? "الدورة التدريبية *" : "Course Name *"}</label>
+                  <button
+                    type="button"
+                    onClick={() => setCustomCourseMode(!customCourseMode)}
+                    className="text-[11px] font-bold text-blue-600 dark:text-[#FFC000] hover:underline cursor-pointer"
+                  >
+                    {customCourseMode ? (language === 'ar' ? 'اختر من القائمة' : 'Select from list') : (language === 'ar' ? '✏️ كتابة دورة أخرى' : '✏️ Type custom')}
+                  </button>
+                </div>
+                {customCourseMode ? (
+                  <input
+                    required
+                    type="text"
+                    placeholder={language === "ar" ? "اكتب اسم الدورة التدريبية..." : "Type custom course title..."}
+                    value={manualRecord.courseId}
+                    onChange={(e) => setManualRecord({...manualRecord, courseId: e.target.value})}
+                    className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white font-semibold"
+                    autoFocus
+                  />
+                ) : (
+                  <select
+                    required
+                    value={manualRecord.courseId}
+                    onChange={(e) => {
+                      if (e.target.value === '__custom__') {
+                        setCustomCourseMode(true);
+                        setManualRecord({...manualRecord, courseId: ''});
+                      } else {
+                        setManualRecord({...manualRecord, courseId: e.target.value});
+                      }
+                    }}
+                    className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                  >
+                    <option value="">{language === "ar" ? "اختر الدورة التدريبية..." : "Select Course..."}</option>
+                    {dynamicCourses.map((c) => <option key={c.id} value={c.title}>{c.title}</option>)}
+                    <option value="__custom__" className="font-bold text-blue-600 dark:text-[#FFC000]">
+                      {language === "ar" ? "➕ كتابة دورة تدريبية أخرى..." : "➕ + Custom Course..."}
+                    </option>
+                  </select>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -3193,7 +3284,20 @@ Content-Type: text/html; charset="utf-8"
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "الدرجة" : "Score"}</label>
-                  <input type="text" placeholder="e.g. 85%" value={manualRecord.score} onChange={(e) => setManualRecord({...manualRecord, score: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      placeholder="85" 
+                      value={manualRecord.score.replace('%', '')} 
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^0-9.]/g, '');
+                        setManualRecord({...manualRecord, score: raw ? `${raw}%` : ''});
+                      }} 
+                      className="w-full border rounded px-3 py-2 pr-9 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white font-bold" 
+                      dir="ltr" 
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-black text-sm pointer-events-none">%</span>
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
