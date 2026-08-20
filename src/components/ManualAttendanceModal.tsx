@@ -21,20 +21,36 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
   
-  // All company trainees
+  // All company trainees deduplicated
   const allTraineesList = useMemo(() => {
-    return allUsers.filter(u => u.role === 'trainee');
+    const map = new Map<string, User>();
+    (allUsers || []).filter(u => u.role === 'trainee').forEach(u => {
+      const codeKey = (u.hrCode || u.id || '').trim();
+      if (codeKey && !map.has(codeKey.toLowerCase())) {
+        map.set(codeKey.toLowerCase(), u);
+      }
+    });
+    return Array.from(map.values());
   }, [allUsers]);
 
-  // Trainees who belong to this course specifically (Registered or matching target role)
+  // Trainees who belong to this course specifically (strictly deduplicated)
   const courseTraineesList = useMemo(() => {
     const regCodes = (session.registeredUsers || []).map(c => c.trim().toLowerCase());
     
     // 1. First priority: Users explicitly registered in this session
-    const registeredList = allTraineesList.filter(u => 
-      regCodes.includes((u.hrCode || '').toLowerCase()) || 
-      regCodes.includes((u.id || '').toLowerCase())
-    );
+    const map = new Map<string, User>();
+    allTraineesList.forEach(u => {
+      const uHr = (u.hrCode || '').toLowerCase();
+      const uId = (u.id || '').toLowerCase();
+      if (regCodes.includes(uHr) || regCodes.includes(uId)) {
+        const uniqueKey = (u.hrCode || u.id || '').trim();
+        if (uniqueKey && !map.has(uniqueKey.toLowerCase())) {
+          map.set(uniqueKey.toLowerCase(), u);
+        }
+      }
+    });
+
+    const registeredList = Array.from(map.values());
 
     // 2. If session registered list is empty, fallback to target role match (e.g. Engineers / Technicians)
     if (registeredList.length === 0) {
@@ -62,7 +78,7 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
 
   // Selected trainees for attendance (defaults to all currently registered in this session)
   const [selectedHrCodes, setSelectedHrCodes] = useState<string[]>(() => {
-    return (session.registeredUsers || []).map(code => code.trim());
+    return Array.from(new Set((session.registeredUsers || []).map(code => code.trim()))).filter(Boolean);
   });
 
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -210,13 +226,13 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
           {/* Search & Filter Bar */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="relative">
-              <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-3 text-gray-400" size={16} />
+              <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-3.5 text-slate-400" size={16} />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder={language === 'ar' ? 'بحث بالاسم أو الكود الوظيفي...' : 'Search by name or HR code...'}
-                className="w-full pl-9 pr-4 rtl:pr-9 rtl:pl-4 py-2.5 bg-gray-50 dark:bg-[#132543] border border-gray-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                className="w-full pl-9 pr-4 rtl:pr-9 rtl:pl-4 py-2.5 bg-slate-50 dark:bg-[#132543] border-2 border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-[#002D62] font-bold"
               />
             </div>
 
@@ -224,7 +240,7 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
               <select
                 value={departmentFilter}
                 onChange={(e) => setDepartmentFilter(e.target.value)}
-                className="w-full py-2.5 px-3 bg-gray-50 dark:bg-[#132543] border border-gray-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 font-medium cursor-pointer"
+                className="w-full py-2.5 px-3 bg-slate-50 dark:bg-[#132543] border-2 border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-[#002D62] font-bold cursor-pointer"
               >
                 <option value="">{language === 'ar' ? '🏢 جميع الأقسام والورش' : '🏢 All Departments'}</option>
                 {departments.map(d => (
@@ -249,15 +265,15 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
               </span>
             </button>
 
-            <span className="text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-3 py-1 rounded-full border border-emerald-300 dark:border-emerald-700">
+            <span className="text-xs font-black bg-emerald-100 dark:bg-emerald-950 text-emerald-950 dark:text-emerald-300 px-3.5 py-1 rounded-full border border-emerald-400 dark:border-emerald-700 shadow-2xs">
               {language === 'ar' ? `تم تحديد: ${selectedHrCodes.length} متدرب للحضور` : `Marked Present: ${selectedHrCodes.length}`}
             </span>
           </div>
 
           {/* Trainees List */}
-          <div className="border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-slate-800 bg-white dark:bg-[#11203D]">
+          <div className="border-2 border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-[#11203D] shadow-inner">
             {filteredTrainees.length === 0 ? (
-              <div className="p-8 text-center text-gray-400 text-xs sm:text-sm italic">
+              <div className="p-8 text-center text-slate-500 text-xs sm:text-sm italic font-bold">
                 {language === 'ar' ? 'لا توجد أسماء مطابقة' : 'No matching names'}
               </div>
             ) : (
@@ -269,20 +285,20 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
                     onClick={() => toggleSelectUser(u.hrCode)}
                     className={`p-3 sm:p-3.5 flex items-center justify-between gap-3 cursor-pointer transition-colors ${
                       isSelected 
-                        ? 'bg-emerald-50/70 dark:bg-emerald-950/30 text-gray-900 dark:text-white font-bold' 
-                        : 'hover:bg-gray-50 dark:hover:bg-slate-800/60 text-gray-700 dark:text-gray-200'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-slate-900 dark:text-white font-black' 
+                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-gray-200'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="text-emerald-600 dark:text-emerald-400 shrink-0">
-                        {isSelected ? <CheckSquare size={19} className="text-emerald-600 dark:text-emerald-400" /> : <Square size={19} className="text-gray-300 dark:text-gray-600" />}
+                        {isSelected ? <CheckSquare size={19} className="text-emerald-600 dark:text-emerald-400" /> : <Square size={19} className="text-slate-300 dark:text-gray-600" />}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs sm:text-sm font-black truncate text-gray-900 dark:text-white">
+                        <div className="text-xs sm:text-sm font-black truncate text-slate-900 dark:text-white">
                           {u.name}
                         </div>
-                        <div className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-0.5">
-                          <span>{language === 'ar' ? 'الكود:' : 'HR:'} <strong className="font-mono text-gray-700 dark:text-gray-300">{u.hrCode}</strong></span>
+                        <div className="text-[11px] text-slate-600 dark:text-gray-400 flex items-center gap-2 mt-0.5 font-bold">
+                          <span>{language === 'ar' ? 'الكود:' : 'HR:'} <strong className="font-mono text-slate-900 dark:text-gray-200">{u.hrCode}</strong></span>
                           <span>•</span>
                           <span className="truncate">{u.department || 'OED Workshop'}</span>
                         </div>
@@ -291,8 +307,8 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
 
                     <span className={`text-[11px] font-black px-2.5 py-1 rounded-lg border shrink-0 ${
                       isSelected
-                        ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700'
-                        : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700'
+                        ? 'bg-emerald-600 text-white dark:bg-emerald-900/80 dark:text-emerald-200 border-emerald-700 dark:border-emerald-700 shadow-2xs'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-gray-400 border-slate-300 dark:border-slate-700'
                     }`}>
                       {isSelected ? (language === 'ar' ? 'حاضر ✓' : 'Present ✓') : (language === 'ar' ? 'غير مسجل' : 'Not Recorded')}
                     </span>
@@ -304,11 +320,11 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 px-6 border-t border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-[#0B1528] flex items-center justify-between gap-3 shrink-0">
+        <div className="p-4 px-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0B1528] flex items-center justify-between gap-3 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-200 text-xs font-bold rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors cursor-pointer"
+            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-gray-200 text-xs font-bold rounded-xl transition-colors cursor-pointer border border-slate-300 dark:border-slate-600"
           >
             {language === 'ar' ? 'إلغاء' : 'Cancel'}
           </button>

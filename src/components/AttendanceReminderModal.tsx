@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { UpcomingSession, User } from '../types';
-import { X, Search, CheckSquare, Square, BellRing, Sparkles, Send, Users, UserCheck } from 'lucide-react';
+import { X, Search, CheckSquare, Square, BellRing, Sparkles, Send } from 'lucide-react';
 
 interface AttendanceReminderModalProps {
   session: UpcomingSession;
@@ -26,24 +26,40 @@ export const AttendanceReminderModal: React.FC<AttendanceReminderModalProps> = (
 
   const [reminderMessage, setReminderMessage] = useState(defaultMessage);
 
-  // All company trainees
+  // All company trainees deduplicated by HR Code
   const allTrainees = useMemo(() => {
-    return allUsers.filter(u => u.role === 'trainee');
+    const map = new Map<string, User>();
+    (allUsers || []).filter(u => u.role === 'trainee').forEach(u => {
+      const codeKey = (u.hrCode || u.id || '').trim();
+      if (codeKey && !map.has(codeKey.toLowerCase())) {
+        map.set(codeKey.toLowerCase(), u);
+      }
+    });
+    return Array.from(map.values());
   }, [allUsers]);
 
-  // Registered trainees for this course (or nominated)
+  // Registered trainees for this course (strictly deduplicated)
   const registeredTrainees = useMemo(() => {
     const regCodes = (session.registeredUsers || []).map(c => c.trim().toLowerCase());
     
-    const matched = allTrainees.filter(u => 
-      regCodes.includes((u.hrCode || '').toLowerCase()) || 
-      regCodes.includes((u.id || '').toLowerCase())
-    );
-
-    if (matched.length === 0) {
+    if (regCodes.length === 0) {
       return allTrainees;
     }
-    return matched;
+
+    const map = new Map<string, User>();
+    allTrainees.forEach(u => {
+      const uHr = (u.hrCode || '').toLowerCase();
+      const uId = (u.id || '').toLowerCase();
+
+      if (regCodes.includes(uHr) || regCodes.includes(uId)) {
+        const uniqueKey = (u.hrCode || u.id || '').trim();
+        if (uniqueKey && !map.has(uniqueKey.toLowerCase())) {
+          map.set(uniqueKey.toLowerCase(), u);
+        }
+      }
+    });
+
+    return Array.from(map.values());
   }, [allTrainees, session]);
 
   // By default, select all registered trainees
@@ -94,7 +110,7 @@ export const AttendanceReminderModal: React.FC<AttendanceReminderModalProps> = (
 
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-[99999] flex items-center justify-center p-3 sm:p-4 animate-fade-in">
-      <div className="bg-white dark:bg-[#0E1A32] w-full max-w-xl rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden border border-gray-200 dark:border-slate-700 animate-scale-in">
+      <div className="bg-white dark:bg-[#0E1A32] w-full max-w-xl rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden border border-slate-300 dark:border-slate-700 animate-scale-in">
         
         {/* Modal Header */}
         <div className="bg-gradient-to-r from-[#002D62] via-blue-900 to-[#104080] text-white p-4 sm:p-5 flex justify-between items-center shrink-0 border-b border-blue-800">
@@ -124,7 +140,7 @@ export const AttendanceReminderModal: React.FC<AttendanceReminderModalProps> = (
           
           {/* Message Text Input */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-black text-gray-800 dark:text-gray-200">
+            <label className="block text-xs font-black text-slate-900 dark:text-gray-200">
               {language === 'ar' ? 'نص رسالة التنبيه (خلال ساعة):' : 'Reminder Message (Within 1 Hour):'}
             </label>
             <textarea
@@ -132,20 +148,20 @@ export const AttendanceReminderModal: React.FC<AttendanceReminderModalProps> = (
               required
               value={reminderMessage}
               onChange={(e) => setReminderMessage(e.target.value)}
-              className="w-full p-3 bg-gray-50 dark:bg-[#132543] border border-gray-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-400 font-medium leading-relaxed"
+              className="w-full p-3.5 bg-slate-50 dark:bg-[#132543] border-2 border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-amber-400 font-bold leading-relaxed"
               dir="auto"
             />
           </div>
 
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-3 text-gray-400" size={16} />
+            <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-3.5 text-slate-400" size={16} />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={language === 'ar' ? 'بحث في المتدربين المسجلين...' : 'Search registered trainees...'}
-              className="w-full pl-9 pr-4 rtl:pr-9 rtl:pl-4 py-2.5 bg-gray-50 dark:bg-[#132543] border border-gray-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+              className="w-full pl-9 pr-4 rtl:pr-9 rtl:pl-4 py-2.5 bg-slate-50 dark:bg-[#132543] border-2 border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-[#002D62] font-bold"
             />
           </div>
 
@@ -164,15 +180,15 @@ export const AttendanceReminderModal: React.FC<AttendanceReminderModalProps> = (
               </span>
             </button>
 
-            <span className="text-xs font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 px-3 py-1 rounded-full border border-amber-300 dark:border-amber-700">
+            <span className="text-xs font-black bg-amber-100 dark:bg-amber-950 text-amber-950 dark:text-amber-300 px-3.5 py-1 rounded-full border border-amber-400 dark:border-amber-700 shadow-2xs">
               {language === 'ar' ? `المستهدفين بالتنبيه: ${selectedHrCodes.length}` : `Targeted: ${selectedHrCodes.length}`}
             </span>
           </div>
 
           {/* Trainees Checkbox List */}
-          <div className="border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-gray-100 dark:divide-slate-800 bg-white dark:bg-[#11203D]">
+          <div className="border-2 border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-[#11203D] shadow-inner">
             {filteredList.length === 0 ? (
-              <div className="p-6 text-center text-gray-400 text-xs italic">
+              <div className="p-6 text-center text-slate-500 text-xs italic font-bold">
                 {language === 'ar' ? 'لا توجد أسماء مسجلة مطابقة' : 'No registered trainees found'}
               </div>
             ) : (
@@ -182,34 +198,34 @@ export const AttendanceReminderModal: React.FC<AttendanceReminderModalProps> = (
                   <div
                     key={u.id || u.hrCode}
                     onClick={() => toggleUser(u.hrCode)}
-                    className={`p-3 flex items-center justify-between gap-3 cursor-pointer transition-colors ${
+                    className={`p-3.5 flex items-center justify-between gap-3 cursor-pointer transition-colors ${
                       isSelected 
-                        ? 'bg-amber-50/70 dark:bg-amber-950/30 font-bold text-gray-900 dark:text-white' 
-                        : 'hover:bg-gray-50 dark:hover:bg-slate-800/60 text-gray-700 dark:text-gray-200'
+                        ? 'bg-amber-50 dark:bg-amber-950/40 text-slate-900 dark:text-white font-black' 
+                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-gray-200'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="text-amber-500 shrink-0">
-                        {isSelected ? <CheckSquare size={18} className="text-amber-600 dark:text-amber-400" /> : <Square size={18} className="text-gray-300 dark:text-gray-600" />}
+                      <div className="text-amber-600 dark:text-amber-400 shrink-0">
+                        {isSelected ? <CheckSquare size={19} className="text-amber-600 dark:text-amber-400" /> : <Square size={19} className="text-slate-300 dark:text-gray-600" />}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs sm:text-sm font-black truncate">
+                        <div className="text-xs sm:text-sm font-black truncate text-slate-900 dark:text-white">
                           {u.name}
                         </div>
-                        <div className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-0.5">
-                          <span>{language === 'ar' ? 'الكود:' : 'HR:'} <strong className="font-mono text-gray-700 dark:text-gray-300">{u.hrCode}</strong></span>
+                        <div className="text-[11px] text-slate-600 dark:text-gray-400 flex items-center gap-2 mt-0.5 font-bold">
+                          <span>{language === 'ar' ? 'الكود:' : 'HR:'} <strong className="font-mono text-slate-900 dark:text-gray-200">{u.hrCode}</strong></span>
                           <span>•</span>
                           <span className="truncate">{u.department || 'OED'}</span>
                         </div>
                       </div>
                     </div>
 
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-md border shrink-0 ${
+                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-md border shrink-0 ${
                       isSelected 
-                        ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700' 
-                        : 'bg-gray-100 dark:bg-slate-800 text-gray-500 border-gray-200 dark:border-slate-700'
+                        ? 'bg-amber-500 text-white dark:bg-amber-900/80 dark:text-amber-200 border-amber-600 dark:border-amber-700 shadow-2xs' 
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-gray-400 border-slate-300 dark:border-slate-700'
                     }`}>
-                      {isSelected ? (language === 'ar' ? 'سيتم إرسال التنبيه' : 'Selected') : (language === 'ar' ? 'مستثنى' : 'Excluded')}
+                      {isSelected ? (language === 'ar' ? 'محدد للتنبيه ✓' : 'Selected ✓') : (language === 'ar' ? 'مستثنى' : 'Excluded')}
                     </span>
                   </div>
                 );
@@ -218,11 +234,11 @@ export const AttendanceReminderModal: React.FC<AttendanceReminderModalProps> = (
           </div>
 
           {/* Modal Footer */}
-          <div className="pt-3 border-t border-gray-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0">
+          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-200 text-xs font-bold rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors cursor-pointer"
+              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-gray-200 text-xs font-bold rounded-xl transition-colors cursor-pointer border border-slate-300 dark:border-slate-600"
             >
               {language === 'ar' ? 'إلغاء' : 'Cancel'}
             </button>
