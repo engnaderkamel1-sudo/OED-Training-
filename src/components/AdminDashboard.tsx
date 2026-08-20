@@ -660,7 +660,7 @@ Please log in to register for this session through the OED-TTMS Application.
 
   const courseStats = useMemo(() => {
     const source = (cleanedData && cleanedData.length > 0) ? cleanedData : records;
-    if (source.length > 0) {
+    if (source.length > 50) {
       const counts: Record<string, number> = {};
       source.forEach(r => {
         const cName = (r.courseName || r.courseTitle || '').toString().trim();
@@ -678,7 +678,7 @@ Please log in to register for this session through the OED-TTMS Application.
 
   const departmentStats = useMemo(() => {
     const source = (cleanedData && cleanedData.length > 0) ? cleanedData : records;
-    if (source.length > 0) {
+    if (source.length > 50) {
       const deptCounts: Record<string, Set<string>> = {};
       source.forEach(r => {
         const dept = (r.department || '').toString().trim();
@@ -715,22 +715,21 @@ Please log in to register for this session through the OED-TTMS Application.
     }
 
     // Read pre-aggregated unique trainees from globalKPIs (1 read from Firebase)
-    return (globalKPIs as any).uniqueTrainees || 352;
+    return (globalKPIs as any).uniqueTrainees || 354;
   }, [cleanedData, records, globalKPIs]);
 
   const totalDistinctCourses = useMemo(() => {
     const allRecords = [...(cleanedData || []), ...(records || [])];
-    const uniqueCourses = new Set<string>();
-    allRecords.forEach(r => {
-      const cName = (r.courseName || (r as any).courseTitle || '').toString().trim().toLowerCase();
-      if (cName) uniqueCourses.add(cName);
-    });
-    (dynamicCourses || []).forEach(c => {
-      if (c.title) uniqueCourses.add(c.title.trim().toLowerCase());
-    });
-    if (uniqueCourses.size > 0) return uniqueCourses.size;
-    return globalKPIs.totalCourses || 21;
-  }, [cleanedData, records, dynamicCourses, globalKPIs]);
+    if (allRecords.length > 50) {
+      const uniqueCourses = new Set<string>();
+      allRecords.forEach(r => {
+        const cName = (r.courseName || (r as any).courseTitle || '').toString().trim().toLowerCase();
+        if (cName) uniqueCourses.add(cName);
+      });
+      if (uniqueCourses.size > 0) return uniqueCourses.size;
+    }
+    return globalKPIs.totalCourses || 22;
+  }, [cleanedData, records, globalKPIs]);
 
   const tnaCounts: Record<string, number> = {};
   mockRequests.forEach((req) => { tnaCounts[req.requestedTopic] = (tnaCounts[req.requestedTopic] || 0) + 1; });
@@ -957,16 +956,28 @@ Please log in to register for this session through the OED-TTMS Application.
         const u = users.find(u => (u.hrCode || u.id || '').toString().toLowerCase() === cleanHrCode.toLowerCase());
         const roleStr = `${u?.jobRole || ''} ${u?.department || ''} ${manualRecord.department || ''}`.toLowerCase();
         let eng = 0, tech = 0, op = 0;
-        if (roleStr.includes('eng') || roleStr.includes('مهندس')) eng = 1;
-        else if (roleStr.includes('tech') || roleStr.includes('فني')) tech = 1;
+        if (roleStr.includes('tech') || roleStr.includes('فني')) tech = 1;
         else if (roleStr.includes('op') || roleStr.includes('مشغل')) op = 1;
+        else eng = 1;
 
-        await updateDoc(doc(db, "systemSettings", "globalKPIs"), {
+        const isNewTrainee = !existingUser;
+        const isNewCourse = !dynamicCourses.some(c => c.title?.toLowerCase() === courseName.toLowerCase() || c.id?.toLowerCase() === cleanCourse.toLowerCase());
+
+        const kpiUpdates: any = {
           totalParticipants: increment(1),
           totalEngineers: increment(eng),
           totalTechnicians: increment(tech),
           totalOperators: increment(op)
-        });
+        };
+
+        if (isNewTrainee) {
+          kpiUpdates.uniqueTrainees = increment(1);
+        }
+        if (isNewCourse) {
+          kpiUpdates.totalCourses = increment(1);
+        }
+
+        await updateDoc(doc(db, "systemSettings", "globalKPIs"), kpiUpdates);
       } catch (kpiErr) {}
       
       alert(language === 'ar' ? 'تم إضافة السجل بنجاح!' : 'Record added successfully!');
