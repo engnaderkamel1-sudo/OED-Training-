@@ -641,8 +641,8 @@ Please log in to register for this session through the OED-TTMS Application.
       if (uniqueKeys.size > 0) return uniqueKeys.size;
     }
 
-    // Baseline official total participants (984)
-    return globalKPIs.totalParticipants || 984;
+    // Read pre-aggregated unique trainees from globalKPIs (1 read from Firebase)
+    return (globalKPIs as any).uniqueTrainees || 352;
   }, [cleanedData, records, globalKPIs]);
 
   const totalDistinctCourses = useMemo(() => {
@@ -2149,7 +2149,7 @@ Content-Type: text/html; charset="utf-8"
                 </div>
                 <div className="border rounded-lg p-6 shadow-sm flex flex-col items-center justify-center transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                   <span className="text-sm font-semibold uppercase tracking-wider mb-2" style={{ color: textMuted }}>{language === "ar" ? "إجمالي السجلات" : "Total Records"}</span>
-                  <span className="text-3xl font-bold" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>{records.length > 50 ? records.length : (globalKPIs.totalParticipants || 984)}</span>
+                  <span className="text-3xl font-bold" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>{records.length > 50 ? records.length : (globalKPIs.totalParticipants || 999)}</span>
                 </div>
                 <div className="border rounded-lg p-6 shadow-sm flex flex-col items-center justify-center transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                   <span className="text-sm font-semibold uppercase tracking-wider mb-2" style={{ color: textMuted }}>{language === "ar" ? "الدورات المختلفة" : "Distinct Courses"}</span>
