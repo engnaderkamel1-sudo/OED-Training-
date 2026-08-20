@@ -22,6 +22,7 @@ import { MonthlyReportModal } from "./MonthlyReportModal";
 import { TrainingRegisterPreviewModal } from "./TrainingRegisterPreviewModal";
 import { EditSessionModal } from "./EditSessionModal";
 import { AnalyticsDashboardTab } from "./AnalyticsDashboardTab";
+import { ManualAttendanceModal } from "./ManualAttendanceModal";
 import { importFromOneDrive } from "../utils/dataSync";
 import { exportCloudBackup } from "../utils/exportUtils";
 
@@ -516,10 +517,22 @@ Please log in to register for this session through the OED-TTMS Application.
   const [showAnnouncementManager, setShowAnnouncementManager] = useState<string | null>(null);
   const [announcingSession, setAnnouncingSession] = useState<UpcomingSession | null>(null);
   const [qrSession, setQrSession] = useState<UpcomingSession | null>(null);
+  const [manualAttendanceSession, setManualAttendanceSession] = useState<UpcomingSession | null>(null);
   const [previewRegisterSession, setPreviewRegisterSession] = useState<UpcomingSession | null>(null);
   const [sessionToEditDirectly, setSessionToEditDirectly] = useState<UpcomingSession | null>(null);
   const [syncProgress, setSyncProgress] = useState(0);
   const [syncSuccess, setSyncSuccess] = useState(false);
+
+  const handleSaveManualAttendance = async (sessionId: string, selectedUserCodes: string[]) => {
+    try {
+      const sessionRef = doc(db, 'sessions', sessionId);
+      await updateDoc(sessionRef, { registeredUsers: selectedUserCodes });
+      setUpcomingSessions(prev => prev.map(s => s.id === sessionId ? { ...s, registeredUsers: selectedUserCodes } : s));
+    } catch (err: any) {
+      console.error("Error updating manual attendance:", err);
+      setUpcomingSessions(prev => prev.map(s => s.id === sessionId ? { ...s, registeredUsers: selectedUserCodes } : s));
+    }
+  };
   
   const pendingUsers = users.filter((u) => u.status === "pending");
   const allTrainees = users.filter((u) => u.role === "trainee");
@@ -1495,10 +1508,55 @@ Content-Type: text/html; charset="utf-8"
   const selectedCourseDetails = selectedCourseFilter ? dynamicCourses.find((c) => c.id === selectedCourseFilter) : null;
   const courseSessions: string[] = selectedCourseDetails ? Array.from(new Set(filteredRecords.map((r) => r.attendanceDate))) : [];
 
+  // Admin Automated Attendance Reminder: Sessions active today before 4:00 PM (16:00)
+  const adminActiveTodaySessions = useMemo(() => {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const currentHour = now.getHours();
+
+    return (upcomingSessions || []).filter(s => {
+      if (s.isDeleted || s.status === 'Cancelled' || s.status === 'Completed') return false;
+      const sStart = s.startDate || todayStr;
+      const sEnd = s.endDate || s.startDate || todayStr;
+      return (todayStr >= sStart && todayStr <= sEnd) && currentHour < 16;
+    });
+  }, [upcomingSessions]);
+
   return (
     <div className="min-h-screen pb-12 transition-colors duration-300" style={{ backgroundColor: bgColor }}>
       <div className="max-w-7xl mx-auto px-4 py-8 print:p-0">
         
+        {/* --- ADMIN LIVE ATTENDANCE BANNER (Until 4:00 PM) --- */}
+        {adminActiveTodaySessions.length > 0 && (
+          <div className="mb-6 p-4.5 rounded-2xl bg-gradient-to-r from-[#002D62] via-blue-900 to-[#104080] text-white shadow-xl border-2 border-[#FFC000] flex items-center justify-between flex-wrap gap-4 animate-fade-in print:hidden">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-2xl bg-[#FFC000] text-[#002D62] font-black shrink-0 shadow-md">
+                <QrCode size={26} />
+              </div>
+              <div>
+                <span className="text-[11px] font-black uppercase tracking-widest bg-yellow-400/20 text-[#FFC000] px-2.5 py-0.5 rounded-full border border-[#FFC000]/40">
+                  🔔 {language === 'ar' ? 'تذكير المحاضر / الأدمن (جلسة اليوم)' : 'Instructor & Admin Attendance Reminder'}
+                </span>
+                <h3 className="text-base sm:text-lg font-black mt-1 text-white">
+                  {adminActiveTodaySessions[0].courseTitle}
+                </h3>
+                <p className="text-xs text-blue-200 font-semibold mt-0.5">
+                  {language === 'ar' ? 'حان موعد بدء الدورة! افتح رمز الـ QR لعرضه على شاشة القاعة للمتدربين (متاح حتى 4:00 م)' : 'Session is live! Open QR code to project on hall screen for trainees (Active until 4:00 PM)'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setQrSession(adminActiveTodaySessions[0])}
+              className="px-5 py-3 bg-[#FFC000] hover:bg-yellow-400 text-[#002D62] font-black text-sm rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
+            >
+              <QrCode size={18} />
+              <span>{language === 'ar' ? '📱 عرض كود الـ QR على الشاشة' : '📱 Project QR Code on Screen'}</span>
+            </button>
+          </div>
+        )}
+
         {/* زرار الطباعة */}
         <div className="flex w-full justify-end border-b-2 border-[#FFC000] pb-4 mb-6 print:hidden">
           {user?.role === 'admin' || user?.role === 'supervisor' ? (
@@ -2752,7 +2810,19 @@ Content-Type: text/html; charset="utf-8"
                       <ul className="space-y-4">
                         {currentDisplayedSessions.map((session, index) => (
                           <li key={session.id || index}>
-                            <SessionCard session={session} isAdminView={true} onEdit={handleStartEdit} onSendReminder={handleSendReminder} onAnnounceRequest={setAnnouncingSession} onManageAnnouncementsRequest={setShowAnnouncementManager} onFinalizeRequest={setFinalizingSession} onPrintRegisterRequest={(session) => setPreviewRegisterSession(session)} onShowQR={setQrSession} onToggleFeedback={handleToggleFeedback} />
+                            <SessionCard 
+                              session={session} 
+                              isAdminView={true} 
+                              onEdit={handleStartEdit} 
+                              onSendReminder={handleSendReminder} 
+                              onAnnounceRequest={setAnnouncingSession} 
+                              onManageAnnouncementsRequest={setShowAnnouncementManager} 
+                              onFinalizeRequest={setFinalizingSession} 
+                              onPrintRegisterRequest={(session) => setPreviewRegisterSession(session)} 
+                              onShowQR={setQrSession} 
+                              onManualAttendanceRequest={setManualAttendanceSession}
+                              onToggleFeedback={handleToggleFeedback} 
+                            />
                           </li>
                         ))}
                       </ul>
@@ -3521,6 +3591,24 @@ Content-Type: text/html; charset="utf-8"
       {previewRegisterSession && <TrainingRegisterPreviewModal session={previewRegisterSession} onClose={() => setPreviewRegisterSession(null)} users={users} records={records} cleanedData={cleanedData || []} />}
       {sessionToEditDirectly && <EditSessionModal session={sessionToEditDirectly} onClose={() => setSessionToEditDirectly(null)} />}
       {selectedUserToEdit && <EditUserModal user={selectedUserToEdit} onClose={() => setSelectedUserToEdit(null)} />}
+      {qrSession && <QRCodeModal session={qrSession} onClose={() => setQrSession(null)} language={language} />}
+      {manualAttendanceSession && (
+        <ManualAttendanceModal
+          session={manualAttendanceSession}
+          allUsers={users}
+          onClose={() => setManualAttendanceSession(null)}
+          onSaveAttendance={handleSaveManualAttendance}
+          language={language}
+        />
+      )}
+      {finalizingSession && (
+        <FinalizeSessionModal 
+          session={finalizingSession} 
+          registeredUsers={users.filter(u => finalizingSession.registeredUsers?.includes(u.hrCode) || finalizingSession.registeredUsers?.includes(u.id))} 
+          onClose={() => setFinalizingSession(null)} 
+          onFinalize={handleSaveFinalizedGrades} 
+        />
+      )}
 
       {/* ========================================================= */}
       {/* FACTORY RESET & DATABASE PURGE MODAL (PASSWORD PROTECTED) */}

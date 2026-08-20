@@ -13,7 +13,8 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({ session, onClose, lang
     window.print();
   };
 
-  const qrData = session.id;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const qrData = `${session.id}_${todayStr}`;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrData)}`;
 
   return (
@@ -35,29 +36,39 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({ session, onClose, lang
               : 'Have trainees scan this code to automatically register their attendance'}
           </p>
 
-          <div className="bg-white p-4 border-4 border-gray-100 rounded-xl shadow-sm mb-6" id="qr-print-area">
-            <img src={qrUrl} alt="Attendance QR" className="w-[250px] h-[250px]" />
+          <div className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-700/60 p-3 rounded-xl mb-5 w-full text-center">
+            <span className="text-xs font-black text-emerald-800 dark:text-emerald-200 block">
+              🟢 {language === 'ar' ? 'فترة تسجيل الحضور اليومية متاحة حتى الساعة 4:00 مساءً' : 'Daily Attendance check-in is active until 4:00 PM'}
+            </span>
+          </div>
+
+          <div className="bg-white p-4 border-4 border-gray-100 dark:border-slate-700 rounded-2xl shadow-sm mb-6" id="qr-print-area">
+            <img src={qrUrl} alt="Attendance QR" className="w-[240px] h-[240px]" />
           </div>
 
           <div className="text-center mb-6">
             <h3 className="font-bold text-lg text-[#002D62] dark:text-[#70B2FF]">{session.courseTitle}</h3>
-            <p className="text-gray-500 dark:text-gray-400">Session ID: {session.sessionNumber || session.id.substring(0,6)}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {session.startDate} {session.startTime ? `(${session.startTime})` : ''} • {language === 'ar' ? 'ينتهي 4:00 م' : 'Closes 4:00 PM'}
+            </p>
           </div>
 
-          <div className="flex gap-4 w-full">
-            <button
-              onClick={handlePrint}
-              className="flex-1 bg-[#FFC000] text-[#002D62] py-3 rounded-lg font-bold hover:bg-yellow-500 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
-            >
-              <Printer size={20} />
-              {language === 'ar' ? 'طباعة الكود' : 'Print QR'}
-            </button>
-            <button
-              onClick={onClose}
-              className="flex-1 bg-gray-200 dark:bg-white/[0.08] text-gray-800 dark:text-gray-200 py-3 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-white/[0.12] transition-colors cursor-pointer"
-            >
-              {language === 'ar' ? 'إغلاق' : 'Close'}
-            </button>
+          <div className="flex flex-col gap-2.5 w-full">
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={handlePrint}
+                className="flex-1 bg-[#FFC000] hover:bg-yellow-500 text-[#002D62] py-2.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md hover:scale-105"
+              >
+                <Printer size={18} />
+                <span>{language === 'ar' ? 'طباعة الكود' : 'Print QR'}</span>
+              </button>
+              <button
+                onClick={onClose}
+                className="flex-1 bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-200 py-2.5 rounded-xl font-bold hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors cursor-pointer"
+              >
+                {language === 'ar' ? 'إغلاق' : 'Close'}
+              </button>
+            </div>
           </div>
         </div>
       </div>

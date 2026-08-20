@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useAppContext } from '../context';
 import { mockCourses } from '../data';
-import { ExternalLink, Check, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag, Megaphone, Radio, Volume2, Sparkles } from 'lucide-react';
+import { ExternalLink, Check, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag, Megaphone, Radio, Volume2, Sparkles, QrCode } from 'lucide-react';
+import { QRScannerModal } from './QRScannerModal';
 
 // Web Audio API Sound Chime
 export const playNotificationSound = () => {
@@ -94,6 +95,8 @@ export const TraineeDashboard: React.FC = () => {
   const [tempManagerEmails, setTempManagerEmails] = useState<string[]>(['', '', '']);
   const [registeredCourseIds, setRegisteredCourseIds] = useState<string[]>([]);
   const [actionToast, setActionToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+  const [showScannerModal, setShowScannerModal] = useState(false);
+  const [activeSessionForScanner, setActiveSessionForScanner] = useState<UpcomingSession | null>(null);
 
   // Automatically fetch trainee's own records on demand (costs only 1-3 reads!)
   React.useEffect(() => {
@@ -132,6 +135,20 @@ export const TraineeDashboard: React.FC = () => {
   
   const activeUpcomingSessions = upcomingSessions.filter(s => !s.isDeleted && s.status !== 'Cancelled');
 
+  // Automated Attendance Window: Sessions active today for this trainee before 4:00 PM (16:00)
+  const activeTodaySessions = useMemo(() => {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const currentHour = now.getHours();
+
+    return activeUpcomingSessions.filter(session => {
+      const isRegistered = session.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(session.id);
+      const sStart = session.startDate || todayStr;
+      const sEnd = session.endDate || session.startDate || todayStr;
+      return isRegistered && (todayStr >= sStart && todayStr <= sEnd) && currentHour < 16;
+    });
+  }, [activeUpcomingSessions, user?.hrCode, registeredCourseIds]);
+
   // حساب الأيام المتبقية للحساب المؤقت
   const remainingDays = useMemo(() => {
     if (!user?.isGuest || !user?.guestExpiryDate) return null;
@@ -157,8 +174,37 @@ export const TraineeDashboard: React.FC = () => {
       return true;
     };
 
+    // Automated Attendance Window Notification (From Session Start until 4:00 PM)
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const currentHour = now.getHours();
+
     activeUpcomingSessions.forEach(session => {
       const isRegistered = session.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(session.id);
+      if (isRegistered) {
+        const sStart = session.startDate || todayStr;
+        const sEnd = session.endDate || session.startDate || todayStr;
+
+        // If today is within course dates and before 4:00 PM (16:00)
+        if (todayStr >= sStart && todayStr <= sEnd && currentHour < 16) {
+          list.push({
+            id: `attendance_live_${session.id}_${todayStr}`,
+            sessionId: session.id,
+            courseTitle: session.courseTitle,
+            startDate: session.startDate,
+            endDate: session.endDate,
+            startTime: session.startTime || '09:00',
+            location: session.location,
+            type: 'Announcement',
+            title: language === 'ar' ? '🟢 جلسة تسجيل الحضور نشطة الآن' : '🟢 Attendance Check-in is Active Now',
+            message: language === 'ar' 
+              ? `بدأت جلسة تسجيل الحضور لدورة [${session.courseTitle}]. يرجى مسح رمز الـ QR داخل القاعة قبل الساعة 4:00 مساءً.`
+              : `Attendance check-in is now OPEN for [${session.courseTitle}]. Please scan the QR code before 4:00 PM.`,
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+
       if (isRegistered || isTargetMatch(session.targetParticipants)) {
         if (session.reminderLog && session.reminderLog.length > 0) {
           session.reminderLog.forEach(log => {
@@ -374,6 +420,39 @@ export const TraineeDashboard: React.FC = () => {
                     {language === 'ar' ? 'يوم متبقي' : 'Days Left'}
                   </span>
                 </div>
+              </div>
+            )}
+            {/* --- ACTIVE ATTENDANCE TODAY BANNER (Until 4:00 PM) --- */}
+            {activeTodaySessions.length > 0 && (
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-700 text-white shadow-lg border-2 border-emerald-300 flex items-center justify-between flex-wrap gap-4 animate-pulse">
+                <div className="flex items-center gap-3.5">
+                  <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-md text-white shrink-0 border border-white/30">
+                    <QrCode size={28} />
+                  </div>
+                  <div>
+                    <span className="text-[11px] font-black uppercase tracking-widest bg-emerald-950/60 text-emerald-200 px-2.5 py-0.5 rounded-full border border-emerald-300/40">
+                      {language === 'ar' ? '🟢 جلسة تسجيل الحضور نشطة الآن' : '🟢 Check-in Active Now'}
+                    </span>
+                    <h3 className="text-base sm:text-lg font-black mt-1">
+                      {activeTodaySessions[0].courseTitle}
+                    </h3>
+                    <p className="text-xs text-emerald-100 font-semibold mt-0.5">
+                      {language === 'ar' ? 'ينتهي موعد تسجيل الحضور اليوم في تمام الساعة 4:00 مساءً' : 'Attendance check-in closes today at 4:00 PM'}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveSessionForScanner(activeTodaySessions[0]);
+                    setShowScannerModal(true);
+                  }}
+                  className="px-5 py-3 bg-[#FFC000] hover:bg-yellow-400 text-[#002D62] font-black text-sm rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer hover:scale-105"
+                >
+                  <QrCode size={18} />
+                  <span>{language === 'ar' ? 'مسح رمز الحضور (QR)' : 'Scan Attendance QR'}</span>
+                </button>
               </div>
             )}
             {/* --------------------------------- */}
@@ -962,6 +1041,10 @@ export const TraineeDashboard: React.FC = () => {
                   registeredCourseIds={registeredCourseIds}
                   onRegister={handleRegisterSession}
                   onUnregister={handleUnregisterFromCard}
+                  onScanQR={(session) => {
+                    setActiveSessionForScanner(session);
+                    setShowScannerModal(true);
+                  }}
                 />
               ))}
             </div>
@@ -1091,6 +1174,30 @@ export const TraineeDashboard: React.FC = () => {
               </div>
             </div>
           </div>
+        {/* QR Code Attendance Scanner Modal */}
+        {showScannerModal && (
+          <QRScannerModal
+            language={language}
+            onClose={() => setShowScannerModal(false)}
+            onScanSuccess={(scannedSessionId) => {
+              setShowScannerModal(false);
+              const userCode = user?.hrCode || 'trainee';
+              const targetId = activeSessionForScanner?.id || scannedSessionId;
+              registerTrainee(targetId, userCode);
+              
+              if (!registeredCourseIds.includes(targetId)) {
+                setRegisteredCourseIds(prev => [...prev, targetId]);
+              }
+
+              const cTitle = activeSessionForScanner?.courseTitle || 'Technical Course';
+              const toastMsg = language === 'ar'
+                ? `🎉 تم تسجيل حضورك بنجاح في دورة [${cTitle}]!`
+                : `🎉 Your attendance has been successfully recorded for [${cTitle}]!`;
+
+              setActionToast({ message: toastMsg, type: 'success' });
+              setTimeout(() => setActionToast(null), 5000);
+            }}
+          />
         )}
       </div>
     </div>

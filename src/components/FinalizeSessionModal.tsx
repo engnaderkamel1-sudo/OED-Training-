@@ -232,6 +232,63 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
                 </div>
               </div>
 
+              {/* Quick 1-Click Automation Actions Bar */}
+              <div className="mb-4 p-3.5 bg-slate-50 dark:bg-[#0B172B] border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-[#002D62] dark:text-[#93C5FD] uppercase tracking-wider">
+                    ⚡ {language === 'ar' ? 'إجراءات الأتمتة السريعة:' : 'Quick 1-Click Actions:'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const totalDays = Number(session.duration || 2) || 1;
+                      const updated: Record<string, { days: number, score: number }> = {};
+                      registeredUsers.forEach(u => {
+                        const prevScore = (traineeData[u.id] || { score: 85 }).score || 85;
+                        updated[u.id] = { days: totalDays, score: prevScore };
+                      });
+                      setTraineeData(updated);
+                    }}
+                    className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-950/80 hover:bg-emerald-200 dark:hover:bg-emerald-900 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 shadow-2xs hover:scale-105 cursor-pointer"
+                  >
+                    <CheckCircle size={13} />
+                    <span>{language === 'ar' ? 'تحضير الكل (كامل الأيام)' : 'Mark All Present (Full Days)'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated: Record<string, { days: number, score: number }> = {};
+                      registeredUsers.forEach(u => {
+                        const prevDays = (traineeData[u.id] || { days: 1 }).days;
+                        updated[u.id] = { days: prevDays, score: 85 };
+                      });
+                      setTraineeData(updated);
+                    }}
+                    className="px-3 py-1.5 bg-blue-100 dark:bg-blue-950/80 hover:bg-blue-200 dark:hover:bg-blue-900 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 shadow-2xs hover:scale-105 cursor-pointer"
+                  >
+                    <span>🎯 {language === 'ar' ? 'درجة نجاح موحدة (85%)' : 'Auto-Fill 85% Score'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated: Record<string, { days: number, score: number }> = {};
+                      registeredUsers.forEach(u => {
+                        const prevDays = (traineeData[u.id] || { days: 1 }).days;
+                        updated[u.id] = { days: prevDays, score: 90 };
+                      });
+                      setTraineeData(updated);
+                    }}
+                    className="px-3 py-1.5 bg-amber-100 dark:bg-amber-950/80 hover:bg-amber-200 dark:hover:bg-amber-900 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 shadow-2xs hover:scale-105 cursor-pointer"
+                  >
+                    <span>⭐ {language === 'ar' ? 'درجة تفوق (90%)' : 'Auto-Fill 90% Score'}</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-xl">
                 <table className="w-full text-left border-collapse text-sm whitespace-nowrap">
                   <thead className="bg-[#002D62] dark:bg-[#0A1324] text-white border-b border-blue-900 dark:border-gray-700">
@@ -240,7 +297,7 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
                       <th className="p-3.5 font-bold text-white text-xs sm:text-sm">{language === 'ar' ? 'القسم' : 'Department'}</th>
                       <th className="p-3.5 font-bold text-white text-xs sm:text-sm w-32 text-center">{language === 'ar' ? 'أيام الحضور' : 'Attended Days'}</th>
                       <th className="p-3.5 font-bold text-white text-xs sm:text-sm w-32 text-center">{language === 'ar' ? 'النتيجة %' : 'Score %'}</th>
-                      <th className="p-3.5 font-bold text-white text-xs sm:text-sm w-24 text-center">{language === 'ar' ? 'الحالة' : 'Status'}</th>
+                      <th className="p-3.5 font-bold text-white text-xs sm:text-sm w-36 text-center">{language === 'ar' ? 'تبديل الحالة السريع' : 'Quick Toggle'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -280,11 +337,32 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
                               />
                             </td>
                             <td className="p-3 text-center">
-                              {isAbsent ? (
-                                <span className="inline-flex items-center text-xs font-bold text-red-600 dark:text-red-300 bg-red-100 dark:bg-red-900/30 px-2.5 py-1 rounded-full gap-1 border border-red-200 dark:border-red-700/50"><Ban size={12}/> {language === 'ar' ? 'غائب' : 'Absent'}</span>
-                              ) : (
-                                <span className="inline-flex items-center text-xs font-bold text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full gap-1 border border-green-200 dark:border-green-700/50"><CheckCircle size={12}/> {language === 'ar' ? 'حاضر' : 'Present'}</span>
-                              )}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const totalDays = Number(session.duration || 2) || 1;
+                                  if (isAbsent) {
+                                    handleDataChange(u.id, 'days', totalDays);
+                                    if (userTraineeData.score === 0) handleDataChange(u.id, 'score', 85);
+                                  } else {
+                                    handleDataChange(u.id, 'days', 0);
+                                  }
+                                }}
+                                className="cursor-pointer transition-transform active:scale-95"
+                                title={language === 'ar' ? 'اضغط لتبديل الحالة بين حاضر وغائب' : 'Click to toggle Present / Absent'}
+                              >
+                                {isAbsent ? (
+                                  <span className="inline-flex items-center text-xs font-black text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-950/80 px-3 py-1.5 rounded-xl gap-1.5 border border-red-300 dark:border-red-700 hover:bg-red-200 shadow-2xs">
+                                    <Ban size={13}/>
+                                    <span>{language === 'ar' ? 'غائب ❌' : 'Absent ❌'}</span>
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center text-xs font-black text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 px-3 py-1.5 rounded-xl gap-1.5 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-200 shadow-2xs">
+                                    <CheckCircle size={13}/>
+                                    <span>{language === 'ar' ? 'حاضر ✓' : 'Present ✓'}</span>
+                                  </span>
+                                )}
+                              </button>
                             </td>
                           </tr>
                         );
