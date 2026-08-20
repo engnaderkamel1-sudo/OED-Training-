@@ -582,42 +582,72 @@ Please log in to register for this session through the OED-TTMS Application.
   }, [users]);
 
   const courseStats = useMemo(() => {
-    if (records.length > 50) {
-      const stats = dynamicCourses.map((course) => {
-        const courseRecords = records.filter((r) => r.courseId === course.id || r.courseName === course.title);
-        const uniqueDates = Array.from(new Set(courseRecords.map((r) => r.attendanceDate)));
-        return { courseName: course.title, attendees: courseRecords.length, sessions: uniqueDates.length };
-      }).sort((a, b) => b.attendees - a.attendees);
-      if (stats.some(s => s.attendees > 0)) return stats.filter(s => s.attendees > 0);
-    }
-    return DEFAULT_COURSE_STATS;
-  }, [dynamicCourses, records]);
-
-  const departmentStats = useMemo(() => {
-    if (records.length > 50) {
-      const stats: Record<string, Set<string>> = {};
-      records.forEach((r) => {
-        const dept = r.department || users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}`)?.department;
-        if (dept) {
-          if (!stats[dept]) stats[dept] = new Set();
-          stats[dept].add(r.userId || r.traineeName || r.name || r.id);
+    const source = (cleanedData && cleanedData.length > 0) ? cleanedData : records;
+    if (source.length > 0) {
+      const counts: Record<string, number> = {};
+      source.forEach(r => {
+        const cName = (r.courseName || r.courseTitle || '').toString().trim();
+        if (cName) {
+          counts[cName] = (counts[cName] || 0) + 1;
         }
       });
-      const res = Object.entries(stats).map(([name, set]) => ({ department: name, trainees: set.size })).sort((a, b) => b.trainees - a.trainees);
+      const res = Object.entries(counts)
+        .map(([courseName, attendees]) => ({ courseName, attendees }))
+        .sort((a, b) => b.attendees - a.attendees);
+      if (res.length > 0) return res.slice(0, 15);
+    }
+    return DEFAULT_COURSE_STATS;
+  }, [cleanedData, records]);
+
+  const departmentStats = useMemo(() => {
+    const source = (cleanedData && cleanedData.length > 0) ? cleanedData : records;
+    if (source.length > 0) {
+      const deptCounts: Record<string, Set<string>> = {};
+      source.forEach(r => {
+        const dept = (r.department || '').toString().trim();
+        const traineeId = (r.hrCode || r.userId || r.name || r.id || '').toString().trim();
+        if (dept) {
+          if (!deptCounts[dept]) deptCounts[dept] = new Set();
+          if (traineeId) deptCounts[dept].add(traineeId);
+        }
+      });
+      const res = Object.entries(deptCounts)
+        .map(([department, set]) => ({ department, trainees: set.size || 1 }))
+        .sort((a, b) => b.trainees - a.trainees);
       if (res.length > 0) return res;
     }
     return DEFAULT_DEPARTMENT_STATS;
-  }, [records, users]);
+  }, [cleanedData, records]);
 
   const totalUniqueTrainees = useMemo(() => {
-    if (records.length > 50) return new Set(records.map((r) => r.userId || r.traineeName || r.name)).size;
-    return globalKPIs.totalParticipants || 984;
-  }, [records, globalKPIs]);
+    const source = (cleanedData && cleanedData.length > 0) ? cleanedData : records;
+    if (source && source.length > 0) {
+      const uniqueKeys = new Set<string>();
+      source.forEach(r => {
+        const key = (r.hrCode || r.userId || r.name || '').toString().trim().toLowerCase();
+        if (key && key !== 'n/a' && key !== 'undefined' && key !== 'unknown') {
+          uniqueKeys.add(key);
+        }
+      });
+      if (uniqueKeys.size > 0) return uniqueKeys.size;
+    }
+    const realUsers = (users || []).filter(u => u.role === 'trainee' && !u.isShadowAccount);
+    if (realUsers.length > 0) return realUsers.length;
+    return (globalKPIs.totalEngineers || 765) + (globalKPIs.totalTechnicians || 117) + (globalKPIs.totalOperators || 102);
+  }, [cleanedData, records, users, globalKPIs]);
 
   const totalDistinctCourses = useMemo(() => {
-    if (records.length > 50) return new Set(records.map((r) => r.courseId || r.courseName)).size;
-    return globalKPIs.totalCourses || 21;
-  }, [records, globalKPIs]);
+    const source = (cleanedData && cleanedData.length > 0) ? cleanedData : records;
+    if (source && source.length > 0) {
+      const uniqueCourses = new Set<string>();
+      source.forEach(r => {
+        const cName = (r.courseName || r.courseTitle || '').toString().trim().toLowerCase();
+        if (cName) uniqueCourses.add(cName);
+      });
+      if (uniqueCourses.size > 0) return uniqueCourses.size;
+    }
+    return dynamicCourses.length || globalKPIs.totalCourses || 21;
+  }, [cleanedData, records, dynamicCourses, globalKPIs]);
 
   const tnaCounts: Record<string, number> = {};
   mockRequests.forEach((req) => { tnaCounts[req.requestedTopic] = (tnaCounts[req.requestedTopic] || 0) + 1; });
@@ -1529,7 +1559,16 @@ Content-Type: text/html; charset="utf-8"
                                     <td className="p-3"><DataField>{u.hrCode}</DataField></td>
                                     <td className="p-3"><UserAvatarWithName user={u} /></td>
                                     <td className="p-3"><DataField>{u.department}</DataField></td>
-                                    <td className="p-3"><DataField>{u.role}</DataField></td>
+                                    <td className="p-3 whitespace-nowrap">
+                                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap inline-flex items-center gap-1.5 ${
+                                        u.role === 'admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-300 dark:border-purple-700' :
+                                        u.role === 'manager' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700' :
+                                        u.role === 'supervisor' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700' :
+                                        'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
+                                      }`}>
+                                        <span>{u.role === 'admin' ? '🛡️ Admin' : u.role === 'manager' ? '👔 Manager' : u.role === 'supervisor' ? '👷 Supervisor' : '🎓 Trainee'}</span>
+                                      </span>
+                                    </td>
                                     <td className="p-3"><DataField>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "N/A"}</DataField></td>
                                     <td className="p-3 flex gap-2">
                                       <button onClick={() => handleApprove(u.id)} className="flex items-center text-green-600 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded hover:opacity-80 font-bold">{language === "ar" ? "موافق" : "Approve"}</button>
@@ -1764,14 +1803,14 @@ Content-Type: text/html; charset="utf-8"
                                 <td className="p-3"><DataField>{u.hrCode}</DataField></td>
                                 <td className="p-3"><UserAvatarWithName user={u} /></td>
                                 <td className="p-3"><DataField>{u.department}</DataField></td>
-                                <td className="p-3">
-                                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                                <td className="p-3 whitespace-nowrap">
+                                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap inline-flex items-center gap-1.5 ${
                                     u.role === 'admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-300 dark:border-purple-700' :
                                     u.role === 'manager' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700' :
                                     u.role === 'supervisor' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700' :
                                     'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
                                   }`}>
-                                    {u.role === 'admin' ? '🛡️ Admin' : u.role === 'manager' ? '👔 Manager' : u.role === 'supervisor' ? '👷 Supervisor' : '🎓 Trainee'}
+                                    <span>{u.role === 'admin' ? '🛡️ Admin' : u.role === 'manager' ? '👔 Manager' : u.role === 'supervisor' ? '👷 Supervisor' : '🎓 Trainee'}</span>
                                   </span>
                                 </td>
                                 <td className="p-3">
@@ -2121,44 +2160,57 @@ Content-Type: text/html; charset="utf-8"
                 </div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="border rounded-lg shadow-sm p-5 h-96 flex flex-col transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                  <div className="z-10 pb-3 border-b flex-none" style={{ borderColor: borderColor }}>
-                    <h3 className="font-bold text-base" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>{language === "ar" ? "الدورات حسب الحضور" : "Courses by Attendance"}</h3>
+                {/* Courses by Attendance */}
+                <div className="border rounded-2xl shadow-sm p-6 h-96 flex flex-col transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                  <div className="z-10 pb-3 border-b flex-none flex items-center justify-between" style={{ borderColor: borderColor }}>
+                    <h3 className="font-bold text-base" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>
+                      {language === "ar" ? "الدورات حسب الحضور" : "Courses by Attendance"}
+                    </h3>
+                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      {courseStats.length} {language === 'ar' ? 'دورات' : 'courses'}
+                    </span>
                   </div>
                   <div className="overflow-y-auto flex-1 pt-3 pr-1 space-y-4">
                     {courseStats.map((stat, idx) => {
                       const maxAttendees = Math.max(...courseStats.map((s) => s.attendees)) || 1;
-                      const percent = Math.round((stat.attendees / maxAttendees) * 100);
+                      const percent = Math.max(4, Math.round((stat.attendees / maxAttendees) * 100));
                       return (
-                        <div key={idx}>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="font-medium truncate mr-4" style={{ color: textColor }}><DataField>{stat.courseName}</DataField></span>
-                            <span className="font-bold" style={{ color: textColor }}>{stat.attendees}</span>
+                        <div key={idx} className="space-y-1">
+                          <div className="flex justify-between text-xs sm:text-sm font-medium">
+                            <span className="truncate mr-4 text-gray-800 dark:text-gray-200" title={stat.courseName}><DataField>{stat.courseName}</DataField></span>
+                            <span className="font-black shrink-0 text-blue-600 dark:text-blue-400">{stat.attendees}</span>
                           </div>
-                          <div className="w-full rounded-full h-2.5" style={{ backgroundColor: tableHeaderBg }}>
-                            <div className="h-2.5 rounded-full" style={{ width: `${percent}%`, backgroundColor: isDark ? '#3b82f6' : '#002D62' }}></div>
+                          <div className="w-full rounded-full h-2.5 bg-gray-100 dark:bg-slate-800/80 border border-gray-200/50 dark:border-slate-700/60 overflow-hidden">
+                            <div className="h-full rounded-full transition-all duration-500 bg-blue-600 dark:bg-blue-500" style={{ width: `${percent}%` }}></div>
                           </div>
                         </div>
                       );
                     })}
                   </div>
                 </div>
-                <div className="border rounded-lg shadow-sm p-5 h-96 flex flex-col transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                  <div className="z-10 pb-3 border-b flex-none" style={{ borderColor: borderColor }}>
-                    <h3 className="font-bold text-[#D97706] text-base">{language === "ar" ? "المتدربين حسب القسم" : "Trainees by Department"}</h3>
+
+                {/* Trainees by Department */}
+                <div className="border rounded-2xl shadow-sm p-6 h-96 flex flex-col transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                  <div className="z-10 pb-3 border-b flex-none flex items-center justify-between" style={{ borderColor: borderColor }}>
+                    <h3 className="font-bold text-base text-[#D97706] dark:text-[#FFC000]">
+                      {language === "ar" ? "المتدربين حسب القسم" : "Trainees by Department"}
+                    </h3>
+                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      {departmentStats.length} {language === 'ar' ? 'أقسام' : 'departments'}
+                    </span>
                   </div>
                   <div className="overflow-y-auto flex-1 pt-3 pr-1 space-y-4">
                     {departmentStats.map((stat, idx) => {
                       const maxTrainees = Math.max(...departmentStats.map((s) => s.trainees)) || 1;
-                      const percent = Math.round((stat.trainees / maxTrainees) * 100);
+                      const percent = Math.max(4, Math.round((stat.trainees / maxTrainees) * 100));
                       return (
-                        <div key={idx}>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="font-medium truncate mr-4" style={{ color: textColor }}><DataField>{stat.department}</DataField></span>
-                            <span className="font-bold" style={{ color: textColor }}>{stat.trainees}</span>
+                        <div key={idx} className="space-y-1">
+                          <div className="flex justify-between text-xs sm:text-sm font-medium">
+                            <span className="truncate mr-4 text-gray-800 dark:text-gray-200" title={stat.department}><DataField>{stat.department}</DataField></span>
+                            <span className="font-black shrink-0 text-amber-600 dark:text-[#FFC000]">{stat.trainees}</span>
                           </div>
-                          <div className="w-full rounded-full h-2.5" style={{ backgroundColor: tableHeaderBg }}>
-                            <div className="h-2.5 rounded-full" style={{ width: `${percent}%`, backgroundColor: '#FFC000' }}></div>
+                          <div className="w-full rounded-full h-2.5 bg-gray-100 dark:bg-slate-800/80 border border-gray-200/50 dark:border-slate-700/60 overflow-hidden">
+                            <div className="h-full rounded-full transition-all duration-500 bg-[#FFC000]" style={{ width: `${percent}%` }}></div>
                           </div>
                         </div>
                       );
@@ -2543,7 +2595,7 @@ Content-Type: text/html; charset="utf-8"
                           onClick={() => setSessionStatusTab('active')}
                           className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
                             sessionStatusTab === 'active'
-                              ? 'bg-[#002D62] text-white shadow-sm'
+                              ? (isDark ? 'bg-blue-600 text-white shadow-sm' : 'bg-[#002D62] text-white shadow-sm')
                               : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-slate-700/50'
                           }`}
                         >
@@ -2632,15 +2684,15 @@ Content-Type: text/html; charset="utf-8"
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Card 1: Official Reports Hub */}
                     <div 
-                      className="p-6 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-[#0F1E36] shadow-sm flex flex-col justify-between transition-all"
+                      className="p-6 rounded-2xl border border-gray-200 dark:border-slate-700/80 bg-white dark:bg-[#0F1E36] shadow-sm flex flex-col justify-between transition-all"
                     >
                       <div>
                         <div className="flex items-center gap-3 mb-5 pb-3 border-b border-gray-100 dark:border-slate-800">
-                          <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center font-bold border border-blue-100 dark:border-blue-900/40">
+                          <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/80 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center font-bold border border-blue-100 dark:border-blue-800/60 shadow-2xs">
                             <Printer size={20} />
                           </div>
                           <div>
-                            <h3 className="font-bold text-base text-gray-900 dark:text-white">
+                            <h3 className="font-black text-base text-gray-900 dark:text-white">
                               {language === "ar" ? "التقارير وسجلات التدريب الرسمية" : "Official Reports & Records"}
                             </h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -2650,16 +2702,16 @@ Content-Type: text/html; charset="utf-8"
                         </div>
 
                         <div className="space-y-3.5">
-                          <div className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/90 dark:bg-slate-800/80 flex items-center justify-between gap-3 shadow-2xs">
+                          <div className="p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 bg-gray-50/80 dark:bg-[#152744] flex items-center justify-between gap-3 shadow-2xs">
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 shrink-0">
+                              <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300 shrink-0 border border-amber-200 dark:border-amber-800/40">
                                 <Calendar size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
+                                <h4 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white truncate">
                                   {language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}
                                 </h4>
-                                <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                <p className="text-[11px] text-gray-600 dark:text-gray-300 font-medium truncate">
                                   {language === 'ar' ? 'ملخص الدورات والحضور لكل شهر' : 'Monthly training sessions & attendance summary'}
                                 </p>
                               </div>
@@ -2667,23 +2719,23 @@ Content-Type: text/html; charset="utf-8"
                             <button
                               type="button"
                               onClick={() => setShowMonthlyReport(true)}
-                              className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
+                              className="px-4 py-2.5 bg-[#002D62] dark:bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center gap-1.5 hover:scale-105"
                             >
                               <Mail size={14} />
                               <span>{language === 'ar' ? 'عرض التقرير' : 'Open Report'}</span>
                             </button>
                           </div>
 
-                          <div className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/90 dark:bg-slate-800/80 flex items-center justify-between gap-3 shadow-2xs">
+                          <div className="p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 bg-gray-50/80 dark:bg-[#152744] flex items-center justify-between gap-3 shadow-2xs">
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 shrink-0">
+                              <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 shrink-0 border border-emerald-200 dark:border-emerald-800/40">
                                 <Download size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
+                                <h4 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white truncate">
                                   {language === 'ar' ? 'تصدير السجل التدريبي العام (PDF)' : 'Full Training Register (PDF)'}
                                 </h4>
-                                <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                <p className="text-[11px] text-gray-600 dark:text-gray-300 font-medium truncate">
                                   {language === 'ar' ? 'كشف شامل لجميع سجلات المتدربين' : 'Comprehensive PDF training register for all trainees'}
                                 </p>
                               </div>
@@ -2693,7 +2745,7 @@ Content-Type: text/html; charset="utf-8"
                               onClick={async () => {
                                 await safePrintReport('printable-area-admin', { title: 'General Training Register' });
                               }}
-                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
+                              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center gap-1.5 hover:scale-105"
                             >
                               <Printer size={14} />
                               <span>{language === 'ar' ? 'طباعة / PDF' : 'Print PDF'}</span>
@@ -2705,15 +2757,15 @@ Content-Type: text/html; charset="utf-8"
 
                     {/* Card 2: Cloud Backup & Data Security */}
                     <div 
-                      className="p-6 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-[#0F1E36] shadow-sm flex flex-col justify-between transition-all"
+                      className="p-6 rounded-2xl border border-gray-200 dark:border-slate-700/80 bg-white dark:bg-[#0F1E36] shadow-sm flex flex-col justify-between transition-all"
                     >
                       <div>
                         <div className="flex items-center gap-3 mb-5 pb-3 border-b border-gray-100 dark:border-slate-800">
-                          <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center font-bold border border-emerald-100 dark:border-emerald-900/40">
+                          <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-300 flex items-center justify-center font-bold border border-emerald-100 dark:border-emerald-800/60 shadow-2xs">
                             <Database size={20} />
                           </div>
                           <div>
-                            <h3 className="font-bold text-base text-gray-900 dark:text-white">
+                            <h3 className="font-black text-base text-gray-900 dark:text-white">
                               {language === "ar" ? "أمان البيانات والنسخ الاحتياطي" : "Data Safety & Cloud Backup"}
                             </h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -2723,16 +2775,16 @@ Content-Type: text/html; charset="utf-8"
                         </div>
 
                         <div className="space-y-3.5">
-                          <div className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/90 dark:bg-slate-800/80 flex items-center justify-between gap-3 shadow-2xs">
+                          <div className="p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 bg-gray-50/80 dark:bg-[#152744] flex items-center justify-between gap-3 shadow-2xs">
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 shrink-0">
+                              <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 shrink-0 border border-emerald-200 dark:border-emerald-800/40">
                                 <Sparkles size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
+                                <h4 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white truncate">
                                   {language === 'ar' ? 'نسخ احتياطي فوري متكامل' : 'Instant Full System Backup'}
                                 </h4>
-                                <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                <p className="text-[11px] text-gray-600 dark:text-gray-300 font-medium truncate">
                                   {language === 'ar' ? 'تنزيل ملف نسخة احتياطية لكافة المستخدمين والسجلات والجلسات' : 'Download complete backup of users, records & sessions'}
                                 </p>
                               </div>
@@ -2740,30 +2792,30 @@ Content-Type: text/html; charset="utf-8"
                             <button
                               type="button"
                               onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])}
-                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
+                              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center gap-1.5 hover:scale-105"
                             >
                               <Download size={14} />
                               <span>{language === 'ar' ? 'تنزيل النسخة' : 'Download'}</span>
                             </button>
                           </div>
 
-                          <div className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50/90 dark:bg-slate-800/80 flex items-center justify-between gap-3 shadow-2xs">
+                          <div className="p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 bg-gray-50/80 dark:bg-[#152744] flex items-center justify-between gap-3 shadow-2xs">
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 shrink-0">
+                              <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-300 shrink-0 border border-blue-200 dark:border-blue-800/40">
                                 <UploadCloud size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
+                                <h4 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white truncate">
                                   {language === 'ar' ? 'استيراد ورفع ملف إكسيل محلي' : 'Import Local Excel File'}
                                 </h4>
-                                <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                <p className="text-[11px] text-gray-600 dark:text-gray-300 font-medium truncate">
                                   {syncFile ? syncFile.name : (language === 'ar' ? 'رفع شيت إكسيل لتحديث السجلات' : 'Upload Excel sheet to update records')}
                                 </p>
                               </div>
                             </div>
                             <label
                               htmlFor="excel-upload-main"
-                              className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
+                              className="px-4 py-2.5 bg-[#002D62] dark:bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center gap-1.5 hover:scale-105"
                             >
                               <UploadCloud size={14} />
                               <span>{language === 'ar' ? 'اختر ملف' : 'Browse'}</span>
@@ -2771,16 +2823,16 @@ Content-Type: text/html; charset="utf-8"
                             <input type="file" id="excel-upload-main" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
                           </div>
 
-                          <div className="p-4 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50/70 dark:bg-red-950/30 flex items-center justify-between gap-3 shadow-2xs">
+                          <div className="p-4 rounded-2xl border border-red-200 dark:border-red-900/50 bg-red-50/70 dark:bg-red-950/30 flex items-center justify-between gap-3 shadow-2xs">
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 shrink-0">
+                              <div className="p-2.5 rounded-xl bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 shrink-0 border border-red-200 dark:border-red-800/40">
                                 <ShieldAlert size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-xs sm:text-sm font-bold text-red-900 dark:text-red-200 truncate">
+                                <h4 className="text-xs sm:text-sm font-black text-red-900 dark:text-red-200 truncate">
                                   {language === 'ar' ? 'تصفير وتنظيف المنظومة (Factory Reset)' : 'System Factory Reset'}
                                 </h4>
-                                <p className="text-[11px] text-red-700/80 dark:text-red-300/80 truncate">
+                                <p className="text-[11px] text-red-700/80 dark:text-red-300 font-medium truncate">
                                   {language === 'ar' ? 'مسح بيانات الاختبار والتجهيز للإطلاق الرسمي (محمي برقم سري)' : 'Wipe trial data & prepare for clean launch (Password Protected)'}
                                 </p>
                               </div>
@@ -2793,7 +2845,7 @@ Content-Type: text/html; charset="utf-8"
                                 setResetError("");
                                 setResetPassword("");
                               }}
-                              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1.5 hover:scale-105"
+                              className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center gap-1.5 hover:scale-105"
                             >
                               <Trash2 size={14} />
                               <span>{language === 'ar' ? 'تصفير المنظومة' : 'Reset System'}</span>
@@ -2957,14 +3009,14 @@ Content-Type: text/html; charset="utf-8"
                                 <td className="p-3 font-mono font-bold">
                                   <DataField>{u.hrCode}</DataField>
                                 </td>
-                                <td className="p-3">
-                                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                                <td className="p-3 whitespace-nowrap">
+                                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap inline-flex items-center gap-1.5 ${
                                     u.role === 'admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-300 dark:border-purple-700' :
                                     u.role === 'manager' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700' :
                                     u.role === 'supervisor' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700' :
                                     'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
                                   }`}>
-                                    {u.role === 'admin' ? '🛡️ Admin' : u.role === 'manager' ? '👔 Manager' : u.role === 'supervisor' ? '👷 Supervisor' : '🎓 Trainee'}
+                                    <span>{u.role === 'admin' ? '🛡️ Admin' : u.role === 'manager' ? '👔 Manager' : u.role === 'supervisor' ? '👷 Supervisor' : '🎓 Trainee'}</span>
                                   </span>
                                 </td>
                                 <td className="p-3">

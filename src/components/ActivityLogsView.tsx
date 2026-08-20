@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { 
@@ -12,11 +12,14 @@ export const ActivityLogsView: React.FC = () => {
   const isDark = theme === 'dark';
   const [activityLogs, setActivityLogs] = useState<any[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
+  const [logsFetched, setLogsFetched] = useState(false);
+  const [lastFetchedAt, setLastFetchedAt] = useState<Date | null>(null);
+  const [fetchLimit, setFetchLimit] = useState<number>(20);
   const [displayLimit, setDisplayLimit] = useState<number>(10);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentLocation, setCurrentLocation] = useState<string>('Cairo, EG');
 
-  const fetchActivityLogs = async (limitCount: number = 300) => {
+  const fetchActivityLogs = async (limitCount: number = fetchLimit) => {
     setLoadingLogs(true);
     try {
       const q = query(
@@ -30,6 +33,8 @@ export const ActivityLogsView: React.FC = () => {
         logs.push({ id: doc.id, ...doc.data() });
       });
       setActivityLogs(logs);
+      setLogsFetched(true);
+      setLastFetchedAt(new Date());
     } catch (error) {
       console.error("Error fetching logs:", error);
     } finally {
@@ -37,43 +42,24 @@ export const ActivityLogsView: React.FC = () => {
     }
   };
 
-  // Immediate location fetch & session logging on mount
+  // Location detection only (no automatic firestore reads or heavy queries)
   useEffect(() => {
-    const initAndLog = async () => {
-      let detectedLoc = "Cairo, EG";
+    const initLocation = async () => {
       try {
         const res = await fetch('https://ipapi.co/json/');
         if (res.ok) {
           const d = await res.json();
           if (d.city && d.country_code) {
-            detectedLoc = `${d.city}, ${d.country_code} (${d.ip})`;
-            setCurrentLocation(detectedLoc);
+            setCurrentLocation(`${d.city}, ${d.country_code} (${d.ip})`);
           }
         }
       } catch (e) {}
-
-      if (currentUser) {
-        try {
-          await addDoc(collection(db, 'activity_logs'), {
-            userId: currentUser.id,
-            userName: currentUser.name || 'Admin',
-            hrCode: currentUser.hrCode || 'admin',
-            role: currentUser.role || 'admin',
-            action: 'session_resume',
-            location: detectedLoc,
-            timestamp: serverTimestamp()
-          });
-        } catch (err) {
-          console.warn("Could not push immediate activity log:", err);
-        }
-      }
-      await fetchActivityLogs(300);
     };
 
-    initAndLog();
-  }, [currentUser]);
+    initLocation();
+  }, []);
 
-  // Online / Active Users Calculation (last 30 mins)
+  // Online / Active Users Calculation from current user memory (0 Firestore reads)
   const now = Date.now();
   const THIRTY_MINUTES = 30 * 60 * 1000;
   const onlineUsersMap = new Map<string, { id: string; name: string; hrCode: string; role: string; lastSeen: string; location: string }>();
@@ -250,11 +236,18 @@ export const ActivityLogsView: React.FC = () => {
               <Activity size={18} />
             </div>
             <div>
-              <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white leading-tight flex items-center gap-2">
+              <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white leading-tight flex items-center gap-2 flex-wrap">
                 <span>{language === 'ar' ? 'سجل نشاط المستخدمين وجلسات الدخول' : 'User Activity & Session Logs'}</span>
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-[#002D62] dark:text-[#85C0FF] border border-blue-200 dark:border-blue-700">
-                  {displayedLogs.length} / {processedLogs.length}
-                </span>
+                {logsFetched && (
+                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-[#002D62] dark:text-[#85C0FF] border border-blue-200 dark:border-blue-700">
+                    {displayedLogs.length} / {processedLogs.length}
+                  </span>
+                )}
+                {lastFetchedAt && (
+                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
+                    {language === 'ar' ? '🕒 تم التحديث:' : '🕒 Last fetch:'} {lastFetchedAt.toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
               </h3>
               <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
                 {isSpecificSearch ? (
@@ -265,179 +258,224 @@ export const ActivityLogsView: React.FC = () => {
                 ) : (
                   <>
                     <Users size={13} className="text-emerald-500" />
-                    <span>{language === 'ar' ? 'عرض آخر نشاط لكل مستخدم (حركة واحدة لكل مستخدم)' : 'Showing latest activity per unique user'}</span>
+                    <span>{language === 'ar' ? 'عرض آخر نشاط لكل مستخدم' : 'Showing latest activity per unique user'}</span>
                   </>
                 )}
               </span>
             </div>
           </div>
 
-          {/* Controls: Search + Limit Buttons + Refresh */}
+          {/* Controls: Fetch Count + Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Search Box */}
-            <div className="relative">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setDisplayLimit(10);
-                }}
-                placeholder={language === 'ar' ? 'بحث بالاسم أو الكود (سجل كامل)...' : 'Search user for full logs...'}
-                className="px-3 py-1.5 pl-8 rtl:pl-3 rtl:pr-8 rounded-xl border text-xs font-medium outline-none focus:ring-2 focus:ring-[#002D62] w-48 sm:w-60 shadow-2xs"
-                style={{
-                  backgroundColor: isDark ? '#193158' : '#ffffff',
-                  borderColor: isDark ? 'rgba(148, 190, 255, 0.25)' : '#94a3b8',
-                  color: isDark ? '#ffffff' : '#002D62'
-                }}
-              />
-              <Search size={14} className="absolute left-2.5 rtl:left-auto rtl:right-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-              {searchTerm && (
-                <button 
-                  onClick={() => setSearchTerm('')} 
-                  className="absolute right-2 rtl:right-auto rtl:left-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </div>
+            {/* Search Box (Active if logs fetched) */}
+            {logsFetched && (
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setDisplayLimit(10);
+                  }}
+                  placeholder={language === 'ar' ? 'بحث بالاسم أو الكود...' : 'Search user...'}
+                  className="px-3 py-1.5 pl-8 rtl:pl-3 rtl:pr-8 rounded-xl border text-xs font-medium outline-none focus:ring-2 focus:ring-[#002D62] w-36 sm:w-52 shadow-2xs"
+                  style={{
+                    backgroundColor: isDark ? '#193158' : '#ffffff',
+                    borderColor: isDark ? 'rgba(148, 190, 255, 0.25)' : '#94a3b8',
+                    color: isDark ? '#ffffff' : '#002D62'
+                  }}
+                />
+                <Search size={14} className="absolute left-2.5 rtl:left-auto rtl:right-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                {searchTerm && (
+                  <button 
+                    onClick={() => setSearchTerm('')} 
+                    className="absolute right-2 rtl:right-auto rtl:left-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+            )}
 
-            {/* Quick Limit Buttons */}
+            {/* Fetch Quantity Selector */}
             <div className="flex items-center rounded-xl p-0.5 border" style={{ backgroundColor: isDark ? '#193158' : '#e2e8f0', borderColor: isDark ? 'rgba(148, 190, 255, 0.15)' : '#cbd5e1' }}>
-              {[10, 20, 50].map((num) => (
+              {[10, 20, 50, 100].map((num) => (
                 <button
                   key={num}
-                  onClick={() => setDisplayLimit(num)}
+                  type="button"
+                  onClick={() => {
+                    setFetchLimit(num);
+                    if (logsFetched) {
+                      fetchActivityLogs(num);
+                    }
+                  }}
                   className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    displayLimit === num
+                    fetchLimit === num
                       ? 'bg-[#002D62] text-white shadow-2xs'
                       : 'text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white'
                   }`}
+                  title={`${num} logs`}
                 >
                   {num}
                 </button>
               ))}
-              <button
-                onClick={() => setDisplayLimit(processedLogs.length || 200)}
-                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                  displayLimit >= processedLogs.length && processedLogs.length > 0
-                    ? 'bg-[#002D62] text-white shadow-2xs'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white'
-                }`}
-              >
-                {language === 'ar' ? 'الكل' : 'All'}
-              </button>
             </div>
 
-            {/* Refresh Button */}
+            {/* Main Fetch / Refresh Button */}
             <button 
-              onClick={() => fetchActivityLogs(300)}
+              type="button"
+              onClick={() => fetchActivityLogs(fetchLimit)}
               disabled={loadingLogs}
-              className="flex items-center gap-1.5 text-xs bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 px-3 py-1.5 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors shadow-2xs cursor-pointer text-gray-700 dark:text-gray-200"
+              className={`flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-xl font-bold transition-all shadow-sm cursor-pointer hover:scale-105 ${
+                !logsFetched 
+                  ? 'bg-[#FFC000] text-[#001D42] hover:bg-yellow-500 font-black' 
+                  : 'bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50'
+              }`}
             >
-              <RefreshCw size={13} className={loadingLogs ? 'animate-spin text-[#002D62] dark:text-[#FFC000]' : 'text-gray-500'} />
-              <span>{language === 'ar' ? 'تحديث' : 'Refresh'}</span>
+              <RefreshCw size={13} className={loadingLogs ? 'animate-spin text-[#002D62] dark:text-[#FFC000]' : (logsFetched ? 'text-gray-500' : 'text-[#001D42]')} />
+              <span>
+                {loadingLogs 
+                  ? (language === 'ar' ? 'جاري الجلب...' : 'Fetching...') 
+                  : !logsFetched 
+                    ? (language === 'ar' ? '⚡ جلب السجلات الحية' : '⚡ Fetch Live Logs') 
+                    : (language === 'ar' ? 'تحديث السجلات' : 'Refresh Logs')}
+              </span>
             </button>
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left rtl:text-right border-collapse">
-            {/* Header Bar with High Contrast */}
-            <thead 
-              className="sticky top-0 z-10 text-xs font-black uppercase tracking-wider border-b"
-              style={{ 
-                backgroundColor: isDark ? '#081324' : '#002D62',
-                borderColor: isDark ? 'rgba(148, 190, 255, 0.2)' : '#001d42',
-                color: '#FFFFFF'
-              }}
-            >
-              <tr>
-                <th className="px-4 py-3 text-white font-black">{language === 'ar' ? 'وقت آخر نشاط' : 'Timestamp'}</th>
-                <th className="px-4 py-3 text-white font-black">{language === 'ar' ? 'اسم المستخدم' : 'User Name'}</th>
-                <th className="px-4 py-3 text-white font-black">{language === 'ar' ? 'الكود الوظيفي' : 'HR Code'}</th>
-                <th className="px-4 py-3 text-white font-black">{language === 'ar' ? 'نوع الحدث' : 'Action / Event'}</th>
-                <th className="px-4 py-3 text-white font-black">{language === 'ar' ? 'الموقع الجغرافي و IP' : 'Location & IP'}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-slate-800/60">
-              {loadingLogs ? (
+        {/* Content Body: Either On-Demand Empty State OR Logs Table */}
+        {!logsFetched ? (
+          <div className="py-14 px-6 text-center space-y-4">
+            <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-900/20 text-[#002D62] dark:text-[#85C0FF] flex items-center justify-center mx-auto border border-blue-200 dark:border-blue-800/50 shadow-inner">
+              <Activity size={32} />
+            </div>
+            <div className="max-w-md mx-auto space-y-1.5">
+              <h4 className="font-bold text-base text-gray-900 dark:text-white">
+                {language === 'ar' ? 'السجلات الحية جاهزة للتحميل عند الطلب' : 'Live Logs Ready to Fetch On-Demand'}
+              </h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                {language === 'ar' 
+                  ? 'تم إيقاف التحميل التلقائي لتوفير استهلاك قراءات فايربيز (0 قراءات مستهلكة). اختر عدد السجلات واضغط على الزر أدناه لجلبها مباشرة.' 
+                  : 'Automatic loading is disabled to save Firebase reads (0 reads consumed). Select quantity and click below to fetch live logs.'}
+              </p>
+            </div>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => fetchActivityLogs(fetchLimit)}
+                disabled={loadingLogs}
+                className="px-6 py-2.5 bg-[#002D62] hover:bg-blue-900 text-white font-black rounded-xl text-xs sm:text-sm inline-flex items-center gap-2 shadow-md transition-all hover:scale-105 cursor-pointer"
+              >
+                {loadingLogs ? (
+                  <Loader2 size={16} className="animate-spin text-[#FFC000]" />
+                ) : (
+                  <RefreshCw size={16} className="text-[#FFC000]" />
+                )}
+                <span>
+                  {language === 'ar' ? `جلب آخر (${fetchLimit}) سجل نشاط الآن` : `Fetch Latest (${fetchLimit}) Logs Now`}
+                </span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left rtl:text-right border-collapse">
+              {/* Header Bar with High Contrast */}
+              <thead 
+                className="sticky top-0 z-10 text-xs font-black uppercase tracking-wider border-b"
+                style={{ 
+                  backgroundColor: isDark ? '#081324' : '#002D62',
+                  borderColor: isDark ? 'rgba(148, 190, 255, 0.2)' : '#001d42',
+                  color: '#FFFFFF'
+                }}
+              >
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-xs">
-                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#002D62] dark:text-[#FFC000]" />
-                    <span>{language === 'ar' ? 'جاري جلب السجلات...' : 'Loading logs...'}</span>
-                  </td>
+                  <th className="px-4 py-3 text-white font-black">{language === 'ar' ? 'وقت آخر نشاط' : 'Timestamp'}</th>
+                  <th className="px-4 py-3 text-white font-black">{language === 'ar' ? 'اسم المستخدم' : 'User Name'}</th>
+                  <th className="px-4 py-3 text-white font-black">{language === 'ar' ? 'الكود الوظيفي' : 'HR Code'}</th>
+                  <th className="px-4 py-3 text-white font-black">{language === 'ar' ? 'نوع الحدث' : 'Action / Event'}</th>
+                  <th className="px-4 py-3 text-white font-black">{language === 'ar' ? 'الموقع الجغرافي و IP' : 'Location & IP'}</th>
                 </tr>
-              ) : displayedLogs.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-xs font-medium">
-                    {language === 'ar' ? 'لا توجد سجلات مطابقة للبحث' : 'No matching activity logs found'}
-                  </td>
-                </tr>
-              ) : (
-                displayedLogs.map((log) => {
-                  const dateObj = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp || Date.now());
-                  const formattedTime = new Intl.DateTimeFormat(language === 'ar' ? 'ar-EG' : 'en-US', {
-                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                  }).format(dateObj);
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-slate-800/60">
+                {loadingLogs ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-xs">
+                      <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#002D62] dark:text-[#FFC000]" />
+                      <span>{language === 'ar' ? 'جاري جلب السجلات...' : 'Loading logs...'}</span>
+                    </td>
+                  </tr>
+                ) : displayedLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-xs font-medium">
+                      {language === 'ar' ? 'لا توجد سجلات مطابقة للبحث' : 'No matching activity logs found'}
+                    </td>
+                  </tr>
+                ) : (
+                  displayedLogs.map((log) => {
+                    const dateObj = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp || Date.now());
+                    const formattedTime = new Intl.DateTimeFormat(language === 'ar' ? 'ar-EG' : 'en-US', {
+                      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    }).format(dateObj);
 
-                  let actionBadge = (
-                    <span className="bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-md text-[11px] font-bold">
-                      {log.action}
-                    </span>
-                  );
-                  if (log.action === 'system_login') {
-                    actionBadge = (
-                      <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md text-[11px] font-bold border border-blue-200 dark:border-blue-800">
-                        {language === 'ar' ? 'تسجيل دخول' : 'System Login'}
+                    let actionBadge = (
+                      <span className="bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-md text-[11px] font-bold">
+                        {log.action}
                       </span>
                     );
-                  } else if (log.action === 'session_resume') {
-                    actionBadge = (
-                      <span className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md text-[11px] font-bold border border-emerald-200 dark:border-emerald-800">
-                        {language === 'ar' ? 'عودة للنشاط' : 'Resumed Activity'}
-                      </span>
+                    if (log.action === 'system_login') {
+                      actionBadge = (
+                        <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md text-[11px] font-bold border border-blue-200 dark:border-blue-800">
+                          {language === 'ar' ? 'تسجيل دخول' : 'System Login'}
+                        </span>
+                      );
+                    } else if (log.action === 'session_resume') {
+                      actionBadge = (
+                        <span className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md text-[11px] font-bold border border-emerald-200 dark:border-emerald-800">
+                          {language === 'ar' ? 'عودة للنشاط' : 'Resumed Activity'}
+                        </span>
+                      );
+                    }
+
+                    const locationText = log.location && log.location !== 'Unknown' && !log.location.includes('undefined')
+                      ? log.location 
+                      : 'Cairo, EG';
+
+                    return (
+                      <tr 
+                        key={log.id} 
+                        className="hover:bg-blue-50/40 dark:hover:bg-slate-800/40 transition-colors"
+                      >
+                        <td className="px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap text-xs">
+                          {formattedTime}
+                        </td>
+                        <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white whitespace-nowrap text-xs">
+                          {log.userName || 'Unknown'}
+                        </td>
+                        <td className="px-4 py-2.5 font-mono text-xs font-bold text-[#002D62] dark:text-[#FFC000] whitespace-nowrap">
+                          {log.hrCode || 'N/A'}
+                        </td>
+                        <td className="px-4 py-2.5 whitespace-nowrap">
+                          {actionBadge}
+                        </td>
+                        <td className="px-4 py-2.5 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-300 font-medium">
+                            <MapPin size={13} className="text-blue-500 shrink-0" />
+                            <span>{locationText}</span>
+                          </div>
+                        </td>
+                      </tr>
                     );
-                  }
-
-                  const locationText = log.location && log.location !== 'Unknown' && !log.location.includes('undefined')
-                    ? log.location 
-                    : 'Cairo, EG';
-
-                  return (
-                    <tr 
-                      key={log.id} 
-                      className="hover:bg-blue-50/40 dark:hover:bg-slate-800/40 transition-colors"
-                    >
-                      <td className="px-4 py-2.5 font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap text-xs">
-                        {formattedTime}
-                      </td>
-                      <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white whitespace-nowrap text-xs">
-                        {log.userName || 'Unknown'}
-                      </td>
-                      <td className="px-4 py-2.5 font-mono text-xs font-bold text-[#002D62] dark:text-[#FFC000] whitespace-nowrap">
-                        {log.hrCode || 'N/A'}
-                      </td>
-                      <td className="px-4 py-2.5 whitespace-nowrap">
-                        {actionBadge}
-                      </td>
-                      <td className="px-4 py-2.5 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-300 font-medium">
-                          <MapPin size={13} className="text-blue-500 shrink-0" />
-                          <span>{locationText}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Load More (+10) Footer */}
-        {hasMore && (
+        {logsFetched && hasMore && (
           <div 
             className="p-3.5 border-t flex justify-center items-center"
             style={{ 

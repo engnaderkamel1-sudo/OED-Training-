@@ -8,18 +8,18 @@ import {
   Mail, ChevronDown, ChevronRight
 } from 'lucide-react';
 
-const CATEGORIES: { value: SuggestionCategory; icon: React.FC<any>; color: string }[] = [
-  { value: 'ui',      icon: Sparkles,  color: 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/50' },
-  { value: 'course',  icon: BookOpen,  color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/50' },
-  { value: 'bug',     icon: Bug,       color: 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/50' },
-  { value: 'general', icon: Lightbulb, color: 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/50' },
+const CATEGORIES: { value: SuggestionCategory; icon: React.FC<any>; color: string; activeColor: string }[] = [
+  { value: 'ui',      icon: Sparkles,  color: 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 border-sky-200 dark:border-sky-700/60', activeColor: 'bg-sky-600 text-white border-sky-600 shadow-sm' },
+  { value: 'course',  icon: BookOpen,  color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-700/60', activeColor: 'bg-blue-600 text-white border-blue-600 shadow-sm' },
+  { value: 'bug',     icon: Bug,       color: 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/60 border-red-200 dark:border-red-700/60', activeColor: 'bg-red-600 text-white border-red-600 shadow-sm' },
+  { value: 'general', icon: Lightbulb, color: 'text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700/60', activeColor: 'bg-[#FFC000] text-[#001D42] border-yellow-500 font-black shadow-sm' },
 ];
 
 const STATUS_CONFIG: Record<SuggestionStatus, { label_en: string; label_ar: string; color: string; icon: React.FC<any> }> = {
-  pending:   { label_en: 'Pending',       label_ar: 'قيد الانتظار', color: 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/[0.08] border-gray-300 dark:border-white/[0.15]', icon: Clock },
-  reviewing: { label_en: 'Under Review',  label_ar: 'قيد الدراسة', color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700/50',    icon: AlertCircle },
-  done:      { label_en: 'Done',          label_ar: 'تم',           color: 'text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700/50', icon: CheckCircle },
-  rejected:  { label_en: 'Rejected',      label_ar: 'مرفوض',        color: 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700/50',       icon: XCircle },
+  pending:   { label_en: 'Pending',       label_ar: 'قيد الانتظار', color: 'text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-slate-800 border-gray-300 dark:border-slate-600', icon: Clock },
+  reviewing: { label_en: 'Under Review',  label_ar: 'قيد الدراسة', color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-700',    icon: AlertCircle },
+  done:      { label_en: 'Done',          label_ar: 'تم',           color: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-700', icon: CheckCircle },
+  rejected:  { label_en: 'Rejected',      label_ar: 'مرفوض',        color: 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/60 border-red-200 dark:border-red-700',       icon: XCircle },
 };
 
 // Message templates for each status change
@@ -92,31 +92,31 @@ const AdminMessageModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={e => { if (e.target === e.currentTarget) onCancel(); }}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={e => { if (e.target === e.currentTarget) onCancel(); }}>
+      <div className="bg-white dark:bg-[#0F1E36] rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden border border-gray-200 dark:border-slate-700">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-slate-800">
           <div>
-            <h3 className="font-bold text-[#002D62] flex items-center gap-2">
+            <h3 className="font-bold text-[#002D62] dark:text-white flex items-center gap-2">
               <Mail size={18} className="text-[#FFC000]" />
               {language === 'ar' ? 'إرسال رسالة للمستخدم' : 'Send Message to User'}
             </h3>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
               {suggestion.userName} · {suggestion.hrCode}
-              <span className={`ml-2 rtl:mr-2 rtl:ml-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${STATUS_CONFIG[newStatus].color}`}>
+              <span className={`ml-2 rtl:mr-2 rtl:ml-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${STATUS_CONFIG[newStatus].color}`}>
                 {statusLabel}
               </span>
             </p>
           </div>
-          <button onClick={onCancel} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-            <X size={18} className="text-gray-500" />
+          <button onClick={onCancel} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors text-gray-500 dark:text-gray-400">
+            <X size={18} />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Suggestion preview */}
-          <div className="bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-600 border border-gray-100">
-            <span className="font-semibold text-gray-800">{language === 'ar' ? 'الاقتراح: ' : 'Suggestion: '}</span>
+          <div className="bg-gray-50 dark:bg-[#162744] rounded-xl px-3.5 py-2.5 text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-700">
+            <span className="font-bold text-gray-900 dark:text-white">{language === 'ar' ? 'الاقتراح: ' : 'Suggestion: '}</span>
             {suggestion.title}
           </div>
 
@@ -124,7 +124,7 @@ const AdminMessageModal: React.FC<{
           <div>
             <button
               onClick={() => setShowTemplates(!showTemplates)}
-              className="flex items-center gap-1.5 text-sm font-semibold text-[#002D62] mb-2"
+              className="flex items-center gap-1.5 text-sm font-bold text-[#002D62] dark:text-blue-300 mb-2 cursor-pointer"
             >
               {showTemplates ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
               {language === 'ar' ? 'قوالب جاهزة' : 'Ready Templates'}
@@ -135,14 +135,14 @@ const AdminMessageModal: React.FC<{
                   <button
                     key={idx}
                     onClick={() => { setSelectedTemplate(idx); setCustomMsg(''); }}
-                    className={`w-full text-start text-sm px-3 py-2.5 rounded-lg border transition-all leading-relaxed ${
+                    className={`w-full text-start text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border transition-all leading-relaxed cursor-pointer ${
                       selectedTemplate === idx
-                        ? 'border-[#002D62] bg-blue-50 text-[#002D62] font-medium shadow-sm'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700'
+                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 font-bold shadow-sm'
+                        : 'border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200'
                     }`}
                   >
-                    <span className={`inline-block w-5 h-5 rounded-full border-2 mr-2 rtl:ml-2 rtl:mr-0 text-[10px] font-bold flex-shrink-0 align-middle text-center leading-4 ${
-                      selectedTemplate === idx ? 'border-[#002D62] bg-[#002D62] text-white' : 'border-gray-300'
+                    <span className={`inline-block w-5 h-5 rounded-full border mr-2 rtl:ml-2 rtl:mr-0 text-[10px] font-bold flex-shrink-0 align-middle text-center leading-4 ${
+                      selectedTemplate === idx ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-300 dark:border-slate-600'
                     }`}>{idx + 1}</span>
                     {tpl}
                   </button>
@@ -153,7 +153,7 @@ const AdminMessageModal: React.FC<{
 
           {/* Custom message */}
           <div>
-            <label className="text-sm font-semibold text-gray-700 block mb-1.5">
+            <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block mb-1.5">
               {language === 'ar' ? '✏️ أو اكتب رسالة مخصصة:' : '✏️ Or write a custom message:'}
             </label>
             <textarea
@@ -161,13 +161,13 @@ const AdminMessageModal: React.FC<{
               onChange={e => { setCustomMsg(e.target.value); setSelectedTemplate(null); }}
               rows={3}
               placeholder={language === 'ar' ? 'اكتب رسالتك هنا...' : 'Write your message here...'}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62]/30 resize-none"
+              className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm bg-white dark:bg-[#162744] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-medium"
             />
           </div>
 
           {/* Admin internal note */}
           <div>
-            <label className="text-sm font-semibold text-gray-700 block mb-1.5">
+            <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block mb-1.5">
               {language === 'ar' ? '📋 ملاحظة داخلية (اختياري - للأدمن فقط):' : '📋 Internal Note (optional – admin only):'}
             </label>
             <input
@@ -175,36 +175,34 @@ const AdminMessageModal: React.FC<{
               value={adminNote}
               onChange={e => setAdminNote(e.target.value)}
               placeholder={language === 'ar' ? 'ملاحظة داخلية...' : 'Internal note...'}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62]/20"
+              className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs sm:text-sm bg-white dark:bg-[#162744] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {/* Preview */}
           {finalMessage.trim() && (
-            <div className="bg-[#002D62]/5 border border-[#002D62]/20 rounded-lg px-4 py-3">
-              <p className="text-[10px] font-bold text-[#002D62] uppercase tracking-wider mb-1">{language === 'ar' ? 'معاينة الرسالة' : 'Message Preview'}</p>
-              <p className="text-sm text-gray-800 leading-relaxed">{finalMessage}</p>
+            <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/60 rounded-xl px-4 py-3">
+              <p className="text-[10px] font-black text-blue-900 dark:text-blue-300 uppercase tracking-wider mb-1">{language === 'ar' ? 'معاينة الرسالة' : 'Message Preview'}</p>
+              <p className="text-xs sm:text-sm text-gray-800 dark:text-gray-100 leading-relaxed font-medium">{finalMessage}</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-gray-100 flex gap-3">
+        <div className="px-5 py-4 border-t border-gray-100 dark:border-slate-800 flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-2 rounded-lg border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
+            className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 font-bold text-xs hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             {language === 'ar' ? 'إلغاء' : 'Cancel'}
           </button>
           <button
             onClick={handleSend}
-            disabled={!finalMessage.trim() || sending}
-            className="flex-1 py-2 rounded-lg bg-[#002D62] text-white font-bold text-sm hover:bg-blue-900 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={sending || !finalMessage.trim()}
+            className="flex-1 py-2.5 rounded-xl bg-[#002D62] dark:bg-blue-600 hover:bg-blue-900 dark:hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send size={14} />
-            {sending
-              ? (language === 'ar' ? 'جارٍ الإرسال...' : 'Sending...')
-              : (language === 'ar' ? 'إرسال الرسالة' : 'Send Message')}
+            <span>{sending ? '...' : (language === 'ar' ? 'إرسال وتحديث' : 'Send & Update')}</span>
           </button>
         </div>
       </div>
@@ -213,53 +211,71 @@ const AdminMessageModal: React.FC<{
 };
 
 export const SuggestionsPage: React.FC = () => {
-  const { user, language, t, suggestions, addSuggestion, updateSuggestion } = useAppContext() as any;
-  const isAdmin = user?.role === 'admin';
-
-  // Form state
+  const { user, suggestions, addSuggestion, updateSuggestion, language, t } = useAppContext() as any;
+  const [category, setCategory] = useState<SuggestionCategory>('general');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<SuggestionCategory>('general');
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [sendSuccess, setSendSuccess] = useState('');
 
-  // Admin filter state
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  // Admin filter states
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Modal for admin status change + message
+  const [messagingFor, setMessagingFor] = useState<{
+    suggestion: Suggestion;
+    newStatus: SuggestionStatus;
+  } | null>(null);
+
+  // Admin internal note inline editing
   const [editingNote, setEditingNote] = useState<{ id: string; note: string } | null>(null);
 
-  // Message modal state
-  const [messagingFor, setMessagingFor] = useState<{ suggestion: Suggestion; newStatus: SuggestionStatus } | null>(null);
-  const [sendSuccess, setSendSuccess] = useState<string | null>(null);
+  const isAdmin = user?.role === 'admin';
+
+  // Submissions for trainee
+  const mySuggestions = suggestions.filter((s: Suggestion) => s.userId === user?.id || s.hrCode === user?.hrCode);
+
+  // Filtered suggestions for admin
+  const adminSuggestions = suggestions.filter((s: Suggestion) => {
+    const matchCat = filterCategory === 'all' || s.category === filterCategory;
+    const matchStat = filterStatus === 'all' || s.status === filterStatus;
+    const q = searchQuery.trim().toLowerCase();
+    const matchSearch = !q ||
+      s.title.toLowerCase().includes(q) ||
+      s.description.toLowerCase().includes(q) ||
+      s.userName.toLowerCase().includes(q) ||
+      s.hrCode.toLowerCase().includes(q) ||
+      (s.department && s.department.toLowerCase().includes(q));
+    return matchCat && matchStat && matchSearch;
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
     setSubmitting(true);
-    const newSuggestion: Suggestion = {
-      id: `sug_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-      userId: user?.id || '',
-      userName: user?.name || '',
-      hrCode: user?.hrCode || '',
-      department: user?.department || '',
-      title: title.trim(),
-      description: description.trim(),
-      category,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    };
-    await addSuggestion(newSuggestion);
-    setTitle('');
-    setDescription('');
-    setCategory('general');
-    setSuccessMsg(t('suggestionSubmitted'));
-    setSubmitting(false);
-    setTimeout(() => setSuccessMsg(''), 4000);
+    try {
+      await addSuggestion({
+        category,
+        title: title.trim(),
+        description: description.trim(),
+      });
+      setTitle('');
+      setDescription('');
+      setCategory('general');
+      setSuccessMsg(language === 'ar' ? 'تم إرسال اقتراحك بنجاح!' : 'Suggestion submitted successfully!');
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleStatusClick = (suggestion: Suggestion, newStatus: SuggestionStatus) => {
-    if (suggestion.status === newStatus) return;
+    // Open message modal
     setMessagingFor({ suggestion, newStatus });
   };
 
@@ -270,42 +286,28 @@ export const SuggestionsPage: React.FC = () => {
       status: newStatus,
       adminMessage: message,
       adminMessageAt: new Date().toISOString(),
-      ...(adminNote ? { adminNote } : {}),
+      adminNote: adminNote.trim() || undefined,
     });
     setMessagingFor(null);
-    const label = language === 'ar' ? STATUS_CONFIG[newStatus].label_ar : STATUS_CONFIG[newStatus].label_en;
-    setSendSuccess(language === 'ar' ? `تم تغيير الحالة إلى "${label}" وإرسال الرسالة ✓` : `Status changed to "${label}" and message sent ✓`);
-    setTimeout(() => setSendSuccess(null), 4000);
+    setSendSuccess(language === 'ar' ? 'تم تحديث الحالة وإرسال الرسالة بنجاح!' : 'Status updated and message sent!');
+    setTimeout(() => setSendSuccess(''), 4000);
   };
 
   const getCategoryLabel = (cat: SuggestionCategory) => {
-    const map: Record<SuggestionCategory, string> = {
-      ui: t('catUi'), course: t('catCourse'), bug: t('catBug'), general: t('catGeneral')
-    };
-    return map[cat];
+    switch (cat) {
+      case 'ui':      return t('catUi');
+      case 'course':  return t('catCourse');
+      case 'bug':     return t('catBug');
+      case 'general': return t('catGeneral');
+    }
   };
-
-  const mySuggestions = suggestions.filter((s: Suggestion) => s.userId === user?.id);
-
-  let adminSuggestions = [...suggestions];
-  if (filterStatus !== 'all') adminSuggestions = adminSuggestions.filter((s: Suggestion) => s.status === filterStatus);
-  if (filterCategory !== 'all') adminSuggestions = adminSuggestions.filter((s: Suggestion) => s.category === filterCategory);
-  if (searchQuery.trim()) {
-    const q = searchQuery.toLowerCase();
-    adminSuggestions = adminSuggestions.filter((s: Suggestion) =>
-      s.title.toLowerCase().includes(q) ||
-      s.userName.toLowerCase().includes(q) ||
-      s.hrCode.toLowerCase().includes(q) ||
-      s.description.toLowerCase().includes(q)
-    );
-  }
 
   const StatusBadge = ({ status }: { status: SuggestionStatus }) => {
     const cfg = STATUS_CONFIG[status];
     const Icon = cfg.icon;
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border ${cfg.color}`}>
-        <Icon size={11} />
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shadow-2xs ${cfg.color}`}>
+        <Icon size={12} />
         {language === 'ar' ? cfg.label_ar : cfg.label_en}
       </span>
     );
@@ -315,15 +317,15 @@ export const SuggestionsPage: React.FC = () => {
     const cfg = CATEGORIES.find(c => c.value === cat)!;
     const Icon = cfg.icon;
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border ${cfg.color}`}>
-        <Icon size={11} />
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shadow-2xs ${cfg.color}`}>
+        <Icon size={12} />
         {getCategoryLabel(cat)}
       </span>
     );
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-5xl mx-auto">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
       {/* Message Modal */}
       {messagingFor && (
         <AdminMessageModal
@@ -336,22 +338,22 @@ export const SuggestionsPage: React.FC = () => {
       )}
 
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#002D62] flex items-center gap-2">
-          <MessageSquare size={24} className="text-[#FFC000]" />
+      <div>
+        <h1 className="text-2xl font-black text-[#002D62] dark:text-white flex items-center gap-2">
+          <MessageSquare size={26} className="text-[#FFC000]" />
           {t('suggestions')}
         </h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-1">
           {language === 'ar'
-            ? 'شارك اقتراحاتك لتحسين النظام'
+            ? 'شارك اقتراحاتك وملاحظاتك لتطوير وتحسين النظام'
             : 'Share your feedback to help us improve the system'}
         </p>
       </div>
 
       {/* Send success toast */}
       {sendSuccess && (
-        <div className="mb-4 bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl flex items-center gap-2 shadow-sm">
-          <CheckCircle size={16} />
+        <div className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-sm px-4 py-3 rounded-2xl flex items-center gap-2 shadow-sm font-bold">
+          <CheckCircle size={17} />
           {sendSuccess}
         </div>
       )}
@@ -359,13 +361,13 @@ export const SuggestionsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* LEFT: Submit Form */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-            <h2 className="text-base font-bold text-[#002D62] mb-4 flex items-center gap-2">
-              <Lightbulb size={18} className="text-[#FFC000]" />
+          <div className="bg-white dark:bg-[#0F1E36] rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-sm p-5 space-y-4">
+            <h2 className="text-base font-black text-[#002D62] dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-slate-800 pb-3">
+              <Lightbulb size={20} className="text-[#FFC000]" />
               {t('newSuggestion')}
             </h2>
             {successMsg && (
-              <div className="mb-4 bg-green-50 border border-green-200 text-green-700 text-sm px-3 py-2 rounded-lg flex items-center gap-2">
+              <div className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-2 font-bold">
                 <CheckCircle size={15} />
                 {successMsg}
               </div>
@@ -373,20 +375,21 @@ export const SuggestionsPage: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Category */}
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('suggestionCategory')}</label>
-                <div className="grid grid-cols-2 gap-2">
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-2.5">{t('suggestionCategory')}</label>
+                <div className="grid grid-cols-2 gap-2.5">
                   {CATEGORIES.map(cat => {
                     const Icon = cat.icon;
+                    const isSelected = category === cat.value;
                     return (
                       <button
                         key={cat.value}
                         type="button"
                         onClick={() => setCategory(cat.value)}
-                        className={`flex flex-col items-center gap-1 p-2 rounded-lg border text-xs font-semibold transition-all ${
-                          category === cat.value ? cat.color + ' scale-[1.03] shadow-sm' : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                          isSelected ? cat.activeColor + ' scale-[1.03] shadow-md' : 'border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-[#162744] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
                         }`}
                       >
-                        <Icon size={16} />
+                        <Icon size={18} />
                         <span>{getCategoryLabel(cat.value)}</span>
                       </button>
                     );
@@ -395,35 +398,35 @@ export const SuggestionsPage: React.FC = () => {
               </div>
               {/* Title */}
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('suggestionTitle')}</label>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-1.5">{t('suggestionTitle')}</label>
                 <input
                   type="text"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   required
                   placeholder={language === 'ar' ? 'عنوان مختصر...' : 'Brief title...'}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62]/30"
+                  className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50/80 dark:bg-[#162744] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                 />
               </div>
               {/* Description */}
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('suggestionDescription')}</label>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-1.5">{t('suggestionDescription')}</label>
                 <textarea
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   required
                   rows={4}
                   placeholder={language === 'ar' ? 'اشرح اقتراحك بالتفصيل...' : 'Describe your suggestion in detail...'}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62]/30 resize-none"
+                  className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50/80 dark:bg-[#162744] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-medium"
                 />
               </div>
               <button
                 type="submit"
                 disabled={submitting || !title.trim() || !description.trim()}
-                className="w-full bg-[#002D62] text-white font-bold py-2.5 rounded-lg hover:bg-blue-900 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#002D62] dark:bg-blue-600 text-white font-black py-3 rounded-xl hover:bg-blue-900 dark:hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
               >
                 <Send size={15} />
-                {submitting ? '...' : t('submitSuggestion')}
+                <span>{submitting ? '...' : t('submitSuggestion')}</span>
               </button>
             </form>
           </div>
@@ -434,47 +437,47 @@ export const SuggestionsPage: React.FC = () => {
           {isAdmin ? (
             <>
               {/* Admin: Filters */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-wrap gap-3 items-center">
+              <div className="bg-white dark:bg-[#0F1E36] rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-sm p-4 flex flex-wrap gap-3 items-center">
                 <div className="relative flex-1 min-w-[150px]">
-                  <Search size={15} className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Search size={15} className="absolute left-3.5 rtl:right-3.5 rtl:left-auto top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder={language === 'ar' ? 'بحث...' : 'Search...'}
-                    className="w-full pl-9 rtl:pr-9 rtl:pl-3 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#002D62]/20"
+                    className="w-full pl-9 rtl:pr-9 rtl:pl-3 pr-3 py-2 text-xs sm:text-sm border border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-[#162744] text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                   />
                 </div>
-                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none">
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="border border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-[#162744] text-gray-900 dark:text-white rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none font-bold">
                   <option value="all">{language === 'ar' ? 'كل الحالات' : 'All Statuses'}</option>
                   <option value="pending">{t('statusPending')}</option>
                   <option value="reviewing">{t('statusReviewing')}</option>
                   <option value="done">{t('statusDone')}</option>
                   <option value="rejected">{t('statusRejected')}</option>
                 </select>
-                <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none">
+                <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className="border border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-[#162744] text-gray-900 dark:text-white rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none font-bold">
                   <option value="all">{language === 'ar' ? 'كل التصنيفات' : 'All Categories'}</option>
                   <option value="ui">{t('catUi')}</option>
                   <option value="course">{t('catCourse')}</option>
                   <option value="bug">{t('catBug')}</option>
                   <option value="general">{t('catGeneral')}</option>
                 </select>
-                <span className="text-xs text-gray-500 font-semibold ml-auto rtl:mr-auto rtl:ml-0">
+                <span className="text-xs text-gray-500 dark:text-gray-400 font-black ml-auto rtl:mr-auto rtl:ml-0">
                   {adminSuggestions.length} {language === 'ar' ? 'نتيجة' : 'results'}
                 </span>
               </div>
 
               {/* Admin suggestions list */}
               {adminSuggestions.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">{t('noSuggestions')}</div>
+                <div className="text-center py-12 text-gray-400 dark:text-gray-500 font-bold bg-white dark:bg-[#0F1E36] rounded-2xl border border-gray-200 dark:border-slate-700/80">{t('noSuggestions')}</div>
               ) : (
                 adminSuggestions.map((s: Suggestion) => (
-                  <div key={s.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                  <div key={s.id} className="bg-white dark:bg-[#0F1E36] rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-sm p-5 space-y-3.5">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div>
-                        <p className="font-bold text-gray-900">{s.title}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{s.userName} · {s.hrCode} · {s.department}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="font-black text-base text-gray-900 dark:text-white">{s.title}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 font-semibold mt-0.5">{s.userName} · {s.hrCode} · {s.department}</p>
+                        <p className="text-[11px] text-gray-400 dark:text-gray-400 mt-0.5">
                           {new Date(s.createdAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}
                         </p>
                       </div>
@@ -483,12 +486,12 @@ export const SuggestionsPage: React.FC = () => {
                         <StatusBadge status={s.status} />
                       </div>
                     </div>
-                    <p className="text-sm text-gray-700 bg-gray-50 rounded-lg px-3 py-2 leading-relaxed">{s.description}</p>
+                    <p className="text-xs sm:text-sm text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-[#162744] border border-gray-100 dark:border-slate-700/80 rounded-xl p-3.5 leading-relaxed font-medium">{s.description}</p>
 
                     {/* Admin Message sent indicator */}
                     {(s as any).adminMessage && (
-                      <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs text-blue-700 flex items-start gap-2">
-                        <Mail size={13} className="mt-0.5 shrink-0" />
+                      <div className="bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60 rounded-xl px-3.5 py-2.5 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2">
+                        <Mail size={14} className="mt-0.5 shrink-0 text-blue-600 dark:text-blue-400" />
                         <div>
                           <span className="font-bold">{language === 'ar' ? 'رسالة أُرسلت: ' : 'Message sent: '}</span>
                           {(s as any).adminMessage}
@@ -497,16 +500,16 @@ export const SuggestionsPage: React.FC = () => {
                     )}
 
                     {/* Admin Controls — clicking status opens the message modal */}
-                    <div className="border-t border-gray-100 pt-3 flex flex-wrap gap-2 items-center">
-                      <span className="text-xs font-semibold text-gray-500">
+                    <div className="border-t border-gray-100 dark:border-slate-800 pt-3.5 flex flex-wrap gap-2 items-center">
+                      <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
                         {language === 'ar' ? 'تغيير الحالة + إرسال رسالة:' : 'Change Status + Send Message:'}
                       </span>
                       {(['pending', 'reviewing', 'done', 'rejected'] as SuggestionStatus[]).map(st => (
                         <button
                           key={st}
                           onClick={() => handleStatusClick(s, st)}
-                          className={`text-xs px-2.5 py-1 rounded-full border font-semibold transition-all hover:scale-105 ${
-                            s.status === st ? STATUS_CONFIG[st].color + ' scale-[1.05]' : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                          className={`text-xs px-3 py-1 rounded-full border font-bold transition-all hover:scale-105 cursor-pointer ${
+                            s.status === st ? STATUS_CONFIG[st].color + ' scale-[1.05] shadow-xs' : 'border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800'
                           }`}
                         >
                           {language === 'ar' ? STATUS_CONFIG[st].label_ar : STATUS_CONFIG[st].label_en}
@@ -523,22 +526,22 @@ export const SuggestionsPage: React.FC = () => {
                             value={editingNote.note}
                             onChange={e => setEditingNote({ id: s.id, note: e.target.value })}
                             placeholder={language === 'ar' ? 'ملاحظة داخلية...' : 'Internal note...'}
-                            className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none"
+                            className="flex-1 border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-[#162744] text-gray-900 dark:text-white rounded-xl px-3.5 py-1.5 text-xs sm:text-sm focus:outline-none"
                           />
                           <button
                             onClick={async () => { await updateSuggestion(s.id, { adminNote: editingNote.note }); setEditingNote(null); }}
-                            className="bg-[#002D62] text-white px-3 py-1.5 rounded-lg text-xs font-bold"
+                            className="bg-[#002D62] dark:bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer"
                           >
                             {language === 'ar' ? 'حفظ' : 'Save'}
                           </button>
-                          <button onClick={() => setEditingNote(null)} className="text-xs text-gray-500 hover:text-gray-700">
+                          <button onClick={() => setEditingNote(null)} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 cursor-pointer">
                             {language === 'ar' ? 'إلغاء' : 'Cancel'}
                           </button>
                         </div>
                       ) : (
                         <button
                           onClick={() => setEditingNote({ id: s.id, note: s.adminNote || '' })}
-                          className="text-xs text-[#002D62] hover:underline font-medium"
+                          className="text-xs text-[#002D62] dark:text-blue-300 hover:underline font-bold cursor-pointer"
                         >
                           {s.adminNote
                             ? `📋 ${t('adminNote')}: ${s.adminNote}`
@@ -553,34 +556,34 @@ export const SuggestionsPage: React.FC = () => {
           ) : (
             <>
               {/* User: My Suggestions */}
-              <h2 className="text-base font-bold text-[#002D62]">{t('mySuggestions')}</h2>
+              <h2 className="text-base font-bold text-[#002D62] dark:text-white">{t('mySuggestions')}</h2>
               {mySuggestions.length === 0 ? (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center text-gray-400">
+                <div className="bg-white dark:bg-[#0F1E36] rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-sm p-8 text-center text-gray-400 dark:text-gray-500 font-bold">
                   <MessageSquare size={32} className="mx-auto mb-2 opacity-30" />
                   <p>{t('noSuggestions')}</p>
                 </div>
               ) : (
                 mySuggestions.map((s: Suggestion) => (
-                  <div key={s.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-2">
+                  <div key={s.id} className="bg-white dark:bg-[#0F1E36] rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-sm p-5 space-y-3">
                     <div className="flex items-start justify-between gap-2 flex-wrap">
-                      <p className="font-bold text-gray-900">{s.title}</p>
+                      <p className="font-black text-base text-gray-900 dark:text-white">{s.title}</p>
                       <div className="flex gap-2 flex-wrap">
                         <CategoryBadge cat={s.category} />
                         <StatusBadge status={s.status} />
                       </div>
                     </div>
-                    <p className="text-sm text-gray-600">{s.description}</p>
+                    <p className="text-xs sm:text-sm text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-[#162744] border border-gray-100 dark:border-slate-700/80 rounded-xl p-3.5 leading-relaxed font-medium">{s.description}</p>
 
                     {/* Admin message to user */}
                     {(s as any).adminMessage && (
-                      <div className="bg-[#002D62]/5 border border-[#002D62]/20 rounded-lg px-3 py-2.5 text-sm">
-                        <p className="text-xs font-bold text-[#002D62] mb-1 flex items-center gap-1">
-                          <Mail size={12} />
+                      <div className="bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm">
+                        <p className="text-xs font-black text-blue-900 dark:text-blue-300 mb-1 flex items-center gap-1">
+                          <Mail size={13} />
                           {language === 'ar' ? 'رد الإدارة:' : 'Admin Reply:'}
                         </p>
-                        <p className="text-gray-800 leading-relaxed">{(s as any).adminMessage}</p>
+                        <p className="text-gray-800 dark:text-gray-100 leading-relaxed font-medium">{(s as any).adminMessage}</p>
                         {(s as any).adminMessageAt && (
-                          <p className="text-[10px] text-gray-400 mt-1">
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
                             {new Date((s as any).adminMessageAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}
                           </p>
                         )}

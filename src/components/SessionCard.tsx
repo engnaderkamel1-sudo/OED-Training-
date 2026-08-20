@@ -124,20 +124,20 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   // DYNAMIC STYLING LOGIC
   // ==========================================
 
-  let cardClasses = "p-5 rounded-xl shadow-sm border transition-all flex flex-col justify-between h-full relative group ";
+  let cardClasses = "p-5 rounded-2xl shadow-sm border transition-all flex flex-col justify-between h-full relative group ";
   
   if (isCancelled) {
-    // Admin Cancelled State - high contrast in dark mode without grayscale
-    cardClasses += "bg-gray-100 dark:bg-[#132543] border-gray-300 dark:border-red-900/40";
+    // Admin Cancelled State - high contrast in dark mode
+    cardClasses += "bg-gray-50 dark:bg-[#132238] border-gray-300 dark:border-red-900/50 shadow-xs";
   } else if (!isAdminView && isUnregistered) {
     // Trainee Unregistered State
-    cardClasses += "bg-white dark:bg-[#193158] border-amber-300 dark:border-amber-500/40";
+    cardClasses += "bg-amber-50/40 dark:bg-[#162744] border-amber-300 dark:border-amber-500/50 shadow-xs";
   } else if (isCompleted) {
     // Completed/Finalized State
-    cardClasses += "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-900/40";
+    cardClasses += "bg-emerald-50/40 dark:bg-[#132840] border-emerald-300 dark:border-emerald-600/50 shadow-xs";
   } else {
     // Default Active State
-    cardClasses += "bg-white dark:bg-[#193158] border-gray-200 dark:border-white/[0.12] hover:border-[#002D62]/40 dark:hover:border-[#85C0FF]/50 hover:shadow-md";
+    cardClasses += "bg-white dark:bg-[#162744] border-gray-200 dark:border-slate-700/80 hover:border-[#002D62] dark:hover:border-blue-400 hover:shadow-md";
   }
 
   return (
@@ -146,66 +146,66 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       <div>
         {/* Header & Badges */}
         <div className="flex justify-between items-start mb-3 gap-2 flex-wrap">
-          <h3 className={`font-bold text-lg leading-tight ${isCancelled ? 'text-gray-600 dark:text-gray-200 line-through' : 'text-[#002D62] dark:text-white'}`}>
+          <h3 className={`font-black text-lg leading-tight ${isCancelled ? 'text-gray-800 dark:text-gray-100 line-through' : 'text-[#002D62] dark:text-white'}`}>
             <DataField>{session.courseTitle}</DataField>
-            {isCancelled && <span className="text-red-600 dark:text-red-400 font-bold ml-2"> ({t('cancelled')})</span>}
+            {isCancelled && <span className="text-red-600 dark:text-red-400 font-black ml-2 no-underline inline-block"> ({t('cancelled')})</span>}
           </h3>
           
           <div className="flex items-center gap-1.5 flex-wrap">
             {session.sessionNumber && (
-              <span className="text-xs bg-blue-50 dark:bg-blue-900/30 text-[#002D62] dark:text-blue-300 px-2 py-0.5 rounded font-semibold border border-blue-200 dark:border-blue-700/50 shadow-sm">
+              <span className="text-xs bg-blue-100 dark:bg-blue-900/50 text-[#002D62] dark:text-blue-200 px-2.5 py-1 rounded-lg font-black border border-blue-200 dark:border-blue-700 shadow-2xs">
                 {session.sessionNumber === 'sessionOne' ? t('sessionOne') : session.sessionNumber === 'sessionTwo' ? t('sessionTwo') : session.sessionNumber === 'sessionThree' ? t('sessionThree') : session.sessionNumber}
               </span>
             )}
             {isCancelled && (
-              <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-0.5 rounded font-bold border border-red-200 dark:border-red-700/50 shadow-sm flex items-center gap-1">
-                <Ban size={12} />
+              <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-200 px-2.5 py-1 rounded-lg font-black border border-red-300 dark:border-red-700 shadow-2xs flex items-center gap-1">
+                <Ban size={13} />
                 {t('cancelled')}
               </span>
             )}
             {isCompleted && (
-              <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-700/50 shadow-sm flex items-center gap-1">
-                <CheckCircle size={12} />
+              <span className="text-xs bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 px-2.5 py-1 rounded-lg font-black border border-emerald-300 dark:border-emerald-700 shadow-2xs flex items-center gap-1">
+                <CheckCircle size={13} />
                 {language === 'ar' ? 'مكتملة' : 'Completed'}
               </span>
             )}
           </div>
         </div>
 
-        {/* Session Details */}
-        <div className="space-y-2.5 text-sm text-gray-700 dark:text-gray-200">
+        {/* Session Details with High Contrast */}
+        <div className="space-y-2 text-xs sm:text-sm text-gray-800 dark:text-gray-100 font-medium">
           <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-[#002D62] dark:text-[#85C0FF] opacity-90 shrink-0" />
-            <span className="font-medium">
+            <Calendar className="h-4 w-4 text-blue-600 dark:text-[#FFC000] shrink-0" />
+            <span>
               {session.startDate === session.endDate || !session.endDate
                 ? <DataField>{session.startDate}</DataField>
-                : <><DataField>{session.startDate}</DataField> <span className="text-gray-400 dark:text-gray-400 text-xs mx-1">{language === 'ar' ? 'إلى' : 'to'}</span> <DataField>{session.endDate}</DataField></>
+                : <><DataField>{session.startDate}</DataField> <span className="text-gray-500 dark:text-gray-400 text-xs mx-1 font-normal">{language === 'ar' ? 'إلى' : 'to'}</span> <DataField>{session.endDate}</DataField></>
               }
             </span>
           </div>
           
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-[#002D62] dark:text-[#85C0FF] opacity-90 shrink-0" />
+            <Clock className="h-4 w-4 text-blue-600 dark:text-[#FFC000] shrink-0" />
             <span><DataField>{session.startTime}</DataField></span>
           </div>
           
           <div className="flex items-start gap-2">
-            <MapPin className="h-4 w-4 text-[#002D62] dark:text-[#85C0FF] opacity-90 shrink-0 mt-0.5" />
+            <MapPin className="h-4 w-4 text-blue-600 dark:text-[#FFC000] shrink-0 mt-0.5" />
             <span className="leading-snug"><DataField>{session.location}</DataField></span>
           </div>
 
           <div className="flex items-start gap-2">
-            <Users className="h-4 w-4 text-[#002D62] dark:text-[#85C0FF] opacity-90 shrink-0 mt-0.5" />
+            <Users className="h-4 w-4 text-blue-600 dark:text-[#FFC000] shrink-0 mt-0.5" />
             <div className="flex flex-col">
-              <span className="leading-snug"><DataField>{session.targetParticipants}</DataField></span>
+              <span className="leading-snug font-semibold"><DataField>{session.targetParticipants}</DataField></span>
               {isAdminView && (
                 <button
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAttendeesModal(true); }}
-                  className="text-xs font-bold text-emerald-700 dark:text-emerald-300 mt-1 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-lg self-start border border-emerald-200 dark:border-emerald-700/50 hover:bg-emerald-100 dark:hover:bg-emerald-800/40 transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:scale-105"
+                  className="text-xs font-black text-emerald-800 dark:text-emerald-200 mt-1.5 bg-emerald-100 dark:bg-emerald-900/50 px-3 py-1 rounded-xl self-start border border-emerald-300 dark:border-emerald-600 hover:bg-emerald-200 dark:hover:bg-emerald-800 transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:scale-105"
                   title={language === 'ar' ? 'عرض قائمة المسجلين' : 'View Registered Attendees'}
                 >
-                  <Users size={13} className="text-emerald-600 dark:text-emerald-400" />
+                  <Users size={13} className="text-emerald-700 dark:text-emerald-300" />
                   <span>{attendeesCount} {language === 'ar' ? 'مسجلين (استعراض 👁️)' : 'registered (View 👁️)'}</span>
                 </button>
               )}
@@ -218,15 +218,15 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       {/* CANCELLED SESSION DETAILS BANNER */}
       {/* ============================================ */}
       {isCancelled && (
-        <div className="mt-3 p-3.5 bg-red-100 dark:bg-red-950/80 border border-red-300 dark:border-red-600/60 rounded-xl text-xs flex flex-col gap-2 shadow-xs">
-          <div className="flex items-center gap-2 font-black text-sm text-red-900 dark:text-red-100">
-            <Ban size={16} className="text-red-600 dark:text-red-400 shrink-0" />
+        <div className="mt-3 p-4 bg-red-100 dark:bg-red-950/70 border-2 border-red-300 dark:border-red-700/60 rounded-2xl text-xs flex flex-col gap-2.5 shadow-xs">
+          <div className="flex items-center gap-2 font-black text-sm text-red-900 dark:text-red-200">
+            <Ban size={17} className="text-red-600 dark:text-red-400 shrink-0" />
             <span>{language === 'ar' ? '🚫 تم إلغاء هذه الجلسة التدريبية' : '🚫 This Training Session Was Cancelled'}</span>
           </div>
           {session.cancellationReason && (
-            <div className="text-xs font-bold text-gray-900 dark:text-white bg-white/95 dark:bg-slate-900/90 p-2.5 rounded-lg border border-red-200 dark:border-red-500/50 leading-relaxed shadow-2xs">
-              <span className="text-red-700 dark:text-red-300 font-black">{language === 'ar' ? '📌 سبب الإلغاء: ' : '📌 Cancellation Reason: '}</span>
-              <span className="font-semibold text-gray-800 dark:text-gray-100">{session.cancellationReason}</span>
+            <div className="text-xs font-bold text-gray-900 dark:text-white bg-white dark:bg-[#0B172B] p-3 rounded-xl border border-red-200 dark:border-red-700 leading-relaxed shadow-2xs">
+              <span className="text-red-700 dark:text-red-400 font-black">{language === 'ar' ? '📌 سبب الإلغاء: ' : '📌 Cancellation Reason: '}</span>
+              <span className="font-bold text-gray-900 dark:text-gray-100">{session.cancellationReason}</span>
             </div>
           )}
           {session.cancelledAt && (
@@ -241,8 +241,8 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       {/* INLINE CONFIRMATION BAR (replaces window.confirm) */}
       {/* ============================================ */}
       {confirmAction && (
-        <div className="mt-3 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/40 rounded-xl flex flex-col gap-3">
-          <p className="text-sm font-bold text-red-800 dark:text-red-200 flex items-center gap-1.5">
+        <div className="mt-3 p-4 bg-red-50 dark:bg-red-950/60 border-2 border-red-300 dark:border-red-700 rounded-2xl flex flex-col gap-3 shadow-md">
+          <p className="text-sm font-black text-red-900 dark:text-red-200 flex items-center gap-1.5">
             <Ban size={16} />
             <span>
               {confirmAction === 'cancel' 
@@ -254,7 +254,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
 
           {confirmAction === 'cancel' && (
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-red-900 dark:text-red-300 block">
+              <label className="text-xs font-bold text-red-900 dark:text-red-300 block">
                 {language === 'ar' ? 'سبب الإلغاء (اختياري):' : 'Cancellation Reason (Optional):'}
               </label>
               <textarea
@@ -262,7 +262,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 value={cancellationReasonInput}
                 onChange={(e) => setCancellationReasonInput(e.target.value)}
                 placeholder={language === 'ar' ? 'اكتب سبب الإلغاء هنا (مثلاً: تأجيل بناءً على طلب الإدارة)...' : 'Type cancellation reason here...'}
-                className="w-full border border-red-200 dark:border-red-800 rounded-lg p-2 text-xs bg-white dark:bg-[#132543] text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full border border-red-300 dark:border-red-700 rounded-xl p-2.5 text-xs bg-white dark:bg-[#132543] text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-red-500 font-medium"
               />
             </div>
           )}
@@ -271,7 +271,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             <button
               type="button"
               onClick={() => { setConfirmAction(null); setCancellationReasonInput(""); }}
-              className="bg-gray-200 dark:bg-white/[0.1] text-gray-700 dark:text-gray-200 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-300 dark:hover:bg-white/[0.15] transition-colors cursor-pointer"
+              className="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-200 px-4 py-1.5 rounded-xl text-xs font-bold hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors cursor-pointer"
             >
               {language === 'ar' ? 'تراجع' : 'Cancel'}
             </button>
@@ -281,7 +281,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 if (confirmAction === 'cancel') doAdminCancel();
                 else if (confirmAction === 'unregister') doTraineeUnregister();
               }}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-xs"
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-xl text-xs font-black transition-colors cursor-pointer shadow-md"
             >
               {language === 'ar' ? 'تأكيد الإلغاء' : 'Confirm Cancellation'}
             </button>
@@ -290,7 +290,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       )}
 
       {/* Action Controls */}
-      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700/80">
         
         {/* ==================================== */}
         {/*           ADMIN CONTROLS             */}
@@ -301,9 +301,9 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               <button 
                 type="button"
                 onClick={doAdminReactivate}
-                className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-sm"
+                className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-md hover:scale-105"
               >
-                <RotateCcw size={14} />
+                <RotateCcw size={15} />
                 <span>{t('reactivateSession')}</span>
               </button>
             ) : isCompleted ? (
@@ -314,9 +314,9 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 <button
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAttendeesModal(true); }}
-                  className="cursor-pointer bg-white dark:bg-[#132543] text-[#002D62] dark:text-[#93C5FD] hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-300 dark:border-slate-700 text-xs px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-2xs"
+                  className="cursor-pointer bg-white dark:bg-slate-800 text-blue-900 dark:text-blue-200 hover:bg-blue-50 dark:hover:bg-slate-700 border border-blue-200 dark:border-slate-600 text-xs px-4 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-xs"
                 >
-                  <Users size={14} className="text-[#002D62] dark:text-[#93C5FD]" />
+                  <Users size={15} className="text-blue-600 dark:text-blue-400" />
                   <span>{language === 'ar' ? `كشف المتدربين (${attendeesCount})` : `Attendees (${attendeesCount})`}</span>
                 </button>
 
@@ -326,12 +326,12 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   className="cursor-pointer bg-[#FFC000] hover:bg-yellow-500 text-[#001D42] text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-sm hover:scale-105"
                   title={language === 'ar' ? 'طباعة الكشف الرسمي' : 'Print Official Register'}
                 >
-                  <FileText size={14} className="text-[#001D42]" />
+                  <FileText size={15} className="text-[#001D42]" />
                   <span>{language === 'ar' ? 'طباعة الكشف الرسمي (PDF)' : 'Print Register (PDF)'}</span>
                 </button>
 
-                <span className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 text-xs font-black px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs">
-                  <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400" />
+                <span className="bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200 text-xs font-black px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs">
+                  <CheckCircle size={15} className="text-emerald-600 dark:text-emerald-400" />
                   <span>{language === 'ar' ? 'مكتملة ومسجلة بالشيت ✓' : 'Completed & Saved ✓'}</span>
                 </span>
               </>
@@ -343,39 +343,39 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(onSendReminder) onSendReminder(session.id, 'Standard'); }}
-                  className="cursor-pointer bg-blue-50 dark:bg-blue-950/40 text-[#002D62] dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800/40 text-xs p-2 rounded-lg transition-colors flex items-center justify-center shadow-sm"
+                  className="cursor-pointer bg-blue-100 dark:bg-blue-900/60 text-[#002D62] dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800 border border-blue-300 dark:border-blue-600 text-xs p-2.5 rounded-xl transition-colors flex items-center justify-center shadow-xs"
                   title={t('standardReminder')}
                 >
-                  <Bell size={14} />
+                  <Bell size={15} />
                 </button>
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(onSendReminder) onSendReminder(session.id, 'Final'); }}
-                  className="cursor-pointer bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800/40 text-xs p-2 rounded-lg transition-colors flex items-center justify-center shadow-sm"
+                  className="cursor-pointer bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-800 border border-amber-300 dark:border-amber-600 text-xs p-2.5 rounded-xl transition-colors flex items-center justify-center shadow-xs"
                   title={t('finalReminder')}
                 >
-                  <AlertTriangle size={14} />
+                  <AlertTriangle size={15} />
                 </button>
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onAnnounceRequest) onAnnounceRequest(session); }}
-                  className="cursor-pointer bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800/40 text-xs p-2 rounded-lg transition-colors flex items-center justify-center shadow-sm"
+                  className="cursor-pointer bg-sky-100 dark:bg-sky-900/60 text-sky-900 dark:text-sky-200 hover:bg-sky-200 dark:hover:bg-sky-800 border border-sky-300 dark:border-sky-600 text-xs p-2.5 rounded-xl transition-colors flex items-center justify-center shadow-xs"
                   title={language === 'ar' ? 'إرسال تنبيه للمجموعة' : 'Announce to Group'}
                 >
-                  <Megaphone size={14} />
+                  <Megaphone size={15} />
                 </button>
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onManageAnnouncementsRequest) onManageAnnouncementsRequest(session.id); }}
-                  className="cursor-pointer bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50 border border-slate-200 dark:border-slate-700/40 text-xs p-2 rounded-lg transition-colors flex items-center justify-center shadow-sm"
+                  className="cursor-pointer bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 text-xs p-2.5 rounded-xl transition-colors flex items-center justify-center shadow-xs"
                   title={language === 'ar' ? 'سجل التنبيهات' : 'Announcements Log'}
                 >
-                  <Clock size={14} />
+                  <Clock size={15} />
                 </button>
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onEdit) onEdit(session); }}
-                  className="cursor-pointer bg-white dark:bg-[#132543] text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/[0.08] border border-gray-300 dark:border-white/[0.15] text-xs px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 font-bold shadow-sm"
+                  className="cursor-pointer bg-white dark:bg-slate-800 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 border border-gray-300 dark:border-slate-600 text-xs px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-xs"
                 >
                   <Edit2 size={14} className="text-gray-600 dark:text-gray-300" />
                   <span>{t('edit')}</span>
@@ -383,35 +383,35 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onShowQR) onShowQR(session); }}
-                  className="cursor-pointer bg-white dark:bg-[#132543] text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-blue-900/40 border border-gray-300 dark:border-blue-400/30 text-xs px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 font-bold shadow-sm"
+                  className="cursor-pointer bg-white dark:bg-slate-800 text-[#002D62] dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-slate-700 border border-gray-300 dark:border-slate-600 text-xs px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-xs"
                   title={language === "ar" ? "عرض رمز QR" : "Show QR Code"}
                 >
-                  <QrCode size={14} className="text-[#002D62] dark:text-[#85C0FF]" />
+                  <QrCode size={14} className="text-[#002D62] dark:text-blue-400" />
                   <span>QR Code</span>
                 </button>
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onPrintRegisterRequest) onPrintRegisterRequest(session); }}
-                  className="cursor-pointer bg-[#FFC000] hover:bg-yellow-500 text-[#001D42] text-xs px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 font-black shadow-sm"
+                  className="cursor-pointer bg-[#FFC000] hover:bg-yellow-500 text-[#001D42] text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-sm hover:scale-105"
                   title={language === 'ar' ? 'طباعة الكشف' : 'Print Register'}
                 >
-                  <FileText size={14} className="text-[#001D42]" />
+                  <FileText size={15} className="text-[#001D42]" />
                   <span className="text-[#001D42] font-black">{language === 'ar' ? 'طباعة الكشف' : 'Print Register'}</span>
                 </button>
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onFinalizeRequest) onFinalizeRequest(session); }}
-                  className="cursor-pointer text-white text-xs px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 font-bold shadow-sm bg-[#002D62] hover:bg-blue-900 border border-blue-400/20"
+                  className="cursor-pointer text-white text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-sm bg-blue-600 hover:bg-blue-700 border border-blue-400/40 hover:scale-105"
                 >
-                  <CheckCircle size={14} />
+                  <CheckCircle size={15} />
                   <span>{language === 'ar' ? 'إنهاء وحضور' : 'Finalize & Grade'}</span>
                 </button>
                 <button 
                   type="button"
                   onClick={() => setConfirmAction('cancel')}
-                  className="cursor-pointer bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800/50 text-xs px-3 py-2 rounded-lg transition-colors flex items-center gap-1 font-semibold"
+                  className="cursor-pointer bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/80 border border-red-300 dark:border-red-700 text-xs px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-xs"
                 >
-                  <Ban size={13} />
+                  <Ban size={14} />
                   <span>{t('cancelSession')}</span>
                 </button>
               </>
