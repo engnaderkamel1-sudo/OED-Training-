@@ -623,36 +623,59 @@ Please log in to register for this session through the OED-TTMS Application.
     return DEFAULT_DEPARTMENT_STATS;
   }, [cleanedData, records]);
 
+
   const totalUniqueTrainees = useMemo(() => {
-    const allData = [...(cleanedData || []), ...(records || [])];
-    if (allData.length > 50) {
-      const uniqueKeys = new Set<string>();
-      allData.forEach(r => {
-        const key = (r.hrCode || r.userId || (r as any).name || '').toString().trim().toLowerCase();
-        if (key && key !== 'n/a' && key !== 'undefined' && key !== 'unknown') {
-          uniqueKeys.add(key);
+    const uniqueKeys = new Set<string>();
+
+    // 1. All records from cleanedData / database records
+    const allRecords = [...(cleanedData || []), ...(records || [])];
+    allRecords.forEach(r => {
+      const hr = (r.hrCode || '').toString().trim().toLowerCase();
+      const name = ((r as any).name || (r as any).traineeName || r.userId || '').toString().trim().toLowerCase();
+      const identifier = hr && hr !== 'n/a' && hr !== 'undefined' ? hr : name;
+      if (identifier && identifier !== 'n/a' && identifier !== 'undefined' && identifier !== 'unknown' && identifier !== '') {
+        uniqueKeys.add(identifier);
+      }
+    });
+
+    // 2. All registered users/trainees in system
+    (users || []).forEach(u => {
+      if (u && u.status !== 'deleted' && (u.role === 'trainee' || !u.role)) {
+        const hr = (u.hrCode || '').toString().trim().toLowerCase();
+        const identifier = hr && hr !== 'n/a' ? hr : (u.id || u.name || '').toString().trim().toLowerCase();
+        if (identifier && identifier !== 'n/a' && identifier !== '') {
+          uniqueKeys.add(identifier);
         }
+      }
+    });
+
+    // 3. Trainees registered across sessions
+    (upcomingSessions || []).forEach(s => {
+      (s.registeredUsers || []).forEach(code => {
+        const c = (code || '').toString().trim().toLowerCase();
+        if (c && c !== 'n/a' && c !== '') uniqueKeys.add(c);
       });
-      if (uniqueKeys.size > 0) return uniqueKeys.size;
+    });
+
+    if (uniqueKeys.size > 0) {
+      return uniqueKeys.size;
     }
-    const deptSum = departmentStats.reduce((acc, curr) => acc + curr.trainees, 0);
-    if (deptSum > 50) {
-      return Math.round(deptSum * 0.88);
-    }
-    return (globalKPIs.totalEngineers || 765) + (globalKPIs.totalTechnicians || 117) + (globalKPIs.totalOperators || 102);
-  }, [cleanedData, records, departmentStats, globalKPIs]);
+
+    return globalKPIs.totalParticipants || 984;
+  }, [cleanedData, records, users, upcomingSessions, globalKPIs]);
 
   const totalDistinctCourses = useMemo(() => {
-    const source = (cleanedData && cleanedData.length > 0) ? cleanedData : records;
-    if (source && source.length > 0) {
-      const uniqueCourses = new Set<string>();
-      source.forEach(r => {
-        const cName = (r.courseName || r.courseTitle || '').toString().trim().toLowerCase();
-        if (cName) uniqueCourses.add(cName);
-      });
-      if (uniqueCourses.size > 0) return uniqueCourses.size;
-    }
-    return dynamicCourses.length || globalKPIs.totalCourses || 21;
+    const allRecords = [...(cleanedData || []), ...(records || [])];
+    const uniqueCourses = new Set<string>();
+    allRecords.forEach(r => {
+      const cName = (r.courseName || (r as any).courseTitle || '').toString().trim().toLowerCase();
+      if (cName) uniqueCourses.add(cName);
+    });
+    (dynamicCourses || []).forEach(c => {
+      if (c.title) uniqueCourses.add(c.title.trim().toLowerCase());
+    });
+    if (uniqueCourses.size > 0) return uniqueCourses.size;
+    return globalKPIs.totalCourses || 21;
   }, [cleanedData, records, dynamicCourses, globalKPIs]);
 
   const tnaCounts: Record<string, number> = {};
