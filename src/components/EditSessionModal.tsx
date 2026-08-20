@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '../context';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -79,7 +79,7 @@ export const EditSessionModal: React.FC<EditSessionModalProps> = ({ session, onC
         // Filter target users based on targetParticipants
         const targetUsers = (users || []).filter(u => {
           if (!u || u.status === 'deleted') return false;
-          if (u.role === 'admin' || u.role === 'manager') return true; // Notify admins/managers
+          if (u.role === 'admin') return true; // Notify admins
 
           const jRole = (u.jobRole || '').toLowerCase();
           const uRole = (u.role || '').toLowerCase();

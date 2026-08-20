@@ -744,7 +744,6 @@ export const Login: React.FC = () => {
                   <option value="Engineer">{language === "ar" ? "مهندس" : "Engineer"}</option>
                   <option value="Technician">{language === "ar" ? "فني" : "Technician"}</option>
                   <option value="Operator">{language === "ar" ? "مشغل" : "Operator"}</option>
-                  <option value="Manager">{language === "ar" ? "مدير" : "Manager"}</option>
                 </select>
               </div>
               <div>
@@ -752,10 +751,7 @@ export const Login: React.FC = () => {
                 <select value={accessRole} onChange={(e) => setAccessRole(e.target.value as Role)} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]" dir={language === "ar" ? "rtl" : "ltr"}>
                   <option value="trainee">{language === "ar" ? "متدرب" : "Trainee"}</option>
                   {registerMode === 'official' && (
-                    <>
-                      <option value="manager">{language === "ar" ? "مدير" : "Manager"}</option>
-                      <option value="admin">{language === "ar" ? "مشرف" : "Admin"}</option>
-                    </>
+                    <option value="admin">{language === "ar" ? "مسؤول النظام (Admin)" : "Admin"}</option>
                   )}
                 </select>
               </div>

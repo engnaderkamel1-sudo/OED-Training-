@@ -136,9 +136,8 @@ export const Sidebar: React.FC = () => {
   ];
 
   let links: any[] = [];
-  if (role === 'trainee') links = getTraineeLinks();
-  else if (role === 'admin') links = getAdminLinks();
-  else if (role === 'manager' || role === 'supervisor') links = getManagerLinks();
+  if (role === 'admin') links = getAdminLinks();
+  else links = getTraineeLinks();
 
   return (
     <>

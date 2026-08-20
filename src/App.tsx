@@ -295,10 +295,8 @@ const AppContent: React.FC = () => {
               </div>
             )}
 
-            {activeRole === 'trainee' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <TraineeDashboard />}
-            {activeRole === 'manager' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <ManagerDashboard />}
             {activeRole === 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <AdminDashboard />}
-            {activeRole === 'supervisor' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <SiteSupervisorDashboard />}
+            {activeRole !== 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <TraineeDashboard />}
           </motion.div>
         </main>
       </div>
