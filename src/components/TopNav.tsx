@@ -90,7 +90,7 @@ export const TopNav: React.FC = () => {
                 {!isLogoExpanded && (
                   <motion.img 
                     layoutId="magic-logo"
-                    src="/app-icon.jpg" 
+                    src="/app-icon-v8.png" 
                     alt="OED-TTMS" 
                     className="w-full h-full object-cover rounded-full shadow-sm border border-white/20 cursor-pointer"
                     onClick={() => setIsLogoExpanded(true)}

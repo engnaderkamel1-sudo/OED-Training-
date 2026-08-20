@@ -142,7 +142,7 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
-      <div className="fixed top-20 left-0 rtl:left-auto rtl:right-0 z-[9999] print:hidden">
+      <div className="fixed top-28 sm:top-24 left-0 rtl:left-auto rtl:right-0 z-[9999] print:hidden">
         <div 
           className={`
             transition-all duration-300 ease-in-out
@@ -199,7 +199,7 @@ export const Sidebar: React.FC = () => {
             style={{ borderBottom: '1px solid var(--border-color)' }}>
             
             <img
-              src="/app-icon.jpg"
+              src="/app-icon-v8.png"
               alt="OED-TTMS Logo"
               className="w-16 h-16 rounded-2xl object-cover shadow-md border-2 border-white/10"
             />

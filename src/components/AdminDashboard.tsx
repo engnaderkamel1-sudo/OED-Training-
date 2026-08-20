@@ -2799,16 +2799,16 @@ Content-Type: text/html; charset="utf-8"
                         </div>
 
                         <div className="space-y-3.5">
-                          <div className="p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 bg-gray-50/80 dark:bg-[#152744] flex items-center justify-between gap-3 shadow-2xs">
+                          <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300 shrink-0 border border-amber-200 dark:border-amber-800/40">
                                 <Calendar size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white truncate">
+                                <h4 className="text-sm font-black text-[#002D62] dark:text-white">
                                   {language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}
                                 </h4>
-                                <p className="text-[11px] text-gray-600 dark:text-gray-300 font-medium truncate">
+                                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                                   {language === 'ar' ? 'ملخص الدورات والحضور لكل شهر' : 'Monthly training sessions & attendance summary'}
                                 </p>
                               </div>
@@ -2816,23 +2816,23 @@ Content-Type: text/html; charset="utf-8"
                             <button
                               type="button"
                               onClick={() => setShowMonthlyReport(true)}
-                              className="px-4 py-2.5 bg-[#002D62] dark:bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center gap-1.5 hover:scale-105"
+                              className="w-full sm:w-auto px-4 py-2.5 bg-[#002D62] dark:bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 hover:scale-105"
                             >
                               <Mail size={14} />
                               <span>{language === 'ar' ? 'عرض التقرير' : 'Open Report'}</span>
                             </button>
                           </div>
 
-                          <div className="p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 bg-gray-50/80 dark:bg-[#152744] flex items-center justify-between gap-3 shadow-2xs">
+                          <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 shrink-0 border border-emerald-200 dark:border-emerald-800/40">
                                 <Download size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white truncate">
+                                <h4 className="text-sm font-black text-[#002D62] dark:text-white">
                                   {language === 'ar' ? 'تصدير السجل التدريبي العام (PDF)' : 'Full Training Register (PDF)'}
                                 </h4>
-                                <p className="text-[11px] text-gray-600 dark:text-gray-300 font-medium truncate">
+                                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                                   {language === 'ar' ? 'كشف شامل لجميع سجلات المتدربين' : 'Comprehensive PDF training register for all trainees'}
                                 </p>
                               </div>
@@ -2842,7 +2842,7 @@ Content-Type: text/html; charset="utf-8"
                               onClick={async () => {
                                 await safePrintReport('printable-area-admin', { title: 'General Training Register' });
                               }}
-                              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center gap-1.5 hover:scale-105"
+                              className="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 hover:scale-105"
                             >
                               <Printer size={14} />
                               <span>{language === 'ar' ? 'طباعة / PDF' : 'Print PDF'}</span>
@@ -2872,16 +2872,16 @@ Content-Type: text/html; charset="utf-8"
                         </div>
 
                         <div className="space-y-3.5">
-                          <div className="p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 bg-gray-50/80 dark:bg-[#152744] flex items-center justify-between gap-3 shadow-2xs">
+                          <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 shrink-0 border border-emerald-200 dark:border-emerald-800/40">
                                 <Sparkles size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white truncate">
+                                <h4 className="text-sm font-black text-[#002D62] dark:text-white">
                                   {language === 'ar' ? 'نسخ احتياطي فوري متكامل' : 'Instant Full System Backup'}
                                 </h4>
-                                <p className="text-[11px] text-gray-600 dark:text-gray-300 font-medium truncate">
+                                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                                   {language === 'ar' ? 'تنزيل ملف نسخة احتياطية لكافة المستخدمين والسجلات والجلسات' : 'Download complete backup of users, records & sessions'}
                                 </p>
                               </div>
@@ -2889,30 +2889,30 @@ Content-Type: text/html; charset="utf-8"
                             <button
                               type="button"
                               onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])}
-                              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center gap-1.5 hover:scale-105"
+                              className="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 hover:scale-105"
                             >
                               <Download size={14} />
                               <span>{language === 'ar' ? 'تنزيل النسخة' : 'Download'}</span>
                             </button>
                           </div>
 
-                          <div className="p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 bg-gray-50/80 dark:bg-[#152744] flex items-center justify-between gap-3 shadow-2xs">
+                          <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-300 shrink-0 border border-blue-200 dark:border-blue-800/40">
                                 <UploadCloud size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white truncate">
+                                <h4 className="text-sm font-black text-[#002D62] dark:text-white">
                                   {language === 'ar' ? 'استيراد ورفع ملف إكسيل محلي' : 'Import Local Excel File'}
                                 </h4>
-                                <p className="text-[11px] text-gray-600 dark:text-gray-300 font-medium truncate">
+                                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                                   {syncFile ? syncFile.name : (language === 'ar' ? 'رفع شيت إكسيل لتحديث السجلات' : 'Upload Excel sheet to update records')}
                                 </p>
                               </div>
                             </div>
                             <label
                               htmlFor="excel-upload-main"
-                              className="px-4 py-2.5 bg-[#002D62] dark:bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center gap-1.5 hover:scale-105"
+                              className="w-full sm:w-auto px-4 py-2.5 bg-[#002D62] dark:bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 hover:scale-105"
                             >
                               <UploadCloud size={14} />
                               <span>{language === 'ar' ? 'اختر ملف' : 'Browse'}</span>
@@ -2920,16 +2920,16 @@ Content-Type: text/html; charset="utf-8"
                             <input type="file" id="excel-upload-main" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
                           </div>
 
-                          <div className="p-4 rounded-2xl border border-red-200 dark:border-red-900/50 bg-red-50/70 dark:bg-red-950/30 flex items-center justify-between gap-3 shadow-2xs">
+                          <div className="p-4 rounded-2xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="p-2.5 rounded-xl bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 shrink-0 border border-red-200 dark:border-red-800/40">
                                 <ShieldAlert size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-xs sm:text-sm font-black text-red-900 dark:text-red-200 truncate">
+                                <h4 className="text-sm font-black text-red-900 dark:text-red-200">
                                   {language === 'ar' ? 'تصفير وتنظيف المنظومة (Factory Reset)' : 'System Factory Reset'}
                                 </h4>
-                                <p className="text-[11px] text-red-700/80 dark:text-red-300 font-medium truncate">
+                                <p className="text-xs text-red-700 dark:text-red-300 font-medium">
                                   {language === 'ar' ? 'مسح بيانات الاختبار والتجهيز للإطلاق الرسمي (محمي برقم سري)' : 'Wipe trial data & prepare for clean launch (Password Protected)'}
                                 </p>
                               </div>
@@ -2942,7 +2942,7 @@ Content-Type: text/html; charset="utf-8"
                                 setResetError("");
                                 setResetPassword("");
                               }}
-                              className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center gap-1.5 hover:scale-105"
+                              className="w-full sm:w-auto px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 hover:scale-105"
                             >
                               <Trash2 size={14} />
                               <span>{language === 'ar' ? 'تصفير المنظومة' : 'Reset System'}</span>
@@ -3587,62 +3587,62 @@ Content-Type: text/html; charset="utf-8"
                       {language === 'ar' ? 'حدد البيانات المراد تصفيرها ومسحها:' : 'Select data to purge:'}
                     </label>
                     <div className="grid grid-cols-1 gap-2 text-xs">
-                      <label className="flex items-center gap-2 p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 cursor-pointer">
+                      <label className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 transition-colors cursor-pointer">
                         <input
                           type="checkbox"
                           checked={wipeOptions.records}
                           onChange={(e) => setWipeOptions({ ...wipeOptions, records: e.target.checked })}
                           className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
                         />
-                        <span className="font-medium text-gray-800 dark:text-gray-200">
+                        <span className="font-bold text-slate-900 dark:text-white">
                           {language === 'ar' ? 'سجلات التدريب والدرجات السابقة (cleanedData & records)' : 'Training records & scores (cleanedData & records)'}
                         </span>
                       </label>
 
-                      <label className="flex items-center gap-2 p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 cursor-pointer">
+                      <label className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 transition-colors cursor-pointer">
                         <input
                           type="checkbox"
                           checked={wipeOptions.sessions}
                           onChange={(e) => setWipeOptions({ ...wipeOptions, sessions: e.target.checked })}
                           className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
                         />
-                        <span className="font-medium text-gray-800 dark:text-gray-200">
+                        <span className="font-bold text-slate-900 dark:text-white">
                           {language === 'ar' ? 'الجلسات والدورات المفتوحة والمنتهية والملغية (sessions)' : 'Training sessions (active, completed & cancelled)'}
                         </span>
                       </label>
 
-                      <label className="flex items-center gap-2 p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 cursor-pointer">
+                      <label className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 transition-colors cursor-pointer">
                         <input
                           type="checkbox"
                           checked={wipeOptions.users}
                           onChange={(e) => setWipeOptions({ ...wipeOptions, users: e.target.checked })}
                           className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
                         />
-                        <span className="font-medium text-gray-800 dark:text-gray-200">
+                        <span className="font-bold text-slate-900 dark:text-white">
                           {language === 'ar' ? 'حسابات المتدربين والمشرفين التجريبية (مع استثناء حساب الأدمن)' : 'Test user accounts (Excludes current Admin)'}
                         </span>
                       </label>
 
-                      <label className="flex items-center gap-2 p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 cursor-pointer">
+                      <label className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 transition-colors cursor-pointer">
                         <input
                           type="checkbox"
                           checked={wipeOptions.logs}
                           onChange={(e) => setWipeOptions({ ...wipeOptions, logs: e.target.checked })}
                           className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
                         />
-                        <span className="font-medium text-gray-800 dark:text-gray-200">
+                        <span className="font-bold text-slate-900 dark:text-white">
                           {language === 'ar' ? 'سجلات النشاط وتسجيل الدخول (activity_logs & login_logs)' : 'Activity & login logs'}
                         </span>
                       </label>
 
-                      <label className="flex items-center gap-2 p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 cursor-pointer">
+                      <label className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 transition-colors cursor-pointer">
                         <input
                           type="checkbox"
                           checked={wipeOptions.kpis}
                           onChange={(e) => setWipeOptions({ ...wipeOptions, kpis: e.target.checked })}
                           className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
                         />
-                        <span className="font-medium text-gray-800 dark:text-gray-200">
+                        <span className="font-bold text-slate-900 dark:text-white">
                           {language === 'ar' ? 'تصفير عدادات الإحصائيات (KPIs)' : 'Reset system KPI statistics counters to 0'}
                         </span>
                       </label>
