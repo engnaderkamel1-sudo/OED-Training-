@@ -147,22 +147,8 @@ export const CoursesPage: React.FC = () => {
           {isAdmin && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => fetchTrainingRecords()}
-                disabled={isFetchingRecords}
-                className="bg-white hover:bg-blue-50 text-[#002D62] font-bold px-3.5 py-2 rounded-xl text-sm flex items-center gap-2 border-2 border-[#002D62]/40 shadow-xs transition-colors whitespace-nowrap cursor-pointer disabled:opacity-50"
-                title={language === 'ar' ? 'سحب كافة الكورسات المسجلة في تاريخ التدريب' : 'Extract all courses from training records'}
-              >
-                {isFetchingRecords ? (
-                  <div className="w-4 h-4 border-2 border-[#002D62] border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <FolderOpen size={16} className="text-[#002D62]" />
-                )}
-                <span>{language === 'ar' ? 'مزامنة كل الكورسات' : 'Sync All Courses'}</span>
-              </button>
-
-              <button
                 onClick={openAddModal}
-                className="bg-[#002D62] hover:bg-blue-900 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2 shadow-sm transition-colors whitespace-nowrap cursor-pointer"
+                className="bg-[#002D62] hover:bg-blue-900 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2 shadow-sm transition-colors whitespace-nowrap cursor-pointer hover:scale-105"
               >
                 <Plus size={18} className="text-[#FFC000]" />
                 <span>{language === 'ar' ? 'إضافة كورس جديد' : 'Add New Course'}</span>

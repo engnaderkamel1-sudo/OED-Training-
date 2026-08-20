@@ -99,9 +99,13 @@ export interface UpcomingSession {
   registeredUsers?: string[];
   unregisteredUsers?: string[];
   createdAt?: string;
+  completedAt?: string;
+  cancelledAt?: string;
+  cancellationReason?: string;
+  cancelledBy?: string;
   managerEmails?: string[];
   isDeleted?: boolean;
-  status?: "Active" | "Cancelled";
+  status?: "Active" | "Completed" | "Cancelled";
   reminderLog?: ReminderLogItem[];
   feedbackLink?: string;
   feedbackEnabled?: boolean;

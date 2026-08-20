@@ -5,7 +5,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText } from "lucide-react";
+import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
@@ -200,7 +200,6 @@ export const AdminDashboard: React.FC = () => {
   });
 
   const generateEmailBodyTemplate = (cTitle: string, sIter: string, sNum: string, sDate: string, eDate: string, sTime: string, sLoc: string) => {
-    const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://oed-ttms.vercel.app';
     const sOrdinal = sIter ? getSessionOrdinalText(sIter) : (sNum ? getSessionOrdinalText(sNum) : '1st Session');
     return `Dear Gents,
 
@@ -214,8 +213,6 @@ Registration & Enrollment:
 Please log in to register for this session through the OED-TTMS Application.
 
 * If you face any issues or need assistance with registration, please feel free to reach out.
-
-Best regards,
 
 
 `;
@@ -241,8 +238,8 @@ Best regards,
 
   useEffect(() => {
     if (!isEmailBodyManual) {
-      const courseObj = courses.find((c) => c.id === selectedCourseId);
-      const cTitle = courseObj ? courseObj.title : "";
+      const courseObj = courses.find((c) => c.id === selectedCourseId || c.title === selectedCourseId);
+      const cTitle = courseObj ? courseObj.title : (selectedCourseId || "");
       setCustomEmailBody(generateEmailBodyTemplate(cTitle, sessionIteration, sessionNumber, startDate, endDate, startTime, location));
     }
   }, [selectedCourseId, sessionIteration, sessionNumber, startDate, endDate, startTime, location, courses, isEmailBodyManual]);
@@ -265,6 +262,25 @@ Best regards,
   const [activeUsersLimit, setActiveUsersLimit] = useState<number | 'all'>(10);
   const [isFullReportView, setIsFullReportView] = useState(false);
   const [pendingSortOrder, setPendingSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [sessionStatusTab, setSessionStatusTab] = useState<'active' | 'completed' | 'cancelled'>('active');
+
+  const activeSessionsList = useMemo(() => {
+    return upcomingSessions.filter(s => s.status !== 'Completed' && s.status !== 'Cancelled' && !s.isDeleted);
+  }, [upcomingSessions]);
+
+  const completedSessionsList = useMemo(() => {
+    return upcomingSessions.filter(s => s.status === 'Completed');
+  }, [upcomingSessions]);
+
+  const cancelledSessionsList = useMemo(() => {
+    return upcomingSessions.filter(s => s.status === 'Cancelled' || s.isDeleted);
+  }, [upcomingSessions]);
+
+  const currentDisplayedSessions = useMemo(() => {
+    if (sessionStatusTab === 'completed') return completedSessionsList;
+    if (sessionStatusTab === 'cancelled') return cancelledSessionsList;
+    return activeSessionsList;
+  }, [sessionStatusTab, activeSessionsList, completedSessionsList, cancelledSessionsList]);
 
   const handleExecuteRecordsSearch = async (fetchAll = false) => {
     if (fetchAll) {
@@ -446,25 +462,25 @@ Best regards,
   }, [users]);
 
   const courseStats = useMemo(() => {
-    if (records.length > 0) {
+    if (records.length > 50) {
       const stats = dynamicCourses.map((course) => {
-        const courseRecords = records.filter((r) => r.courseId === course.id);
+        const courseRecords = records.filter((r) => r.courseId === course.id || r.courseName === course.title);
         const uniqueDates = Array.from(new Set(courseRecords.map((r) => r.attendanceDate)));
         return { courseName: course.title, attendees: courseRecords.length, sessions: uniqueDates.length };
       }).sort((a, b) => b.attendees - a.attendees);
-      if (stats.some(s => s.attendees > 0)) return stats;
+      if (stats.some(s => s.attendees > 0)) return stats.filter(s => s.attendees > 0);
     }
     return DEFAULT_COURSE_STATS;
   }, [dynamicCourses, records]);
 
   const departmentStats = useMemo(() => {
-    if (records.length > 0) {
+    if (records.length > 50) {
       const stats: Record<string, Set<string>> = {};
       records.forEach((r) => {
-        const u = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}`);
-        if (u && u.department) {
-          if (!stats[u.department]) stats[u.department] = new Set();
-          stats[u.department].add(r.userId);
+        const dept = r.department || users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}`)?.department;
+        if (dept) {
+          if (!stats[dept]) stats[dept] = new Set();
+          stats[dept].add(r.userId || r.traineeName || r.name || r.id);
         }
       });
       const res = Object.entries(stats).map(([name, set]) => ({ department: name, trainees: set.size })).sort((a, b) => b.trainees - a.trainees);
@@ -474,12 +490,12 @@ Best regards,
   }, [records, users]);
 
   const totalUniqueTrainees = useMemo(() => {
-    if (records.length > 0) return new Set(records.map((r) => r.userId)).size;
+    if (records.length > 50) return new Set(records.map((r) => r.userId || r.traineeName || r.name)).size;
     return globalKPIs.totalParticipants || 984;
   }, [records, globalKPIs]);
 
   const totalDistinctCourses = useMemo(() => {
-    if (records.length > 0) return new Set(records.map((r) => r.courseId)).size;
+    if (records.length > 50) return new Set(records.map((r) => r.courseId || r.courseName)).size;
     return globalKPIs.totalCourses || 21;
   }, [records, globalKPIs]);
 
@@ -1958,11 +1974,6 @@ Content-Type: text/html; charset="utf-8"
                   <h2 className="text-xl font-bold border-l-4 rtl:border-r-4 rtl:border-l-0 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0" style={{ color: textColor }}>
                     {language === "ar" ? "لوحة الإحصائيات والتحليلات" : "Analytics & Statistics Dashboard"}
                   </h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {language === 'ar' 
-                      ? '⚡ إحصائيات معتمدة وفورية وموفرة للاستهلاك (0 قراءات من السيرفر).' 
-                      : '⚡ Instant verified zero-read system statistics.'}
-                  </p>
                 </div>
                 <button
                   onClick={async () => {
@@ -1982,7 +1993,7 @@ Content-Type: text/html; charset="utf-8"
                 </div>
                 <div className="border rounded-lg p-6 shadow-sm flex flex-col items-center justify-center transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                   <span className="text-sm font-semibold uppercase tracking-wider mb-2" style={{ color: textMuted }}>{language === "ar" ? "إجمالي السجلات" : "Total Records"}</span>
-                  <span className="text-3xl font-bold" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>{records.length > 0 ? records.length : (globalKPIs.totalParticipants || 984)}</span>
+                  <span className="text-3xl font-bold" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>{records.length > 50 ? records.length : (globalKPIs.totalParticipants || 984)}</span>
                 </div>
                 <div className="border rounded-lg p-6 shadow-sm flex flex-col items-center justify-center transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                   <span className="text-sm font-semibold uppercase tracking-wider mb-2" style={{ color: textMuted }}>{language === "ar" ? "الدورات المختلفة" : "Distinct Courses"}</span>
@@ -2351,8 +2362,8 @@ Content-Type: text/html; charset="utf-8"
                               type="button"
                               onClick={() => {
                                 setIsEmailBodyManual(false);
-                                const courseObj = courses.find((c) => c.id === selectedCourseId);
-                                const cTitle = courseObj ? courseObj.title : "";
+                                const courseObj = courses.find((c) => c.id === selectedCourseId || c.title === selectedCourseId);
+                                const cTitle = courseObj ? courseObj.title : (selectedCourseId || "");
                                 setCustomEmailBody(generateEmailBodyTemplate(cTitle, sessionIteration, sessionNumber, startDate, endDate, startTime, location));
                               }}
                               className="text-[10px] font-bold text-amber-800 dark:text-amber-300 hover:underline cursor-pointer bg-white/80 dark:bg-white/10 px-2.5 py-1 rounded border border-amber-300 dark:border-amber-700 flex items-center gap-1"
@@ -2399,16 +2410,78 @@ Content-Type: text/html; charset="utf-8"
                 )}
                 
                 {["tools", "tools_manage"].includes(currentView) && (
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "إدارة الجلسات القادمة" : "Manage Upcoming Sessions"}</h2>
-                    {upcomingSessions.length === 0 ? (
-                      <div className="text-center py-12 px-4 border border-dashed rounded-lg transition-colors" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between flex-wrap gap-4 border-b pb-4" style={{ borderColor: borderColor }}>
+                      <h2 className="text-xl font-bold border-l-4 rtl:border-r-4 rtl:border-l-0 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0" style={{ color: textColor }}>
+                        {language === "ar" ? "إدارة ومتابعة الدورات التدريبية" : "Manage Training Sessions"}
+                      </h2>
+                      
+                      {/* 3 Status Sub-Tabs */}
+                      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-gray-100 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => setSessionStatusTab('active')}
+                          className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+                            sessionStatusTab === 'active'
+                              ? 'bg-[#002D62] text-white shadow-sm'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-slate-700/50'
+                          }`}
+                        >
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                          <span>{language === 'ar' ? 'الدورات المفتوحة والجارية' : 'Open & Active'}</span>
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white/20 text-white font-mono">
+                            {activeSessionsList.length}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setSessionStatusTab('completed')}
+                          className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+                            sessionStatusTab === 'completed'
+                              ? 'bg-emerald-600 text-white shadow-sm'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-slate-700/50'
+                          }`}
+                        >
+                          <CheckCircle size={14} className={sessionStatusTab === 'completed' ? 'text-white' : 'text-emerald-500'} />
+                          <span>{language === 'ar' ? 'الدورات المنتهية' : 'Completed Sessions'}</span>
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-900/40 text-white font-mono">
+                            {completedSessionsList.length}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setSessionStatusTab('cancelled')}
+                          className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+                            sessionStatusTab === 'cancelled'
+                              ? 'bg-red-600 text-white shadow-sm'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-slate-700/50'
+                          }`}
+                        >
+                          <Ban size={14} className={sessionStatusTab === 'cancelled' ? 'text-white' : 'text-red-500'} />
+                          <span>{language === 'ar' ? 'الدورات الملغية' : 'Cancelled Sessions'}</span>
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-red-900/40 text-white font-mono">
+                            {cancelledSessionsList.length}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {currentDisplayedSessions.length === 0 ? (
+                      <div className="text-center py-12 px-4 border border-dashed rounded-2xl transition-colors" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
                         <Calendar className="mx-auto h-12 w-12 mb-3" style={{ color: textMuted }} />
-                        <p className="font-medium" style={{ color: textMuted }}>{language === "ar" ? "لا توجد جلسات قادمة" : "No Upcoming Sessions"}</p>
+                        <p className="font-bold text-sm" style={{ color: textMuted }}>
+                          {sessionStatusTab === 'completed'
+                            ? (language === 'ar' ? 'لا توجد دورات منتهية حالياً' : 'No Completed Sessions Yet')
+                            : sessionStatusTab === 'cancelled'
+                            ? (language === 'ar' ? 'لا توجد دورات ملغية' : 'No Cancelled Sessions')
+                            : (language === 'ar' ? 'لا توجد دورات مفتوحة حالياً' : 'No Open Sessions Currently')}
+                        </p>
                       </div>
                     ) : (
                       <ul className="space-y-4">
-                        {upcomingSessions.map((session, index) => (
+                        {currentDisplayedSessions.map((session, index) => (
                           <li key={session.id || index}>
                             <SessionCard session={session} isAdminView={true} onEdit={handleStartEdit} onSendReminder={handleSendReminder} onAnnounceRequest={setAnnouncingSession} onManageAnnouncementsRequest={setShowAnnouncementManager} onFinalizeRequest={setFinalizingSession} onPrintRegisterRequest={async (session) => await downloadTrainingRegisterPDF(session, users, records)} onShowQR={setQrSession} onToggleFeedback={handleToggleFeedback} />
                           </li>
@@ -2419,162 +2492,212 @@ Content-Type: text/html; charset="utf-8"
                 )}
               </div>
 
-              {/* TNA Section */}
+              {/* Reports & Resource Sharing Section */}
               {["tools", "tools_reports"].includes(currentView) && (
                 <>
-                  <div className="border-t pt-8 mt-8" style={{ borderColor: borderColor }}>
-                    <h2 className="text-2xl font-bold mb-6 border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>{language === "ar" ? "تحليل الاحتياجات التدريبية" : "Training Needs Analysis"}</h2>
-                    <div className="h-[300px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={tnaData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={borderColor} />
-                          <XAxis dataKey="name" stroke={textMuted} />
-                          <YAxis stroke={textMuted} />
-                          <Tooltip cursor={{ fill: tableHeaderBg }} contentStyle={{ backgroundColor: cardColor, borderColor: borderColor, color: textColor }} />
-                          <Bar dataKey="count" fill="#FFC000" radius={[4, 4, 0, 0]} name={language === "ar" ? "الطلبات" : "Requests"} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-8 mt-8" style={{ borderColor: borderColor }}>
-                    <div className="max-w-md">
-                      <h2 className="text-2xl font-bold mb-6 border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>{language === "ar" ? "مشاركة الموارد" : "Resource Sharing"}</h2>
-                      <form onSubmit={handleShareResource} className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-1" style={{ color: textMuted }}>{language === "ar" ? "اسم الدورة" : "Course Name"}</label>
-                          <select value={selectedCourseForResource} onChange={(e) => setSelectedCourseForResource(e.target.value)} className="w-full border rounded px-3 py-2 font-sans focus:ring-[#002D62]" dir="ltr" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}>
-                            {dynamicCourses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1" style={{ color: textMuted }}>{language === "ar" ? "رابط جوجل درايف" : "Google Drive Link"}</label>
-                          <input type="url" required value={resourceLink} onChange={(e) => setResourceLink(e.target.value)} placeholder="https://drive.google.com/..." className="w-full border rounded px-3 py-2 focus:ring-[#002D62]" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} />
-                        </div>
-                        <button type="submit" className="text-white font-bold py-2 px-6 rounded transition-colors flex items-center" style={{ backgroundColor: isDark ? '#2563eb' : '#002D62' }}>
-                          <Share2 size={18} className="mr-2 rtl:ml-2 rtl:mr-0" /> {language === "ar" ? "مشاركة" : "Share"}
-                        </button>
-                      </form>
-                    </div>
+              {/* Reports, Backup & Resource Management Hub */}
+              {["tools", "tools_reports"].includes(currentView) && (
+                <div className="space-y-8">
+                  {/* Page Header */}
+                  <div className="border-b pb-4" style={{ borderColor: borderColor }}>
+                    <h2 className="text-2xl font-bold border-l-4 rtl:border-r-4 rtl:border-l-0 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>
+                      {language === "ar" ? "مركز التقارير والنسخ الاحتياطي وإدارة البيانات" : "Reports, Backup & Data Hub"}
+                    </h2>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {language === 'ar' ? 'إصدار التقارير المعتمدة، تصدير واستيراد البيانات، وأمان النسخ الاحتياطي للمنظومة.' : 'Generate official reports, export/import data, and manage secure cloud backups.'}
+                    </p>
+                  </div>
 
-                    <div>
-                      {/* SYSTEM VERSION CONTROL (ADMIN ONLY) */}
-                      {user?.role === 'admin' && (
-                        <div 
-                          className="p-5 rounded-2xl border shadow-sm mb-8 transition-all"
-                          style={{ 
-                            backgroundColor: cardColor, 
-                            borderColor: isDark ? 'rgba(255, 192, 0, 0.35)' : '#FDE68A' 
-                          }}
-                        >
-                          <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Card 1: Official Reports Hub */}
+                    <div 
+                      className="p-6 rounded-2xl border shadow-sm flex flex-col justify-between transition-all"
+                      style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                    >
+                      <div>
+                        <div className="flex items-center gap-3 mb-4 pb-3 border-b" style={{ borderColor: borderColor }}>
+                          <div className="w-10 h-10 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center font-bold">
+                            <Printer size={20} />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-base text-[#002D62] dark:text-[#93C5FD]">
+                              {language === "ar" ? "التقارير وسجلات التدريب الرسمية" : "Official Reports & Records"}
+                            </h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {language === "ar" ? "تصدير وطباعة التقارير المعتمدة بصيغة PDF و Excel" : "Export & print official verified reports in PDF & Excel"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="p-3.5 rounded-xl border flex items-center justify-between gap-3" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
                             <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-xl bg-[#FFC000] text-[#001D42] flex items-center justify-center font-black shadow-xs">
-                                v
-                              </div>
+                              <Calendar size={18} className="text-[#FFC000]" />
                               <div>
-                                <h3 className="font-bold text-base text-[#002D62] dark:text-[#93C5FD]">
-                                  {language === "ar" ? "التحكم في رقم إصدار المنظومة (System Version Control)" : "System Version Control"}
-                                </h3>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                  {language === "ar" ? "خاص بالمسؤول فقط: تعديل وتعميم رقم الإصدار الجديد لجميع المستخدمين" : "Admin Only: Update and broadcast system release version to all users"}
-                                </p>
+                                <h4 className="text-xs font-bold" style={{ color: textColor }}>{language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}</h4>
+                                <p className="text-[11px]" style={{ color: textMuted }}>{language === 'ar' ? 'ملخص الدورات والحضور لكل شهر' : 'Monthly training sessions & attendance summary'}</p>
                               </div>
                             </div>
-                            <span className="bg-blue-100 dark:bg-blue-900/60 text-[#002D62] dark:text-blue-200 font-mono font-bold text-xs px-3 py-1 rounded-full border border-blue-200 dark:border-blue-700">
-                              {language === 'ar' ? 'الإصدار الحالي:' : 'Current:'} v{systemVersion}
-                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setShowMonthlyReport(true)}
+                              className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
+                            >
+                              <Mail size={14} />
+                              <span>{language === 'ar' ? 'عرض التقرير' : 'Open Report'}</span>
+                            </button>
                           </div>
 
-                          {versionSuccessToast && (
-                            <div className="bg-green-50 dark:bg-green-900/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 text-xs font-bold p-2.5 rounded-xl mb-3 flex items-center gap-2 animate-fadeIn">
-                              <CheckCircle size={16} />
-                              <span>{language === 'ar' ? `تم حفظ وتعميم الإصدار الجديد (v${systemVersion}) بنجاح على مستوى النظام!` : `System version updated to v${systemVersion} successfully!`}</span>
+                          <div className="p-3.5 rounded-xl border flex items-center justify-between gap-3" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
+                            <div className="flex items-center gap-2.5">
+                              <Download size={18} className="text-emerald-500" />
+                              <div>
+                                <h4 className="text-xs font-bold" style={{ color: textColor }}>{language === 'ar' ? 'تصدير السجل التدريبي العام (PDF)' : 'Full Training Register (PDF)'}</h4>
+                                <p className="text-[11px]" style={{ color: textMuted }}>{language === 'ar' ? 'كشف شامل لجميع سجلات المتدربين' : 'Comprehensive PDF training register for all trainees'}</p>
+                              </div>
                             </div>
-                          )}
-
-                          <form onSubmit={handleSaveSystemVersion} className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                            <div className="relative flex-1 min-w-[200px]">
-                              <span className="absolute inset-y-0 left-3 rtl:left-auto rtl:right-3 flex items-center text-gray-400 font-mono font-bold text-sm">
-                                v
-                              </span>
-                              <input 
-                                type="text" 
-                                required 
-                                value={versionInput} 
-                                onChange={(e) => setVersionInput(e.target.value)} 
-                                placeholder="1.0.0" 
-                                className="w-full border rounded-xl pl-8 rtl:pl-3 rtl:pr-8 pr-3 py-2 text-sm font-mono font-bold focus:ring-2 focus:ring-[#002D62]" 
-                                style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
-                              />
-                            </div>
-                            <button 
-                              type="submit" 
-                              disabled={isSavingVersion || versionInput.trim() === systemVersion}
-                              className="bg-[#002D62] hover:bg-blue-900 disabled:opacity-50 text-white font-bold text-xs sm:text-sm px-5 py-2 rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-2 shrink-0"
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                await safePrintReport('printable-area-admin', { title: 'General Training Register' });
+                              }}
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
                             >
-                              {isSavingVersion ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                              <span>{language === "ar" ? "حفظ وتعميم الإصدار" : "Broadcast Version"}</span>
+                              <Printer size={14} />
+                              <span>{language === 'ar' ? 'طباعة / PDF' : 'Print PDF'}</span>
                             </button>
-                          </form>
+                          </div>
                         </div>
-                      )}
+                      </div>
+                    </div>
 
-                      <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
-                        <h2 className="text-2xl font-bold border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0" style={{ color: isDark ? '#FFFFFF' : '#002D62' }}>{language === "ar" ? "إدارة البيانات والنسخ الاحتياطي" : "Data Management & Backup"}</h2>
-                        <div className="flex flex-wrap gap-2">
-                          {user?.role === 'admin' && (
-                            <>
-                              <button onClick={() => setShowGlobalAnnouncement(true)} className="flex items-center gap-2 bg-white dark:bg-[#132543] border border-red-500/40 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40 px-3.5 py-2 rounded-xl font-bold transition-colors shadow-sm text-xs md:text-sm cursor-pointer"><Globe size={16} className="text-red-600 dark:text-red-400" />{language === 'ar' ? 'إعلان عام' : 'Global Broadcast'}</button>
-                              <button onClick={() => setShowAnnouncementManager("GLOBAL")} className="flex items-center gap-2 bg-white dark:bg-[#132543] border border-blue-400/40 text-[#002D62] dark:text-[#85C0FF] hover:bg-blue-50 dark:hover:bg-blue-900/30 px-3.5 py-2 rounded-xl font-bold transition-colors shadow-sm text-xs md:text-sm cursor-pointer"><Megaphone size={16} className="text-blue-600 dark:text-blue-400" />{language === 'ar' ? 'إدارة الإعلانات' : 'Manage Announcements'}</button>
-                            </>
-                          )}
-                          <button onClick={() => setShowMonthlyReport(true)} className="flex items-center gap-2 bg-[#002D62] hover:bg-blue-900 text-white border border-blue-400/20 px-3.5 py-2 rounded-xl font-bold transition-colors shadow-sm text-xs md:text-sm cursor-pointer"><Mail size={16} />{language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}</button>
-                          <button onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])} className="flex items-center gap-2 bg-white dark:bg-[#132543] border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 px-3.5 py-2 rounded-xl font-bold transition-colors shadow-sm text-xs md:text-sm cursor-pointer"><Download size={16} className="text-emerald-600 dark:text-emerald-400" />{language === 'ar' ? 'نسخ احتياطي للبيانات' : 'Backup Data'}</button>
+                    {/* Card 2: Cloud Backup & Data Security */}
+                    <div 
+                      className="p-6 rounded-2xl border shadow-sm flex flex-col justify-between transition-all"
+                      style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                    >
+                      <div>
+                        <div className="flex items-center gap-3 mb-4 pb-3 border-b" style={{ borderColor: borderColor }}>
+                          <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold">
+                            <Database size={20} />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-base text-[#002D62] dark:text-[#93C5FD]">
+                              {language === "ar" ? "أمان البيانات والنسخ الاحتياطي" : "Data Safety & Cloud Backup"}
+                            </h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {language === "ar" ? "حفظ واسترجاع نسخ احتياطية كاملة لقواعد بيانات المنظومة" : "Export and secure full system database backups"}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <p className="mb-6" style={{ color: textMuted }}>
-                        {language === "ar" ? "ضع رابط ملف الإكسيل من OneDrive لمزامنة السجلات." : "Provide a OneDrive link to your Excel file to synchronize training records."}
-                        <br /><span className="px-1 py-0.5 rounded text-sm mt-1 inline-block" style={{ backgroundColor: tableHeaderBg, color: textColor }}>ID, Participant Name, Department, Total Courses, Date 1, Duration 1, Score 1</span>
-                      </p>
-                      {syncSuccess && (
-                        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded mb-6 flex items-center">
-                          <CheckCircle size={20} className="mr-2 rtl:ml-2 rtl:mr-0 flex-shrink-0" /><span className="font-medium">{language === "ar" ? "تمت المزامنة بنجاح!" : "Data successfully synced from OneDrive!"}</span>
+
+                        <div className="space-y-3">
+                          <div className="p-3.5 rounded-xl border flex items-center justify-between gap-3" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
+                            <div className="flex items-center gap-2.5">
+                              <Sparkles size={18} className="text-emerald-500" />
+                              <div>
+                                <h4 className="text-xs font-bold" style={{ color: textColor }}>{language === 'ar' ? 'نسخ احتياطي فوري متكامل' : 'Instant Full System Backup'}</h4>
+                                <p className="text-[11px]" style={{ color: textMuted }}>{language === 'ar' ? 'تنزيل ملف نسخة احتياطية لكافة المستخدمين والسجلات والجلسات' : 'Download complete backup of users, records & sessions'}</p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => exportCloudBackup(users, records, upcomingSessions, cleanedData || [])}
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
+                            >
+                              <Download size={14} />
+                              <span>{language === 'ar' ? 'تنزيل النسخة' : 'Download'}</span>
+                            </button>
+                          </div>
+
+                          <div className="p-3.5 rounded-xl border flex items-center justify-between gap-3" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
+                            <div className="flex items-center gap-2.5">
+                              <UploadCloud size={18} className="text-blue-500" />
+                              <div>
+                                <h4 className="text-xs font-bold" style={{ color: textColor }}>{language === 'ar' ? 'استيراد ورفع ملف إكسيل محلي' : 'Import Local Excel File'}</h4>
+                                <p className="text-[11px]" style={{ color: textMuted }}>{syncFile ? syncFile.name : (language === 'ar' ? 'رفع شيت إكسيل لتحديث السجلات' : 'Upload Excel sheet to update records')}</p>
+                              </div>
+                            </div>
+                            <label
+                              htmlFor="excel-upload-main"
+                              className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
+                            >
+                              <UploadCloud size={14} />
+                              <span>{language === 'ar' ? 'اختر ملف' : 'Browse'}</span>
+                            </label>
+                            <input type="file" id="excel-upload-main" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
+                          </div>
                         </div>
-                      )}
-                      <div className="mb-6">
-                        <label className="block text-sm font-medium mb-2" style={{ color: textColor }}>{language === "ar" ? "رابط ملف OneDrive" : "OneDrive Shared Link"}</label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none rtl:left-auto rtl:right-0 rtl:pl-0 rtl:pr-3"><Database size={18} style={{ color: textMuted }} /></div>
-                          <input type="url" placeholder={language === "ar" ? "ضع الرابط هنا..." : "Paste your OneDrive Excel link here..."} value={syncLink} onChange={(e) => setSyncLink(e.target.value)} className="w-full border rounded-lg pl-10 rtl:pl-3 rtl:pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-[#002D62]" dir="ltr" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} />
-                        </div>
-                      </div>
-                      {isSyncing && (
-                        <div className="mb-6">
-                          <div className="flex justify-between text-sm mb-1" style={{ color: textMuted }}><span>{language === "ar" ? "جاري جلب ومزامنة البيانات..." : "Fetching & Syncing..."}</span><span>{syncProgress}%</span></div>
-                          <div className="w-full rounded-full h-2.5" style={{ backgroundColor: tableHeaderBg }}><div className="h-2.5 rounded-full transition-all duration-300" style={{ width: `${syncProgress}%`, backgroundColor: isDark ? '#3b82f6' : '#002D62' }}></div></div>
-                        </div>
-                      )}
-                      <button onClick={handleSyncData} disabled={!syncLink.trim() || isSyncing} className={`w-full font-black py-3 px-6 rounded-lg transition-colors flex justify-center items-center ${!syncLink.trim() || isSyncing ? "opacity-50 cursor-not-allowed" : "bg-[#FFC000] text-[#001D42] hover:bg-yellow-500 shadow cursor-pointer"}`}>
-                        <RefreshCw size={18} className={`mr-2 rtl:ml-2 rtl:mr-0 ${isSyncing ? "animate-spin" : ""}`} />
-                        {isSyncing ? (language === "ar" ? "جاري المزامنة..." : "Syncing...") : (language === "ar" ? "مزامنة من OneDrive" : "Sync from OneDrive")}
-                      </button>
-                      <div className="flex items-center my-6">
-                        <div className="flex-grow border-t" style={{ borderColor: borderColor }}></div>
-                        <span className="mx-4 text-sm font-medium" style={{ color: textMuted }}>{language === "ar" ? "أو" : "OR"}</span>
-                        <div className="flex-grow border-t" style={{ borderColor: borderColor }}></div>
-                      </div>
-                      <div className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center transition-colors" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
-                        <UploadCloud size={48} className="mb-4" style={{ color: textMuted }} />
-                        <input type="file" id="excel-upload" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
-                        <label htmlFor="excel-upload" className="cursor-pointer border px-4 py-2 rounded shadow-sm flex items-center mb-2 font-medium transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor, color: textColor }}>
-                          <UploadCloud size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
-                          {language === "ar" ? "اختر ملف إكسيل محلي" : "Select Local Excel File"}
-                        </label>
-                        {syncFile && <p className="text-sm text-green-600 dark:text-green-400 font-medium">Selected: {syncFile.name}</p>}
                       </div>
                     </div>
                   </div>
+
+                  {/* Card 3: Course Materials & Resource Sharing */}
+                  <div 
+                    className="p-6 rounded-2xl border shadow-sm transition-all"
+                    style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                  >
+                    <div className="flex items-center justify-between flex-wrap gap-3 mb-4 pb-3 border-b" style={{ borderColor: borderColor }}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold">
+                          <Share2 size={20} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-base text-[#002D62] dark:text-[#93C5FD]">
+                            {language === "ar" ? "مشاركة المواد والمراجع التدريبية (Google Drive)" : "Course Materials & Resource Sharing"}
+                          </h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {language === "ar" ? "ربط أي دورة تدريبية برابط المواد العلمية والمجلدات لتظهر للمتدربين" : "Link training courses to Google Drive material folders for trainees"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleShareResource} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                      <div>
+                        <label className="block text-xs font-bold mb-1.5" style={{ color: textColor }}>
+                          {language === "ar" ? "اختر الدورة التدريبية" : "Select Course"}
+                        </label>
+                        <select 
+                          value={selectedCourseForResource} 
+                          onChange={(e) => setSelectedCourseForResource(e.target.value)} 
+                          className="w-full border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#002D62] outline-none" 
+                          dir="ltr" 
+                          style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
+                        >
+                          {dynamicCourses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold mb-1.5" style={{ color: textColor }}>
+                          {language === "ar" ? "رابط مجلد Google Drive / Material" : "Google Drive / Material Link"}
+                        </label>
+                        <input 
+                          type="url" 
+                          required 
+                          value={resourceLink} 
+                          onChange={(e) => setResourceLink(e.target.value)} 
+                          placeholder="https://drive.google.com/..." 
+                          className="w-full border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#002D62] outline-none" 
+                          style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                        />
+                      </div>
+
+                      <div>
+                        <button 
+                          type="submit" 
+                          className="w-full bg-[#FFC000] hover:bg-yellow-500 text-[#001D42] font-black text-xs py-2.5 px-4 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer hover:scale-105"
+                        >
+                          <Share2 size={15} />
+                          <span>{language === "ar" ? "حفظ وتعميم الرابط" : "Save & Share Resource"}</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
                 </>
               )}
 

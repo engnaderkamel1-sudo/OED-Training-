@@ -38,7 +38,7 @@ interface AppContextType {
   setUpcomingSessions: (sessions: UpcomingSession[] | ((prev: UpcomingSession[]) => UpcomingSession[])) => void;
   addUpcomingSession: (session: UpcomingSession) => void;
   updateUpcomingSession: (session: UpcomingSession) => void;
-  cancelSession: (targetId: string) => void;
+  cancelSession: (targetId: string, reason?: string) => void;
   reactivateSession: (targetId: string) => void;
   deleteUpcomingSession: (id: string) => void;
   restoreUpcomingSession: (id: string) => void;
@@ -438,10 +438,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     batch.commit().catch(console.error);
   };
 
-  const cancelSession = async (targetId: string) => {
+  const cancelSession = async (targetId: string, reason?: string) => {
     const session = upcomingSessions.find(s => s.id === targetId);
     if (session) {
-      const updatedSession = { ...session, status: 'Cancelled' as const, isDeleted: true };
+      const updatedSession = { 
+        ...session, 
+        status: 'Cancelled' as const, 
+        isDeleted: false,
+        cancelledAt: new Date().toISOString(),
+        cancellationReason: reason ? reason.trim() : (session.cancellationReason || undefined)
+      };
       await setDoc(doc(db, "sessions", targetId), updatedSession);
     }
   };
