@@ -1,33 +1,85 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, CheckCircle, AlertTriangle, Camera, RefreshCw, KeyRound, ShieldAlert, Sparkles } from 'lucide-react';
+import { X, CheckCircle, AlertTriangle, Camera, RefreshCw, KeyRound, ShieldAlert, Sparkles, Info } from 'lucide-react';
+import { useAppContext } from '../context';
+import { UpcomingSession } from '../types';
 
 interface QRScannerModalProps {
   onClose: () => void;
-  onScanSuccess: (sessionId: string) => void;
+  onScanSuccess?: (sessionId: string) => void;
+  session?: UpcomingSession;
   language: 'en' | 'ar';
 }
 
-export const QRScannerModal: React.FC<QRScannerModalProps> = ({ onClose, onScanSuccess, language }) => {
+export const QRScannerModal: React.FC<QRScannerModalProps> = ({ 
+  onClose, 
+  onScanSuccess, 
+  session: propSession, 
+  language 
+}) => {
+  const { user, upcomingSessions, registerTrainee } = useAppContext();
   const [error, setError] = useState<string | null>(null);
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+  const [alreadyRecorded, setAlreadyRecorded] = useState<{ courseTitle: string } | null>(null);
   const [manualCode, setManualCode] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(true);
   const scannerRef = useRef<any>(null);
+
+  const userCode = (user?.hrCode || user?.id || '').trim().toLowerCase();
+
+  const handleProcessCode = (rawCode: string) => {
+    if (scannerRef.current) {
+      try {
+        scannerRef.current.clear();
+      } catch (e) {}
+      scannerRef.current = null;
+    }
+
+    const rawText = rawCode.trim();
+    const cleanSessionId = rawText.includes('_') ? rawText.split('_')[0] : rawText;
+
+    // Find target session
+    const targetSession = upcomingSessions.find(s => s.id === cleanSessionId) || propSession;
+    const cTitle = targetSession?.courseTitle || (language === 'ar' ? 'الدورة التدريبية' : 'Training Course');
+
+    // 1. Check if already recorded/registered
+    const isAlreadyRegistered = targetSession && (targetSession.registeredUsers || []).map(c => c.toLowerCase()).includes(userCode);
+
+    if (isAlreadyRegistered) {
+      setAlreadyRecorded({ courseTitle: cTitle });
+      return;
+    }
+
+    // 2. If new registration:
+    if (targetSession) {
+      registerTrainee(targetSession.id, user?.hrCode || user?.id || 'trainee');
+    }
+
+    setSuccess(
+      language === 'ar' 
+        ? `🎉 تم تسجيل حضورك بنجاح في دورة [${cTitle}]!` 
+        : `🎉 Attendance recorded successfully for [${cTitle}]!`
+    );
+
+    if (onScanSuccess) {
+      setTimeout(() => {
+        onScanSuccess(cleanSessionId);
+      }, 1200);
+    }
+  };
 
   const startScanner = async () => {
     setError(null);
     setPermissionDenied(false);
     setCameraLoading(true);
 
-    // 1. Explicitly check / request camera permission
+    // 1. Check / request camera permission
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' }
         });
-        // Stop stream immediately after permission granted so Html5QrcodeScanner can claim it
         stream.getTracks().forEach(t => t.stop());
       } catch (err: any) {
         console.warn("Camera permission error:", err);
@@ -70,24 +122,11 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ onClose, onScanS
       scannerRef.current = scanner;
 
       const onScan = (decodedText: string) => {
-        if (scannerRef.current) {
-          try {
-            scannerRef.current.clear();
-          } catch (e) {}
-          scannerRef.current = null;
-        }
-        setSuccess(language === 'ar' ? 'تم التقاط كود الحضور بنجاح! 🎉' : 'Attendance code scanned successfully! 🎉');
-        
-        const rawText = decodedText.trim();
-        const cleanSessionId = rawText.includes('_') ? rawText.split('_')[0] : rawText;
-
-        setTimeout(() => {
-          onScanSuccess(cleanSessionId);
-        }, 900);
+        handleProcessCode(decodedText);
       };
 
       const onScanFailure = (err: any) => {
-        // Normal frame scanning misses, keep scanning
+        // Continuous frame reading
       };
 
       scanner.render(onScan, onScanFailure);
@@ -120,31 +159,17 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ onClose, onScanS
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualCode.trim()) return;
-
-    if (scannerRef.current) {
-      try {
-        scannerRef.current.clear();
-      } catch (e) {}
-      scannerRef.current = null;
-    }
-
-    setSuccess(language === 'ar' ? 'تم التحقق من الكود وتسجيل حضورك بنجاح! 🎉' : 'Session code verified successfully! 🎉');
-    const rawText = manualCode.trim();
-    const cleanSessionId = rawText.includes('_') ? rawText.split('_')[0] : rawText;
-
-    setTimeout(() => {
-      onScanSuccess(cleanSessionId);
-    }, 900);
+    handleProcessCode(manualCode);
   };
 
   return (
     <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-[99999] animate-fade-in">
-      <div className="bg-white dark:bg-[#0E1A32] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative border border-gray-200 dark:border-slate-700 animate-scale-in flex flex-col max-h-[92vh]">
+      <div className="bg-white dark:bg-[#0E1A32] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative border border-slate-300 dark:border-slate-700 animate-scale-in flex flex-col max-h-[92vh]">
         
         {/* Header */}
         <div className="bg-[#002D62] p-4 text-white flex justify-between items-center shrink-0 border-b border-blue-900">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-amber-400 text-[#002D62] font-bold shadow-xs">
+            <div className="p-2 rounded-xl bg-amber-400 text-[#002D62] font-black shadow-xs">
               <Camera size={20} />
             </div>
             <div>
@@ -163,17 +188,57 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ onClose, onScanS
 
         {/* Content */}
         <div className="p-5 sm:p-6 flex flex-col items-center overflow-y-auto flex-1">
-          {success ? (
-            <div className="text-center py-8 animate-fade-in space-y-3">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-300 flex items-center justify-center mx-auto border-2 border-emerald-400 shadow-md">
+          
+          {/* 1. Already Registered / Scanned State */}
+          {alreadyRecorded ? (
+            <div className="text-center py-6 animate-fade-in space-y-4 w-full">
+              <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-300 flex items-center justify-center mx-auto border-2 border-blue-400 shadow-md">
+                <Info size={36} />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                  {language === 'ar' ? 'تم تسجيل حضورك مسبقاً! ✓' : 'Attendance Already Recorded! ✓'}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-bold leading-relaxed px-2">
+                  {language === 'ar'
+                    ? `لقد تم توثيق حضورك بالفعل مسبقاً في دورة [${alreadyRecorded.courseTitle}]. لا داعي لتكرار المسح.`
+                    : `Your attendance in [${alreadyRecorded.courseTitle}] has already been recorded. No need to scan again.`}
+                </p>
+              </div>
+
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 font-bold flex items-center justify-center gap-2">
+                <CheckCircle size={16} className="text-blue-600 dark:text-blue-400" />
+                <span>{language === 'ar' ? 'حالتك: مسجل وحاضر في المنظومة' : 'Status: Present & Verified'}</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full py-2.5 bg-[#002D62] hover:bg-blue-900 text-white font-black text-xs sm:text-sm rounded-xl shadow-md transition-all cursor-pointer"
+              >
+                {language === 'ar' ? 'حسناً، فهمت' : 'Got it, Close'}
+              </button>
+            </div>
+          ) : success ? (
+            /* 2. First-time Success State */
+            <div className="text-center py-6 animate-fade-in space-y-3 w-full">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-300 flex items-center justify-center mx-auto border-2 border-emerald-400 shadow-md">
                 <CheckCircle size={36} />
               </div>
-              <h3 className="text-lg sm:text-xl font-black text-gray-900 dark:text-white">{success}</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {language === 'ar' ? 'جاري توثيق وتسجيل الحضور في قاعدة البيانات...' : 'Recording your attendance in the database...'}
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">{success}</h3>
+              <p className="text-xs text-slate-500 dark:text-gray-400 font-bold">
+                {language === 'ar' ? 'تم توثيق وتسجيل الحضور في قاعدة البيانات بنجاح!' : 'Recording your attendance in the database...'}
               </p>
+              <button
+                type="button"
+                onClick={onClose}
+                className="mt-3 w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm rounded-xl shadow-md transition-all cursor-pointer"
+              >
+                {language === 'ar' ? 'إتمام وإغلاق' : 'Done & Close'}
+              </button>
             </div>
           ) : permissionDenied || error ? (
+            /* 3. Camera Error State */
             <div className="text-center py-4 space-y-4 w-full animate-fade-in">
               <div className="w-14 h-14 rounded-2xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-300 flex items-center justify-center mx-auto border border-red-300 dark:border-red-800 shadow-sm">
                 <ShieldAlert size={28} />
@@ -188,97 +253,76 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ onClose, onScanS
                 </p>
               </div>
 
-              {/* Instructions on how to allow camera */}
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/40 rounded-xl text-xs text-blue-900 dark:text-blue-200 text-left rtl:text-right space-y-1">
-                <strong>{language === 'ar' ? 'كيف تسمح بالكاميرا؟' : 'How to allow camera?'}</strong>
-                <p className="text-[11px] leading-relaxed">
-                  {language === 'ar'
-                    ? '1. اضغط على أيقونة القفل 🔒 أعلى يسار أو يمين شريط العنوان.\n2. اختر (إعدادات الموقع / Permissions).\n3. غيّر خيار الكاميرا إلى (سماح / Allow).'
-                    : '1. Tap the lock icon 🔒 in your browser address bar.\n2. Go to Site Settings / Permissions.\n3. Change Camera to (Allow).'}
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2 w-full pt-2">
-                <button
-                  type="button"
-                  onClick={startScanner}
-                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-105"
-                >
-                  <RefreshCw size={15} />
-                  <span>{language === 'ar' ? '🔄 إعادة المحاولة وطلب الإذن' : '🔄 Retry & Request Permission'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowManualInput(!showManualInput)}
-                  className="w-full py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-200 font-bold text-xs rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <KeyRound size={15} />
-                  <span>{language === 'ar' ? '⌨️ كتابة كود الحضور يدوياً' : '⌨️ Enter Code Manually'}</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={startScanner}
+                className="px-4 py-2 bg-blue-50 dark:bg-blue-900/40 text-[#002D62] dark:text-blue-300 border border-blue-200 dark:border-blue-700 rounded-xl font-bold text-xs hover:bg-blue-100 transition-all flex items-center justify-center gap-2 mx-auto cursor-pointer"
+              >
+                <RefreshCw size={14} />
+                <span>{language === 'ar' ? 'إعادة محاولة فتح الكاميرا' : 'Retry Camera'}</span>
+              </button>
             </div>
           ) : (
-            <div className="w-full flex flex-col items-center space-y-4">
-              <p className="text-center text-xs sm:text-sm text-gray-600 dark:text-gray-300 font-medium">
-                {language === 'ar' 
-                  ? 'وجه الكاميرا نحو رمز الـ QR المعروض على شاشة القاعة' 
-                  : 'Point your camera at the session QR code on screen'}
-              </p>
-              
-              <div 
-                id="qr-reader" 
-                className="w-full overflow-hidden rounded-2xl border-2 border-dashed border-blue-400 dark:border-blue-600 bg-black/5 dark:bg-black/40 min-h-[260px] shadow-inner"
-              ></div>
-
-              <div className="flex items-center justify-between w-full pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowManualInput(!showManualInput)}
-                  className="text-xs font-black text-[#002D62] dark:text-[#93C5FD] hover:underline flex items-center gap-1.5 cursor-pointer"
-                >
-                  <KeyRound size={14} />
-                  <span>{language === 'ar' ? 'كتابة الكود يدوياً؟' : 'Enter Code Manually?'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                >
-                  {language === 'ar' ? 'إلغاء' : 'Cancel'}
-                </button>
+            /* 4. Live Scanning View */
+            <div className="w-full flex flex-col items-center">
+              <div className="w-full max-w-[280px] sm:max-w-[300px] overflow-hidden rounded-2xl border-2 border-slate-300 dark:border-slate-700 shadow-md relative bg-black aspect-square flex items-center justify-center">
+                {cameraLoading && (
+                  <div className="absolute inset-0 z-10 bg-slate-900 flex flex-col items-center justify-center text-white gap-2 p-4 text-center">
+                    <RefreshCw size={24} className="animate-spin text-amber-400" />
+                    <span className="text-xs font-bold">{language === 'ar' ? 'جاري تشغيل الكاميرا...' : 'Starting camera...'}</span>
+                  </div>
+                )}
+                <div id="qr-reader" className="w-full h-full"></div>
               </div>
+
+              <p className="text-xs text-slate-700 dark:text-gray-300 text-center mt-3 font-bold">
+                {language === 'ar' 
+                  ? 'وجه الكاميرا نحو رمز الـ QR المعروض في قاعة التدريب' 
+                  : 'Point camera at the QR code displayed in the training room'}
+              </p>
             </div>
           )}
 
-          {/* Manual Code Input Fallback Form */}
-          {showManualInput && !success && (
-            <form onSubmit={handleManualSubmit} className="mt-4 p-4 rounded-xl bg-gray-50 dark:bg-[#132543] border border-gray-200 dark:border-slate-700 w-full space-y-3 animate-fade-in">
-              <label className="block text-xs font-black text-gray-800 dark:text-gray-200">
-                {language === 'ar' ? 'أدخل كود الدورة / الجلسة:' : 'Enter Session ID / Code:'}
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  required
-                  value={manualCode}
-                  onChange={(e) => setManualCode(e.target.value)}
-                  placeholder="e.g. session_134 or Course Name"
-                  className="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-xl text-xs sm:text-sm text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold"
-                  dir="ltr"
-                />
+          {/* Manual Code Input Fallback */}
+          {!success && !alreadyRecorded && (
+            <div className="w-full mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+              {!showManualInput ? (
                 <button
-                  type="submit"
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer hover:scale-105"
+                  type="button"
+                  onClick={() => setShowManualInput(true)}
+                  className="w-full py-2 text-xs font-bold text-[#002D62] dark:text-[#93C5FD] hover:underline flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  {language === 'ar' ? 'تأكيد' : 'Verify'}
+                  <KeyRound size={14} />
+                  <span>{language === 'ar' ? 'أو كتابة كود الجلسة يدوياً' : 'Or enter session code manually'}</span>
                 </button>
-              </div>
-            </form>
+              ) : (
+                <form onSubmit={handleManualSubmit} className="space-y-2 animate-fade-in">
+                  <label className="block text-xs font-black text-slate-800 dark:text-gray-200">
+                    {language === 'ar' ? 'أدخل كود الجلسة (Session ID / Code):' : 'Enter Session ID or Code:'}
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={manualCode}
+                      onChange={(e) => setManualCode(e.target.value)}
+                      placeholder="e.g. session_123"
+                      className="flex-1 px-3 py-2 bg-slate-50 dark:bg-[#132543] border-2 border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-[#002D62]"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white font-black text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+                    >
+                      {language === 'ar' ? 'تأكيد' : 'Verify'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           )}
 
         </div>
+
       </div>
     </div>
   );
