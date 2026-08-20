@@ -25,6 +25,7 @@ import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UpdateNotificationBanner } from './components/UpdateNotificationBanner';
 import { QuotaExhaustedBanner } from './components/QuotaExhaustedBanner';
+import { GlobalAttendanceAlertBanner } from './components/GlobalAttendanceAlertBanner';
 
 const AppContent: React.FC = () => {
   const { user, isLoading, t, currentView, language, setUser } = useAppContext();
@@ -230,6 +231,7 @@ const AppContent: React.FC = () => {
         }}
       />
       <TopNav />
+      <GlobalAttendanceAlertBanner />
       <QuotaExhaustedBanner />
       <UpdateNotificationBanner />
       {/* الكلاسات الأساسية للتطبيق */}

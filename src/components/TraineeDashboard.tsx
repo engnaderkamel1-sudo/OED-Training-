@@ -882,14 +882,14 @@ export const TraineeDashboard: React.FC = () => {
                     <div 
                       key={notif.id}
                       onClick={() => markNotifAsRead(notif.id)}
-                      className={`p-4 md:p-5 rounded-2xl border transition-all cursor-pointer relative shadow-sm hover:shadow-md ${
-                        !isRead ? 'border-l-4 rtl:border-l rtl:border-r-4' : 'opacity-85'
+                      className={`p-4 md:p-5 rounded-2xl border-2 transition-all cursor-pointer relative shadow-sm hover:shadow-md ${
+                        !isRead ? 'border-l-4 rtl:border-l rtl:border-r-4' : 'opacity-90'
                       }`}
                       style={{
                         backgroundColor: isDark 
                           ? (!isRead ? '#15294a' : '#10223d') 
-                          : (!isRead ? '#ffffff' : '#f8fafc'),
-                        borderColor: !isRead ? accentColor : borderColor,
+                          : '#ffffff',
+                        borderColor: !isRead ? accentColor : (isDark ? 'rgba(148, 190, 255, 0.2)' : '#cbd5e1'),
                         borderLeftColor: !isRead ? accentColor : undefined,
                         borderRightColor: !isRead ? accentColor : undefined,
                       }}
@@ -1010,15 +1010,17 @@ export const TraineeDashboard: React.FC = () => {
                               >
                                 {notif.courseTitle}
                               </h4>
-                              <div className="p-3 rounded-xl bg-gray-50 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700/60 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                                <span className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                                  <span>📅</span>
-                                  <strong>{language === 'ar' ? 'التاريخ:' : 'Date:'}</strong> {notif.startDate} {notif.startTime ? `(${notif.startTime})` : ''}
+                              <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs shadow-2xs">
+                                <span className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                                  <span className="text-sm">📅</span>
+                                  <strong className="text-[#002D62] dark:text-[#FFC000]">{language === 'ar' ? 'التاريخ:' : 'Date:'}</strong> 
+                                  <span className="font-mono text-slate-900 dark:text-white font-black">{notif.startDate} {notif.startTime ? `(${notif.startTime})` : ''}</span>
                                 </span>
                                 {notif.location && (
-                                  <span className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                                    <span>📍</span>
-                                    <strong>{language === 'ar' ? 'المكان:' : 'Location:'}</strong> {notif.location}
+                                  <span className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                                    <span className="text-sm">📍</span>
+                                    <strong className="text-[#002D62] dark:text-[#FFC000]">{language === 'ar' ? 'المكان:' : 'Location:'}</strong> 
+                                    <span className="text-slate-900 dark:text-white font-black">{notif.location}</span>
                                   </span>
                                 )}
                               </div>
