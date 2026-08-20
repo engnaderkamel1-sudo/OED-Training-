@@ -242,13 +242,38 @@ const AppContent: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-opacity-75"
-                style={{ backgroundColor: 'var(--bg-secondary)' }}
+                transition={{ duration: 0.3 }}
+                className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#001D42]"
               >
-                <Loader2 className="w-12 h-12 animate-spin mb-4" style={{ color: 'var(--oc-navy)' }} />
-                <p className="font-semibold text-lg animate-pulse" style={{ color: 'var(--oc-navy)' }}>
-                  {t('loading') || 'Loading...'}
-                </p>
+                <motion.div 
+                  initial={{ scale: 0.85, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  className="flex flex-col items-center justify-center p-6 text-center"
+                >
+                  <div className="relative mb-5">
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden shadow-2xl border-2 border-[#FFC000]/60 p-1 bg-white/10 backdrop-blur-md">
+                      <img 
+                        src="/app-icon.jpg?v=7" 
+                        alt="OED-TTMS Logo" 
+                        className="w-full h-full object-cover rounded-2xl" 
+                      />
+                    </div>
+                    <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FFC000] to-blue-400 opacity-40 blur-lg -z-10 animate-pulse"></div>
+                  </div>
+
+                  <h1 className="text-2xl sm:text-3xl font-black text-white tracking-wider mb-1">
+                    OED-TTMS
+                  </h1>
+                  <p className="text-xs sm:text-sm font-bold text-[#FFC000] tracking-wide mb-6">
+                    Technical Training Management System
+                  </p>
+
+                  <div className="flex items-center gap-2 text-white/80 text-xs font-semibold bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm border border-white/10">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#FFC000]" />
+                    <span>{language === 'ar' ? 'جاري تهيئة المنظومة...' : 'Loading System...'}</span>
+                  </div>
+                </motion.div>
               </motion.div>
             ) : null}
           </AnimatePresence>
