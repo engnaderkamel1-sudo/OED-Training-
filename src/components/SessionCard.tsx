@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAppContext } from '../context';
 import { UpcomingSession } from '../types';
 import { 
