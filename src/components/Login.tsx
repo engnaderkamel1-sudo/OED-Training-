@@ -29,6 +29,7 @@ export const Login: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState("");
   const [department, setDepartment] = useState("Heavy Machinery");
+  const [customDepartment, setCustomDepartment] = useState("");
   const [jobRole, setJobRole] = useState("Engineer");
   const [accessRole, setAccessRole] = useState<Role>("trainee");
   const [managerEmail1, setManagerEmail1] = useState("");
@@ -285,7 +286,13 @@ export const Login: React.FC = () => {
         return;
       }
 
-      if (!name || !department || !password || !email.trim()) {
+      const finalDepartment = department === '__custom__' ? customDepartment.trim() : department.trim();
+      if (!finalDepartment) {
+        setError(language === "ar" ? "الرجاء تحديد أو كتابة اسم القسم" : "Please select or enter the department name");
+        return;
+      }
+
+      if (!name || !password || !email.trim()) {
         setError(language === "ar" ? "الرجاء ملء جميع الحقول المطلوبة" : "Please fill all required fields");
         return;
       }
@@ -372,7 +379,7 @@ export const Login: React.FC = () => {
         name: name.trim(),
         phone: phone.trim(),
         email: fullEmail,
-        department,
+        department: finalDepartment,
         role: accessRole,
         jobRole: jobRole || '',
         status: "pending",
@@ -391,10 +398,12 @@ export const Login: React.FC = () => {
       );
 
       // Save to Firebase and update local state
-      try {
         await setDoc(doc(db, "users", targetUserId), cleanUserDoc);
-        // Filter out the old shadow account (if any) and push the new user
-        setUsers(prev => [...prev.filter(u => u.id !== targetUserId), newUser]);
+        try {
+          if (typeof setUsers === 'function') {
+            setUsers((prev: any) => Array.isArray(prev) ? [...prev.filter((u: any) => u.id !== targetUserId), newUser] : [newUser]);
+          }
+        } catch (e) {}
         
         setSuccessMsg(language === "ar" ? "تم إرسال طلب تسجيلك بنجاح وفي انتظار الموافقة قريباً" : "Registration request sent and pending approval");
         
@@ -654,9 +663,37 @@ export const Login: React.FC = () => {
 
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">{t("department")} *</label>
-              <select value={department} onChange={(e) => setDepartment(e.target.value)} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]" dir="ltr" required>
-                {uniqueDepartments && uniqueDepartments.length > 0 ? uniqueDepartments.map((dep) => (<option key={dep} value={dep}>{dep}</option>)) : <option value="Heavy Machinery">Heavy Machinery</option>}
+              <select 
+                value={department} 
+                onChange={(e) => {
+                  setDepartment(e.target.value);
+                  if (e.target.value !== '__custom__') setCustomDepartment('');
+                }} 
+                className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]" 
+                dir="ltr" 
+                required
+              >
+                {uniqueDepartments && uniqueDepartments.length > 0 ? uniqueDepartments.map((dep) => (
+                  <option key={dep} value={dep}>{dep}</option>
+                )) : <option value="Heavy Machinery">Heavy Machinery</option>}
+                <option value="__custom__">➕ {language === 'ar' ? 'قسم آخر (كتابة يدوية)...' : 'Other Department (Type manually)...'}</option>
               </select>
+
+              {department === '__custom__' && (
+                <div className="mt-2 animate-fadeIn">
+                  <input
+                    type="text"
+                    value={customDepartment}
+                    onChange={(e) => setCustomDepartment(e.target.value)}
+                    placeholder={language === 'ar' ? 'اكتب اسم القسم الجديد هنا...' : 'Enter new department name...'}
+                    className="w-full border-2 border-[#002D62] rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50/40"
+                    required
+                  />
+                  <p className="text-[11px] text-gray-500 mt-1">
+                    {language === 'ar' ? '* سيتم حفظ واعتماد هذا القسم الجديد تلقائياً في النظام.' : '* This new department will be saved to the system.'}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">

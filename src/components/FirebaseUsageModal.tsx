@@ -1,16 +1,13 @@
-import React, { useEffect } from 'react';
+﻿import React, { useEffect } from 'react';
 import { useAppContext } from '../context';
 import { 
   X, 
   Database, 
   Activity, 
-  Users, 
   ExternalLink,
-  ShieldCheck,
   Flame,
   CheckCircle2,
-  Lock,
-  Cpu
+  Lock
 } from 'lucide-react';
 
 interface FirebaseUsageModalProps {
@@ -20,8 +17,6 @@ interface FirebaseUsageModalProps {
 export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose }) => {
   const { 
     language, 
-    users, 
-    user: currentUser,
     theme
   } = useAppContext();
 
@@ -35,40 +30,6 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
-
-  // Online / Active Users (last 30 mins)
-  const now = Date.now();
-  const THIRTY_MINUTES = 30 * 60 * 1000;
-  const onlineUsersMap = new Map<string, { name: string; hrCode: string; role: string; lastSeen: string }>();
-
-  if (currentUser) {
-    onlineUsersMap.set(currentUser.id, {
-      name: currentUser.name,
-      hrCode: currentUser.hrCode,
-      role: currentUser.role || 'admin',
-      lastSeen: language === 'ar' ? 'الآن (أنت)' : 'Now (You)'
-    });
-  }
-
-  const realUsers = (users || []).filter(u => u && u.id && !String(u.id).startsWith('derived_'));
-  realUsers.forEach(u => {
-    if (u.lastLogin) {
-      const logTime = new Date(u.lastLogin).getTime();
-      if (!isNaN(logTime) && (now - logTime) <= THIRTY_MINUTES) {
-        if (!onlineUsersMap.has(u.id)) {
-          const diffMinutes = Math.max(1, Math.round((now - logTime) / 60000));
-          onlineUsersMap.set(u.id, {
-            name: u.name || u.id,
-            hrCode: u.hrCode || '',
-            role: u.role || 'trainee',
-            lastSeen: language === 'ar' ? `منذ ${diffMinutes} دقيقة` : `${diffMinutes}m ago`
-          });
-        }
-      }
-    }
-  });
-
-  const onlineUsersList = Array.from(onlineUsersMap.values());
 
   const firebaseConsoleUrl = "https://console.firebase.google.com/";
 
@@ -105,7 +66,7 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
                 </span>
               </h3>
               <p className="text-xs text-blue-200 mt-0.5">
-                {language === 'ar' ? 'متابعة الاتصال اللحظي والوصول المباشر للوحة التحكم الرسمية' : 'Live connection status & direct official console access'}
+                {language === 'ar' ? 'الوصول المباشر للوحات التحكم والإحصائيات الرسمية في Google Cloud' : 'Direct official Google Cloud management consoles'}
               </p>
             </div>
           </div>
@@ -122,81 +83,13 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-5">
 
-          {/* Connection Status Banner */}
-          <div 
-            className="p-4 rounded-xl border flex items-center justify-between gap-3 shadow-2xs"
-            style={{ 
-              backgroundColor: isDark ? 'rgba(16, 185, 129, 0.12)' : '#ecfdf5',
-              borderColor: isDark ? 'rgba(16, 185, 129, 0.3)' : '#a7f3d0'
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                <ShieldCheck size={22} />
-              </div>
-              <div>
-                <h4 className="font-bold text-sm text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
-                  <span>{language === 'ar' ? 'حالة السيرفر: متصل ويعمل بكفاءة' : 'Server Status: Connected & Healthy'}</span>
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                </h4>
-                <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">
-                  {language === 'ar' ? 'تم تفعيل التخزين المؤقت الذكي لتقليل القراءات بنسبة 99%' : 'Persistent IndexedDB cache active to minimize server reads by 99%'}
-                </p>
-              </div>
-            </div>
-            <div className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
-              <Cpu size={14} />
-              <span>0ms Latency</span>
-            </div>
-          </div>
-
-          {/* Active Users Section */}
-          <div 
-            className="border rounded-xl p-4 shadow-2xs"
-            style={{ 
-              backgroundColor: isDark ? '#132543' : '#f8fafc',
-              borderColor: isDark ? 'rgba(148, 190, 255, 0.18)' : '#e2e8f0'
-            }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-bold text-xs sm:text-sm flex items-center gap-2" style={{ color: isDark ? '#FFFFFF' : '#0D1B2A' }}>
-                <Users size={16} className="text-[#FFC000]" />
-                <span>{language === 'ar' ? 'المستخدمون النشطون الآن على النظام:' : 'Active Users Online Right Now:'}</span>
-              </h4>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:electronic-emerald-300 border border-emerald-300 dark:border-emerald-700">
-                {onlineUsersList.length} {language === 'ar' ? 'متصل' : 'Online'}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
-              {onlineUsersList.map((u, idx) => (
-                <div 
-                  key={idx} 
-                  className="p-2.5 rounded-lg border flex items-center justify-between text-xs"
-                  style={{ 
-                    backgroundColor: isDark ? '#193158' : '#ffffff',
-                    borderColor: isDark ? 'rgba(148, 190, 255, 0.2)' : '#e2e8f0'
-                  }}
-                >
-                  <div className="min-w-0 pr-2">
-                    <span className="font-bold block truncate" style={{ color: isDark ? '#FFFFFF' : '#002D62' }}>{u.name}</span>
-                    <span className="text-[11px] text-gray-500 dark:text-gray-400">{u.hrCode} • {u.role}</span>
-                  </div>
-                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 shrink-0 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
-                    {u.lastSeen}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Official Google Firebase Links Cards */}
           <div>
             <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 px-1">
               {language === 'ar' ? 'لوحات المتابعة الرسمية من Google Cloud:' : 'Official Google Cloud Management Consoles:'}
             </h4>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               {/* Usage & Quota Card */}
               <a 
                 href={firebaseConsoleUrl}
@@ -219,7 +112,7 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
                     {language === 'ar' ? 'متابعة القراءات والكتابات الرسمية اليومية والشهرية' : 'Live official read/write counts & daily quota graphs'}
                   </p>
                 </div>
-                <div className="mt-3 pt-2 border-t flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400" style={{ borderColor: isDark ? 'rgba(148, 190, 255, 0.1)' : '#f1f5f9' }}>
+                <div className="mt-4 pt-2 border-t flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400" style={{ borderColor: isDark ? 'rgba(148, 190, 255, 0.1)' : '#f1f5f9' }}>
                   <span>{language === 'ar' ? 'فتح في جوجل' : 'Open Console'}</span>
                   <ExternalLink size={13} className="group-hover:translate-x-0.5 transition-transform" />
                 </div>
@@ -247,7 +140,7 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
                     {language === 'ar' ? 'استعراض والتحكم في الجداول والسجلات والمستخدمين' : 'Browse Firestore collections, documents, and rules'}
                   </p>
                 </div>
-                <div className="mt-3 pt-2 border-t flex items-center justify-between text-xs font-bold text-amber-600 dark:text-amber-400" style={{ borderColor: isDark ? 'rgba(148, 190, 255, 0.1)' : '#f1f5f9' }}>
+                <div className="mt-4 pt-2 border-t flex items-center justify-between text-xs font-bold text-amber-600 dark:text-amber-400" style={{ borderColor: isDark ? 'rgba(148, 190, 255, 0.1)' : '#f1f5f9' }}>
                   <span>{language === 'ar' ? 'فتح في جوجل' : 'Open Database'}</span>
                   <ExternalLink size={13} className="group-hover:translate-x-0.5 transition-transform" />
                 </div>
@@ -275,7 +168,7 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
                     {language === 'ar' ? 'إدارة الإيميلات المسجلة وإعادة تعيين كلمات المرور' : 'Manage registered emails, credentials, and sign-ins'}
                   </p>
                 </div>
-                <div className="mt-3 pt-2 border-t flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400" style={{ borderColor: isDark ? 'rgba(148, 190, 255, 0.1)' : '#f1f5f9' }}>
+                <div className="mt-4 pt-2 border-t flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400" style={{ borderColor: isDark ? 'rgba(148, 190, 255, 0.1)' : '#f1f5f9' }}>
                   <span>{language === 'ar' ? 'فتح في جوجل' : 'Open Auth'}</span>
                   <ExternalLink size={13} className="group-hover:translate-x-0.5 transition-transform" />
                 </div>
