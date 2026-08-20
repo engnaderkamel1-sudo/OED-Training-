@@ -398,6 +398,7 @@ export const Login: React.FC = () => {
       );
 
       // Save to Firebase and update local state
+      try {
         await setDoc(doc(db, "users", targetUserId), cleanUserDoc);
         try {
           if (typeof setUsers === 'function') {
@@ -424,7 +425,6 @@ export const Login: React.FC = () => {
       } catch (err: any) {
         setError("Error saving user data: " + err.message);
       }
-
     } finally {
       setIsSubmitting(false);
     }
