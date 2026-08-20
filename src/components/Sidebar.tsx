@@ -88,6 +88,12 @@ export const Sidebar: React.FC = () => {
     setExpandedMenus(prev => ({ ...prev, [menuId]: !prev[menuId] }));
   };
 
+  const { users } = useAppContext();
+
+  const pendingUsersCount = (users || []).filter(u => u && u.status === 'pending' && !u.isShadowAccount && !String(u.id).startsWith('derived_')).length;
+  const pendingUpdatesCount = (users || []).filter(u => u && u.pendingUpdates && Object.keys(u.pendingUpdates).length > 0).length;
+  const totalUserRequestsBadge = pendingUsersCount + pendingUpdatesCount;
+
   const getTraineeLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'newCourses', label: 'Available Courses', icon: CalendarDays },
@@ -97,14 +103,14 @@ export const Sidebar: React.FC = () => {
 
   const getManagerLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'userManagement', label: 'User Requests', icon: Users },
+    { id: 'userManagement', label: 'User Requests', icon: Users, badge: totalUserRequestsBadge },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
   ];
 
   const getAdminLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'coursesCatalog', label: 'Courses Catalog', icon: BookOpen },
-    { id: 'userManagement', label: 'User Requests', icon: Users },
+    { id: 'userManagement', label: 'User Requests', icon: Users, badge: totalUserRequestsBadge },
     { id: 'analytics', label: 'Analytics', icon: BarChart },
     { 
       id: 'tools_parent', 
@@ -281,14 +287,14 @@ export const Sidebar: React.FC = () => {
               );
             }
 
-            const isActive = currentView === link.id || (link.id === 'dashboard' && currentView === 'userManagement');
+            const isActive = currentView === link.id;
             return (
               <motion.button
                 key={link.id}
                 whileHover={{ x: 2 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleNavClick(link.id)}
-                className="flex items-center w-full px-4 py-2.5 rounded-lg transition-all duration-200 text-sm"
+                className="flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all duration-200 text-sm cursor-pointer"
                 style={{
                   backgroundColor: isActive ? 'var(--oc-navy)' : 'transparent',
                   color: isActive ? '#ffffff' : 'var(--text-secondary)',
@@ -296,8 +302,15 @@ export const Sidebar: React.FC = () => {
                   boxShadow: isActive ? '0 3px 10px rgba(0,45,98,0.28)' : 'none',
                 }}
               >
-                <link.icon size={19} className="mr-3 rtl:ml-3 rtl:mr-0 shrink-0" />
-                <span className="truncate">{link.label}</span>
+                <div className="flex items-center min-w-0 pr-1">
+                  <link.icon size={19} className="mr-3 rtl:ml-3 rtl:mr-0 shrink-0" />
+                  <span className="truncate">{link.label}</span>
+                </div>
+                {link.badge !== undefined && link.badge > 0 && (
+                  <span className="bg-red-500 text-white text-[11px] font-black px-2 py-0.5 rounded-full shadow-xs shrink-0 animate-pulse">
+                    {link.badge}
+                  </span>
+                )}
               </motion.button>
             );
           })}

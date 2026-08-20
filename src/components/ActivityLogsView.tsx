@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { 
   Activity, RefreshCw, Loader2, MapPin, Search, PlusCircle, X, 
@@ -14,40 +14,7 @@ export const ActivityLogsView: React.FC = () => {
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [displayLimit, setDisplayLimit] = useState<number>(10);
   const [searchTerm, setSearchTerm] = useState<string>('');
-
-  // Online / Active Users Calculation (last 30 mins)
-  const now = Date.now();
-  const THIRTY_MINUTES = 30 * 60 * 1000;
-  const onlineUsersMap = new Map<string, { name: string; hrCode: string; role: string; lastSeen: string }>();
-
-  if (currentUser) {
-    onlineUsersMap.set(currentUser.id, {
-      name: currentUser.name,
-      hrCode: currentUser.hrCode,
-      role: currentUser.role || 'admin',
-      lastSeen: language === 'ar' ? 'الآن (أنت)' : 'Now (You)'
-    });
-  }
-
-  const realUsers = (users || []).filter(u => u && u.id && !String(u.id).startsWith('derived_'));
-  realUsers.forEach(u => {
-    if (u.lastLogin) {
-      const logTime = new Date(u.lastLogin).getTime();
-      if (!isNaN(logTime) && (now - logTime) <= THIRTY_MINUTES) {
-        if (!onlineUsersMap.has(u.id)) {
-          const diffMinutes = Math.max(1, Math.round((now - logTime) / 60000));
-          onlineUsersMap.set(u.id, {
-            name: u.name || u.id,
-            hrCode: u.hrCode || '',
-            role: u.role || 'trainee',
-            lastSeen: language === 'ar' ? `منذ ${diffMinutes} دقيقة` : `${diffMinutes}m ago`
-          });
-        }
-      }
-    }
-  });
-
-  const onlineUsersList = Array.from(onlineUsersMap.values());
+  const [currentLocation, setCurrentLocation] = useState<string>('Cairo, EG');
 
   const fetchActivityLogs = async (limitCount: number = 300) => {
     setLoadingLogs(true);
@@ -70,9 +37,80 @@ export const ActivityLogsView: React.FC = () => {
     }
   };
 
+  // Immediate location fetch & session logging on mount
   useEffect(() => {
-    fetchActivityLogs(300);
-  }, []);
+    const initAndLog = async () => {
+      let detectedLoc = "Cairo, EG";
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        if (res.ok) {
+          const d = await res.json();
+          if (d.city && d.country_code) {
+            detectedLoc = `${d.city}, ${d.country_code} (${d.ip})`;
+            setCurrentLocation(detectedLoc);
+          }
+        }
+      } catch (e) {}
+
+      if (currentUser) {
+        try {
+          await addDoc(collection(db, 'activity_logs'), {
+            userId: currentUser.id,
+            userName: currentUser.name || 'Admin',
+            hrCode: currentUser.hrCode || 'admin',
+            role: currentUser.role || 'admin',
+            action: 'session_resume',
+            location: detectedLoc,
+            timestamp: serverTimestamp()
+          });
+        } catch (err) {
+          console.warn("Could not push immediate activity log:", err);
+        }
+      }
+      await fetchActivityLogs(300);
+    };
+
+    initAndLog();
+  }, [currentUser]);
+
+  // Online / Active Users Calculation (last 30 mins)
+  const now = Date.now();
+  const THIRTY_MINUTES = 30 * 60 * 1000;
+  const onlineUsersMap = new Map<string, { id: string; name: string; hrCode: string; role: string; lastSeen: string; location: string }>();
+
+  if (currentUser) {
+    onlineUsersMap.set(currentUser.id, {
+      id: currentUser.id,
+      name: currentUser.name,
+      hrCode: currentUser.hrCode,
+      role: currentUser.role || 'admin',
+      lastSeen: language === 'ar' ? 'الآن (أنت)' : 'Now (You)',
+      location: currentLocation
+    });
+  }
+
+  const realUsers = (users || []).filter(u => u && u.id && !String(u.id).startsWith('derived_'));
+  realUsers.forEach(u => {
+    if (u.lastLogin) {
+      const logTime = new Date(u.lastLogin).getTime();
+      if (!isNaN(logTime) && (now - logTime) <= THIRTY_MINUTES) {
+        if (!onlineUsersMap.has(u.id)) {
+          const diffMinutes = Math.max(1, Math.round((now - logTime) / 60000));
+          const userLogLoc = activityLogs.find(l => l.userId === u.id || l.hrCode === u.hrCode || l.userName === u.name)?.location || 'Cairo, EG';
+          onlineUsersMap.set(u.id, {
+            id: u.id,
+            name: u.name || u.id,
+            hrCode: u.hrCode || '',
+            role: u.role || 'trainee',
+            lastSeen: language === 'ar' ? `منذ ${diffMinutes} دقيقة` : `${diffMinutes}m ago`,
+            location: userLogLoc
+          });
+        }
+      }
+    }
+  });
+
+  const onlineUsersList = Array.from(onlineUsersMap.values());
 
   const isSpecificSearch = Boolean(searchTerm.trim());
 
@@ -113,9 +151,9 @@ export const ActivityLogsView: React.FC = () => {
   return (
     <div className="space-y-4 animate-fadeIn">
       
-      {/* 1. Server Status Banner */}
+      {/* 1. Server Status Banner (Clean, without the requested removed phrase) */}
       <div 
-        className="p-4 rounded-2xl border flex items-center justify-between gap-3 shadow-sm transition-colors"
+        className="p-3.5 rounded-2xl border flex items-center justify-between gap-3 shadow-xs transition-colors"
         style={{ 
           backgroundColor: isDark ? 'rgba(16, 185, 129, 0.12)' : '#ecfdf5',
           borderColor: isDark ? 'rgba(16, 185, 129, 0.3)' : '#a7f3d0'
@@ -123,25 +161,22 @@ export const ActivityLogsView: React.FC = () => {
       >
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-            <ShieldCheck size={22} />
+            <ShieldCheck size={20} />
           </div>
           <div>
-            <h4 className="font-bold text-sm text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
+            <h4 className="font-bold text-xs sm:text-sm text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
               <span>{language === 'ar' ? 'حالة السيرفر: متصل ويعمل بكفاءة' : 'Server Status: Connected & Healthy'}</span>
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             </h4>
-            <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">
-              {language === 'ar' ? 'تم تفعيل التخزين المؤقت الذكي لتقليل القراءات بنسبة 99%' : 'Persistent IndexedDB cache active to minimize server reads by 99%'}
-            </p>
           </div>
         </div>
-        <div className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
-          <Cpu size={14} />
+        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
+          <Cpu size={13} />
           <span>0ms Latency</span>
         </div>
       </div>
 
-      {/* 2. Active Users Online Right Now */}
+      {/* 2. Active Users Online Right Now (with location for each user) */}
       <div 
         className="border rounded-2xl p-4 shadow-sm transition-colors"
         style={{ 
@@ -159,19 +194,32 @@ export const ActivityLogsView: React.FC = () => {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-40 overflow-y-auto pr-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto pr-1">
           {onlineUsersList.map((u, idx) => (
             <div 
               key={idx} 
-              className="p-2.5 rounded-xl border flex items-center justify-between text-xs transition-colors"
+              className="p-3 rounded-xl border flex items-center justify-between gap-2.5 text-xs transition-colors shadow-2xs"
               style={{ 
                 backgroundColor: isDark ? '#193158' : '#f8fafc',
                 borderColor: isDark ? 'rgba(148, 190, 255, 0.18)' : '#e2e8f0'
               }}
             >
-              <div className="min-w-0 pr-2">
-                <span className="font-bold block truncate text-gray-900 dark:text-white">{u.name}</span>
-                <span className="text-[11px] text-gray-500 dark:text-gray-400">{u.hrCode} • {u.role}</span>
+              <div className="min-w-0 flex-1">
+                <span className="font-bold block truncate text-gray-900 dark:text-white text-xs">{u.name}</span>
+                <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 flex-wrap">
+                  <span className="font-mono">{u.hrCode}</span>
+                  <span>•</span>
+                  <span>{u.role}</span>
+                  {u.location && (
+                    <>
+                      <span>•</span>
+                      <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium truncate max-w-[140px]" title={u.location}>
+                        <MapPin size={10} className="shrink-0" />
+                        <span className="truncate">{u.location}</span>
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
               <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
                 {u.lastSeen}

@@ -5,7 +5,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search } from "lucide-react";
+import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
@@ -230,6 +230,7 @@ export const AdminDashboard: React.FC = () => {
   const [activeUsersSearchTerm, setActiveUsersSearchTerm] = useState("");
   const [activeUsersLimit, setActiveUsersLimit] = useState<number | 'all'>(10);
   const [isFullReportView, setIsFullReportView] = useState(false);
+  const [pendingSortOrder, setPendingSortOrder] = useState<'desc' | 'asc'>('desc');
 
   const handleExecuteRecordsSearch = async (fetchAll = false) => {
     if (fetchAll) {
@@ -1206,12 +1207,44 @@ It is my pleasure to announce the beginning of the following course:
                   
                   {userManagementTab === 'pending' && (
                     <div>
-                      <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>{language === "ar" ? "طلبات معلقة" : "Pending Users"}</h2>
-                      {pendingUsers.filter(u => {
-                        if (!userSearchTerm.trim()) return true;
-                        const term = userSearchTerm.trim().toLowerCase();
-                        return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
-                      }).length > 0 ? (
+                      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                        <div className="flex items-center gap-2.5">
+                          <h2 className="text-xl font-bold" style={{ color: textColor }}>{language === "ar" ? "طلبات معلقة" : "Pending Users"}</h2>
+                          <span className="bg-red-500 text-white text-xs font-black px-2.5 py-0.5 rounded-full shadow-xs">
+                            {pendingUsers.length}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setPendingSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                          className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border transition-all cursor-pointer shadow-2xs hover:scale-105"
+                          style={{
+                            backgroundColor: inputBg,
+                            borderColor: borderColor,
+                            color: textColor
+                          }}
+                          title={language === 'ar' ? 'تغيير اتجاه الترتيب' : 'Toggle Sort Order'}
+                        >
+                          <ArrowUpDown size={14} className="text-[#FFC000]" />
+                          <span>
+                            {pendingSortOrder === 'desc' 
+                              ? (language === 'ar' ? 'الترتيب: من الأحدث للأقدم ⬇' : 'Sort: Newest First ⬇') 
+                              : (language === 'ar' ? 'الترتيب: من الأقدم للأحدث ⬆' : 'Sort: Oldest First ⬆')}
+                          </span>
+                        </button>
+                      </div>
+
+                      {pendingUsers
+                        .filter(u => {
+                          if (!userSearchTerm.trim()) return true;
+                          const term = userSearchTerm.trim().toLowerCase();
+                          return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term) || (u.phone || '').includes(term);
+                        })
+                        .sort((a, b) => {
+                          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                          return pendingSortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+                        })
+                        .length > 0 ? (
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
@@ -1224,11 +1257,18 @@ It is my pleasure to announce the beginning of the following course:
                             </tr>
                           </thead>
                           <tbody>
-                            {pendingUsers.filter(u => {
-                              if (!userSearchTerm.trim()) return true;
-                              const term = userSearchTerm.trim().toLowerCase();
-                              return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
-                            }).map((u) => (
+                            {pendingUsers
+                              .filter(u => {
+                                if (!userSearchTerm.trim()) return true;
+                                const term = userSearchTerm.trim().toLowerCase();
+                                return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term) || (u.phone || '').includes(term);
+                              })
+                              .sort((a, b) => {
+                                const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                                const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                                return pendingSortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+                              })
+                              .map((u) => (
                               <tr key={u.id} className="border-b transition-colors" style={{ borderColor: borderColor, color: textColor }}>
                                 {editingUserId === u.id ? (
                                   <>

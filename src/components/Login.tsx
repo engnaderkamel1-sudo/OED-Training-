@@ -6,7 +6,7 @@ import {
   Briefcase, Clock, ArrowRight, UserPlus
 } from "lucide-react";
 import { auth, db } from "../firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { getLoginMeta, getLocationFromIP } from "../utils/loginUtils";
@@ -281,19 +281,33 @@ export const Login: React.FC = () => {
         ? email.trim().toLowerCase() + "@orascom.com" 
         : email.trim().toLowerCase(); 
       
+      // 1. Mandatory Profile Image
       if (!profileImage) {
         setError(language === "ar" ? "الصورة الشخصية إجبارية لإتمام إنشاء الحساب، يرجى رفع صورتك أولاً." : "Profile photo is required to create an account. Please upload your photo.");
         return;
       }
 
-      const finalDepartment = department === '__custom__' ? customDepartment.trim() : department.trim();
-      if (!finalDepartment) {
-        setError(language === "ar" ? "الرجاء تحديد أو كتابة اسم القسم" : "Please select or enter the department name");
+      // 2. Mandatory Full Name
+      if (!name || !name.trim()) {
+        setError(language === "ar" ? "يرجى كتابة الاسم بالكامل" : "Please enter your full name");
         return;
       }
 
-      if (!name || !password || !email.trim()) {
-        setError(language === "ar" ? "الرجاء ملء جميع الحقول المطلوبة" : "Please fill all required fields");
+      // 3. Mandatory Phone Number
+      if (!phone || phone.length !== 11 || !/^01(0|1|2|5)/.test(phone)) {
+        setError(language === "ar" ? "رقم الهاتف غير صحيح، يجب أن يتكون من 11 رقماً ويبدأ بـ 01" : "Phone must be 11 digits and start with 01 (e.g. 010xxxxxxxx)");
+        return;
+      }
+
+      // 4. Mandatory HR Code (Official Account)
+      if (registerMode === 'official' && (!hrCode || !hrCode.trim())) {
+        setError(language === "ar" ? "يرجى إدخال الرقم الوظيفي (HR Code)" : "Please enter your HR Code");
+        return;
+      }
+
+      // 5. Mandatory Email
+      if (!email || !email.trim()) {
+        setError(language === "ar" ? "يرجى إدخال البريد الإلكتروني" : "Please enter your email address");
         return;
       }
 
@@ -301,19 +315,34 @@ export const Login: React.FC = () => {
         setError(language === "ar" ? "برجاء استخدام بريد إلكتروني شخصي (مثل Gmail) وليس بريد الشركة" : "Please use a personal email (e.g. Gmail), not a company email.");
         return;
       }
-      
-      if (phone.length !== 11 || !/^01(0|1|2|5)/.test(phone)) {
-        setError(language === "ar" ? "رقم الهاتف غير صحيح، يجب أن يتكون من 11 رقماً ويبدأ بـ 01" : "Phone must be 11 digits and start with 01 (e.g. 010xxxxxxxx)");
+
+      // 6. Mandatory Department
+      const finalDepartment = department === '__custom__' ? customDepartment.trim() : department.trim();
+      if (!finalDepartment) {
+        setError(language === "ar" ? "الرجاء تحديد أو كتابة اسم القسم" : "Please select or enter the department name");
         return;
       }
-      
-      if (password.length < 6) {
-        setError(language === "ar" ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
+
+      // 7. Mandatory Job Role
+      if (!jobRole) {
+        setError(language === "ar" ? "الرجاء تحديد المسمى الوظيفي" : "Please select your job role");
+        return;
+      }
+
+      // 8. Mandatory Manager Email 1 (For Official Trainees)
+      if (accessRole === 'trainee' && registerMode === 'official' && (!managerEmail1 || !managerEmail1.trim())) {
+        setError(language === "ar" ? "يرجى إدخال البريد الإلكتروني للمدير المباشر 1 (إلزامي)" : "Please enter Manager 1 Email (Required)");
+        return;
+      }
+
+      // 9. Mandatory Password & Confirmation
+      if (!password || password.length < 6) {
+        setError(language === "ar" ? "كلمة المرور يجب أن تكون 6 أحرف أو أرقام على الأقل" : "Password must be at least 6 characters");
         return;
       }
 
       if (password !== confirmPassword) {
-        setError(language === "ar" ? "كلمة المرور غير متطابقة" : "Passwords do not match");
+        setError(language === "ar" ? "تأكيد كلمة المرور غير متطابق" : "Passwords do not match");
         return;
       }
 
@@ -346,22 +375,23 @@ export const Login: React.FC = () => {
         return;
       }
 
+      let createdAuthUser: any = null;
       try {
-        await createUserWithEmailAndPassword(auth, fullEmail, password);
-        await auth.signOut();
+        const userCred = await createUserWithEmailAndPassword(auth, fullEmail, password);
+        createdAuthUser = userCred.user;
       } catch (err: any) {
         if (err.code === 'auth/email-already-in-use') {
           // If already in Auth from earlier attempt, verify credentials
           try {
-            await signInWithEmailAndPassword(auth, fullEmail, password);
-            await auth.signOut();
+            const userCred = await signInWithEmailAndPassword(auth, fullEmail, password);
+            createdAuthUser = userCred.user;
           } catch (signInErr: any) {
             setError(language === "ar" ? "البريد الإلكتروني مسجل بالفعل بكلمة مرور مختلفة" : "Email already registered with a different password.");
             return;
           }
         } else {
           console.error(err);
-          setError(language === "ar" ? `حدث خطأ من السيرفر: ${err.message}` : `Server error: ${err.message}`);
+          setError(language === "ar" ? `حدث خطأ في إنشاء الحساب: ${err.message}` : `Server error: ${err.message}`);
           return;
         }
       }
@@ -389,7 +419,7 @@ export const Login: React.FC = () => {
         profileImageUrl: profileImage || '',
         isGuest: registerMode === 'temporary', 
         guestExpiryDate: registerMode === 'temporary' ? expiryDate.toISOString() : '',
-        isShadowAccount: false // Remove shadow flag since it's a real account now
+        isShadowAccount: false
       } as any; 
 
       // Remove any possible undefined values for Firebase Firestore compliance
@@ -400,6 +430,8 @@ export const Login: React.FC = () => {
       // Save to Firebase and update local state
       try {
         await setDoc(doc(db, "users", targetUserId), cleanUserDoc);
+        await auth.signOut();
+
         try {
           if (typeof setUsers === 'function') {
             setUsers((prev: any) => Array.isArray(prev) ? [...prev.filter((u: any) => u.id !== targetUserId), newUser] : [newUser]);
@@ -423,7 +455,16 @@ export const Login: React.FC = () => {
           setProfileImage(undefined);
         }, 3000);
       } catch (err: any) {
-        setError("Error saving user data: " + err.message);
+        // Rollback: delete auth user if Firestore write fails so email is not locked/burned!
+        if (createdAuthUser) {
+          try {
+            await deleteUser(createdAuthUser);
+          } catch (delErr) {
+            console.warn("Rollback auth delete error:", delErr);
+          }
+        }
+        await auth.signOut();
+        setError(language === "ar" ? `فشل حفظ بيانات الحساب: ${err.message}` : `Error saving user data: ${err.message}`);
       }
     } finally {
       setIsSubmitting(false);
