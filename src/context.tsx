@@ -78,7 +78,22 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('en');
-  const [currentView, setCurrentView] = useState<string>('dashboard');
+  const [currentView, setCurrentViewState] = useState<string>(() => {
+    try {
+      const stored = localStorage.getItem('oed_current_view');
+      return stored || 'dashboard';
+    } catch {
+      return 'dashboard';
+    }
+  });
+
+  const setCurrentView = (view: string) => {
+    setCurrentViewState(view);
+    try {
+      localStorage.setItem('oed_current_view', view);
+    } catch (e) {}
+  };
+
   const [user, setUserState] = useState<User | null>(() => {
     try {
       const stored = localStorage.getItem('oed_training_user');
@@ -98,6 +113,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (newUser && (newUser.hrCode?.toLowerCase() === 'admin' || newUser.id === 'admin')) {
       newUser.role = 'admin';
       newUser.status = 'approved';
+    }
+    if (!newUser) {
+      try {
+        localStorage.removeItem('oed_current_view');
+      } catch (e) {}
     }
     setUserState(newUser);
   };

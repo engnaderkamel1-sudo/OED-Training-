@@ -575,15 +575,68 @@ Please log in to register for this session through the OED-TTMS Application.
   ];
 
   const dynamicCourses = useMemo(() => {
-    const map = new Map<string, string>();
-    records.forEach((r) => { if (r.courseId) map.set(r.courseId, r.courseName || mockCourses.find((c) => c.id === r.courseId)?.title || r.courseId); });
-    mockCourses.forEach((c) => { if (!map.has(c.id)) map.set(c.id, c.title); });
-    return Array.from(map.entries()).map(([id, title]) => ({ id, title }));
-  }, [records]);
+    const courseTitles = new Set<string>();
+    const result: { id: string; title: string }[] = [];
+
+    // 1. From Firestore courses collection
+    (courses || []).forEach((c) => {
+      const title = (c.title || c.id || '').trim();
+      if (title && !courseTitles.has(title.toLowerCase())) {
+        courseTitles.add(title.toLowerCase());
+        result.push({ id: c.id || title, title });
+      }
+    });
+
+    // 2. From upcoming sessions
+    (upcomingSessions || []).forEach((s) => {
+      const title = (s.courseTitle || '').trim();
+      if (title && !courseTitles.has(title.toLowerCase())) {
+        courseTitles.add(title.toLowerCase());
+        result.push({ id: s.courseId || title, title });
+      }
+    });
+
+    // 3. From cleanedData / records
+    const allRecords = [...(cleanedData || []), ...(records || [])];
+    allRecords.forEach((r) => {
+      const title = (r.courseName || (r as any).courseTitle || '').trim();
+      if (title && !courseTitles.has(title.toLowerCase())) {
+        courseTitles.add(title.toLowerCase());
+        result.push({ id: (r as any).courseId || title, title });
+      }
+    });
+
+    // 4. Default OED training courses (fallback so dropdown is ALWAYS full!)
+    DEFAULT_COURSE_STATS.forEach((c) => {
+      const title = c.courseName.trim();
+      if (title && !courseTitles.has(title.toLowerCase())) {
+        courseTitles.add(title.toLowerCase());
+        result.push({ id: title, title });
+      }
+    });
+
+    return result.sort((a, b) => a.title.localeCompare(b.title));
+  }, [courses, upcomingSessions, cleanedData, records]);
 
   const dynamicDepartments = useMemo(() => {
-    return Array.from(new Set(users.filter((u) => u.role === "trainee").map((u) => u.department).filter(Boolean)));
-  }, [users]);
+    const depts = new Set<string>();
+    
+    DEFAULT_DEPARTMENT_STATS.forEach(d => depts.add(d.department));
+    depts.add("Technical Office");
+    depts.add("Procurement");
+    depts.add("Civil Works");
+
+    (users || []).forEach(u => {
+      if (u.department) depts.add(u.department.trim());
+    });
+
+    const allRecords = [...(cleanedData || []), ...(records || [])];
+    allRecords.forEach(r => {
+      if (r.department) depts.add(r.department.trim());
+    });
+
+    return Array.from(depts).filter(Boolean).sort();
+  }, [users, cleanedData, records]);
 
   const courseStats = useMemo(() => {
     const source = (cleanedData && cleanedData.length > 0) ? cleanedData : records;
@@ -3078,28 +3131,60 @@ Content-Type: text/html; charset="utf-8"
             <form onSubmit={handleManualRecordSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "الكود الوظيفي *" : "HR Code *"}</label>
-                <input required type="text" value={manualRecord.hrCode} onChange={(e) => setManualRecord({...manualRecord, hrCode: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white" dir="ltr" />
-                <p className="text-[10px] text-gray-500 mt-1">{language === "ar" ? "إذا لم يكن للمتدرب حساب، سيتم إنشاء حساب وهمي له." : "If user doesn't exist, a shadow account will be created."}</p>
+                <input 
+                  required 
+                  type="text" 
+                  placeholder="e.g. 100452"
+                  value={manualRecord.hrCode} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const found = users.find(u => (u.hrCode || '').toLowerCase() === val.trim().toLowerCase());
+                    setManualRecord(prev => ({
+                      ...prev,
+                      hrCode: val,
+                      traineeName: found ? found.name : prev.traineeName,
+                      department: found ? found.department : prev.department
+                    }));
+                  }} 
+                  className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white" 
+                  dir="ltr" 
+                />
+                <p className="text-[10px] text-gray-500 mt-1">{language === "ar" ? "إذا لم يكن للمتدرب حساب، سيتم إنشاء حساب وهمي له تلقائياً." : "If user doesn't exist, a shadow account will be created."}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "الاسم" : "Name"}</label>
-                  <input type="text" value={manualRecord.traineeName} onChange={(e) => setManualRecord({...manualRecord, traineeName: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                  <input type="text" placeholder={language === "ar" ? "اسم المتدرب..." : "Trainee name..."} value={manualRecord.traineeName} onChange={(e) => setManualRecord({...manualRecord, traineeName: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "القسم" : "Department"}</label>
-                  <select value={manualRecord.department} onChange={(e) => setManualRecord({...manualRecord, department: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-                    <option value="">{language === "ar" ? "اختر..." : "Select..."}</option>
-                    {dynamicDepartments.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "القسم (اختر أو اكتب)" : "Department"}</label>
+                  <input
+                    list="departments-datalist"
+                    type="text"
+                    placeholder={language === "ar" ? "اختر أو اكتب القسم..." : "Select or type department..."}
+                    value={manualRecord.department}
+                    onChange={(e) => setManualRecord({...manualRecord, department: e.target.value})}
+                    className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                  />
+                  <datalist id="departments-datalist">
+                    {dynamicDepartments.map(d => <option key={d} value={d} />)}
+                  </datalist>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "الدورة التدريبية *" : "Course Name *"}</label>
-                <select required value={manualRecord.courseId} onChange={(e) => setManualRecord({...manualRecord, courseId: e.target.value})} className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-                  <option value="">{language === "ar" ? "اختر..." : "Select..."}</option>
-                  {dynamicCourses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
-                </select>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{language === "ar" ? "الدورة التدريبية * (اختر أو اكتب)" : "Course Name *"}</label>
+                <input
+                  required
+                  list="courses-datalist"
+                  type="text"
+                  placeholder={language === "ar" ? "اختر أو اكتب اسم الدورة التدريبية..." : "Select or type course title..."}
+                  value={manualRecord.courseId}
+                  onChange={(e) => setManualRecord({...manualRecord, courseId: e.target.value})}
+                  className="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62] dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                />
+                <datalist id="courses-datalist">
+                  {dynamicCourses.map(c => <option key={c.id} value={c.title} />)}
+                </datalist>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
