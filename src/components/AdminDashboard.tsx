@@ -3,9 +3,10 @@ import { EditRecordModal } from './EditRecordModal';
 import { EditUserModal } from './EditUserModal';
 import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
-import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment } from 'firebase/firestore';
-import { db } from '../firebase';
-import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban } from "lucide-react";
+import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment, collection, getDocs, writeBatch } from 'firebase/firestore';
+import { db, auth } from '../firebase';
+import { EmailAuthProvider, reauthenticateWithCredential, signInWithEmailAndPassword } from 'firebase/auth';
+import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
@@ -281,6 +282,125 @@ Please log in to register for this session through the OED-TTMS Application.
     if (sessionStatusTab === 'cancelled') return cancelledSessionsList;
     return activeSessionsList;
   }, [sessionStatusTab, activeSessionsList, completedSessionsList, cancelledSessionsList]);
+
+  // -- FACTORY RESET STATE & HANDLER --
+  const [showFactoryResetModal, setShowFactoryResetModal] = useState(false);
+  const [resetPassword, setResetPassword] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [wipeOptions, setWipeOptions] = useState({
+    records: true,
+    sessions: true,
+    users: true,
+    logs: true,
+    announcements: true,
+    kpis: true,
+  });
+
+  const handleExecuteFactoryReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetPassword) return;
+    setIsResetting(true);
+    setResetError("");
+
+    try {
+      // 1. Re-authenticate admin with entered password
+      const currentUser = auth.currentUser;
+      const adminEmail = currentUser?.email || user?.email;
+      if (!adminEmail) {
+        throw new Error(language === 'ar' ? 'لم يتم العثور على بريد المسؤول' : 'Admin email not found');
+      }
+
+      if (currentUser && currentUser.email) {
+        const credential = EmailAuthProvider.credential(currentUser.email, resetPassword);
+        await reauthenticateWithCredential(currentUser, credential);
+      } else {
+        await signInWithEmailAndPassword(auth, adminEmail, resetPassword);
+      }
+
+      // 2. Auto Full Backup First!
+      try {
+        exportCloudBackup(users, records, upcomingSessions, cleanedData || []);
+      } catch (backupErr) {
+        console.warn("Auto backup prior to reset:", backupErr);
+      }
+
+      // 3. Batch deletions
+      if (wipeOptions.records) {
+        const cleanedSnap = await getDocs(collection(db, "cleanedData"));
+        const batch1 = writeBatch(db);
+        cleanedSnap.forEach(d => batch1.delete(d.ref));
+        await batch1.commit();
+
+        const recordsSnap = await getDocs(collection(db, "records"));
+        const batch2 = writeBatch(db);
+        recordsSnap.forEach(d => batch2.delete(d.ref));
+        await batch2.commit();
+      }
+
+      if (wipeOptions.sessions) {
+        const sessionsSnap = await getDocs(collection(db, "sessions"));
+        const batch3 = writeBatch(db);
+        sessionsSnap.forEach(d => batch3.delete(d.ref));
+        await batch3.commit();
+      }
+
+      if (wipeOptions.users) {
+        const usersSnap = await getDocs(collection(db, "users"));
+        const batch4 = writeBatch(db);
+        usersSnap.forEach(d => {
+          const uData = d.data();
+          // Keep current admin safe!
+          if (d.id !== user?.id && uData.email !== user?.email && uData.role !== 'admin') {
+            batch4.delete(d.ref);
+          }
+        });
+        await batch4.commit();
+      }
+
+      if (wipeOptions.logs) {
+        const actSnap = await getDocs(collection(db, "activity_logs"));
+        const batch5 = writeBatch(db);
+        actSnap.forEach(d => batch5.delete(d.ref));
+        await batch5.commit();
+
+        const loginSnap = await getDocs(collection(db, "login_logs"));
+        const batch6 = writeBatch(db);
+        loginSnap.forEach(d => batch6.delete(d.ref));
+        await batch6.commit();
+      }
+
+      if (wipeOptions.announcements) {
+        const annSnap = await getDocs(collection(db, "system_announcements"));
+        const batch7 = writeBatch(db);
+        annSnap.forEach(d => batch7.delete(d.ref));
+        await batch7.commit();
+      }
+
+      if (wipeOptions.kpis) {
+        await setDoc(doc(db, "systemSettings", "globalKPIs"), {
+          totalParticipants: 0,
+          totalCourses: 0,
+          totalHours: 0,
+          averageScore: 0,
+          lastResetAt: new Date().toISOString()
+        }, { merge: true });
+      }
+
+      setResetSuccess(true);
+      setResetPassword("");
+    } catch (err: any) {
+      console.error("Reset execution error:", err);
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setResetError(language === 'ar' ? 'الرقم السري غير صحيح! يرجى التأكد والمحاولة ثانية.' : 'Incorrect password! Please try again.');
+      } else {
+        setResetError(err.message || 'Error occurred during factory reset');
+      }
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   const handleExecuteRecordsSearch = async (fetchAll = false) => {
     if (fetchAll) {
@@ -2650,6 +2770,35 @@ Content-Type: text/html; charset="utf-8"
                             </label>
                             <input type="file" id="excel-upload-main" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
                           </div>
+
+                          <div className="p-4 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50/70 dark:bg-red-950/30 flex items-center justify-between gap-3 shadow-2xs">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 shrink-0">
+                                <ShieldAlert size={18} />
+                              </div>
+                              <div className="min-w-0">
+                                <h4 className="text-xs sm:text-sm font-bold text-red-900 dark:text-red-200 truncate">
+                                  {language === 'ar' ? 'تصفير وتنظيف المنظومة (Factory Reset)' : 'System Factory Reset'}
+                                </h4>
+                                <p className="text-[11px] text-red-700/80 dark:text-red-300/80 truncate">
+                                  {language === 'ar' ? 'مسح بيانات الاختبار والتجهيز للإطلاق الرسمي (محمي برقم سري)' : 'Wipe trial data & prepare for clean launch (Password Protected)'}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowFactoryResetModal(true);
+                                setResetSuccess(false);
+                                setResetError("");
+                                setResetPassword("");
+                              }}
+                              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1.5 hover:scale-105"
+                            >
+                              <Trash2 size={14} />
+                              <span>{language === 'ar' ? 'تصفير المنظومة' : 'Reset System'}</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -3104,6 +3253,202 @@ Content-Type: text/html; charset="utf-8"
       )}
       {showMonthlyReport && <MonthlyReportModal onClose={() => setShowMonthlyReport(false)} records={records} upcomingSessions={upcomingSessions} />}
       {selectedUserToEdit && <EditUserModal user={selectedUserToEdit} onClose={() => setSelectedUserToEdit(null)} />}
+
+      {/* ========================================================= */}
+      {/* FACTORY RESET & DATABASE PURGE MODAL (PASSWORD PROTECTED) */}
+      {/* ========================================================= */}
+      {showFactoryResetModal && (
+        <div 
+          className="fixed inset-0 bg-black/75 backdrop-blur-xs z-[99999] flex items-center justify-center p-4 cursor-pointer animate-fade-in"
+          onClick={() => { if (!isResetting) setShowFactoryResetModal(false); }}
+        >
+          <div 
+            className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-red-300 dark:border-red-900 bg-white dark:bg-[#0D1E38] cursor-default animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-red-700 text-white px-6 py-4 flex justify-between items-center shrink-0 border-b border-red-800">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-white text-red-700 font-bold shadow-xs">
+                  <ShieldAlert size={22} />
+                </div>
+                <div>
+                  <h3 className="font-black text-base md:text-lg leading-tight">
+                    {language === 'ar' ? 'تصفير وتنظيف المنظومة (Factory Reset)' : 'System Factory Reset'}
+                  </h3>
+                  <p className="text-xs text-red-100">
+                    {language === 'ar' ? 'حذف بيانات الاختبار وتجهيز المنظومة للبدء الرسمي' : 'Purge test data & prepare for official go-live'}
+                  </p>
+                </div>
+              </div>
+              {!isResetting && (
+                <button 
+                  type="button"
+                  onClick={() => setShowFactoryResetModal(false)}
+                  className="text-red-200 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              )}
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto space-y-4 text-sm flex-1">
+              {resetSuccess ? (
+                <div className="text-center py-6 space-y-3 animate-fade-in">
+                  <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 flex items-center justify-center mx-auto mb-2 border border-emerald-300 dark:border-emerald-700">
+                    <Check size={32} />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                    {language === 'ar' ? 'تم تنظيف وتصفير المنظومة بنجاح! 🧼' : 'System Reset Completed Successfully!'}
+                  </h4>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 max-w-sm mx-auto leading-relaxed">
+                    {language === 'ar' 
+                      ? 'تم تنزيل نسخة احتياطية على جهازك ومسح كافة السجلات والجلسات والحسابات التجريبية. المنظومة جاهزة الآن لرفع قاعدة بيانات الإكسيل الجديدة المعتمدة.'
+                      : 'A full backup was downloaded to your device, and all test records, sessions, and accounts were purged. The system is ready for official clean data.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowFactoryResetModal(false)}
+                    className="mt-4 px-6 py-2.5 bg-[#002D62] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer hover:bg-blue-900 transition-all"
+                  >
+                    {language === 'ar' ? 'تم، إغلاق النافذة' : 'Done, Close'}
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleExecuteFactoryReset} className="space-y-4">
+                  {/* Warning Box */}
+                  <div className="p-3.5 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50/80 dark:bg-red-950/40 text-red-800 dark:text-red-200 text-xs flex items-start gap-2.5 leading-relaxed">
+                    <AlertTriangle size={18} className="text-red-600 shrink-0 mt-0.5" />
+                    <div>
+                      <strong>{language === 'ar' ? 'تنبيه أمان هام:' : 'Important Safety Note:'}</strong>
+                      <p className="mt-0.5">
+                        {language === 'ar'
+                          ? 'سيقوم هذا الإجراء بحذف البيانات المحددة بالأسفل. سيتم تنزيل ملف نسخة احتياطية كاملة (JSON) تلقائياً على جهازك قبل البدء كإجراء أمان. حسابك كمسؤول رئيسي لن يتم حذفه.'
+                          : 'This will purge selected test data. A full backup file (JSON) will be automatically downloaded to your device first. Your admin account will not be deleted.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Selective Checkboxes */}
+                  <div className="space-y-2 pt-1">
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                      {language === 'ar' ? 'حدد البيانات المراد تصفيرها ومسحها:' : 'Select data to purge:'}
+                    </label>
+                    <div className="grid grid-cols-1 gap-2 text-xs">
+                      <label className="flex items-center gap-2 p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={wipeOptions.records}
+                          onChange={(e) => setWipeOptions({ ...wipeOptions, records: e.target.checked })}
+                          className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
+                        />
+                        <span className="font-medium text-gray-800 dark:text-gray-200">
+                          {language === 'ar' ? 'سجلات التدريب والدرجات السابقة (cleanedData & records)' : 'Training records & scores (cleanedData & records)'}
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={wipeOptions.sessions}
+                          onChange={(e) => setWipeOptions({ ...wipeOptions, sessions: e.target.checked })}
+                          className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
+                        />
+                        <span className="font-medium text-gray-800 dark:text-gray-200">
+                          {language === 'ar' ? 'الجلسات والدورات المفتوحة والمنتهية والملغية (sessions)' : 'Training sessions (active, completed & cancelled)'}
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={wipeOptions.users}
+                          onChange={(e) => setWipeOptions({ ...wipeOptions, users: e.target.checked })}
+                          className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
+                        />
+                        <span className="font-medium text-gray-800 dark:text-gray-200">
+                          {language === 'ar' ? 'حسابات المتدربين والمشرفين التجريبية (مع استثناء حساب الأدمن)' : 'Test user accounts (Excludes current Admin)'}
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={wipeOptions.logs}
+                          onChange={(e) => setWipeOptions({ ...wipeOptions, logs: e.target.checked })}
+                          className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
+                        />
+                        <span className="font-medium text-gray-800 dark:text-gray-200">
+                          {language === 'ar' ? 'سجلات النشاط وتسجيل الدخول (activity_logs & login_logs)' : 'Activity & login logs'}
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={wipeOptions.kpis}
+                          onChange={(e) => setWipeOptions({ ...wipeOptions, kpis: e.target.checked })}
+                          className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
+                        />
+                        <span className="font-medium text-gray-800 dark:text-gray-200">
+                          {language === 'ar' ? 'تصفير عدادات الإحصائيات (KPIs)' : 'Reset system KPI statistics counters to 0'}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Password Input */}
+                  <div className="pt-2">
+                    <label className="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-1.5 flex items-center gap-1.5">
+                      <Lock size={14} className="text-red-600" />
+                      <span>{language === 'ar' ? 'أدخل الرقم السري لحسابك لتأكيد العملية:' : 'Enter your Admin password to confirm:'}</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="password"
+                        required
+                        value={resetPassword}
+                        onChange={(e) => setResetPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full border border-gray-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 outline-none font-bold"
+                        dir="ltr"
+                      />
+                    </div>
+                  </div>
+
+                  {resetError && (
+                    <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs font-bold flex items-center gap-2 animate-shake">
+                      <AlertTriangle size={15} />
+                      <span>{resetError}</span>
+                    </div>
+                  )}
+
+                  {/* Modal Footer Buttons */}
+                  <div className="flex gap-2 justify-end pt-3 border-t border-gray-100 dark:border-slate-800">
+                    <button
+                      type="button"
+                      disabled={isResetting}
+                      onClick={() => setShowFactoryResetModal(false)}
+                      className="px-4 py-2.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                    >
+                      {language === 'ar' ? 'إلغاء وتراجع' : 'Cancel'}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isResetting || !resetPassword}
+                      className="px-5 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer hover:scale-105"
+                    >
+                      {isResetting ? <Loader2 size={16} className="animate-spin" /> : <ShieldAlert size={16} />}
+                      <span>{isResetting ? (language === 'ar' ? 'جاري النسخ الاحتياطي والتصفير...' : 'Resetting...') : (language === 'ar' ? 'تأكيد التصفير وبدء المسح' : 'Confirm & Reset System')}</span>
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

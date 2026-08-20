@@ -6,7 +6,8 @@ import {
   Sun, 
   ChevronDown,
   UserCircle,
-  Info
+  Info,
+  Bell
 } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
@@ -14,12 +15,26 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AboutModal } from './AboutModal';
 
 export const TopNav: React.FC = () => {
-  const { user, language, setUser, theme, toggleTheme, setCurrentView } = useAppContext();
+  const { user, language, setUser, theme, toggleTheme, setCurrentView, announcements, upcomingSessions } = useAppContext();
   const isDark = theme === 'dark';
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isLogoExpanded, setIsLogoExpanded] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const unreadCount = useMemo(() => {
+    if (!user) return 0;
+    if (user.role === 'trainee') {
+      const activeSessions = (upcomingSessions || []).filter(s => !s.isDeleted && s.status !== 'Cancelled');
+      let count = 0;
+      (announcements || []).forEach(a => {
+        if (a.isGlobal) count++;
+        else if (a.sessionId && activeSessions.some(s => s.id === a.sessionId && (s.registeredUsers || []).includes(user.hrCode))) count++;
+      });
+      return count;
+    }
+    return (announcements || []).length;
+  }, [user, announcements, upcomingSessions]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -110,11 +125,33 @@ export const TopNav: React.FC = () => {
               </div>
             )}
 
-            {/* الجزء الأيمن: القائمة المنسدلة والدارك مود */}
+            {/* الجزء الأيمن: التنبيهات، الدارك مود، والقائمة المنسدلة */}
             <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0 z-50">
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (user.role === 'trainee') {
+                      setCurrentView('notifications');
+                    } else if (user.role === 'admin') {
+                      setCurrentView('dashboard');
+                    }
+                  }}
+                  className="relative p-1.5 sm:p-2 text-white cursor-pointer hover:bg-white/10 rounded-xl transition-all"
+                  title={language === 'ar' ? 'التنبيهات والإعلانات' : 'Notifications & Announcements'}
+                >
+                  <Bell size={18} className={unreadCount > 0 ? 'text-[#FFC000]' : 'text-white'} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0.5 right-0.5 rtl:right-auto rtl:left-0.5 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border border-[#002D62] shadow-xs animate-pulse">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
               <button
                 onClick={toggleTheme}
-                className="theme-toggle p-1.5 sm:p-2 text-white cursor-pointer hover:bg-white/10 rounded-lg transition-colors"
+                className="theme-toggle p-1.5 sm:p-2 text-white cursor-pointer hover:bg-white/10 rounded-xl transition-colors"
                 aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
               >
                 {theme === 'light' ? (

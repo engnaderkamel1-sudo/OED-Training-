@@ -1,4 +1,4 @@
-﻿import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useAppContext } from '../context';
 import { 
   X, 
@@ -31,7 +31,9 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  const firebaseConsoleUrl = "https://console.firebase.google.com/";
+  const firebaseUsageUrl = "https://console.firebase.google.com/u/1/project/oed-training/usage";
+  const firestoreDbUrl = "https://console.firebase.google.com/u/1/project/oed-training/firestore/databases/-default-/data";
+  const firebaseAuthUrl = "https://console.firebase.google.com/u/1/project/oed-training/authentication/users";
 
   return (
     <div 
@@ -92,7 +94,7 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               {/* Usage & Quota Card */}
               <a 
-                href={firebaseConsoleUrl}
+                href={firebaseUsageUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group p-4 rounded-xl border flex flex-col justify-between transition-all hover:scale-[1.02] hover:shadow-md cursor-pointer"
@@ -120,7 +122,7 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
 
               {/* Firestore Database Card */}
               <a 
-                href={firebaseConsoleUrl}
+                href={firestoreDbUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group p-4 rounded-xl border flex flex-col justify-between transition-all hover:scale-[1.02] hover:shadow-md cursor-pointer"
@@ -148,7 +150,7 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
 
               {/* Authentication Card */}
               <a 
-                href={firebaseConsoleUrl}
+                href={firebaseAuthUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group p-4 rounded-xl border flex flex-col justify-between transition-all hover:scale-[1.02] hover:shadow-md cursor-pointer"

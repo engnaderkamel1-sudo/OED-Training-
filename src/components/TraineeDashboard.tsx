@@ -201,16 +201,10 @@ export const TraineeDashboard: React.FC = () => {
       });
     }
 
-    const userCreatedAt = user?.createdAt ? new Date(user.createdAt).getTime() : 0;
-    
-    const filteredList = list.filter(notif => {
-      if (!userCreatedAt) return true;
-      const notifTime = new Date(notif.timestamp).getTime();
-      return isNaN(notifTime) || notifTime >= userCreatedAt;
-    });
-
-    return filteredList.reverse();
-  }, [activeUpcomingSessions, user?.createdAt, announcements, language, registeredCourseIds, user]);
+    // Sort notifications with newest first
+    list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return list;
+  }, [activeUpcomingSessions, announcements, language, registeredCourseIds, user]);
 
   const markNotifAsRead = (id: string) => {
     if (!readNotifIds.includes(id)) {
