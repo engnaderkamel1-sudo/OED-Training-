@@ -1154,25 +1154,27 @@ It is my pleasure to announce the beginning of the following course:
             <div className="space-y-12">
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="md:w-64 shrink-0 flex flex-col space-y-2 border-b md:border-b-0 md:border-r rtl:border-r-0 rtl:border-l pb-4 md:pb-0 md:pr-4 rtl:md:pl-4" style={{ borderColor: borderColor }}>
+                  {/* قسم حسابات المستخدمين */}
                   <button onClick={() => setUserManagementTab('pending')} className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors flex justify-between items-center ${userManagementTab === 'pending' ? 'bg-[#002D62] text-white dark:bg-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`} style={{ color: userManagementTab === 'pending' ? '#fff' : textMuted }}>
                     <span>{language === "ar" ? "طلبات معلقة" : "Pending Users"}</span>
-                    {pendingUsers.length > 0 && <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{pendingUsers.length}</span>}
+                    {pendingUsers.length > 0 && <span className="bg-red-500 text-white text-xs font-black px-2 py-0.5 rounded-full">{pendingUsers.length}</span>}
                   </button>
-                  <button onClick={() => setUserManagementTab('updates')} className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors flex justify-between items-center ${userManagementTab === 'updates' ? 'bg-[#002D62] text-white dark:bg-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`} style={{ color: userManagementTab === 'updates' ? '#fff' : textMuted }}>
-                    <span>{language === "ar" ? "تعديل البيانات" : "Data Updates"}</span>
-                    {usersWithPendingUpdates.length > 0 && <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">{usersWithPendingUpdates.length}</span>}
-                  </button>
-                  
-                  {/* التابة الجديدة: سجل التعديلات المكتملة */}
-                  <button onClick={() => setUserManagementTab('processed_updates')} className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors flex justify-between items-center ${userManagementTab === 'processed_updates' ? 'bg-[#002D62] text-white dark:bg-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`} style={{ color: userManagementTab === 'processed_updates' ? '#fff' : textMuted }}>
-                    <span>{language === "ar" ? "سجل التعديلات" : "Processed Updates"}</span>
-                  </button>
-
                   <button onClick={() => setUserManagementTab('processed')} className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors ${userManagementTab === 'processed' ? 'bg-[#002D62] text-white dark:bg-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`} style={{ color: userManagementTab === 'processed' ? '#fff' : textMuted }}>
                     {language === "ar" ? "طلبات مراجعة" : "Processed Requests"}
                   </button>
                   <button onClick={() => setUserManagementTab('deleted')} className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors ${userManagementTab === 'deleted' ? 'bg-[#002D62] text-white dark:bg-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`} style={{ color: userManagementTab === 'deleted' ? '#fff' : textMuted }}>
                     {language === "ar" ? "متدربين محذوفين" : "Deleted Trainees"}
+                  </button>
+
+                  <div className="my-2 border-t" style={{ borderColor: borderColor }} />
+
+                  {/* قسم تعديلات البيانات */}
+                  <button onClick={() => setUserManagementTab('updates')} className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors flex justify-between items-center ${userManagementTab === 'updates' ? 'bg-[#002D62] text-white dark:bg-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`} style={{ color: userManagementTab === 'updates' ? '#fff' : textMuted }}>
+                    <span>{language === "ar" ? "تعديل البيانات" : "Data Updates"}</span>
+                    {usersWithPendingUpdates.length > 0 && <span className="bg-orange-500 text-white text-xs font-black px-2 py-0.5 rounded-full">{usersWithPendingUpdates.length}</span>}
+                  </button>
+                  <button onClick={() => setUserManagementTab('processed_updates')} className={`text-left rtl:text-right px-4 py-3 rounded-lg font-medium transition-colors flex justify-between items-center ${userManagementTab === 'processed_updates' ? 'bg-[#002D62] text-white dark:bg-blue-600' : 'hover:bg-gray-100 dark:hover:bg-slate-800'}`} style={{ color: userManagementTab === 'processed_updates' ? '#fff' : textMuted }}>
+                    <span>{language === "ar" ? "سجل التعديلات" : "Processed Updates"}</span>
                   </button>
                 </div>
                 <div className="flex-1 overflow-x-auto">
