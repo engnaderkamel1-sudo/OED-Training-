@@ -127,8 +127,8 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   let cardClasses = "p-5 rounded-xl shadow-sm border transition-all flex flex-col justify-between h-full relative group ";
   
   if (isCancelled) {
-    // Admin Cancelled State
-    cardClasses += "bg-gray-100 dark:bg-white/[0.04] border-gray-300 dark:border-white/[0.1] opacity-75 grayscale";
+    // Admin Cancelled State - high contrast in dark mode without grayscale
+    cardClasses += "bg-gray-100 dark:bg-[#132543] border-gray-300 dark:border-red-900/40";
   } else if (!isAdminView && isUnregistered) {
     // Trainee Unregistered State
     cardClasses += "bg-white dark:bg-[#193158] border-amber-300 dark:border-amber-500/40";
@@ -146,7 +146,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       <div>
         {/* Header & Badges */}
         <div className="flex justify-between items-start mb-3 gap-2 flex-wrap">
-          <h3 className={`font-bold text-lg leading-tight ${isCancelled ? 'text-gray-500 line-through' : 'text-[#002D62] dark:text-white'}`}>
+          <h3 className={`font-bold text-lg leading-tight ${isCancelled ? 'text-gray-600 dark:text-gray-200 line-through' : 'text-[#002D62] dark:text-white'}`}>
             <DataField>{session.courseTitle}</DataField>
             {isCancelled && <span className="text-red-600 dark:text-red-400 font-bold ml-2"> ({t('cancelled')})</span>}
           </h3>
@@ -218,18 +218,19 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       {/* CANCELLED SESSION DETAILS BANNER */}
       {/* ============================================ */}
       {isCancelled && (
-        <div className="mt-3 p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 rounded-xl text-xs flex flex-col gap-1.5 text-red-800 dark:text-red-200">
-          <div className="flex items-center gap-1.5 font-bold text-sm">
-            <Ban size={16} className="text-red-600 dark:text-red-400" />
+        <div className="mt-3 p-3.5 bg-red-100 dark:bg-red-950/80 border border-red-300 dark:border-red-600/60 rounded-xl text-xs flex flex-col gap-2 shadow-xs">
+          <div className="flex items-center gap-2 font-black text-sm text-red-900 dark:text-red-100">
+            <Ban size={16} className="text-red-600 dark:text-red-400 shrink-0" />
             <span>{language === 'ar' ? '🚫 تم إلغاء هذه الجلسة التدريبية' : '🚫 This Training Session Was Cancelled'}</span>
           </div>
           {session.cancellationReason && (
-            <div className="text-xs font-semibold text-red-700 dark:text-red-300 bg-white/70 dark:bg-red-900/30 p-2 rounded-lg border border-red-200 dark:border-red-800/40">
-              📌 <strong>{language === 'ar' ? 'سبب الإلغاء:' : 'Cancellation Reason:'}</strong> {session.cancellationReason}
+            <div className="text-xs font-bold text-gray-900 dark:text-white bg-white/95 dark:bg-slate-900/90 p-2.5 rounded-lg border border-red-200 dark:border-red-500/50 leading-relaxed shadow-2xs">
+              <span className="text-red-700 dark:text-red-300 font-black">{language === 'ar' ? '📌 سبب الإلغاء: ' : '📌 Cancellation Reason: '}</span>
+              <span className="font-semibold text-gray-800 dark:text-gray-100">{session.cancellationReason}</span>
             </div>
           )}
           {session.cancelledAt && (
-            <span className="text-[10px] text-gray-500 dark:text-gray-400">
+            <span className="text-[11px] font-bold text-red-800 dark:text-red-300">
               {language === 'ar' ? 'تاريخ الإلغاء:' : 'Cancelled at:'} {new Date(session.cancelledAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}
             </span>
           )}
@@ -472,15 +473,16 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 </>
               ) : isUnregistered ? (
                 <>
-                  <span className="text-xs text-amber-900 dark:text-amber-200 font-bold self-center bg-amber-100 dark:bg-amber-950/70 px-3 py-1.5 rounded-lg border border-amber-300 dark:border-amber-500/50 shadow-sm">
-                    {language === 'ar' ? 'لقد قمت بإلغاء تسجيلك' : (t('youCancelledRegistration') || "You Cancelled Your Registration")}
+                  <span className="text-xs font-black self-center bg-amber-500/20 text-amber-900 dark:text-amber-200 px-3.5 py-1.5 rounded-xl border border-amber-400/50 dark:border-amber-400/60 shadow-xs flex items-center gap-1.5">
+                    <XCircle size={14} className="text-amber-700 dark:text-amber-300 shrink-0" />
+                    <span>{language === 'ar' ? 'لقد قمت بإلغاء تسجيلك' : (t('youCancelledRegistration') || "You Cancelled Your Registration")}</span>
                   </span>
                   <button 
                     type="button"
                     onClick={doTraineeRegister}
-                    className="cursor-pointer bg-[#002D62] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-900 transition-colors flex items-center gap-1.5 shadow-sm"
+                    className="cursor-pointer bg-[#FFC000] hover:bg-yellow-400 text-[#001D42] px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-sm hover:scale-105"
                   >
-                    <CheckCircle size={14} />
+                    <CheckCircle size={14} className="text-[#001D42]" />
                     <span>{t('reRegister')}</span>
                   </button>
                 </>
