@@ -1174,6 +1174,8 @@ export const TraineeDashboard: React.FC = () => {
               </div>
             </div>
           </div>
+        )}
+
         {/* QR Code Attendance Scanner Modal */}
         {showScannerModal && (
           <QRScannerModal
