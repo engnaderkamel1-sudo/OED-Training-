@@ -128,20 +128,20 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   // DYNAMIC STYLING LOGIC
   // ==========================================
 
-  let cardClasses = "p-5 rounded-2xl shadow-sm border transition-all flex flex-col justify-between h-full relative group ";
+  let cardClasses = "p-5 rounded-2xl shadow-sm border-2 transition-all flex flex-col justify-between h-full relative group ";
   
   if (isCancelled) {
-    // Admin Cancelled State - high contrast in dark mode
-    cardClasses += "bg-gray-50 dark:bg-[#132238] border-gray-300 dark:border-red-900/50 shadow-xs";
+    // Admin Cancelled State
+    cardClasses += "bg-white dark:bg-[#111C30] border-red-200 dark:border-red-900/50 shadow-xs opacity-90";
   } else if (!isAdminView && isUnregistered) {
-    // Trainee Unregistered State
-    cardClasses += "bg-amber-50/40 dark:bg-[#162744] border-amber-300 dark:border-amber-500/50 shadow-xs";
+    // Trainee Unregistered State - clean high contrast
+    cardClasses += "bg-white dark:bg-[#132238] border-amber-400/80 dark:border-amber-500/60 shadow-sm";
   } else if (isCompleted) {
-    // Completed/Finalized State
-    cardClasses += "bg-emerald-50/40 dark:bg-[#132840] border-emerald-300 dark:border-emerald-600/50 shadow-xs";
+    // Completed/Finalized State - crisp clean white with clear green border
+    cardClasses += "bg-white dark:bg-[#132840] border-emerald-400 dark:border-emerald-600/60 shadow-sm";
   } else {
-    // Default Active State
-    cardClasses += "bg-white dark:bg-[#162744] border-gray-200 dark:border-slate-700/80 hover:border-[#002D62] dark:hover:border-blue-400 hover:shadow-md";
+    // Default Active State - pure clean white background with crisp border
+    cardClasses += "bg-white dark:bg-[#152642] border-slate-200 dark:border-slate-700 hover:border-[#002D62] dark:hover:border-blue-400 hover:shadow-md";
   }
 
   return (
@@ -480,22 +480,20 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   </span>
                   <button 
                     type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onScanQR) onScanQR(session); }}
+                    className="cursor-pointer bg-[#002D62] hover:bg-blue-900 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all shadow-xs hover:scale-105 active:scale-95"
+                  >
+                    <ScanLine size={15} />
+                    <span>{language === "ar" ? "مسح الحضور" : "Scan Attendance"}</span>
+                  </button>
+                  <button 
+                    type="button"
                     onClick={() => setConfirmAction('unregister')}
-                    className="cursor-pointer bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800/40 px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                    className="cursor-pointer bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800/40 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
                   >
                     <XCircle size={15} />
                     <span>{t('cancelRegistration')}</span>
                   </button>
-                  {session.status === "Active" && (
-                    <button 
-                      type="button"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onScanQR) onScanQR(session); }}
-                      className="cursor-pointer bg-[#002D62] text-white hover:bg-blue-900 px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors shadow-sm"
-                    >
-                      <ScanLine size={15} />
-                      <span>{language === "ar" ? "مسح الحضور" : "Scan Attendance"}</span>
-                    </button>
-                  )}
                   {session.feedbackEnabled && session.feedbackLink && (
                     <a 
                       href={session.feedbackLink}

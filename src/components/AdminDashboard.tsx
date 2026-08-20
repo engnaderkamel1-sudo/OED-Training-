@@ -560,6 +560,26 @@ Please log in to register for this session through the OED-TTMS Application.
       });
     } catch (e) {}
 
+    // Real-Time Broadcast to Firestore 'announcements' collection
+    try {
+      const annDocRef = doc(collection(db, 'announcements'));
+      const annPayload = {
+        id: annDocRef.id,
+        sessionId: session.id,
+        courseName: session.courseTitle,
+        title: language === 'ar' ? '🟢 تذكير فوري بتسجيل الحضور (خلال ساعة)' : '🟢 Attendance Reminder (Within 1 Hour)',
+        message: customMessage,
+        targetAudience: 'mixed',
+        targetHrCodes: targetHrCodes,
+        author: 'Training Administration (OED)',
+        date: new Date().toISOString(),
+        isGlobal: false
+      };
+      await setDoc(annDocRef, annPayload);
+    } catch (annErr) {
+      console.error("Error broadcasting announcement to Firestore:", annErr);
+    }
+
     setUpcomingSessions(prev => prev.map(s => s.id === sessionId ? updatedSession : s));
     playNotificationSound();
 
