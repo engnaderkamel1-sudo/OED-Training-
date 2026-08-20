@@ -13,9 +13,9 @@ export default defineConfig(() => {
       VitePWA({
         registerType: 'autoUpdate',
         injectRegister: 'auto',
-        includeAssets: ['app-icon.jpg', 'icon-192x192.png', 'icon-512x512.png', 'orascom-logo.png'],
+        includeAssets: ['app-icon-v8.png', 'icon-192-v8.png', 'icon-512-v8.png', 'apple-touch-icon.png', 'orascom-logo.png'],
         manifest: {
-          id: '/?v=6',
+          id: '/?v=8',
           name: 'OED TTMS (Technical Training Management System)',
           short_name: 'OED-TTMS',
           description: 'Orascom Equipment Department Technical Training Management System',
@@ -25,22 +25,28 @@ export default defineConfig(() => {
           orientation: 'portrait',
           icons: [
             {
-              src: '/app-icon.jpg?v=6',
-              sizes: '192x192',
-              type: 'image/jpeg',
-              purpose: 'any maskable'
-            },
-            {
-              src: '/icon-192x192.png?v=6',
+              src: '/app-icon-v8.png',
               sizes: '192x192',
               type: 'image/png',
-              purpose: 'any maskable'
+              purpose: 'any'
             },
             {
-              src: '/icon-512x512.png?v=6',
+              src: '/icon-192-v8.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'maskable'
+            },
+            {
+              src: '/icon-512-v8.png',
               sizes: '512x512',
               type: 'image/png',
-              purpose: 'any maskable'
+              purpose: 'any'
+            },
+            {
+              src: '/icon-512-v8.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable'
             }
           ]
         },
