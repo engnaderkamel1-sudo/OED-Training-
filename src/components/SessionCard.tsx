@@ -300,12 +300,44 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               <button 
                 type="button"
                 onClick={doAdminReactivate}
-                className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-2 rounded-lg transition-colors flex items-center gap-1 font-bold shadow-sm"
+                className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-sm"
               >
                 <RotateCcw size={14} />
                 <span>{t('reactivateSession')}</span>
               </button>
+            ) : isCompleted ? (
+              /* ==================================================== */
+              /* COMPLETED SESSIONS CONTROLS: Clean, focused & useful */
+              /* ==================================================== */
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAttendeesModal(true); }}
+                  className="cursor-pointer bg-white dark:bg-[#132543] text-[#002D62] dark:text-[#93C5FD] hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-300 dark:border-slate-700 text-xs px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-2xs"
+                >
+                  <Users size={14} className="text-[#002D62] dark:text-[#93C5FD]" />
+                  <span>{language === 'ar' ? `كشف المتدربين (${attendeesCount})` : `Attendees (${attendeesCount})`}</span>
+                </button>
+
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onPrintRegisterRequest) onPrintRegisterRequest(session); }}
+                  className="cursor-pointer bg-[#FFC000] hover:bg-yellow-500 text-[#001D42] text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-sm hover:scale-105"
+                  title={language === 'ar' ? 'طباعة الكشف الرسمي' : 'Print Official Register'}
+                >
+                  <FileText size={14} className="text-[#001D42]" />
+                  <span>{language === 'ar' ? 'طباعة الكشف الرسمي (PDF)' : 'Print Register (PDF)'}</span>
+                </button>
+
+                <span className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 text-xs font-black px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs">
+                  <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400" />
+                  <span>{language === 'ar' ? 'مكتملة ومسجلة بالشيت ✓' : 'Completed & Saved ✓'}</span>
+                </span>
+              </>
             ) : (
+              /* ==================================================== */
+              /* ACTIVE / UPCOMING SESSIONS CONTROLS                  */
+              /* ==================================================== */
               <>
                 <button 
                   type="button"
@@ -368,10 +400,10 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onFinalizeRequest) onFinalizeRequest(session); }}
-                  className={`cursor-pointer text-white text-xs px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 font-bold shadow-sm ${isCompleted ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-[#002D62] hover:bg-blue-900 border border-blue-400/20'}`}
+                  className="cursor-pointer text-white text-xs px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 font-bold shadow-sm bg-[#002D62] hover:bg-blue-900 border border-blue-400/20"
                 >
                   <CheckCircle size={14} />
-                  <span>{isCompleted ? (language === 'ar' ? 'تم التسجيل ✓' : 'Finalized ✓') : (language === 'ar' ? 'إنهاء وحضور' : 'Finalize & Grade')}</span>
+                  <span>{language === 'ar' ? 'إنهاء وحضور' : 'Finalize & Grade'}</span>
                 </button>
                 <button 
                   type="button"
