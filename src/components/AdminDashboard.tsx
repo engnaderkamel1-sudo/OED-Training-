@@ -2781,34 +2781,38 @@ Content-Type: text/html; charset="utf-8"
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Card 1: Official Reports Hub */}
                     <div 
-                      className="p-6 rounded-2xl border border-gray-200 dark:border-slate-700/80 bg-white dark:bg-[#0F1E36] shadow-sm flex flex-col justify-between transition-all"
+                      className="p-6 rounded-2xl border shadow-sm flex flex-col justify-between transition-all"
+                      style={{ backgroundColor: cardColor, borderColor: borderColor }}
                     >
                       <div>
-                        <div className="flex items-center gap-3 mb-5 pb-3 border-b border-gray-100 dark:border-slate-800">
+                        <div className="flex items-center gap-3 mb-5 pb-3 border-b" style={{ borderColor: borderColor }}>
                           <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/80 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center font-bold border border-blue-100 dark:border-blue-800/60 shadow-2xs">
                             <Printer size={20} />
                           </div>
                           <div>
-                            <h3 className="font-black text-base text-gray-900 dark:text-white">
+                            <h3 className="font-black text-base" style={{ color: textColor }}>
                               {language === "ar" ? "التقارير وسجلات التدريب الرسمية" : "Official Reports & Records"}
                             </h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <p className="text-xs" style={{ color: textMuted }}>
                               {language === "ar" ? "تصدير وطباعة التقارير المعتمدة بصيغة PDF و Excel" : "Export & print official verified reports in PDF & Excel"}
                             </p>
                           </div>
                         </div>
 
                         <div className="space-y-3.5">
-                          <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                          <div 
+                            className="p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                            style={{ backgroundColor: isDark ? '#162B4D' : '#F8FAFC', borderColor: borderColor }}
+                          >
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300 shrink-0 border border-amber-200 dark:border-amber-800/40">
                                 <Calendar size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-sm font-black text-[#002D62] dark:text-white">
+                                <h4 className="text-sm font-black" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>
                                   {language === 'ar' ? 'تقرير التحديث الشهري' : 'Monthly Update Report'}
                                 </h4>
-                                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                                <p className="text-xs font-medium" style={{ color: textMuted }}>
                                   {language === 'ar' ? 'ملخص الدورات والحضور لكل شهر' : 'Monthly training sessions & attendance summary'}
                                 </p>
                               </div>
@@ -2816,23 +2820,26 @@ Content-Type: text/html; charset="utf-8"
                             <button
                               type="button"
                               onClick={() => setShowMonthlyReport(true)}
-                              className="w-full sm:w-auto px-4 py-2.5 bg-[#002D62] dark:bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 hover:scale-105"
+                              className="w-full sm:w-auto px-4 py-2.5 bg-[#002D62] hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 hover:scale-105"
                             >
                               <Mail size={14} />
                               <span>{language === 'ar' ? 'عرض التقرير' : 'Open Report'}</span>
                             </button>
                           </div>
 
-                          <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                          <div 
+                            className="p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                            style={{ backgroundColor: isDark ? '#162B4D' : '#F8FAFC', borderColor: borderColor }}
+                          >
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 shrink-0 border border-emerald-200 dark:border-emerald-800/40">
                                 <Download size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-sm font-black text-[#002D62] dark:text-white">
+                                <h4 className="text-sm font-black" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>
                                   {language === 'ar' ? 'تصدير السجل التدريبي العام (PDF)' : 'Full Training Register (PDF)'}
                                 </h4>
-                                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                                <p className="text-xs font-medium" style={{ color: textMuted }}>
                                   {language === 'ar' ? 'كشف شامل لجميع سجلات المتدربين' : 'Comprehensive PDF training register for all trainees'}
                                 </p>
                               </div>
@@ -2854,34 +2861,38 @@ Content-Type: text/html; charset="utf-8"
 
                     {/* Card 2: Cloud Backup & Data Security */}
                     <div 
-                      className="p-6 rounded-2xl border border-gray-200 dark:border-slate-700/80 bg-white dark:bg-[#0F1E36] shadow-sm flex flex-col justify-between transition-all"
+                      className="p-6 rounded-2xl border shadow-sm flex flex-col justify-between transition-all"
+                      style={{ backgroundColor: cardColor, borderColor: borderColor }}
                     >
                       <div>
-                        <div className="flex items-center gap-3 mb-5 pb-3 border-b border-gray-100 dark:border-slate-800">
+                        <div className="flex items-center gap-3 mb-5 pb-3 border-b" style={{ borderColor: borderColor }}>
                           <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-300 flex items-center justify-center font-bold border border-emerald-100 dark:border-emerald-800/60 shadow-2xs">
                             <Database size={20} />
                           </div>
                           <div>
-                            <h3 className="font-black text-base text-gray-900 dark:text-white">
+                            <h3 className="font-black text-base" style={{ color: textColor }}>
                               {language === "ar" ? "أمان البيانات والنسخ الاحتياطي" : "Data Safety & Cloud Backup"}
                             </h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <p className="text-xs" style={{ color: textMuted }}>
                               {language === "ar" ? "حفظ واسترجاع نسخ احتياطية كاملة لقواعد بيانات المنظومة" : "Export and secure full system database backups"}
                             </p>
                           </div>
                         </div>
 
                         <div className="space-y-3.5">
-                          <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                          <div 
+                            className="p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                            style={{ backgroundColor: isDark ? '#162B4D' : '#F8FAFC', borderColor: borderColor }}
+                          >
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 shrink-0 border border-emerald-200 dark:border-emerald-800/40">
                                 <Sparkles size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-sm font-black text-[#002D62] dark:text-white">
+                                <h4 className="text-sm font-black" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>
                                   {language === 'ar' ? 'نسخ احتياطي فوري متكامل' : 'Instant Full System Backup'}
                                 </h4>
-                                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                                <p className="text-xs font-medium" style={{ color: textMuted }}>
                                   {language === 'ar' ? 'تنزيل ملف نسخة احتياطية لكافة المستخدمين والسجلات والجلسات' : 'Download complete backup of users, records & sessions'}
                                 </p>
                               </div>
@@ -2896,23 +2907,26 @@ Content-Type: text/html; charset="utf-8"
                             </button>
                           </div>
 
-                          <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                          <div 
+                            className="p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                            style={{ backgroundColor: isDark ? '#162B4D' : '#F8FAFC', borderColor: borderColor }}
+                          >
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-300 shrink-0 border border-blue-200 dark:border-blue-800/40">
                                 <UploadCloud size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-sm font-black text-[#002D62] dark:text-white">
+                                <h4 className="text-sm font-black" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>
                                   {language === 'ar' ? 'استيراد ورفع ملف إكسيل محلي' : 'Import Local Excel File'}
                                 </h4>
-                                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                                <p className="text-xs font-medium" style={{ color: textMuted }}>
                                   {syncFile ? syncFile.name : (language === 'ar' ? 'رفع شيت إكسيل لتحديث السجلات' : 'Upload Excel sheet to update records')}
                                 </p>
                               </div>
                             </div>
                             <label
                               htmlFor="excel-upload-main"
-                              className="w-full sm:w-auto px-4 py-2.5 bg-[#002D62] dark:bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 hover:scale-105"
+                              className="w-full sm:w-auto px-4 py-2.5 bg-[#002D62] hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 hover:scale-105"
                             >
                               <UploadCloud size={14} />
                               <span>{language === 'ar' ? 'اختر ملف' : 'Browse'}</span>
@@ -2920,16 +2934,19 @@ Content-Type: text/html; charset="utf-8"
                             <input type="file" id="excel-upload-main" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
                           </div>
 
-                          <div className="p-4 rounded-2xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                          <div 
+                            className="p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                            style={{ backgroundColor: isDark ? '#3B1219' : '#FEF2F2', borderColor: isDark ? '#991B1B' : '#FECACA' }}
+                          >
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="p-2.5 rounded-xl bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 shrink-0 border border-red-200 dark:border-red-800/40">
                                 <ShieldAlert size={18} />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-sm font-black text-red-900 dark:text-red-200">
+                                <h4 className="text-sm font-black" style={{ color: isDark ? '#FCA5A5' : '#991B1B' }}>
                                   {language === 'ar' ? 'تصفير وتنظيف المنظومة (Factory Reset)' : 'System Factory Reset'}
                                 </h4>
-                                <p className="text-xs text-red-700 dark:text-red-300 font-medium">
+                                <p className="text-xs font-medium" style={{ color: isDark ? '#F87171' : '#B91C1C' }}>
                                   {language === 'ar' ? 'مسح بيانات الاختبار والتجهيز للإطلاق الرسمي (محمي برقم سري)' : 'Wipe trial data & prepare for clean launch (Password Protected)'}
                                 </p>
                               </div>
