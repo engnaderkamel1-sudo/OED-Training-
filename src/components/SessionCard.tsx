@@ -308,16 +308,36 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               </button>
             ) : isCompleted ? (
               /* ==================================================== */
-              /* COMPLETED SESSIONS CONTROLS: Clean, focused & useful */
+              /* COMPLETED SESSIONS CONTROLS: Clean, focused & editable */
               /* ==================================================== */
               <>
                 <button
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAttendeesModal(true); }}
-                  className="cursor-pointer bg-white dark:bg-slate-800 text-blue-900 dark:text-blue-200 hover:bg-blue-50 dark:hover:bg-slate-700 border border-blue-200 dark:border-slate-600 text-xs px-4 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-xs"
+                  className="cursor-pointer bg-white dark:bg-slate-800 text-blue-900 dark:text-blue-200 hover:bg-blue-50 dark:hover:bg-slate-700 border border-blue-200 dark:border-slate-600 text-xs px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-xs"
                 >
-                  <Users size={15} className="text-blue-600 dark:text-blue-400" />
+                  <Users size={14} className="text-blue-600 dark:text-blue-400" />
                   <span>{language === 'ar' ? `كشف المتدربين (${attendeesCount})` : `Attendees (${attendeesCount})`}</span>
+                </button>
+
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onFinalizeRequest) onFinalizeRequest(session); }}
+                  className="cursor-pointer bg-blue-50 dark:bg-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-900/70 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105"
+                  title={language === 'ar' ? 'تعديل درجات وتقييم المتدربين' : 'Edit Trainee Grades & Attendance'}
+                >
+                  <CheckCircle size={14} className="text-blue-600 dark:text-blue-400" />
+                  <span>{language === 'ar' ? '📝 تعديل الدرجات والتقييم' : 'Edit Grades & Attendance'}</span>
+                </button>
+
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onEdit) onEdit(session); }}
+                  className="cursor-pointer bg-white dark:bg-slate-800 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 border border-gray-300 dark:border-slate-600 text-xs px-3 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-xs"
+                  title={language === 'ar' ? 'تعديل بيانات الدورة' : 'Edit Session Details'}
+                >
+                  <Edit2 size={13} className="text-gray-600 dark:text-gray-300" />
+                  <span>{t('edit')}</span>
                 </button>
 
                 <button 
@@ -326,13 +346,13 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   className="cursor-pointer bg-[#FFC000] hover:bg-yellow-500 text-[#001D42] text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-sm hover:scale-105"
                   title={language === 'ar' ? 'طباعة الكشف الرسمي' : 'Print Official Register'}
                 >
-                  <FileText size={15} className="text-[#001D42]" />
-                  <span>{language === 'ar' ? 'طباعة الكشف الرسمي (PDF)' : 'Print Register (PDF)'}</span>
+                  <FileText size={14} className="text-[#001D42]" />
+                  <span>{language === 'ar' ? 'طباعة الكشف (PDF)' : 'Print Register (PDF)'}</span>
                 </button>
 
-                <span className="bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200 text-xs font-black px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs">
-                  <CheckCircle size={15} className="text-emerald-600 dark:text-emerald-400" />
-                  <span>{language === 'ar' ? 'مكتملة ومسجلة بالشيت ✓' : 'Completed & Saved ✓'}</span>
+                <span className="bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200 text-xs font-black px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs">
+                  <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400" />
+                  <span>{language === 'ar' ? 'مكتملة ومسجلة ✓' : 'Completed ✓'}</span>
                 </span>
               </>
             ) : (

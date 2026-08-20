@@ -19,6 +19,7 @@ import { AnnouncementModal } from "./AnnouncementModal";
 import { AnnouncementManagerModal } from "./AnnouncementManagerModal";
 import { QRCodeModal } from "./QRCodeModal";
 import { MonthlyReportModal } from "./MonthlyReportModal";
+import { TrainingRegisterPreviewModal } from "./TrainingRegisterPreviewModal";
 import { AnalyticsDashboardTab } from "./AnalyticsDashboardTab";
 import { importFromOneDrive } from "../utils/dataSync";
 import { exportCloudBackup } from "../utils/exportUtils";
@@ -512,6 +513,7 @@ Please log in to register for this session through the OED-TTMS Application.
   const [showAnnouncementManager, setShowAnnouncementManager] = useState<string | null>(null);
   const [announcingSession, setAnnouncingSession] = useState<UpcomingSession | null>(null);
   const [qrSession, setQrSession] = useState<UpcomingSession | null>(null);
+  const [previewRegisterSession, setPreviewRegisterSession] = useState<UpcomingSession | null>(null);
   const [syncProgress, setSyncProgress] = useState(0);
   const [syncSuccess, setSyncSuccess] = useState(false);
   
@@ -2589,19 +2591,19 @@ Content-Type: text/html; charset="utf-8"
                       </h2>
                       
                       {/* 3 Status Sub-Tabs */}
-                      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-gray-100 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700 flex-wrap">
+                      <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-gray-100 dark:bg-[#0B172B] border border-gray-300 dark:border-slate-700 flex-wrap shadow-inner">
                         <button
                           type="button"
                           onClick={() => setSessionStatusTab('active')}
-                          className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+                          className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
                             sessionStatusTab === 'active'
-                              ? (isDark ? 'bg-blue-600 text-white shadow-sm' : 'bg-[#002D62] text-white shadow-sm')
-                              : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-slate-700/50'
+                              ? 'bg-[#002D62] text-white shadow-md ring-2 ring-blue-400'
+                              : 'bg-white dark:bg-slate-800 text-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800/60 hover:bg-blue-50 dark:hover:bg-slate-700/80'
                           }`}
                         >
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                          <span>{language === 'ar' ? 'الدورات المفتوحة والجارية' : 'Open & Active'}</span>
-                          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white/20 text-white font-mono">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                          <span>{language === 'ar' ? '🟢 الدورات المفتوحة والجارية' : '🟢 Open & Active'}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-black ${sessionStatusTab === 'active' ? 'bg-white/20 text-white' : 'bg-blue-100 dark:bg-blue-900/60 text-blue-900 dark:text-blue-200'}`}>
                             {activeSessionsList.length}
                           </span>
                         </button>
@@ -2609,15 +2611,15 @@ Content-Type: text/html; charset="utf-8"
                         <button
                           type="button"
                           onClick={() => setSessionStatusTab('completed')}
-                          className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+                          className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
                             sessionStatusTab === 'completed'
-                              ? 'bg-emerald-600 text-white shadow-sm'
-                              : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-slate-700/50'
+                              ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400'
+                              : 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-50 dark:hover:bg-slate-700/80'
                           }`}
                         >
-                          <CheckCircle size={14} className={sessionStatusTab === 'completed' ? 'text-white' : 'text-emerald-500'} />
-                          <span>{language === 'ar' ? 'الدورات المنتهية' : 'Completed Sessions'}</span>
-                          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-900/40 text-white font-mono">
+                          <CheckCircle size={15} className={sessionStatusTab === 'completed' ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'} />
+                          <span>{language === 'ar' ? '🔵 الدورات المنتهية (المقيّمة)' : '🔵 Completed Sessions'}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-black ${sessionStatusTab === 'completed' ? 'bg-white/20 text-white' : 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200'}`}>
                             {completedSessionsList.length}
                           </span>
                         </button>
@@ -2625,15 +2627,15 @@ Content-Type: text/html; charset="utf-8"
                         <button
                           type="button"
                           onClick={() => setSessionStatusTab('cancelled')}
-                          className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+                          className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
                             sessionStatusTab === 'cancelled'
-                              ? 'bg-red-600 text-white shadow-sm'
-                              : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-slate-700/50'
+                              ? 'bg-red-600 text-white shadow-md ring-2 ring-red-400'
+                              : 'bg-white dark:bg-slate-800 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800/60 hover:bg-red-50 dark:hover:bg-slate-700/80'
                           }`}
                         >
-                          <Ban size={14} className={sessionStatusTab === 'cancelled' ? 'text-white' : 'text-red-500'} />
-                          <span>{language === 'ar' ? 'الدورات الملغية' : 'Cancelled Sessions'}</span>
-                          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-red-900/40 text-white font-mono">
+                          <Ban size={15} className={sessionStatusTab === 'cancelled' ? 'text-white' : 'text-red-600 dark:text-red-400'} />
+                          <span>{language === 'ar' ? '🔴 الدورات الملغية' : '🔴 Cancelled Sessions'}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-black ${sessionStatusTab === 'cancelled' ? 'bg-white/20 text-white' : 'bg-red-100 dark:bg-red-900/60 text-red-900 dark:text-red-200'}`}>
                             {cancelledSessionsList.length}
                           </span>
                         </button>
@@ -2655,7 +2657,7 @@ Content-Type: text/html; charset="utf-8"
                       <ul className="space-y-4">
                         {currentDisplayedSessions.map((session, index) => (
                           <li key={session.id || index}>
-                            <SessionCard session={session} isAdminView={true} onEdit={handleStartEdit} onSendReminder={handleSendReminder} onAnnounceRequest={setAnnouncingSession} onManageAnnouncementsRequest={setShowAnnouncementManager} onFinalizeRequest={setFinalizingSession} onPrintRegisterRequest={async (session) => await downloadTrainingRegisterPDF(session, users, records)} onShowQR={setQrSession} onToggleFeedback={handleToggleFeedback} />
+                            <SessionCard session={session} isAdminView={true} onEdit={handleStartEdit} onSendReminder={handleSendReminder} onAnnounceRequest={setAnnouncingSession} onManageAnnouncementsRequest={setShowAnnouncementManager} onFinalizeRequest={setFinalizingSession} onPrintRegisterRequest={(session) => setPreviewRegisterSession(session)} onShowQR={setQrSession} onToggleFeedback={handleToggleFeedback} />
                           </li>
                         ))}
                       </ul>
@@ -3303,7 +3305,8 @@ Content-Type: text/html; charset="utf-8"
           </div>
         </div>
       )}
-      {showMonthlyReport && <MonthlyReportModal onClose={() => setShowMonthlyReport(false)} records={records} upcomingSessions={upcomingSessions} />}
+      {showMonthlyReport && <MonthlyReportModal onClose={() => setShowMonthlyReport(false)} records={records} upcomingSessions={upcomingSessions} cleanedData={cleanedData || []} users={users || []} />}
+      {previewRegisterSession && <TrainingRegisterPreviewModal session={previewRegisterSession} onClose={() => setPreviewRegisterSession(null)} users={users} records={records} cleanedData={cleanedData || []} />}
       {selectedUserToEdit && <EditUserModal user={selectedUserToEdit} onClose={() => setSelectedUserToEdit(null)} />}
 
       {/* ========================================================= */}

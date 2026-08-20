@@ -16,21 +16,43 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
   onClose,
   onFinalize
 }) => {
-  const { language } = useAppContext();
+  const { language, records = [], cleanedData = [] } = useAppContext() as any;
   
   // State for each trainee's attendance and score
   const [traineeData, setTraineeData] = useState<Record<string, { days: number, score: number }>>({});
   const [isConfirming, setIsConfirming] = useState(false);
 
-  // Initialize form with defaults
+  // Initialize form with defaults or pre-existing saved grades if session was completed
   useEffect(() => {
     const initial: Record<string, { days: number, score: number }> = {};
     registeredUsers.forEach(u => {
-      // Default to 1 day and 0 score
-      initial[u.id] = { days: 1, score: 0 };
+      // Find existing record in cleanedData or records
+      const existingCleaned = (cleanedData || []).find((c: any) => 
+        (c.hrCode === u.hrCode || c.name === u.name) && 
+        (c.courseName === session.courseTitle || c.id?.includes(session.id))
+      );
+      const existingRec = (records || []).find((r: any) => 
+        (r.hrCode === u.hrCode || r.userId === u.id) && 
+        (r.courseName === session.courseTitle || r.courseId === session.id)
+      );
+
+      let savedScore = 0;
+      let savedDays = 1;
+
+      if (existingCleaned) {
+        const rawScore = String(existingCleaned.score ?? '').replace('%', '').trim();
+        savedScore = (!rawScore || isNaN(Number(rawScore))) ? 0 : Number(rawScore);
+        savedDays = Number(existingCleaned.attendedDays || 1);
+      } else if (existingRec) {
+        const rawScore = String(existingRec.score ?? '').replace('%', '').trim();
+        savedScore = (!rawScore || isNaN(Number(rawScore))) ? 0 : Number(rawScore);
+        savedDays = Number(existingRec.daysAttended || existingRec.days || 1);
+      }
+
+      initial[u.id] = { days: savedDays, score: savedScore };
     });
     setTraineeData(initial);
-  }, [registeredUsers]);
+  }, [registeredUsers, session, records, cleanedData]);
 
   const handleDataChange = (userId: string, field: 'days' | 'score', value: number) => {
     setTraineeData(prev => ({
@@ -183,7 +205,9 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
       <div className="bg-white dark:bg-[#13223F] w-full max-w-4xl rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-200 dark:border-white/[0.12]">
         <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-bold text-[#002D62] dark:text-[#70B2FF]">
-            {language === 'ar' ? 'إنهاء الدورة وتسجيل الحضور' : 'Finalize Course & Attendance'}
+            {session.status === 'Completed'
+              ? (language === 'ar' ? 'تعديل درجات وتقييم الدورة المنتهية 📝' : 'Edit Completed Session Grades & Evaluation 📝')
+              : (language === 'ar' ? 'إنهاء الدورة وتسجيل الحضور والدرجات' : 'Finalize Course & Attendance')}
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
             <X size={24} />
