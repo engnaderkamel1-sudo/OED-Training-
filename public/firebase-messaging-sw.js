@@ -31,7 +31,7 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification.title || 'OED-TTMS';
   const notificationOptions = {
     body: payload.notification.body || '',
-    icon: '/app-icon-v8.png'
+    icon: '/app-icon-v9.png'
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);

@@ -838,13 +838,15 @@ export const TraineeDashboard: React.FC = () => {
                       className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer shadow-xs hover:shadow-md ${
                         !isRead 
                           ? 'border-l-4 rtl:border-l rtl:border-r-4 border-l-[#002D62] dark:border-l-[#FFC000] rtl:border-r-[#002D62] dark:rtl:border-r-[#FFC000]' 
-                          : 'opacity-90'
+                          : ''
                       }`}
                       style={{
                         backgroundColor: isDark 
                           ? (!isRead ? '#142542' : '#0E1A30') 
                           : (!isRead ? '#F0F6FF' : '#FFFFFF'),
-                        borderColor: !isRead ? (isDark ? 'rgba(148, 190, 255, 0.45)' : '#94A3B8') : (isDark ? 'rgba(148, 190, 255, 0.15)' : '#E2E8F0'),
+                        borderColor: !isRead 
+                          ? (isDark ? 'rgba(148, 190, 255, 0.45)' : '#94A3B8') 
+                          : (isDark ? 'rgba(148, 190, 255, 0.18)' : '#CBD5E1'),
                       }}
                     >
                       <div className="flex items-start gap-3 sm:gap-3.5">
@@ -918,47 +920,78 @@ export const TraineeDashboard: React.FC = () => {
                               </span>
 
                               {!isRead && (
-                                <span className="inline-flex items-center gap-1 bg-blue-600 dark:bg-amber-400 text-white dark:text-[#001D42] text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-[#001D42]"></span>
+                                <span 
+                                  className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs"
+                                  style={{
+                                    backgroundColor: isDark ? '#FFC000' : '#002D62',
+                                    color: isDark ? '#002D62' : '#FFFFFF'
+                                  }}
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>
                                   <span>{language === 'ar' ? 'جديد' : 'NEW'}</span>
                                 </span>
                               )}
                             </div>
 
-                            <span className="text-[11px] text-slate-800 dark:text-slate-200 font-bold whitespace-nowrap">
+                            <span 
+                              className="text-[11px] font-black whitespace-nowrap"
+                              style={{ color: isDark ? '#CBD5E1' : '#334155' }}
+                            >
                               {formatNotificationDate(notif.timestamp, language)}
                             </span>
                           </div>
 
-                          {/* Row 2: Prominent Course Title (Never truncated awkwardly!) */}
+                          {/* Row 2: Prominent Course Title */}
                           <h4 
-                            className="font-black text-sm sm:text-base leading-snug break-words text-[#002D62] dark:text-white"
+                            className="font-black text-sm sm:text-base leading-snug break-words"
+                            style={{ color: isDark ? '#FFFFFF' : '#002D62' }}
                           >
                             {notif.courseTitle || notif.title || (language === 'ar' ? 'تنبيه تدريبي' : 'Training Notification')}
                           </h4>
 
-                          {/* Row 3: Message / Announcement Body */}
+                          {/* Row 3: Message / Announcement Body (100% Solid Crisp Black on Light) */}
                           {notif.message && notif.message !== notif.title && (
-                            <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
+                            <p 
+                              className="text-xs sm:text-sm leading-relaxed font-bold"
+                              style={{ color: isDark ? '#E2E8F0' : '#0F172A' }}
+                            >
                               {notif.message}
                             </p>
                           )}
 
                           {/* Row 4: High Contrast Details Pill (Date, Time, Location) */}
                           {(notif.startDate || notif.location) && (
-                            <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700/80 flex items-center gap-2 sm:gap-3 flex-wrap text-xs font-bold">
+                            <div className="mt-2 pt-2 border-t flex items-center gap-2 sm:gap-3 flex-wrap text-xs font-bold" style={{ borderColor: isDark ? 'rgba(148, 190, 255, 0.2)' : '#E2E8F0' }}>
                               {notif.startDate && (
-                                <span className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white">
+                                <span 
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-2xs"
+                                  style={{
+                                    backgroundColor: isDark ? '#193158' : '#F1F5F9',
+                                    borderColor: isDark ? '#2A4878' : '#CBD5E1',
+                                    color: isDark ? '#FFFFFF' : '#0F172A'
+                                  }}
+                                >
                                   <span>📅</span>
-                                  <span className="text-blue-900 dark:text-amber-300">{language === 'ar' ? 'التاريخ:' : 'Date:'}</span>
-                                  <span className="font-mono text-slate-950 dark:text-white font-black">{notif.startDate} {notif.startTime ? `(${notif.startTime})` : ''}</span>
+                                  <span style={{ color: isDark ? '#FFC000' : '#002D62' }}>{language === 'ar' ? 'التاريخ:' : 'Date:'}</span>
+                                  <span className="font-mono font-black" style={{ color: isDark ? '#FFFFFF' : '#000000' }}>
+                                    {notif.startDate} {notif.startTime ? `(${notif.startTime})` : ''}
+                                  </span>
                                 </span>
                               )}
                               {notif.location && (
-                                <span className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white">
+                                <span 
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-2xs"
+                                  style={{
+                                    backgroundColor: isDark ? '#193158' : '#F1F5F9',
+                                    borderColor: isDark ? '#2A4878' : '#CBD5E1',
+                                    color: isDark ? '#FFFFFF' : '#0F172A'
+                                  }}
+                                >
                                   <span>📍</span>
-                                  <span className="text-blue-900 dark:text-amber-300">{language === 'ar' ? 'المكان:' : 'Location:'}</span>
-                                  <span className="text-slate-950 dark:text-white font-black">{notif.location}</span>
+                                  <span style={{ color: isDark ? '#FFC000' : '#002D62' }}>{language === 'ar' ? 'المكان:' : 'Location:'}</span>
+                                  <span className="font-black" style={{ color: isDark ? '#FFFFFF' : '#000000' }}>
+                                    {notif.location}
+                                  </span>
                                 </span>
                               )}
                             </div>
