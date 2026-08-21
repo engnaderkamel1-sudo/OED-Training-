@@ -412,8 +412,19 @@ export const TraineeDashboard: React.FC = () => {
       className="min-h-screen pb-12 transition-colors duration-300"
       style={{ backgroundColor: bgColor }}
     >
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         
+        {/* شريط شعار أوراسكوم الأصلي */}
+        <div className="flex w-full justify-start items-end border-b-2 border-[#FFC000] pb-2 mb-2 print:hidden">
+          <div className="bg-white px-3 py-1.5 rounded-t-xl shadow-xs border border-b-0 border-gray-200">
+            <img 
+              src="/orascom-logo.png" 
+              alt="Orascom Construction Equipment Department OED" 
+              className="h-7 sm:h-8 w-auto object-contain"
+            />
+          </div>
+        </div>
+
         {/* Stats Section (dashboard) */}
         {currentView === 'dashboard' && (
           <section className="print:hidden animate-fadeIn space-y-6">

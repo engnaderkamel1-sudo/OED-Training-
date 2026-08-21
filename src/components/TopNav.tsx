@@ -31,10 +31,30 @@ export const TopNav: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [isLogoExpanded, setIsLogoExpanded] = useState(false);
-  const [logoZoom, setLogoZoom] = useState(1);
   const [aboutOpen, setAboutOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+
+  // App UI Zoom Level State (Scaling the entire Application interface)
+  const [appZoom, setAppZoom] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('oed_app_ui_zoom');
+      return saved ? parseInt(saved, 10) : 100;
+    } catch {
+      return 100;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      (document.documentElement.style as any).zoom = `${appZoom}%`;
+      localStorage.setItem('oed_app_ui_zoom', appZoom.toString());
+    } catch (e) {}
+  }, [appZoom]);
+
+  const handleZoomIn = () => setAppZoom(prev => Math.min(prev + 10, 130));
+  const handleZoomOut = () => setAppZoom(prev => Math.max(prev - 10, 75));
+  const handleZoomReset = () => setAppZoom(100);
 
   // Admin and User Notification Counts
   const pendingUsersCount = useMemo(() => {
@@ -305,6 +325,31 @@ export const TopNav: React.FC = () => {
                 </div>
               )}
 
+              {/* App UI Zoom Controls in Navbar for Desktop/Tablet */}
+              <div className="hidden lg:flex items-center bg-white/10 rounded-xl p-0.5 border border-white/15">
+                <button
+                  type="button"
+                  onClick={handleZoomOut}
+                  disabled={appZoom <= 75}
+                  className="px-2 py-1 text-white hover:text-[#FFC000] text-xs font-black disabled:opacity-40 transition-colors cursor-pointer"
+                  title={language === 'ar' ? 'تصغير الواجهة (A-)' : 'Zoom Out App'}
+                >
+                  A-
+                </button>
+                <span className="text-[10px] font-mono text-amber-300 px-1 font-black">
+                  {appZoom}%
+                </span>
+                <button
+                  type="button"
+                  onClick={handleZoomIn}
+                  disabled={appZoom >= 130}
+                  className="px-2 py-1 text-white hover:text-[#FFC000] text-xs font-black disabled:opacity-40 transition-colors cursor-pointer"
+                  title={language === 'ar' ? 'تكبير الواجهة (A+)' : 'Zoom In App'}
+                >
+                  A+
+                </button>
+              </div>
+
               <button
                 onClick={toggleTheme}
                 className="theme-toggle p-1.5 sm:p-2 text-white cursor-pointer hover:bg-white/10 rounded-xl transition-colors"
@@ -353,7 +398,7 @@ export const TopNav: React.FC = () => {
                         boxShadow: '0 20px 35px -5px rgba(0, 0, 0, 0.25), 0 10px 15px -5px rgba(0, 0, 0, 0.1)'
                       }}
                     >
-                      {/* User Info Header (Prominent Elevated Box - Light & Dark) */}
+                      {/* User Info Header */}
                       <div 
                         className="p-3.5 rounded-xl border flex flex-col gap-1.5 shadow-sm transition-all"
                         style={{
@@ -393,6 +438,58 @@ export const TopNav: React.FC = () => {
 
                       <div className="my-1.5 border-t" style={{ borderColor: isDark ? 'rgba(148, 190, 255, 0.15)' : '#F1F5F9' }} />
 
+                      {/* App Interface Scaling / Zoom Controls (تكبير وتصغير التطبيق) */}
+                      <div 
+                        className="p-2.5 rounded-xl border flex flex-col gap-1.5 shadow-2xs my-1"
+                        style={{
+                          backgroundColor: isDark ? '#11223D' : '#F8FAFC',
+                          borderColor: isDark ? 'rgba(148, 190, 255, 0.2)' : '#E2E8F0'
+                        }}
+                      >
+                        <div className="flex items-center justify-between text-xs font-bold" style={{ color: isDark ? '#FFFFFF' : '#1E293B' }}>
+                          <span className="flex items-center gap-1.5">
+                            <ZoomIn size={14} className="text-[#FFC000]" />
+                            <span>{language === 'ar' ? 'حجم التطبيق (Zoom)' : 'App UI Zoom'}</span>
+                          </span>
+                          <span className="font-mono font-black text-[#FFC000] bg-[#FFC000]/10 px-2 py-0.5 rounded-md text-[11px]">
+                            {appZoom}%
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={handleZoomOut}
+                            disabled={appZoom <= 75}
+                            className="flex-1 py-1.5 rounded-lg bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 disabled:opacity-40 text-xs font-black transition-all flex items-center justify-center gap-1 cursor-pointer text-gray-800 dark:text-gray-200"
+                            title={language === 'ar' ? 'تصغير الواجهة' : 'Zoom Out App'}
+                          >
+                            <ZoomOut size={12} />
+                            <span>A-</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleZoomReset}
+                            className="py-1.5 px-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold transition-all cursor-pointer"
+                            title={language === 'ar' ? 'الحجم الافتراضي' : 'Reset to 100%'}
+                          >
+                            <RotateCcw size={12} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleZoomIn}
+                            disabled={appZoom >= 130}
+                            className="flex-1 py-1.5 rounded-lg bg-[#002D62] text-white hover:bg-blue-900 dark:bg-amber-400 dark:text-[#001D42] dark:hover:bg-amber-300 disabled:opacity-40 text-xs font-black transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                            title={language === 'ar' ? 'تكبير الواجهة' : 'Zoom In App'}
+                          >
+                            <ZoomIn size={12} />
+                            <span>A+</span>
+                          </button>
+                        </div>
+                      </div>
+
                       {/* My Profile Button */}
                       <button
                         onClick={openProfile}
@@ -409,27 +506,6 @@ export const TopNav: React.FC = () => {
                       >
                         <UserCircle size={18} style={{ color: isDark ? '#FFC000' : '#002D62' }} className="shrink-0" />
                         <span>{language === 'ar' ? 'الملف الشخصي' : 'My Profile'}</span>
-                      </button>
-
-                      {/* View & Zoom Logo Button */}
-                      <button
-                        onClick={() => {
-                          setIsLogoExpanded(true);
-                          setDropdownOpen(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer"
-                        style={{
-                          color: isDark ? '#FFFFFF' : '#1E293B',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : '#F0F7FF';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
-                      >
-                        <ZoomIn size={18} style={{ color: '#FFC000' }} className="shrink-0" />
-                        <span>{language === 'ar' ? 'تكبير وعرض الشعار 🔍' : 'View & Zoom Logo 🔍'}</span>
                       </button>
 
                       {/* About System Button in Dropdown */}
@@ -498,7 +574,7 @@ export const TopNav: React.FC = () => {
         </div>
       </nav>
 
-      {/* 4K ULTRA-HD EXPANDED LOGO MODAL WITH INTUITIVE ZOOM CONTROLS */}
+      {/* EXPANDED LOGO MODAL */}
       <AnimatePresence>
         {isLogoExpanded && (
           <motion.div
@@ -506,11 +582,8 @@ export const TopNav: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[999999] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 select-none"
-            onClick={() => {
-              setIsLogoExpanded(false);
-              setLogoZoom(1);
-            }}
+            className="fixed inset-0 z-[999999] bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-pointer select-none"
+            onClick={() => setIsLogoExpanded(false)}
           >
             <motion.div
               initial={{ scale: 0.6, opacity: 0 }}
@@ -518,67 +591,33 @@ export const TopNav: React.FC = () => {
               exit={{ scale: 0.6, opacity: 0 }}
               transition={{ type: "spring", stiffness: 260, damping: 25 }}
               className="relative flex flex-col items-center max-w-[95vw]"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsLogoExpanded(false);
+              }}
             >
               {/* Close Button Top Right */}
               <button
                 type="button"
-                onClick={() => {
-                  setIsLogoExpanded(false);
-                  setLogoZoom(1);
-                }}
+                onClick={() => setIsLogoExpanded(false)}
                 className="absolute -top-12 right-0 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-md transition-colors cursor-pointer"
                 title={language === 'ar' ? 'إغلاق' : 'Close'}
               >
                 <X size={22} />
               </button>
 
-              {/* 4K Ultra-HD Crisp Logo (Never Pixelated) with Drag & Smooth Zoom */}
-              <div className="overflow-hidden rounded-3xl sm:rounded-[2.5rem] p-2 flex items-center justify-center max-w-[92vw] max-h-[60vh] sm:max-h-[68vh]">
-                <motion.img
-                  layoutId="magic-logo"
-                  src="/app-logo-hd.png"
-                  alt="OED-TTMS Ultra-HD Logo"
-                  animate={{ scale: logoZoom }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  drag={logoZoom > 1}
-                  dragConstraints={{ left: -180, right: 180, top: -180, bottom: 180 }}
-                  onClick={() => setLogoZoom(prev => prev === 1 ? 1.8 : 1)}
-                  className="w-72 h-72 sm:w-96 sm:h-96 md:w-[480px] md:h-[480px] object-cover rounded-2xl sm:rounded-[2rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] border-4 border-[#FFC000] ring-8 ring-white/10 cursor-zoom-in"
-                />
-              </div>
+              {/* Crisp Clean Logo Display */}
+              <motion.img
+                layoutId="magic-logo"
+                src="/app-icon-v9.png"
+                onError={(e: any) => {
+                  e.target.src = '/app-icon.png';
+                }}
+                alt="OED-TTMS Logo"
+                className="w-72 h-72 sm:w-96 sm:h-96 md:w-[460px] md:h-[460px] object-cover rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] border-4 border-[#FFC000] ring-8 ring-white/10"
+              />
 
-              {/* Intuitive Bottom Zoom & Navigation Bar */}
-              <div className="flex items-center gap-2 mt-4 bg-slate-900/90 border border-white/20 backdrop-blur-xl px-4 py-2 rounded-2xl shadow-2xl z-50">
-                <button
-                  type="button"
-                  onClick={() => setLogoZoom(prev => Math.min(prev + 0.3, 3))}
-                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-[#FFC000] hover:text-[#002D62] text-white active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer font-bold text-xs"
-                >
-                  <ZoomIn size={16} />
-                  <span>{language === 'ar' ? 'تكبير (+)' : 'Zoom In'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setLogoZoom(prev => Math.max(prev - 0.3, 0.7))}
-                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-[#FFC000] hover:text-[#002D62] text-white active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer font-bold text-xs"
-                >
-                  <ZoomOut size={16} />
-                  <span>{language === 'ar' ? 'تصغير (-)' : 'Zoom Out'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setLogoZoom(1)}
-                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-blue-600 text-blue-200 hover:text-white active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer font-bold text-xs"
-                >
-                  <RotateCcw size={15} />
-                  <span>{Math.round(logoZoom * 100)}%</span>
-                </button>
-              </div>
-
-              <div className="mt-3 text-center">
+              <div className="mt-4 text-center">
                 <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">OED-TTMS</h3>
                 <p className="text-xs sm:text-sm font-bold text-[#FFC000] mt-0.5">Orascom Equipment Department • Technical Training System</p>
               </div>
