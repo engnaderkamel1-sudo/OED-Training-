@@ -56,6 +56,35 @@ export const TopNav: React.FC = () => {
   const handleZoomOut = () => setAppZoom(prev => Math.max(prev - 10, 75));
   const handleZoomReset = () => setAppZoom(100);
 
+  // Read Notifications State synchronized across the system
+  const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('oed_read_notifications');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const markNotifAsRead = (id: string) => {
+    if (!readNotifIds.includes(id)) {
+      const updated = [...readNotifIds, id];
+      setReadNotifIds(updated);
+      try {
+        localStorage.setItem('oed_read_notifications', JSON.stringify(updated));
+      } catch (e) {}
+    }
+  };
+
+  const markAllNotifsAsRead = () => {
+    const allIds = (announcements || []).map(a => a.id);
+    const updated = Array.from(new Set([...readNotifIds, ...allIds]));
+    setReadNotifIds(updated);
+    try {
+      localStorage.setItem('oed_read_notifications', JSON.stringify(updated));
+    } catch (e) {}
+  };
+
   // Admin and User Notification Counts
   const pendingUsersCount = useMemo(() => {
     if (!users || !user || user.role !== 'admin') return 0;
@@ -74,19 +103,22 @@ export const TopNav: React.FC = () => {
   const unreadCount = useMemo(() => {
     if (!user) return 0;
     if (user.role === 'admin') {
-      return pendingUsersCount + pendingUpdatesCount + (activeSessionsNow.length > 0 ? 1 : 0) + (announcements?.length || 0);
+      const unreadAnnouncements = (announcements || []).filter(a => !readNotifIds.includes(a.id)).length;
+      return pendingUsersCount + pendingUpdatesCount + (activeSessionsNow.length > 0 ? 1 : 0) + unreadAnnouncements;
     }
     if (user.role === 'trainee') {
       const activeSessions = (upcomingSessions || []).filter(s => !s.isDeleted && s.status !== 'Cancelled');
       let count = 0;
       (announcements || []).forEach(a => {
-        if (a.isGlobal) count++;
-        else if (a.sessionId && activeSessions.some(s => s.id === a.sessionId && (s.registeredUsers || []).includes(user.hrCode))) count++;
+        if (!readNotifIds.includes(a.id)) {
+          if (a.isGlobal) count++;
+          else if (a.sessionId && activeSessions.some(s => s.id === a.sessionId && (s.registeredUsers || []).includes(user.hrCode))) count++;
+        }
       });
       return count;
     }
-    return (announcements || []).length;
-  }, [user, announcements, upcomingSessions, pendingUsersCount, pendingUpdatesCount, activeSessionsNow]);
+    return (announcements || []).filter(a => !readNotifIds.includes(a.id)).length;
+  }, [user, announcements, upcomingSessions, pendingUsersCount, pendingUpdatesCount, activeSessionsNow, readNotifIds]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -219,9 +251,25 @@ export const TopNav: React.FC = () => {
                             {language === 'ar' ? 'التنبيهات والإشعارات' : 'Notifications Center'}
                           </h4>
                         </div>
-                        <span className="text-[11px] font-black bg-[#FFC000] text-[#002D62] px-2 py-0.5 rounded-full">
-                          {unreadCount} {language === 'ar' ? 'تنبيه' : 'alerts'}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {unreadCount > 0 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                markAllNotifsAsRead();
+                              }}
+                              className="text-[10px] font-black text-[#002D62] bg-[#FFC000] hover:bg-amber-300 px-2 py-0.5 rounded-full transition-colors cursor-pointer shadow-xs flex items-center gap-1"
+                              title={language === 'ar' ? 'تعيين الكل كمقروء' : 'Mark all as read'}
+                            >
+                              <CheckCircle size={11} />
+                              <span>{language === 'ar' ? 'تحديد كمقروء' : 'Mark Read'}</span>
+                            </button>
+                          )}
+                          <span className="text-[10px] font-black bg-white/15 text-white px-2 py-0.5 rounded-full">
+                            {unreadCount} {language === 'ar' ? 'جديد' : 'new'}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Notification Items List */}
@@ -275,30 +323,49 @@ export const TopNav: React.FC = () => {
                         )}
 
                         {/* Recent Announcements */}
-                        {(announcements || []).slice(0, 4).map((ann) => (
-                          <div 
-                            key={ann.id}
-                            className="p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors"
-                          >
-                            <div className="flex items-start gap-2">
-                              <Sparkles size={15} className="text-amber-500 shrink-0 mt-0.5" />
-                              <div className="min-w-0 flex-1">
-                                <p className="font-bold text-xs text-gray-900 dark:text-white leading-tight">
-                                  {ann.title}
-                                </p>
-                                <p className="text-[11px] text-gray-600 dark:text-gray-300 mt-0.5 line-clamp-2">
-                                  {ann.message}
-                                </p>
-                                <span className="text-[9px] text-gray-400 dark:text-gray-500 mt-1 block">
-                                  {new Date(ann.date).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB')}
-                                </span>
+                        {(announcements || []).slice(0, 5).map((ann) => {
+                          const isRead = readNotifIds.includes(ann.id);
+                          return (
+                            <div 
+                              key={ann.id}
+                              onClick={() => {
+                                markNotifAsRead(ann.id);
+                                if (user.role === 'trainee') {
+                                  setCurrentView('notifications');
+                                  setNotifDropdownOpen(false);
+                                }
+                              }}
+                              className={`p-2.5 rounded-xl transition-colors cursor-pointer ${
+                                !isRead 
+                                  ? 'bg-blue-50/70 dark:bg-blue-950/30 hover:bg-blue-100/70 dark:hover:bg-blue-900/40' 
+                                  : 'hover:bg-gray-50 dark:hover:bg-slate-800/60 opacity-80'
+                              }`}
+                            >
+                              <div className="flex items-start gap-2">
+                                <Sparkles size={15} className={`shrink-0 mt-0.5 ${!isRead ? 'text-amber-500' : 'text-gray-400'}`} />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center justify-between gap-1">
+                                    <p className={`font-bold text-xs leading-tight ${!isRead ? 'text-[#002D62] dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
+                                      {ann.title}
+                                    </p>
+                                    {!isRead && (
+                                      <span className="w-2 h-2 rounded-full bg-red-500 shrink-0 animate-pulse"></span>
+                                    )}
+                                  </div>
+                                  <p className="text-[11px] text-gray-600 dark:text-gray-300 mt-0.5 line-clamp-2">
+                                    {ann.message}
+                                  </p>
+                                  <span className="text-[9px] text-gray-400 dark:text-gray-500 mt-1 block">
+                                    {new Date(ann.date).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB')}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
 
                         {/* Empty State */}
-                        {unreadCount === 0 && (
+                        {unreadCount === 0 && (announcements || []).length === 0 && (
                           <div className="py-6 text-center text-xs text-gray-500 dark:text-gray-400">
                             {language === 'ar' ? 'لا توجد تنبيهات جديدة حالياً' : 'No new notifications'}
                           </div>
@@ -366,17 +433,17 @@ export const TopNav: React.FC = () => {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-1.5 sm:gap-2 px-1 sm:px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 sm:gap-2 px-1.5 py-1 rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
                   >
                     {user.profileImageUrl ? (
                       <img 
                         src={user.profileImageUrl} 
                         alt={user.name || 'User'}
-                        className="w-8 h-8 rounded-full object-cover border-2 border-[#FFC000]"
+                        className="w-8 h-8 rounded-full object-cover border-2 border-[#FFC000] shrink-0"
                       />
                     ) : (
                       <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-[13px] shadow-sm"
+                        className="w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-[13px] shadow-sm shrink-0"
                         style={{ 
                           backgroundColor: '#ffffff', 
                           color: '#002D62', 
@@ -386,7 +453,13 @@ export const TopNav: React.FC = () => {
                         {getInitials(user.name)}
                       </div>
                     )}
-                    <ChevronDown size={14} className={`text-white transition-transform sm:w-4 sm:h-4 ${dropdownOpen ? 'rotate-180' : ''}`} />
+
+                    {/* First Name on Mobile & Desktop */}
+                    <span className="text-xs font-bold text-white max-w-[65px] sm:max-w-[110px] truncate leading-tight">
+                      {getFirstName(user.name)}
+                    </span>
+
+                    <ChevronDown size={14} className={`text-white transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {dropdownOpen && (

@@ -414,8 +414,13 @@ export const TraineeDashboard: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         
-        {/* الشريط الذهبي العلوي */}
-        <div className="w-full border-b-2 border-[#FFC000] pb-2 mb-2 print:hidden" />
+        {/* الشريط الذهبي والترحيب على الموبايل */}
+        <div className="w-full flex items-center justify-between border-b-2 border-[#FFC000] pb-2 mb-2 print:hidden">
+          <p className="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200 md:hidden">
+            {language === 'ar' ? '👋 أهلاً بك، ' : '👋 Welcome, '}
+            <span className="text-[#002D62] dark:text-[#FFC000] font-black">{user?.name?.split(' ')[0]}</span>
+          </p>
+        </div>
 
         {/* Stats Section (dashboard) */}
         {currentView === 'dashboard' && (
