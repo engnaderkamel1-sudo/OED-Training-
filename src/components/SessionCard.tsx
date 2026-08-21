@@ -48,6 +48,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   onManualAttendanceRequest,
   onAttendanceReminderRequest,
   onToggleFeedback,
+  onRequestHandoutRevision,
   registeredCourseIds = [],
   onRegister,
   onUnregister
