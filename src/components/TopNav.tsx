@@ -1,3 +1,5 @@
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useAppContext } from '../context';
 import { 
   LogOut, 
   Moon, 
