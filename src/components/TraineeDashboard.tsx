@@ -835,116 +835,130 @@ export const TraineeDashboard: React.FC = () => {
                     <div 
                       key={notif.id}
                       onClick={() => markNotifAsRead(notif.id)}
-                      className={`p-3.5 rounded-xl border transition-all cursor-pointer relative shadow-2xs hover:shadow-md ${
+                      className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer shadow-xs hover:shadow-md ${
                         !isRead 
                           ? 'border-l-4 rtl:border-l rtl:border-r-4 border-l-[#002D62] dark:border-l-[#FFC000] rtl:border-r-[#002D62] dark:rtl:border-r-[#FFC000]' 
-                          : 'opacity-85'
+                          : 'opacity-90'
                       }`}
                       style={{
                         backgroundColor: isDark 
-                          ? (!isRead ? '#142542' : '#0F1E36') 
-                          : (!isRead ? '#F8FAFC' : '#FFFFFF'),
-                        borderColor: !isRead ? (isDark ? 'rgba(148, 190, 255, 0.35)' : '#cbd5e1') : (isDark ? 'rgba(148, 190, 255, 0.15)' : '#E2E8F0'),
+                          ? (!isRead ? '#142542' : '#0E1A30') 
+                          : (!isRead ? '#F0F6FF' : '#FFFFFF'),
+                        borderColor: !isRead ? (isDark ? 'rgba(148, 190, 255, 0.45)' : '#94A3B8') : (isDark ? 'rgba(148, 190, 255, 0.15)' : '#E2E8F0'),
                       }}
                     >
-                      <div className="flex items-start gap-3">
-                        {/* Compact Icon */}
+                      <div className="flex items-start gap-3 sm:gap-3.5">
+                        {/* High Contrast Icon Avatar */}
                         <div 
-                          className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs mt-0.5"
+                          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs mt-0.5"
                           style={{
                             backgroundColor: isGlobal 
-                              ? (isDark ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2') 
+                              ? (isDark ? '#450a0a' : '#FEE2E2') 
                               : isFinal 
-                                ? (isDark ? 'rgba(245, 158, 11, 0.2)' : '#fef3c7') 
+                                ? (isDark ? '#451a03' : '#FEF3C7') 
                                 : isAnnouncement 
-                                  ? (isDark ? 'rgba(59, 130, 246, 0.2)' : '#eff6ff') 
-                                  : (isDark ? 'rgba(16, 185, 129, 0.2)' : '#ecfdf5'),
+                                  ? (isDark ? '#172554' : '#EFF6FF') 
+                                  : (isDark ? '#064e3b' : '#ECFDF5'),
                             borderColor: isGlobal 
-                              ? (isDark ? 'rgba(239, 68, 68, 0.4)' : '#fecaca') 
+                              ? '#EF4444' 
                               : isFinal 
-                                ? (isDark ? 'rgba(245, 158, 11, 0.4)' : '#fde68a') 
+                                ? '#F59E0B' 
                                 : isAnnouncement 
-                                  ? (isDark ? 'rgba(59, 130, 246, 0.4)' : '#bfdbfe') 
-                                  : (isDark ? 'rgba(16, 185, 129, 0.4)' : '#a7f3d0'),
+                                  ? '#3B82F6' 
+                                  : '#10B981',
                             color: isGlobal 
-                              ? (isDark ? '#f87171' : '#dc2626') 
+                              ? '#EF4444' 
                               : isFinal 
-                                ? (isDark ? '#fbbf24' : '#d97706') 
+                                ? '#D97706' 
                                 : isAnnouncement 
-                                  ? (isDark ? '#60a5fa' : '#2563eb') 
-                                  : (isDark ? '#34d399' : '#059669')
+                                  ? '#2563EB' 
+                                  : '#059669'
                           }}
                         >
-                          {isGlobal && <Radio size={16} />}
-                          {isAnnouncement && <Megaphone size={16} />}
-                          {isFinal && <AlertTriangle size={16} />}
-                          {!isGlobal && !isAnnouncement && !isFinal && <Bell size={16} />}
+                          {isGlobal && <Radio size={18} />}
+                          {isAnnouncement && <Megaphone size={18} />}
+                          {isFinal && <AlertTriangle size={18} />}
+                          {!isGlobal && !isAnnouncement && !isFinal && <Bell size={18} />}
                         </div>
 
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          {/* Row 1: Badge + Title + Time + Unread indicator */}
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        {/* Content Body */}
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          {/* Row 1: Badge + Timestamp + Unread Indicator */}
+                          <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+                            <div className="flex items-center gap-2">
                               <span 
-                                className="text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0"
+                                className="text-[11px] font-black px-2.5 py-0.5 rounded-lg border uppercase tracking-wider shadow-2xs"
                                 style={{
                                   backgroundColor: isGlobal 
-                                    ? (isDark ? 'rgba(239, 68, 68, 0.15)' : '#fee2e2') 
+                                    ? (isDark ? '#7F1D1D' : '#FEE2E2') 
                                     : isFinal 
-                                      ? (isDark ? 'rgba(245, 158, 11, 0.15)' : '#fef3c7') 
+                                      ? (isDark ? '#78350F' : '#FEF3C7') 
                                       : isAnnouncement 
-                                        ? (isDark ? 'rgba(59, 130, 246, 0.15)' : '#eff6ff') 
-                                        : (isDark ? 'rgba(16, 185, 129, 0.15)' : '#ecfdf5'),
+                                        ? (isDark ? '#1E3A8A' : '#DBEAFE') 
+                                        : (isDark ? '#064E3B' : '#D1FAE5'),
                                   color: isGlobal 
-                                    ? (isDark ? '#fca5a5' : '#991b1b') 
+                                    ? (isDark ? '#FECACA' : '#991B1B') 
                                     : isFinal 
-                                      ? (isDark ? '#fcd34d' : '#92400e') 
+                                      ? (isDark ? '#FDE68A' : '#92400E') 
                                       : isAnnouncement 
-                                        ? (isDark ? '#93c5fd' : '#1e40af') 
-                                        : (isDark ? '#6ee7b7' : '#065f46')
+                                        ? (isDark ? '#BFDBFE' : '#1E40AF') 
+                                        : (isDark ? '#A7F3D0' : '#065F46'),
+                                  borderColor: isGlobal 
+                                    ? '#F87171' 
+                                    : isFinal 
+                                      ? '#FBBF24' 
+                                      : isAnnouncement 
+                                        ? '#60A5FA' 
+                                        : '#34D399'
                                 }}
                               >
                                 {language === 'ar' 
-                                  ? (isFinal ? 'نهائي' : isGlobal ? 'عام' : isAnnouncement ? 'دورة' : 'تذكير') 
-                                  : (isFinal ? 'Final' : isGlobal ? 'Global' : isAnnouncement ? 'Course' : 'Reminder')}
+                                  ? (isFinal ? '🚨 تذكير نهائي' : isGlobal ? '🌐 إعلان عام' : isAnnouncement ? '📢 دورة تدريبية' : '⏰ تذكير بموعد') 
+                                  : (isFinal ? 'FINAL REMINDER' : isGlobal ? 'GLOBAL' : isAnnouncement ? 'COURSE ANNOUNCEMENT' : 'REMINDER')}
                               </span>
 
-                              <h4 className="font-black text-xs sm:text-sm truncate" style={{ color: isDark ? '#FFFFFF' : '#002D62' }}>
-                                {notif.title || notif.courseTitle || 'تنبيه تدريبي'}
-                              </h4>
-                            </div>
-
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">
-                                {formatNotificationDate(notif.timestamp, language)}
-                              </span>
                               {!isRead && (
-                                <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-amber-400 shadow-xs"></span>
+                                <span className="inline-flex items-center gap-1 bg-blue-600 dark:bg-amber-400 text-white dark:text-[#001D42] text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-[#001D42]"></span>
+                                  <span>{language === 'ar' ? 'جديد' : 'NEW'}</span>
+                                </span>
                               )}
                             </div>
+
+                            <span className="text-[11px] text-slate-800 dark:text-slate-200 font-bold whitespace-nowrap">
+                              {formatNotificationDate(notif.timestamp, language)}
+                            </span>
                           </div>
 
-                          {/* Row 2: Message / Body */}
-                          {notif.message && (
-                            <p className="text-xs text-gray-700 dark:text-gray-300 leading-snug mt-1 line-clamp-2">
+                          {/* Row 2: Prominent Course Title (Never truncated awkwardly!) */}
+                          <h4 
+                            className="font-black text-sm sm:text-base leading-snug break-words text-[#002D62] dark:text-white"
+                          >
+                            {notif.courseTitle || notif.title || (language === 'ar' ? 'تنبيه تدريبي' : 'Training Notification')}
+                          </h4>
+
+                          {/* Row 3: Message / Announcement Body */}
+                          {notif.message && notif.message !== notif.title && (
+                            <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
                               {notif.message}
                             </p>
                           )}
 
-                          {/* Row 3: Session details if applicable */}
+                          {/* Row 4: High Contrast Details Pill (Date, Time, Location) */}
                           {(notif.startDate || notif.location) && (
-                            <div className="mt-2 pt-1.5 border-t border-gray-100 dark:border-slate-800/80 flex items-center gap-3 flex-wrap text-[11px] text-gray-600 dark:text-gray-300 font-medium">
+                            <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700/80 flex items-center gap-2 sm:gap-3 flex-wrap text-xs font-bold">
                               {notif.startDate && (
-                                <span className="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">
+                                <span className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white">
                                   <span>📅</span>
-                                  <span>{notif.startDate} {notif.startTime ? `(${notif.startTime})` : ''}</span>
+                                  <span className="text-blue-900 dark:text-amber-300">{language === 'ar' ? 'التاريخ:' : 'Date:'}</span>
+                                  <span className="font-mono text-slate-950 dark:text-white font-black">{notif.startDate} {notif.startTime ? `(${notif.startTime})` : ''}</span>
                                 </span>
                               )}
                               {notif.location && (
-                                <span className="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">
+                                <span className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white">
                                   <span>📍</span>
-                                  <span className="truncate max-w-[200px]">{notif.location}</span>
+                                  <span className="text-blue-900 dark:text-amber-300">{language === 'ar' ? 'المكان:' : 'Location:'}</span>
+                                  <span className="text-slate-950 dark:text-white font-black">{notif.location}</span>
                                 </span>
                               )}
                             </div>
