@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OED-TTMS | Executive Presentation to Chairman & Owner</title>
+  
+  <!-- Google Fonts: Cairo & Inter for high-end corporate typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --oc-navy-dark: #001835;
+      --oc-navy: #002D62;
+      --oc-navy-light: #0B3B7B;
+      --oc-gold: #FFC000;
+      --oc-gold-hover: #E5AC00;
+      --oc-card-bg: #0D2242;
+      --oc-card-border: rgba(255, 192, 0, 0.25);
+      --oc-text-main: #FFFFFF;
+      --oc-text-muted: #CBD5E1;
+      --oc-text-gold: #FFD54F;
+      --oc-emerald: #10B981;
+      --oc-red: #EF4444;
+      --oc-blue: #3B82F6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', 'Inter', sans-serif;
+    }
+
+    body {
+      background-color: var(--oc-navy-dark);
+      color: var(--oc-text-main);
+      overflow-x: hidden;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Presentation Header & Navigation Controls */
+    .top-controls {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: rgba(0, 24, 53, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--oc-gold);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      z-index: 9999;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: var(--oc-gold);
+      letter-spacing: 0.5px;
+    }
+
+    .brand-badge {
+      background: rgba(255, 192, 0, 0.15);
+      border: 1px solid var(--oc-gold);
+      color: var(--oc-gold);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-ctrl {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-ctrl:hover {
+      background: var(--oc-navy-light);
+      border-color: var(--oc-gold);
+      color: var(--oc-gold);
+    }
+
+    .btn-ctrl.btn-gold {
+      background: var(--oc-gold);
+      color: var(--oc-navy-dark);
+      border-color: var(--oc-gold);
+      font-weight: 800;
+    }
+
+    .btn-ctrl.btn-gold:hover {
+      background: var(--oc-gold-hover);
+      transform: translateY(-1px);
+    }
+
+    .slide-counter {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--oc-gold);
+      padding: 0 10px;
+    }
+
+    /* Slide Container */
+    .deck-container {
+      width: 100vw;
+      height: calc(100vh - 60px);
+      margin-top: 60px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slide {
+      position: absolute;
+      width: 92%;
+      max-width: 1400px;
+      height: 86%;
+      max-height: 800px;
+      background: linear-gradient(145deg, #00224A 0%, #001835 100%);
+      border: 1.5px solid rgba(255, 192, 0, 0.3);
+      border-radius: 24px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 45, 98, 0.4);
+      padding: 40px 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(60px) scale(0.96);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0) scale(1);
+      z-index: 10;
+    }
+
+    /* Slide Header */
+    .slide-header {
+      border-bottom: 2px solid rgba(255, 192, 0, 0.25);
+      padding-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .slide-category {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--oc-gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .slide-title {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #FFFFFF;
+      line-height: 1.2;
+    }
+
+    .slide-subtitle {
+      font-size: 0.95rem;
+      color: var(--oc-text-muted);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    /* Slide Body Layouts */
+    .slide-body {
+      flex: 1;
+      display: grid;
+      gap: 30px;
+      padding: 24px 0;
+      align-items: center;
+    }
+
+    .grid-2-cols {
+      grid-template-columns: 1.1fr 0.9fr;
+    }
+
+    .grid-3-cols {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid-4-cols {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .grid-1-col {
+      grid-template-columns: 1fr;
+    }
+
+    /* Cards & Stat Boxes */
+    .feature-card {
+      background: rgba(13, 34, 66, 0.85);
+      border: 1px solid rgba(255, 192, 0, 0.2);
+      border-radius: 16px;
+      padding: 22px;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .feature-card:hover {
+      border-color: var(--oc-gold);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 25px rgba(255, 192, 0, 0.12);
+    }
+
+    .feature-card.highlight {
+      background: linear-gradient(135deg, rgba(0, 45, 98, 0.9) 0%, rgba(255, 192, 0, 0.15) 100%);
+      border: 1.5px solid var(--oc-gold);
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 192, 0, 0.15);
+      color: var(--oc-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 14px;
+      border: 1px solid var(--oc-gold);
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 0.9rem;
+      color: var(--oc-text-muted);
+      line-height: 1.6;
+      font-weight: 500;
+    }
+
+    .stat-badge {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--oc-gold);
+      line-height: 1;
+      margin-bottom: 6px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #E2E8F0;
+    }
+
+    /* Screenshot Holder / Device Mockup */
+    .screenshot-frame {
+      background: #001229;
+      border: 2px dashed rgba(255, 192, 0, 0.4);
+      border-radius: 18px;
+      padding: 10px;
+      height: 100%;
+      min-height: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .screenshot-frame:hover {
+      border-color: var(--oc-gold);
+      background: #001735;
+    }
+
+    .screenshot-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 12px;
+    }
+
+    .placeholder-prompt {
+      text-align: center;
+      padding: 20px;
+      color: var(--oc-text-muted);
+    }
+
+    .placeholder-prompt .icon {
+      font-size: 2.5rem;
+      color: var(--oc-gold);
+      margin-bottom: 10px;
+    }
+
+    .placeholder-prompt h4 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .placeholder-prompt p {
+      font-size: 0.85rem;
+      color: var(--oc-text-gold);
+    }
+
+    .file-input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 20;
+    }
+
+    /* Comparison Table (Before vs After) */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .comparison-table th, .comparison-table td {
+      padding: 14px 18px;
+      text-align: right;
+    }
+
+    .comparison-table th {
+      background: rgba(0, 45, 98, 0.6);
+      color: var(--oc-gold);
+      font-size: 0.95rem;
+      font-weight: 800;
+      border-bottom: 2px solid var(--oc-gold);
+    }
+
+    .comparison-table td {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.95rem;
+      color: #E2E8F0;
+    }
+
+    .comparison-table tr:hover td {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .badge-bad {
+      background: rgba(239, 68, 68, 0.2);
+      color: #F87171;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .badge-good {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34D399;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    /* Speaker Notes Drawer */
+    .speaker-notes-drawer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 18, 41, 0.98);
+      border-top: 2px solid var(--oc-gold);
+      padding: 16px 30px;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      z-index: 999;
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.8);
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .speaker-notes-drawer.open {
+      transform: translateY(0);
+    }
+
+    .notes-title {
+      color: var(--oc-gold);
+      font-weight: 900;
+      font-size: 1rem;
+      min-width: 140px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .notes-content {
+      color: #F1F5F9;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      font-weight: 600;
+    }
+
+    /* Slide Footer */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 14px;
+      font-size: 0.8rem;
+      color: var(--oc-text-muted);
+    }
+
+    .footer-highlight {
+      color: var(--oc-gold);
+      font-weight: 700;
+    }
+
+    /* Print / PDF Styles */
+    @media print {
+      body {
+        background: #001835 !important;
+        color: #fff !important;
+      }
+      .top-controls, .speaker-notes-drawer, .file-input {
+        display: none !important;
+      }
+      .deck-container {
+        height: auto !important;
+        margin: 0 !important;
+        display: block !important;
+      }
+      .slide {
+        position: relative !important;
+        opacity: 1 !important;
+        transform: none !important;
+        page-break-after: always !important;
+        height: 100vh !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Controller Bar -->
+  <header class="top-controls">
+    <div class="brand-title">
+      <span>🏗️ ORASCOM CONSTRUCTION</span>
+      <span class="brand-badge">OED-TTMS EXECUTIVE PITCH</span>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn-ctrl" onclick="toggleNotes()">🎙️ ملاحظات الإلقاء (N)</button>
+      <button class="btn-ctrl" onclick="window.print()">🖨️ تصدير PDF</button>
+      <button class="btn-ctrl" onclick="prevSlide()">◀ السابق</button>
+      <span class="slide-counter" id="slideIndex">1 / 11</span>
+      <button class="btn-ctrl btn-gold" onclick="nextSlide()">التالي ▶</button>
+    </div>
+  </header>
+
+  <!-- Presentation Deck Container -->
+  <main class="deck-container">
+
+    <!-- SLIDE 1: COVER -->
+    <section class="slide active" id="slide-1">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">ORASCOM EQUIPMENT DEPARTMENT | قطاع المعدات</div>
+          <h1 class="slide-title" style="font-size: 2.8rem;">منظومة إدارة التدريب الفني الذكية</h1>
+          <p class="slide-subtitle" style="font-size: 1.2rem; color: var(--oc-gold);">OED-TTMS (Technical Training Management System)</p>
+        </div>
+        <div style="text-align: left;">
+          <div style="font-size: 1.8rem;">🦅</div>
+          <span style="font-weight: 800; font-size: 0.85rem; color: var(--oc-text-muted);">نسخة العرض التنفيذي 2026</span>
+        </div>
+      </div>
+
+      <div class="slide-body grid-2-cols" style="align-items: center;">
+        <div class="space-y-4">
+          <div class="feature-card highlight" style="padding: 28px;">
+            <h3 style="color: #fff; font-size: 1.4rem; font-weight: 900; margin-bottom: 12px;">رؤية المشروع:</h3>
+            <p style="color: #F1F5F9; font-size: 1.05rem; line-height: 1.8; font-weight: 600;">
+              التحول الرقمي الشامل لإدارة وتطوير الكفاءات الفنية لمهندسي وفنيي ومشغلي قطاع المعدات بأوراسكوم للإنشاءات، لحماية استثمارات وأصول الشركة وخفض تكاليف الأعطال بنظام سحابي آمن 100%.
+            </p>
+          </div>
+
+          <div style="display: flex; gap: 15px; margin-top: 15px;">
+            <div class="feature-card" style="flex: 1; text-align: center; padding: 15px;">
+              <div style="font-size: 0.8rem; color: var(--oc-text-gold);">إعداد وتطوير</div>
+              <div style="font-weight: 800; font-size: 1rem; color: #fff;">إدارة التدريب الفني - OED</div>
+            </div>
+            <div class="feature-card" style="flex: 1; text-align: center; padding: 15px;">
+              <div style="font-size: 0.8rem; color: var(--oc-text-gold);">الجهة المستهدفة</div>
+              <div style="font-weight: 800; font-size: 1rem; color: #fff;">الإدارة العليا ومجلس الإدارة</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screenshot-frame" onclick="triggerUpload(this)">
+          <div class="placeholder-prompt">
+            <div class="icon">💻</div>
+            <h4>شعار التطبيق وشاشة الدخول الرسمية</h4>
+            <p>اضغط هنا لرفع أو استبدال الصورة (app-cover / Login)</p>
+          </div>
+          <input type="file" accept="image/*" class="file-input" onchange="previewImage(this)">
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Orascom Construction © 2026 - Confidential</span>
+        <span class="footer-highlight">استخدم الأسهم ◀ ▶ للتنقل بين السلايدات</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: THE PROBLEM (BEFORE) -->
+    <section class="slide" id="slide-2">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">التحديات السابقة | Current Situation</div>
+          <h2 class="slide-title">أين كنا؟ التحديات التشغيلية قبل المنظومة</h2>
+          <p class="slide-subtitle">حجم الوقت المهدر والمخاطر الناتجة عن الطرق اليدوية القديمة</p>
+        </div>
+      </div>
+
+      <div class="slide-body grid-1-col">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>عنصر التقييم</th>
+              <th>الوضع السابق (الطريقة الورقية والإكسيل)</th>
+              <th>المخاطر والتأثير على العمل</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight: 800; color: var(--oc-gold);">تجميع التقارير</td>
+              <td>تجميع يدوي يستغرق <strong>من يومين إلى 3 أيام عمل</strong> لكل تقرير دوري</td>
+              <td><span class="badge-bad">تأخر القرارات التنفيذية</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight: 800; color: var(--oc-gold);">دقة البيانات</td>
+              <td>ملفات إكسيل مبعثرة ومعرضة للتكرار والخطأ البشري وفقدان سجلات الحضور</td>
+              <td><span class="badge-bad">ضعف الموثوقية والمطابقة</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight: 800; color: var(--oc-gold);">إثبات الحضور</td>
+              <td>كشوف ورقية معرضة للتلف وضياع توقيعات المتدربين في المواقع البعيدة</td>
+              <td><span class="badge-bad">غياب إلكتروني غير منضبط</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight: 800; color: var(--oc-gold);">المادة التعليمية</td>
+              <td>كتب وملازم ورقية تُفقد بعد انتهاء الدورة دون مرجع دائم للفني بالموقع</td>
+              <td><span class="badge-bad">ضياع الأصول المعرفية</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="slide-footer">
+        <span>التحليل التشغيلي لقسم التدريب</span>
+        <span class="footer-highlight">الحل الحتمي: بناء منظومة مركزية سحابية رقمية مغلقة</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: THE LIVE METRICS -->
+    <section class="slide" id="slide-3">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">الحقائق والأرقام الحية | Live Ground Truth</div>
+          <h2 class="slide-title">الواقع الفعلي المحقق بالأرقام على أرض الواقع</h2>
+          <p class="slide-subtitle">بيانات حية ومباشرة مسجلة في قاعدة بيانات المنظومة حتى هذه اللحظة</p>
+        </div>
+      </div>
+
+      <div class="slide-body grid-4-cols">
+        <div class="feature-card highlight" style="text-align: center;">
+          <div class="card-icon" style="margin: 0 auto 12px;">📊</div>
+          <div class="stat-badge">1,003</div>
+          <div class="stat-label">إجمالي السجلات التدريبية الموثقة</div>
+          <p class="card-desc" style="font-size: 0.8rem; margin-top: 8px;">توثيق رقمي شامل للدرجات والحضور بالتواريخ الدقيقة</p>
+        </div>
+
+        <div class="feature-card highlight" style="text-align: center;">
+          <div class="card-icon" style="margin: 0 auto 12px;">👷</div>
+          <div class="stat-badge">354</div>
+          <div class="stat-label">متدرب فريد مسجل بالمنظومة</div>
+          <p class="card-desc" style="font-size: 0.8rem; margin-top: 8px;">تغطية حقيقية للمهندسين والفنيين والمشغلين بكافة الورش والمواقع</p>
+        </div>
+
+        <div class="feature-card highlight" style="text-align: center;">
+          <div class="card-icon" style="margin: 0 auto 12px;">📚</div>
+          <div class="stat-badge">22</div>
+          <div class="stat-label">دورة تدريبية تخصصية معتمدة</div>
+          <p class="card-desc" style="font-size: 0.8rem; margin-top: 8px;">شاملة الهيدروليك، محركات الديزل، الصيانة الوقائية، والسلامة</p>
+        </div>
+
+        <div class="feature-card highlight" style="text-align: center;">
+          <div class="card-icon" style="margin: 0 auto 12px;">🗓️</div>
+          <div class="stat-badge">125</div>
+          <div class="stat-label">جلسة تدريبية منفذة بنجاح</div>
+          <p class="card-desc" style="font-size: 0.8rem; margin-top: 8px;">جلسات موثقة بالكامل بدون أي هدر ورقي أو تأخير إداري</p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>قاعدة البيانات السحابية الحية - قطاع المعدات OED</span>
+        <span class="footer-highlight">زمن استخراج التقرير الشامل: من 3 أيام ⬅️ إلى ثانيتين فقط</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: CORE FEATURES SHOWCASE -->
+    <section class="slide" id="slide-4">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">الميزات التشغيلية الكبرى | Core Operational Features</div>
+          <h2 class="slide-title">أهم مزايا المنظومة وحلولها الذكية</h2>
+          <p class="slide-subtitle">تقنيات حديثة مصممة لتسريع العمل ومنع الخطأ البشري</p>
+        </div>
+      </div>
+
+      <div class="slide-body grid-2-cols">
+        <div class="space-y-3">
+          <div class="feature-card">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <div class="card-icon" style="margin-bottom: 0;">📱</div>
+              <div>
+                <h4 class="card-title">التحضير الذكي عبر الـ QR Code</h4>
+                <p class="card-desc">تسجيل الحضور الفوري بكاميرا الهاتف في ثانية واحدة لمنع التوقيعات الوهمية.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <div class="card-icon" style="margin-bottom: 0;">📧</div>
+              <div>
+                <h4 class="card-title">أتمتة مراسلات Outlook الرسمية (.eml)</h4>
+                <p class="card-desc">توليد إيميلات رسمية منسقة بأسماء الحضور وإرسالها لمديري المشروعات بنقرة زر.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <div class="card-icon" style="margin-bottom: 0;">🖨️</div>
+              <div>
+                <h4 class="card-title">التقارير الرسمية المعتمدة (PDF & Excel)</h4>
+                <p class="card-desc">إصدار تقارير وسجلات معتمدة بهيدر أوراسكوم الرسمي جاهزة لجهات التفتيش فوراً.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screenshot-frame" onclick="triggerUpload(this)">
+          <div class="placeholder-prompt">
+            <div class="icon">📸</div>
+            <h4>لقطة شاشة الـ QR Code أو التقارير الرسمية</h4>
+            <p>اضغط هنا لرفع سكرين شوت نافذة الـ QR أو التقرير المعتمد</p>
+          </div>
+          <input type="file" accept="image/*" class="file-input" onchange="previewImage(this)">
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>دورة عمل مغلقة ومؤتمتة بالكامل</span>
+        <span class="footer-highlight">ربط ذكي بين القاعة التدريبية والموقع والإدارة العليا</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: CLOUD & CYBERSECURITY -->
+    <section class="slide" id="slide-5">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">البنية التكنولوجية والأمان | Cloud & Cybersecurity</div>
+          <h2 class="slide-title">البنية السحابية، أمان البيانات، والتكلفة الصفرية</h2>
+          <p class="slide-subtitle">حماية مشددة على خوادم جوجل واستيعاب آلاف الموظفين مجاناً</p>
+        </div>
+      </div>
+
+      <div class="slide-body grid-3-cols">
+        <div class="feature-card">
+          <div class="card-icon">⚡</div>
+          <h4 class="card-title">أحدث التقنيات العالمية</h4>
+          <p class="card-desc">
+            • واجهة فائقة السرعة مبنية بـ <strong>React + TypeScript</strong>.<br>
+            • تطبيق ويب تقدمي <strong>(PWA)</strong> يعمل كـ App أصيل على الموبايل والكمبيوتر دون رسوم متاجر التطبيقات.
+          </p>
+        </div>
+
+        <div class="feature-card highlight">
+          <div class="card-icon">🔒</div>
+          <h4 class="card-title">الأمن السيبراني وحماية البيانات</h4>
+          <p class="card-desc">
+            • تشفير كامل للبيانات <strong>(TLS 1.3 & AES-256)</strong>.<br>
+            • نظام صلاحيات صارم <strong>(RBAC)</strong> يمنع تداخل البيانات.<br>
+            • حماية مسبقة ضد الاختراق و(SQL Injection & XSS).
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="card-icon">🆓</div>
+          <h4 class="card-title">طاقة استيعابية بتكلفة صفرية</h4>
+          <p class="card-desc">
+            • تغطي النسخة الحالية <strong>من 1,000 إلى 2,000 مستخدم نشط بتكلفة 0 دولار شهرياً!</strong><br>
+            • معمارية ذكية تستهلك أقل من 3% من الحد اليومي المجاني لسحابة Google Cloud.
+          </p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Zero Software Licensing Cost - توفير مالي كامل لميزانية الشركة</span>
+        <span class="footer-highlight">جاهزية التوسع اللحظي لخدمة 50,000 موظف في أوراسكوم</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: KNOWLEDGE ASSETS & ONEDRIVE -->
+    <section class="slide" id="slide-6">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">أصول المعرفة الهندسية | Knowledge Management</div>
+          <h2 class="slide-title">حفظ المادة التعليمية وربطها بسحابة الشركة (OneDrive)</h2>
+          <p class="slide-subtitle">حماية المراجع وكتالوجات المعدات وإتاحتها للفنيين بالمواقع 24/7</p>
+        </div>
+      </div>
+
+      <div class="slide-body grid-2-cols">
+        <div class="space-y-4">
+          <div class="feature-card highlight">
+            <h4 class="card-title" style="color: var(--oc-gold);">1. حماية أصول ومعارف الشركة من الضياع</h4>
+            <p class="card-desc">
+              حفظ جميع الحقائب التدريبية، فيديوهات الشرح، وكتالوجات الصيانة المعتمدة مركزياً على حساب ون درايف الرسمي لشركة أوراسكوم دون خوف من تلفها أو فقدانها.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <h4 class="card-title" style="color: var(--oc-gold);">2. مكتبة هندسية في جيب الفني بالموقع</h4>
+            <p class="card-desc">
+              أثناء تواجد المهندس أو الفني في موقع ناءٍ (العلمين، السخنة، توشكى) وأمام عطل مفاجئ في معدة ثقيلة، يفتح التطبيق ويصل لمخطط الصيانة والمادة العلمية في ثوانٍ.
+            </p>
+          </div>
+        </div>
+
+        <div class="screenshot-frame" onclick="triggerUpload(this)">
+          <div class="placeholder-prompt">
+            <div class="icon">☁️</div>
+            <h4>لقطة شاشة ربط المادة العلمية (Course Materials)</h4>
+            <p>اضغط هنا لرفع سكرين شوت نافذة المواد ومجلدات OneDrive</p>
+          </div>
+          <input type="file" accept="image/*" class="file-input" onchange="previewImage(this)">
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>ربط السحابة المؤسسية بالتطبيق الميداني</span>
+        <span class="footer-highlight">مرجع فني دائم يحمي معدات الشركة من أخطاء الصيانة</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 7: PILLAR 1 - TRAINEE VALUE -->
+    <section class="slide" id="slide-7">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">المحور الأول | Pillar 1: Trainee Value</div>
+          <h2 class="slide-title">القيمة المضافة للمتدرب (المهندس / الفني / المشغل)</h2>
+          <p class="slide-subtitle">تجربة تدريبية رقمية ميسرة ومتكاملة في يد كل موظف على مدار الساعة</p>
+        </div>
+      </div>
+
+      <div class="slide-body grid-2-cols">
+        <div class="space-y-3">
+          <div class="feature-card">
+            <h4 class="card-title">📜 جواز سفر تدريبي رقمي (Training Passport)</h4>
+            <p class="card-desc">سجل موثق ودائم يوضح تاريخ دوراته، درجاته، ونسب حضوره على هاتفه.</p>
+          </div>
+
+          <div class="feature-card">
+            <h4 class="card-title">📖 وصول دائم للمراجع العلمية (24/7 Access)</h4>
+            <p class="card-desc">مراجعة المادة العلمية والمخططات الهندسية المخزنة على OneDrive بضغطة زر.</p>
+          </div>
+
+          <div class="feature-card">
+            <h4 class="card-title">💬 قناة تواصل واقتراحات مباشرة</h4>
+            <p class="card-desc">تقديم مقترحات التدريب والاحتياجات الميدانية لإدارة التدريب مباشرة عبر التطبيق.</p>
+          </div>
+        </div>
+
+        <div class="screenshot-frame" onclick="triggerUpload(this)">
+          <div class="placeholder-prompt">
+            <div class="icon">📱</div>
+            <h4>لقطة شاشة واجهة المتدرب على الموبايل</h4>
+            <p>اضغط هنا لرفع سكرين شوت شاشة المتدرب وسجل دوراته</p>
+          </div>
+          <input type="file" accept="image/*" class="file-input" onchange="previewImage(this)">
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>تجربة مستخدم راقية تعزز ولاء وانتماء الكوادر الفنية</span>
+        <span class="footer-highlight">رفع كفاءة العنصر البشري في الميدان</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: PILLAR 2 - SITE MANAGERS VALUE -->
+    <section class="slide" id="slide-8">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">المحور الثاني | Pillar 2: Site Managers Value</div>
+          <h2 class="slide-title">القيمة لمديري المشروعات ورؤساء الأقسام</h2>
+          <p class="slide-subtitle">تنسيق مسبق وشفافية كاملة بين مواقع العمل وإدارة التدريب</p>
+        </div>
+      </div>
+
+      <div class="slide-body grid-2-cols">
+        <div class="space-y-3">
+          <div class="feature-card">
+            <h4 class="card-title">🗓️ التنسيق المسبق وترتيب الورديات</h4>
+            <p class="card-desc">إخطار رسمي فوري بمواعيد وأماكن الدورات لترتيب ورديات العمل دون تعطيل إنتاجية المشروعات.</p>
+          </div>
+
+          <div class="feature-card">
+            <h4 class="card-title">🎯 قياس جاهزية وكفاءة الفريق</h4>
+            <p class="card-desc">معرفة المهندسين الحاصلين على دورات متخصصة والمؤهلين للتعامل مع المعدات الحساسة والحديثة.</p>
+          </div>
+
+          <div class="feature-card">
+            <h4 class="card-title">📈 تقييم حقيقي للأداء الفني</h4>
+            <p class="card-desc">رؤية تقييمات الحضور والدرجات الفعلية لمرؤوسيهم ومستوى التزامهم بالتدريب.</p>
+          </div>
+        </div>
+
+        <div class="screenshot-frame" onclick="triggerUpload(this)">
+          <div class="placeholder-prompt">
+            <div class="icon">✉️</div>
+            <h4>لقطة شاشة إيميل إخطار مديري المواقع (.eml)</h4>
+            <p>اضغط هنا لرفع سكرين شوت مسودة Outlook المنسقة</p>
+          </div>
+          <input type="file" accept="image/*" class="file-input" onchange="previewImage(this)">
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>تنسيق مؤسسي كامل يمنع التعارض بين التدريب والإنتاجية</span>
+        <span class="footer-highlight">استثمار الوقت الميداني بأعلى كفاءة</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 9: PILLAR 3 - TRAINING ADMIN VALUE -->
+    <section class="slide" id="slide-9">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">المحور الثالث | Pillar 3: Training Admin Value</div>
+          <h2 class="slide-title">القيمة لمدير التدريب ومسؤول المنظومة (Admin)</h2>
+          <p class="slide-subtitle">أتمتة كاملة للعمليات وتوفير مئات الساعات التشغيلية شهرياً</p>
+        </div>
+      </div>
+
+      <div class="slide-body grid-2-cols">
+        <div class="space-y-3">
+          <div class="feature-card">
+            <h4 class="card-title">⚡ تقليص زمن التقارير بنسبة 99%</h4>
+            <p class="card-desc">التحول من 3 أيام عمل لتجهيز التقارير الشهرية إلى ثانيتين فقط بنقرة زر واحدة.</p>
+          </div>
+
+          <div class="feature-card">
+            <h4 class="card-title">🎯 تحديد دقيق للاحتياجات (TNA)</h4>
+            <p class="card-desc">معرفة الورش والأقسام الأكثر احتياجاً لدورات صيانة محددة بناءً على أرقام وإحصائيات دقيقة.</p>
+          </div>
+
+          <div class="feature-card">
+            <h4 class="card-title">🛡️ أمان وحفظ النسخ الاحتياطية</h4>
+            <p class="card-desc">تنزيل واسترجاع نسخ احتياطية كاملة (JSON Cloud Backup) لحماية السجلات على المدى الطويل.</p>
+          </div>
+        </div>
+
+        <div class="screenshot-frame" onclick="triggerUpload(this)">
+          <div class="placeholder-prompt">
+            <div class="icon">📊</div>
+            <h4>لقطة شاشة لوحة تحكم الأدمن والتقارير</h4>
+            <p>اضغط هنا لرفع سكرين شوت الداشبورد والنسخ الاحتياطي</p>
+          </div>
+          <input type="file" accept="image/*" class="file-input" onchange="previewImage(this)">
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>التحول من العمل الإداري الروتيني إلى التخطيط الاستراتيجي</span>
+        <span class="footer-highlight">حوكمة بنسبة 100% بدون أخطاء بشرية</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 10: PILLAR 4 - EXECUTIVE & OWNER VALUE -->
+    <section class="slide" id="slide-10">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">المحور الرابع | Pillar 4: Executive Board & Owner</div>
+          <h2 class="slide-title">القيمة المضافة للإدارة العليا وصاحب الشركة</h2>
+          <p class="slide-subtitle">حماية استثمارات ومعدات أوراسكوم، والامتثال لمعايير الجودة العالمية</p>
+        </div>
+      </div>
+
+      <div class="slide-body grid-2-cols">
+        <div class="space-y-3">
+          <div class="feature-card highlight">
+            <h4 class="card-title" style="color: var(--oc-gold);">🚜 حماية أصول ومعدات الشركة بملايين الدولارات</h4>
+            <p class="card-desc">التدريب الفني الموثق يرفع كفاءة صيانة المعدات الثقيلة، ويقلل أعطالها المكلفة ويطيل عمرها التشغيلي.</p>
+          </div>
+
+          <div class="feature-card">
+            <h4 class="card-title" style="color: var(--oc-gold);">🏅 الامتثال ومعايير الجودة العالمية (ISO / Audits)</h4>
+            <p class="card-desc">سجلات دقيقة وموثقة بالتواريخ والدرجات جاهزة فوراً للتفتيش وأمام كبرى جهات الاعتماد والعملاء الدوليين.</p>
+          </div>
+
+          <div class="feature-card">
+            <h4 class="card-title" style="color: var(--oc-gold);">🌐 قابلية التوسع لجميع قطاعات أوراسكوم</h4>
+            <p class="card-desc">منظومة سحابية مرنة جاهزة للتطبيق على قطاعات الإنشاءات والمشروعات المدنية والبحرية داخل مصر وخارجها.</p>
+          </div>
+        </div>
+
+        <div class="screenshot-frame" onclick="triggerUpload(this)">
+          <div class="placeholder-prompt">
+            <div class="icon">📈</div>
+            <h4>لقطة شاشة لوحة التحليلات التنفيذية الكبرى</h4>
+            <p>اضغط هنا لرفع سكرين شوت Analytics Dashboard</p>
+          </div>
+          <input type="file" accept="image/*" class="file-input" onchange="previewImage(this)">
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>العائد الاستثماري الحقيقي: حماية الأصول وتطوير الكادر البشري</span>
+        <span class="footer-highlight">الريادة الرقمية لشركة أوراسكوم للإنشاءات</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 11: FUTURE ROADMAP & CLOSING -->
+    <section class="slide" id="slide-11">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">الرؤية المستقبلية والخاتمة | Future Roadmap</div>
+          <h2 class="slide-title">خارطة الطريق: نحو منصة تدريبية رقمية رائدة</h2>
+          <p class="slide-subtitle">المرحلة القادمة لتطوير منظومة OED-TTMS وتحويلها لأكاديمية متكاملة</p>
+        </div>
+      </div>
+
+      <div class="slide-body grid-3-cols">
+        <div class="feature-card">
+          <div class="card-icon">🤖</div>
+          <h4 class="card-title">الذكاء الاصطناعي (AI Gap Analyzer)</h4>
+          <p class="card-desc">نظام ذكي يحلل سجل أعطال المعدات ويقترح تلقائياً الدورات الفنية المناسبة لكل مهندس وفني لسد الفجوة المهارية.</p>
+        </div>
+
+        <div class="feature-card highlight">
+          <div class="card-icon">🏆</div>
+          <h4 class="card-title">الشهادات الرقمية الذكية (E-Certificates)</h4>
+          <p class="card-desc">إصدار شهادات إلكترونية معتمدة تحتوي على رمز QR للتحقق الرسمي من صحتها من أي مكان حول العالم.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="card-icon">🎥</div>
+          <h4 class="card-title">أكاديمية أوراسكوم للتدريب المصغر</h4>
+          <p class="card-desc">مكتبة فيديوهات تدريبية تفاعلية قصيرة (Micro-Learning) لرفع كفاءة الفنيين في أوقات الراحة بالمواقع.</p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Designed & Developed with Pride by Orascom Engineers</span>
+        <span class="footer-highlight">شكراً لحسن استماعكم - نسعد باستقبال استفساراتكم 🌟</span>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Speaker Notes Drawer (Toggled by 'N' key or button) -->
+  <aside class="speaker-notes-drawer" id="notesDrawer">
+    <div class="notes-title">🎙️ ماذا تقول هنا:</div>
+    <div class="notes-content" id="notesText">
+      ابدأ بالترحيب برئيس مجلس الإدارة وصاحب الشركة، وعرّف بالمنظومة كإنجاز داخلي صنع بأيدي أبناء قطاع المعدات لتحقيق التحول الرقمي الكامل.
+    </div>
+  </aside>
+
+  <!-- Interactive Slide Controller Script -->
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+
+    const speakerNotes = [
+      "ابدأ بالترحيب بصاحب الشركة، وعرّف بالمنظومة كإنجاز داخلي صُنع بأيدي أبناء قطاع المعدات لنقل إدارة التدريب الفني إلى العصر الرقمي السحابي.",
+      "اشرح المشاكل السابقة بأسلوب عملي دون لوم: كنا نستهلك 3 أيام لإعداد التقرير، والبيانات مبعثرة بين الإكسيل والورق، والمادة العلمية تفقد في المواقع.",
+      "اعرض لغة الأرقام الحية بثقة: المنظومة بها 1003 سجل، و354 متدرب حقيقي، و22 دورة معتمدة، و125 جلسة منفذة، وكل هذا موثق في قاعدة بيانات حية.",
+      "استعرض التحضير السريع بالـ QR، وتوليد إيميلات الـ Outlook الرسمية (.eml) بنقرة زر، وطباعة كشوف الـ PDF في ثانيتين أمام جهات التفتيش.",
+      "النقطة التقنية الحاسمة: المنظومة مبنية على أحدث تقنيات الويب السحابية من Google، مشفرة بأعلى معايير الأمان، وتعمل مجاناً بالكامل دون تكلفة ترخيص برامج.",
+      "اشرح كيف قمنا بربط كل دورة بمجلد OneDrive الرسمي للشركة؛ لحفظ الحقائب التدريبية ومراجع المعدات من الضياع وجعلها في جيب الفني بالموقع 24/7.",
+      "المحور الأول: المتدرب أصبح يمتلك سجله التدريبي ودرجاته ومراجعه الهندسية على هاتفه، ويمكنه إرسال مقترحات تدريب للإدارة مباشرة.",
+      "المحور الثاني: مديري المواقع والورش أصبح لديهم تنسيق مسبق بمواعيد الدورات وترتيب الورديات، مع متابعة دقيقة لكفاءة ودرجات فريقهم.",
+      "المحور الثالث: إدارة التدريب وفرت مئات الساعات التشغيلية شهرياً، وأصبحت تحدد الاحتياجات التدريبية الحقيقية بالأرقام الدقيقة وليس التخمين.",
+      "المحور الرابع (الأهم لصاحب الشركة): حماية استثمارات ومعدات أوراسكوم بملايين الدولارات، الجاهزية لتفتيش الجودة ISO، وقابلية التوسع لكافة قطاعات الشركة.",
+      "اختم بالرؤية المستقبلية: إضافة الذكاء الاصطناعي لتحليل الأعطال والشهادات الرقمية المعتمدة، ثم اشكر صاحب الشركة على دعمه المستمر."
+    ];
+
+    function showSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+      
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === index);
+      });
+
+      currentSlide = index;
+      document.getElementById('slideIndex').innerText = `${currentSlide + 1} / ${totalSlides}`;
+      document.getElementById('notesText').innerText = speakerNotes[currentSlide] || "";
+    }
+
+    function nextSlide() {
+      showSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      showSlide(currentSlide - 1);
+    }
+
+    function toggleNotes() {
+      document.getElementById('notesDrawer').classList.toggle('open');
+    }
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'n' || e.key === 'N') {
+        toggleNotes();
+      }
+    });
+
+    // Image Upload & Preview Handler
+    function triggerUpload(frame) {
+      const input = frame.querySelector('.file-input');
+      if (input) input.click();
+    }
+
+    function previewImage(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const frame = input.closest('.screenshot-frame');
+          // Remove placeholder if present
+          const placeholder = frame.querySelector('.placeholder-prompt');
+          if (placeholder) placeholder.style.display = 'none';
+
+          let existingImg = frame.querySelector('img');
+          if (!existingImg) {
+            existingImg = document.createElement('img');
+            frame.appendChild(existingImg);
+          }
+          existingImg.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    // Initialize slide 1
+    showSlide(0);
+  </script>
+</body>
+</html>

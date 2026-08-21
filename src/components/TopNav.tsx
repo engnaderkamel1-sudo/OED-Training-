@@ -478,20 +478,38 @@ export const TopNav: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-sm flex items-center justify-center cursor-pointer"
+            className="fixed inset-0 z-[999999] bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-pointer"
             onClick={() => setIsLogoExpanded(false)}
           >
-            <motion.img
-              layoutId="magic-logo"
-              src="/app-icon.jpg"
-              alt="OED-TTMS Logo Expanded"
-              className="w-64 h-64 md:w-96 md:h-96 object-cover rounded-[2rem] shadow-2xl border-4 border-white/20"
-              transition={{ type: "spring", stiffness: 200, damping: 25 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsLogoExpanded(false);
-              }}
-            />
+            <motion.div
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.7, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 25 }}
+              className="relative flex flex-col items-center max-w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setIsLogoExpanded(false)}
+                className="absolute -top-12 right-0 sm:-right-4 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-md transition-colors cursor-pointer"
+                title={language === 'ar' ? 'إغلاق' : 'Close'}
+              >
+                <X size={24} />
+              </button>
+
+              <motion.img
+                layoutId="magic-logo"
+                src="/app-icon-v8.png"
+                alt="OED-TTMS Logo Expanded"
+                className="w-72 h-72 sm:w-[420px] sm:h-[420px] md:w-[500px] md:h-[500px] object-cover rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] border-4 border-[#FFC000] ring-8 ring-white/10"
+              />
+
+              <div className="mt-4 text-center">
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">OED-TTMS</h3>
+                <p className="text-xs sm:text-sm font-bold text-[#FFC000] mt-0.5">Orascom Equipment Department • Technical Training System</p>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
