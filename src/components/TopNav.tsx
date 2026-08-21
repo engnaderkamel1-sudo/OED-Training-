@@ -482,90 +482,41 @@ export const TopNav: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[999999] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 select-none"
-            onClick={() => {
-              setIsLogoExpanded(false);
-              setLogoZoom(1);
-            }}
+            className="fixed inset-0 z-[999999] bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-pointer"
+            onClick={() => setIsLogoExpanded(false)}
           >
             <motion.div
-              initial={{ scale: 0.7, opacity: 0 }}
+              initial={{ scale: 0.6, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.7, opacity: 0 }}
+              exit={{ scale: 0.6, opacity: 0 }}
               transition={{ type: "spring", stiffness: 260, damping: 25 }}
-              className="relative flex flex-col items-center max-w-full"
-              onClick={(e) => e.stopPropagation()}
+              className="relative flex flex-col items-center max-w-[95vw]"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsLogoExpanded(false);
+              }}
             >
-              {/* Floating Zoom & Close Controls Bar */}
-              <div className="flex items-center gap-2 mb-4 bg-slate-900/90 border border-white/20 backdrop-blur-xl px-4 py-2 rounded-2xl shadow-2xl z-50">
-                <button
-                  type="button"
-                  onClick={() => setLogoZoom(prev => Math.min(prev + 0.3, 3))}
-                  className="p-2 rounded-xl text-white hover:bg-white/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer font-bold text-xs"
-                  title={language === 'ar' ? 'تكبير (Zoom In)' : 'Zoom In'}
-                >
-                  <ZoomIn size={18} className="text-[#FFC000]" />
-                  <span className="hidden sm:inline">{language === 'ar' ? 'تكبير' : 'Zoom In'}</span>
-                </button>
+              {/* Close Button on Top Right */}
+              <button
+                type="button"
+                onClick={() => setIsLogoExpanded(false)}
+                className="absolute -top-12 right-0 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-md transition-colors cursor-pointer"
+                title={language === 'ar' ? 'إغلاق' : 'Close'}
+              >
+                <X size={22} />
+              </button>
 
-                <div className="w-px h-5 bg-white/20"></div>
+              {/* Clean Large Logo */}
+              <motion.img
+                layoutId="magic-logo"
+                src="/app-icon-v9.png"
+                alt="OED-TTMS Logo"
+                className="w-72 h-72 sm:w-96 sm:h-96 md:w-[460px] md:h-[460px] object-cover rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] border-4 border-[#FFC000] ring-8 ring-white/10"
+              />
 
-                <button
-                  type="button"
-                  onClick={() => setLogoZoom(prev => Math.max(prev - 0.3, 0.7))}
-                  className="p-2 rounded-xl text-white hover:bg-white/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer font-bold text-xs"
-                  title={language === 'ar' ? 'تصغير (Zoom Out)' : 'Zoom Out'}
-                >
-                  <ZoomOut size={18} className="text-[#FFC000]" />
-                  <span className="hidden sm:inline">{language === 'ar' ? 'تصغير' : 'Zoom Out'}</span>
-                </button>
-
-                <div className="w-px h-5 bg-white/20"></div>
-
-                <button
-                  type="button"
-                  onClick={() => setLogoZoom(1)}
-                  className="p-2 rounded-xl text-white hover:bg-white/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer font-bold text-xs"
-                  title={language === 'ar' ? 'إعادة ضبط الحجم' : 'Reset Zoom'}
-                >
-                  <RotateCcw size={16} className="text-blue-300" />
-                  <span>{Math.round(logoZoom * 100)}%</span>
-                </button>
-
-                <div className="w-px h-5 bg-white/20"></div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLogoExpanded(false);
-                    setLogoZoom(1);
-                  }}
-                  className="p-2 rounded-xl text-red-400 hover:text-white hover:bg-red-500/30 active:scale-95 transition-all cursor-pointer"
-                  title={language === 'ar' ? 'إغلاق' : 'Close'}
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              {/* Logo Display with Smooth Zoom & Drag */}
-              <div className="overflow-hidden rounded-3xl sm:rounded-[2.5rem] p-2 flex items-center justify-center max-w-[92vw] max-h-[60vh] sm:max-h-[70vh]">
-                <motion.img
-                  layoutId="magic-logo"
-                  src="/app-icon-v9.png"
-                  alt="OED-TTMS Logo Expanded"
-                  animate={{ scale: logoZoom }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  drag={logoZoom > 1}
-                  dragConstraints={{ left: -150, right: 150, top: -150, bottom: 150 }}
-                  onClick={() => setLogoZoom(prev => prev === 1 ? 1.8 : 1)}
-                  className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 object-cover rounded-2xl sm:rounded-[2rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] border-4 border-[#FFC000] ring-8 ring-white/10 cursor-zoom-in"
-                />
-              </div>
-
-              <div className="mt-4 text-center">
+              <div className="mt-5 text-center">
                 <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">OED-TTMS</h3>
-                <p className="text-xs sm:text-sm font-bold text-[#FFC000] mt-0.5">Orascom Equipment Department • Technical Training System</p>
-                <p className="text-[11px] text-gray-400 mt-1">{language === 'ar' ? '💡 اضغط على الصورة للتكبير أو استخدم أزرار التحكم بالأعلى' : '💡 Click on the image or use the buttons above to zoom'}</p>
+                <p className="text-xs sm:text-sm font-bold text-[#FFC000] mt-1">Orascom Equipment Department • Technical Training System</p>
               </div>
             </motion.div>
           </motion.div>
