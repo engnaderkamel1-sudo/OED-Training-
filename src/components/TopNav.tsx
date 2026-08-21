@@ -17,7 +17,8 @@ import {
   ArrowRight,
   ZoomIn,
   ZoomOut,
-  RotateCcw
+  RotateCcw,
+  BookOpen
 } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
@@ -625,6 +626,27 @@ export const TopNav: React.FC = () => {
                       >
                         <UserCircle size={18} style={{ color: isDark ? '#FFC000' : '#002D62' }} className="shrink-0" />
                         <span>{language === 'ar' ? 'الملف الشخصي' : 'My Profile'}</span>
+                      </button>
+
+                      {/* Handout Revisions Page Link */}
+                      <button
+                        onClick={() => {
+                          setCurrentView('handoutRevisions');
+                          setDropdownOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer"
+                        style={{
+                          color: isDark ? '#FFFFFF' : '#1E293B',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : '#F0F7FF';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <BookOpen size={18} style={{ color: '#FFC000' }} className="shrink-0" />
+                        <span>{language === 'ar' ? 'تعديلات المحتوى (Handouts)' : 'Handout Revisions'}</span>
                       </button>
 
                       {/* About System Button in Dropdown */}

@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAppContext } from '../context';
-import { UpcomingSession } from '../types';
 import { 
   Calendar, Clock, MapPin, Users, Ban, 
   RotateCcw, Edit2, Bell, BellRing, AlertTriangle, 
   CheckCircle, FileText, QrCode, ScanLine, MessageSquare,
-  XCircle, Megaphone, X, Phone, Mail, UserCheck
+  XCircle, Megaphone, X, Phone, Mail, UserCheck, BookOpen, AlertCircle, Star, ExternalLink
 } from 'lucide-react';
+import { db } from '../firebase';
+import { collection, doc, setDoc } from 'firebase/firestore';
 import { DataField } from './DataField';
+import { isDateInSessionRange, sendNativePushNotification } from '../utils/sessionTimeUtils';
+import { playNotificationSound } from './TraineeDashboard';
+
+const EVALUATION_FORM_URL = "https://forms.cloud.microsoft/r/cj3ByTQCRS";
 
 interface SessionCardProps {
   session: UpcomingSession;
@@ -23,6 +28,7 @@ interface SessionCardProps {
   onManualAttendanceRequest?: (session: UpcomingSession) => void;
   onAttendanceReminderRequest?: (session: UpcomingSession) => void;
   onToggleFeedback?: (session: UpcomingSession) => void;
+  onRequestHandoutRevision?: (courseTitle: string) => void;
   registeredCourseIds?: string[];
   onRegister?: (session: UpcomingSession) => void;
   onUnregister?: (session: UpcomingSession) => void;
@@ -54,6 +60,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
     reactivateSession, 
     unregisterTrainee, 
     registerTrainee, 
+    updateUpcomingSession,
     user, 
     users,
     language, 
@@ -63,10 +70,43 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   // -- State Derived from Context --
   const isCancelled = session.status === 'Cancelled' || !!session.isDeleted;
   const isCompleted = session.status === 'Completed';
+  const isRegistrationClosed = !!session.isRegistrationClosed;
+  
+  // Auto-close check if deadline has passed
+  const isDeadlinePassed = useMemo(() => {
+    if (!session.registrationDeadline) return false;
+    try {
+      return new Date().getTime() > new Date(session.registrationDeadline).getTime();
+    } catch {
+      return false;
+    }
+  }, [session.registrationDeadline]);
+
+  const isRegistrationLocked = isRegistrationClosed || isDeadlinePassed;
+  const isDateActiveForAttendance = useMemo(() => isDateInSessionRange(session), [session]);
+
   const userCode = user?.hrCode || 'trainee';
   const isRegistered = session.registeredUsers?.includes(userCode) || registeredCourseIds.includes(session.id);
   const isUnregistered = session.unregisteredUsers?.includes(userCode);
   const attendeesCount = session.registeredUsers?.length || 0;
+
+  const formatDeadline = (dStr?: string) => {
+    if (!dStr) return '';
+    try {
+      const d = new Date(dStr);
+      return d.toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return dStr;
+    }
+  };
 
   const registeredTrainees = (users || []).filter(u => 
     u && (
@@ -100,6 +140,68 @@ export const SessionCard: React.FC<SessionCardProps> = ({
     }
   };
 
+  const doToggleRegistration = () => {
+    try {
+      updateUpcomingSession({
+        ...session,
+        isRegistrationClosed: !isRegistrationClosed
+      });
+    } catch (error: any) {
+      setDebugMsg("Toggle Registration Error: " + (error.message || error));
+    }
+  };
+
+  const doMarkSessionCompleted = () => {
+    try {
+      updateUpcomingSession({
+        ...session,
+        status: 'Completed',
+        completedAt: new Date().toISOString()
+      });
+    } catch (error: any) {
+      setDebugMsg("Mark Completed Error: " + (error.message || error));
+    }
+  };
+
+  const doSendEvaluationAlert = async () => {
+    try {
+      const updatedSession: UpcomingSession = {
+        ...session,
+        feedbackEnabled: true,
+        feedbackLink: EVALUATION_FORM_URL
+      };
+      await updateUpcomingSession(updatedSession);
+
+      const annTitle = language === 'ar' ? `⭐ استبيان تقييم الدورة: ${session.courseTitle}` : `⭐ Course Evaluation: ${session.courseTitle}`;
+      const annMsg = language === 'ar' 
+        ? `يرجى التكرم بالدخول على الرابط التالي لتقييم دورة [${session.courseTitle}] ومشاركتنا رأيك:\n${EVALUATION_FORM_URL}`
+        : `Please fill out the course evaluation form for [${session.courseTitle}] via:\n${EVALUATION_FORM_URL}`;
+
+      const annDocRef = doc(collection(db, 'announcements'));
+      await setDoc(annDocRef, {
+        id: annDocRef.id,
+        sessionId: session.id,
+        courseName: session.courseTitle,
+        title: annTitle,
+        message: annMsg,
+        link: EVALUATION_FORM_URL,
+        targetAudience: session.targetParticipants || 'mixed',
+        targetHrCodes: session.registeredUsers || [],
+        author: 'Training Administration (OED)',
+        date: new Date().toISOString(),
+        isGlobal: true
+      });
+
+      sendNativePushNotification(annTitle, { body: annMsg });
+      playNotificationSound();
+
+      alert(language === 'ar' ? '⭐ تم إرسال تنبيه ورابط تقييم الدورة بنجاح لجميع المتدربين!' : '⭐ Course evaluation alert & link sent successfully!');
+    } catch (error: any) {
+      console.error("Evaluation alert error:", error);
+      alert('Error: ' + (error.message || error));
+    }
+  };
+
   const doTraineeUnregister = () => {
     try {
       unregisterTrainee(session.id, userCode);
@@ -113,6 +215,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   };
 
   const doTraineeRegister = () => {
+    if (isRegistrationLocked) return;
     try {
       if(onRegister) {
         onRegister(session);
@@ -131,16 +234,14 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   let cardClasses = "p-5 rounded-2xl shadow-sm border-2 transition-all flex flex-col justify-between h-full relative group ";
   
   if (isCancelled) {
-    // Admin Cancelled State
     cardClasses += "bg-white dark:bg-[#111C30] border-red-200 dark:border-red-900/50 shadow-xs opacity-90";
   } else if (!isAdminView && isUnregistered) {
-    // Trainee Unregistered State - clean high contrast
     cardClasses += "bg-white dark:bg-[#132238] border-amber-400/80 dark:border-amber-500/60 shadow-sm";
   } else if (isCompleted) {
-    // Completed/Finalized State - crisp clean white with clear green border
     cardClasses += "bg-white dark:bg-[#132840] border-emerald-400 dark:border-emerald-600/60 shadow-sm";
+  } else if (isRegistrationClosed) {
+    cardClasses += "bg-white dark:bg-[#152642] border-amber-300 dark:border-amber-700 shadow-sm";
   } else {
-    // Default Active State - pure clean white background with crisp border
     cardClasses += "bg-white dark:bg-[#152642] border-slate-200 dark:border-slate-700 hover:border-[#002D62] dark:hover:border-blue-400 hover:shadow-md";
   }
 
@@ -170,7 +271,13 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             {isCompleted && (
               <span className="text-xs bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 px-2.5 py-1 rounded-lg font-black border border-emerald-300 dark:border-emerald-700 shadow-2xs flex items-center gap-1">
                 <CheckCircle size={13} />
-                {language === 'ar' ? 'مكتملة' : 'Completed'}
+                {language === 'ar' ? 'دورة منفذة ✓' : 'Completed ✓'}
+              </span>
+            )}
+            {!isCancelled && !isCompleted && isRegistrationClosed && (
+              <span className="text-xs bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 px-2.5 py-1 rounded-lg font-black border border-amber-300 dark:border-amber-700 shadow-2xs flex items-center gap-1">
+                <Ban size={13} />
+                {language === 'ar' ? 'التسجيل مغلق' : 'Reg Closed'}
               </span>
             )}
           </div>
@@ -215,6 +322,17 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               )}
             </div>
           </div>
+
+          {/* Registration Deadline Banner */}
+          {session.registrationDeadline && (
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-xs font-bold shadow-2xs mt-2">
+              <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span>
+                <span className="font-extrabold">{language === 'ar' ? '⏰ آخر موعد للتسجيل: ' : '⏰ Deadline: '}</span>
+                {formatDeadline(session.registrationDeadline)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -242,7 +360,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       )}
 
       {/* ============================================ */}
-      {/* INLINE CONFIRMATION BAR (replaces window.confirm) */}
+      {/* INLINE CONFIRMATION BAR */}
       {/* ============================================ */}
       {confirmAction && (
         <div className="mt-3 p-4 bg-red-50 dark:bg-red-950/60 border-2 border-red-300 dark:border-red-700 rounded-2xl flex flex-col gap-3 shadow-md">
@@ -312,7 +430,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               </button>
             ) : isCompleted ? (
               /* ==================================================== */
-              /* COMPLETED SESSIONS CONTROLS: Clean, focused & editable */
+              /* COMPLETED SESSIONS CONTROLS */
               /* ==================================================== */
               <>
                 <button
@@ -334,7 +452,6 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   <span>{language === 'ar' ? '📝 تعديل الدرجات والتقييم' : 'Edit Grades & Attendance'}</span>
                 </button>
 
-
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onPrintRegisterRequest) onPrintRegisterRequest(session); }}
@@ -345,9 +462,19 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   <span>{language === 'ar' ? 'طباعة الكشف (PDF)' : 'Print Register (PDF)'}</span>
                 </button>
 
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); doSendEvaluationAlert(); }}
+                  className="cursor-pointer bg-amber-50 dark:bg-amber-950/70 hover:bg-amber-100 dark:hover:bg-amber-900/80 text-amber-950 dark:text-amber-200 border border-amber-400 dark:border-amber-600 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105"
+                  title={language === 'ar' ? 'إرسال رابط تقييم الدورة لجميع المتدربين' : 'Send Evaluation Link'}
+                >
+                  <Star size={14} className="text-amber-500 fill-amber-400" />
+                  <span>{language === 'ar' ? 'إرسال رابط التقييم ⭐' : 'Send Evaluation ⭐'}</span>
+                </button>
+
                 <span className="bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200 text-xs font-black px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs">
                   <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400" />
-                  <span>{language === 'ar' ? 'مكتملة ومسجلة ✓' : 'Completed ✓'}</span>
+                  <span>{language === 'ar' ? 'دورة منفذة ومكتملة ✓' : 'Completed ✓'}</span>
                 </span>
               </>
             ) : (
@@ -355,6 +482,42 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               /* ACTIVE / UPCOMING SESSIONS CONTROLS                  */
               /* ==================================================== */
               <>
+                {/* Toggle Pause / Open Registration */}
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); doToggleRegistration(); }}
+                  className={`cursor-pointer text-xs px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105 ${
+                    isRegistrationClosed
+                      ? 'bg-amber-100 text-amber-900 hover:bg-amber-200 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600'
+                  }`}
+                  title={isRegistrationClosed ? (language === 'ar' ? 'فتح باب التسجيل' : 'Reopen Registration') : (language === 'ar' ? 'إيقاف استقبال طلبات التسجيل' : 'Pause Registration')}
+                >
+                  <Ban size={14} className={isRegistrationClosed ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500'} />
+                  <span>{isRegistrationClosed ? (language === 'ar' ? 'فتح التسجيل 🔓' : 'Open Reg 🔓') : (language === 'ar' ? 'إيقاف التسجيل 🔒' : 'Pause Reg 🔒')}</span>
+                </button>
+
+                {/* Mark as Completed */}
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); doMarkSessionCompleted(); }}
+                  className="cursor-pointer bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700/80 text-xs px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105"
+                  title={language === 'ar' ? 'تعليم الدورة كمنفذة ومكتملة' : 'Mark Session as Completed'}
+                >
+                  <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400" />
+                  <span>{language === 'ar' ? 'تم التنفيذ ✓' : 'Completed ✓'}</span>
+                </button>
+
+                <button 
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); doSendEvaluationAlert(); }}
+                  className="cursor-pointer bg-amber-50 dark:bg-amber-950/70 hover:bg-amber-100 dark:hover:bg-amber-900/80 text-amber-950 dark:text-amber-200 border border-amber-400 dark:border-amber-600 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105"
+                  title={language === 'ar' ? 'إرسال رابط تقييم الدورة لجميع المتدربين' : 'Send Evaluation Link'}
+                >
+                  <Star size={14} className="text-amber-500 fill-amber-400" />
+                  <span>{language === 'ar' ? 'إرسال رابط التقييم ⭐' : 'Send Evaluation ⭐'}</span>
+                </button>
+
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(onSendReminder) onSendReminder(session.id, 'Standard'); }}
@@ -418,15 +581,27 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   <QrCode size={14} className="text-[#002D62] dark:text-blue-400" />
                   <span>QR Code</span>
                 </button>
+                
+                {/* Manual Check-in with Smart Date-Range Safeguard */}
                 <button 
                   type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onManualAttendanceRequest) onManualAttendanceRequest(session); }}
-                  className="cursor-pointer bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700/80 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105"
-                  title={language === 'ar' ? 'تسجيل حضور استثنائي يدوي' : 'Manual Attendance Override'}
+                  disabled={!isDateActiveForAttendance}
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    e.stopPropagation(); 
+                    if (isDateActiveForAttendance && onManualAttendanceRequest) onManualAttendanceRequest(session); 
+                  }}
+                  className={`text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs ${
+                    isDateActiveForAttendance
+                      ? 'cursor-pointer bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700/80 hover:scale-105'
+                      : 'opacity-40 cursor-not-allowed bg-gray-100 dark:bg-slate-800 text-gray-500 border border-gray-200 dark:border-slate-700'
+                  }`}
+                  title={isDateActiveForAttendance ? (language === 'ar' ? 'تسجيل حضور استثنائي يدوي' : 'Manual Attendance') : (language === 'ar' ? 'متاح فقط أثناء أيام انعقاد الدورة الفعلية' : 'Available only during active session dates')}
                 >
-                  <UserCheck size={14} className="text-emerald-700 dark:text-emerald-400" />
+                  <UserCheck size={14} className={isDateActiveForAttendance ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-400'} />
                   <span>{language === 'ar' ? 'تحضير يدوي ✍️' : 'Manual Check-in ✍️'}</span>
                 </button>
+
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onPrintRegisterRequest) onPrintRegisterRequest(session); }}
@@ -436,14 +611,27 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   <FileText size={15} className="text-[#001D42]" />
                   <span className="text-[#001D42] font-black">{language === 'ar' ? 'طباعة الكشف' : 'Print Register'}</span>
                 </button>
+
+                {/* Finalize & Grade with Smart Date-Range Safeguard */}
                 <button 
                   type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onFinalizeRequest) onFinalizeRequest(session); }}
-                  className="cursor-pointer text-white text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-sm bg-blue-600 hover:bg-blue-700 border border-blue-400/40 hover:scale-105"
+                  disabled={!isDateActiveForAttendance}
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    e.stopPropagation(); 
+                    if (isDateActiveForAttendance && onFinalizeRequest) onFinalizeRequest(session); 
+                  }}
+                  className={`text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-sm ${
+                    isDateActiveForAttendance
+                      ? 'cursor-pointer text-white bg-blue-600 hover:bg-blue-700 border border-blue-400/40 hover:scale-105'
+                      : 'opacity-40 cursor-not-allowed bg-gray-200 dark:bg-slate-800 text-gray-500 border border-gray-300 dark:border-slate-700'
+                  }`}
+                  title={isDateActiveForAttendance ? (language === 'ar' ? 'إنهاء الجلسة وتسجيل الدرجات' : 'Finalize & Grade') : (language === 'ar' ? 'متاح فقط أثناء أيام انعقاد الدورة الفعلية' : 'Available only during active session dates')}
                 >
                   <CheckCircle size={15} />
                   <span>{language === 'ar' ? 'إنهاء وحضور' : 'Finalize & Grade'}</span>
                 </button>
+
                 <button 
                   type="button"
                   onClick={() => setConfirmAction('cancel')}
@@ -473,11 +661,68 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   <Ban size={14} className="text-red-600 dark:text-red-400 shrink-0" />
                   <span>{language === 'ar' ? 'تم إلغاء الجلسة من قبل الإدارة' : 'Session Cancelled by Admin'}</span>
                 </span>
+              ) : isCompleted ? (
+                /* Course is Completed for Trainee */
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 px-3.5 py-2 rounded-xl border-2 border-emerald-400 dark:border-emerald-600 shadow-xs flex items-center gap-1.5">
+                    <CheckCircle size={15} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>{language === 'ar' ? 'تم انتهاء وتنفيذ الدورة بنجاح ✅' : 'Course Completed ✅'}</span>
+                  </span>
+                  <a 
+                    href={session.feedbackLink || EVALUATION_FORM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="cursor-pointer bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-[#001D42] px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md hover:scale-105"
+                    title={language === 'ar' ? 'تقييم الدورة التدريبية' : 'Course Evaluation'}
+                  >
+                    <Star size={14} className="fill-[#001D42] text-[#001D42]" />
+                    <span>{language === 'ar' ? 'تقييم الدورة ⭐' : 'Course Evaluation ⭐'}</span>
+                  </a>
+                  {onRequestHandoutRevision && (
+                    <button
+                      type="button"
+                      onClick={() => onRequestHandoutRevision(session.courseTitle)}
+                      className="cursor-pointer bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105 shadow-xs"
+                      title={language === 'ar' ? 'اقتراح تعديل في المادة التدريبية (Handout)' : 'Suggest Handout Revision'}
+                    >
+                      <BookOpen size={14} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span>{language === 'ar' ? 'تعديلات المحتوى (Handout) 📝' : 'Handout Revision 📝'}</span>
+                    </button>
+                  )}
+                </div>
               ) : isRegistered ? (
                 <>
                   <span className="inline-flex items-center text-emerald-950 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-950/80 border-2 border-emerald-400 dark:border-emerald-600 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs">
                     <CheckCircle size={15} className="mr-1 rtl:ml-1 rtl:mr-0 text-emerald-700 dark:text-emerald-400" /> {t('registered')}
                   </span>
+
+                  {/* Course Evaluation link for Registered Trainees */}
+                  <a 
+                    href={session.feedbackLink || EVALUATION_FORM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="cursor-pointer bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-[#001D42] px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md hover:scale-105"
+                    title={language === 'ar' ? 'تقييم الدورة التدريبية' : 'Course Evaluation'}
+                  >
+                    <Star size={14} className="fill-[#001D42] text-[#001D42]" />
+                    <span>{language === 'ar' ? 'تقييم الدورة ⭐' : 'Course Evaluation ⭐'}</span>
+                  </a>
+                  
+                  {/* Handout revision button always available for registered/active trainee */}
+                  {onRequestHandoutRevision && (
+                    <button
+                      type="button"
+                      onClick={() => onRequestHandoutRevision(session.courseTitle)}
+                      className="cursor-pointer bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105 shadow-xs"
+                      title={language === 'ar' ? 'اقتراح تعديل في المادة التدريبية (Handout)' : 'Suggest Handout Revision'}
+                    >
+                      <BookOpen size={13} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span>{language === 'ar' ? 'تعديل المحتوى' : 'Revision'}</span>
+                    </button>
+                  )}
+
                   <button 
                     type="button"
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onScanQR) onScanQR(session); }}
@@ -494,19 +739,13 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                     <XCircle size={15} className="text-red-600 dark:text-red-400 shrink-0" />
                     <span>{t('cancelRegistration')}</span>
                   </button>
-                  {session.feedbackEnabled && session.feedbackLink && (
-                    <a 
-                      href={session.feedbackLink}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="cursor-pointer bg-emerald-600 text-white hover:bg-emerald-700 px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md hover:scale-105"
-                    >
-                      <MessageSquare size={15} />
-                      <span>{language === "ar" ? "تقييم الجلسة" : "Evaluate Session"}</span>
-                    </a>
-                  )}
                 </>
+              ) : isRegistrationLocked ? (
+                /* Registration is Closed / Deadline Passed for Trainee */
+                <span className="text-xs font-black bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 px-3.5 py-2 rounded-xl border-2 border-amber-300 dark:border-amber-700 shadow-xs flex items-center gap-1.5">
+                  <Ban size={14} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>{language === 'ar' ? 'تم إيقاف استقبال طلبات التسجيل' : 'Registration Closed'}</span>
+                </span>
               ) : isUnregistered ? (
                 <>
                   <span className="text-xs font-black self-center bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3.5 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 shadow-xs flex items-center gap-1.5">
@@ -526,9 +765,9 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 <button 
                   type="button"
                   onClick={doTraineeRegister}
-                  className="cursor-pointer bg-[#002D62] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-900 transition-colors flex items-center gap-1.5 shadow-sm"
+                  className="cursor-pointer bg-[#002D62] hover:bg-blue-900 text-white px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md hover:scale-105"
                 >
-                  <CheckCircle size={14} />
+                  <CheckCircle size={14} className="text-[#FFC000]" />
                   <span>{t('register')}</span>
                 </button>
               )}

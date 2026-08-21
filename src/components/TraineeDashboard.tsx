@@ -2,8 +2,9 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context';
 import { mockCourses } from '../data';
-import { ExternalLink, Check, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag, Megaphone, Radio, Volume2, Sparkles, QrCode, UserCircle, X } from 'lucide-react';
+import { ExternalLink, Check, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag, Megaphone, Radio, Volume2, Sparkles, QrCode, UserCircle, X, BookOpen, Star } from 'lucide-react';
 import { QRScannerModal } from './QRScannerModal';
+import { HandoutRevisionModal } from './HandoutRevisionModal';
 import { isSessionActiveNow, sendNativePushNotification } from '../utils/sessionTimeUtils';
 
 export const playNotificationSound = () => {
@@ -108,6 +109,7 @@ export const TraineeDashboard: React.FC = () => {
   const [showScannerModal, setShowScannerModal] = useState(false);
   const [activeSessionForScanner, setActiveSessionForScanner] = useState<UpcomingSession | null>(null);
   const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
+  const [handoutRevisionCourseTitle, setHandoutRevisionCourseTitle] = useState<string | null>(null);
 
   // Automatically fetch trainee's own records on demand (costs only 1-3 reads!)
   React.useEffect(() => {
@@ -625,25 +627,37 @@ export const TraineeDashboard: React.FC = () => {
                         </div>
 
                         <div 
-                          className="flex justify-between items-center pt-2 mt-2 border-t text-xs"
+                          className="flex justify-between items-center pt-2 mt-2 border-t text-xs flex-wrap gap-2"
                           style={{ borderColor: borderColor }}
                         >
                           <span style={{ color: isDark ? '#C8DBF6' : '#6b7280' }}>
                             {t('attendedDays')}: <strong style={{ color: textColor }}>{attendedDaysStr} / {totalDaysStr}</strong>
                           </span>
-                          <span 
-                            className="font-bold px-2 py-0.5 rounded-md text-[11px]"
-                            style={{
-                              backgroundColor: scoreVal >= 85 
-                                ? (isDark ? 'rgba(16, 185, 129, 0.25)' : '#dcfce7')
-                                : (isDark ? 'rgba(59, 130, 246, 0.25)' : '#dbeafe'),
-                              color: scoreVal >= 85 
-                                ? (isDark ? '#34d399' : '#15803d') 
-                                : (isDark ? '#85C0FF' : '#1d4ed8'),
-                            }}
-                          >
-                            {language === 'ar' ? 'النتيجة:' : 'Score:'} {scoreVal}%
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span 
+                              className="font-bold px-2 py-0.5 rounded-md text-[11px]"
+                              style={{
+                                backgroundColor: scoreVal >= 85 
+                                  ? (isDark ? 'rgba(16, 185, 129, 0.25)' : '#dcfce7')
+                                  : (isDark ? 'rgba(59, 130, 246, 0.25)' : '#dbeafe'),
+                                color: scoreVal >= 85 
+                                  ? (isDark ? '#34d399' : '#15803d') 
+                                  : (isDark ? '#85C0FF' : '#1d4ed8'),
+                              }}
+                            >
+                              {language === 'ar' ? 'النتيجة:' : 'Score:'} {scoreVal}%
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() => setHandoutRevisionCourseTitle(course?.title || r.courseName || '')}
+                              className="cursor-pointer bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 px-2 py-0.5 rounded-md text-[11px] font-bold transition-all flex items-center gap-1 shadow-2xs hover:scale-105"
+                              title={language === 'ar' ? 'اقتراح تعديل في مذكرة أو محتوى هذه الدورة' : 'Suggest Handout Revision for this Course'}
+                            >
+                              <BookOpen size={12} className="text-amber-600 dark:text-amber-400" />
+                              <span>{language === 'ar' ? 'تعديل المحتوى' : 'Revision'}</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -1012,6 +1026,22 @@ export const TraineeDashboard: React.FC = () => {
                               )}
                             </div>
                           )}
+
+                          {/* Action Button for Evaluation Forms / Links */}
+                          {(notif.link || (notif.message && notif.message.includes('forms')) || (notif.title && (notif.title.includes('تقييم') || notif.title.includes('Evaluation')))) && (
+                            <div className="pt-2">
+                              <a 
+                                href={notif.link || (notif.message?.match(/https?:\/\/[^\s]+/)?.[0]) || "https://forms.cloud.microsoft/r/cj3ByTQCRS"}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-2 bg-[#FFC000] hover:bg-yellow-500 text-[#001D42] font-black text-xs px-4 py-2 rounded-xl transition-all shadow-md hover:scale-105"
+                              >
+                                <Star size={14} className="fill-[#001D42]" />
+                                <span>{language === 'ar' ? '⭐ الدخول لتقييم الدورة (Course Evaluation) ↗' : '⭐ Open Evaluation Form (MS Forms) ↗'}</span>
+                              </a>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1045,6 +1075,7 @@ export const TraineeDashboard: React.FC = () => {
                   registeredCourseIds={registeredCourseIds}
                   onRegister={handleRegisterSession}
                   onUnregister={handleUnregisterFromCard}
+                  onRequestHandoutRevision={(title) => setHandoutRevisionCourseTitle(title)}
                   onScanQR={(session) => {
                     setActiveSessionForScanner(session);
                     setShowScannerModal(true);
@@ -1100,12 +1131,14 @@ export const TraineeDashboard: React.FC = () => {
               <h2 className="text-xl font-semibold mb-2" style={{ color: textColor }}>{t('courseEvaluation')}</h2>
               <p className="text-sm mb-6" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>{t('evaluationDesc')}</p>
               <a 
-                href="#" 
-                onClick={(e) => { e.preventDefault(); alert('Redirecting to MS Forms...'); }}
-                className="inline-flex items-center justify-center font-bold py-3 px-6 rounded-lg transition-colors"
-                style={{ backgroundColor: isDark ? '#3b82f6' : '#002D62', color: '#ffffff' }}
+                href="https://forms.cloud.microsoft/r/cj3ByTQCRS" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center font-black py-3 px-6 rounded-xl transition-all shadow-md hover:scale-105"
+                style={{ backgroundColor: '#002D62', color: '#ffffff' }}
               >
-                {t('goToForm')} <ExternalLink size={18} className="ml-2 rtl:mr-2 rtl:ml-0" />
+                <span>{language === 'ar' ? '⭐ الدخول لنموذج التقييم (MS Forms)' : '⭐ Fill out Evaluation (MS Forms)'}</span>
+                <ExternalLink size={18} className="ml-2 rtl:mr-2 rtl:ml-0 text-[#FFC000]" />
               </a>
             </section>
           </div>
@@ -1279,6 +1312,14 @@ export const TraineeDashboard: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Handout Revision Modal */}
+        {handoutRevisionCourseTitle !== null && (
+          <HandoutRevisionModal
+            initialCourseTitle={handoutRevisionCourseTitle}
+            onClose={() => setHandoutRevisionCourseTitle(null)}
+          />
+        )}
       </div>
     </div>
   );

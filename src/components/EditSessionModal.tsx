@@ -23,6 +23,8 @@ export const EditSessionModal: React.FC<EditSessionModalProps> = ({ session, onC
   const [sessionNumber, setSessionNumber] = useState(session.sessionNumber || '');
   const [targetParticipants, setTargetParticipants] = useState(session.targetParticipants || 'engineers');
   const [feedbackLink, setFeedbackLink] = useState(session.feedbackLink || '');
+  const [registrationDeadline, setRegistrationDeadline] = useState(session.registrationDeadline || '');
+  const [isRegistrationClosed, setIsRegistrationClosed] = useState(!!session.isRegistrationClosed);
   const [ccEmails, setCcEmails] = useState((session.additionalNotificationEmails || []).join('; '));
   const [sendTargetedNotification, setSendTargetedNotification] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -66,6 +68,8 @@ export const EditSessionModal: React.FC<EditSessionModalProps> = ({ session, onC
         sessionNumber,
         targetParticipants,
         feedbackLink: feedbackLink.trim(),
+        registrationDeadline: registrationDeadline || undefined,
+        isRegistrationClosed,
         additionalNotificationEmails: cleanCcList
       };
 
@@ -313,6 +317,41 @@ export const EditSessionModal: React.FC<EditSessionModalProps> = ({ session, onC
               className="w-full border border-gray-300 dark:border-slate-600 rounded-xl px-3.5 py-2 bg-white dark:bg-[#091426] text-gray-900 dark:text-white font-mono text-xs outline-none focus:ring-2 focus:ring-blue-500"
               dir="ltr"
             />
+          </div>
+
+          {/* REGISTRATION DEADLINE & STATUS CONTROLS */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/20">
+            <div>
+              <label className="block text-xs font-bold text-amber-900 dark:text-amber-200 mb-1.5 flex items-center justify-between">
+                <span>⏰ {language === 'ar' ? 'آخر موعد للتسجيل (تاريخ وساعة)' : 'Registration Deadline'}</span>
+                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-normal">
+                  {language === 'ar' ? '(اختياري)' : '(Optional)'}
+                </span>
+              </label>
+              <input 
+                type="datetime-local" 
+                value={registrationDeadline} 
+                onChange={(e) => setRegistrationDeadline(e.target.value)}
+                className="w-full border border-amber-300 dark:border-amber-800 rounded-xl px-3.5 py-2 bg-white dark:bg-[#091426] text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 text-xs sm:text-sm"
+              />
+            </div>
+
+            <div className="flex flex-col justify-center">
+              <label className="block text-xs font-bold text-gray-700 dark:text-gray-200 mb-1.5">
+                🔒 {language === 'ar' ? 'حالة استقبال طلبات التسجيل' : 'Registration Status'}
+              </label>
+              <button
+                type="button"
+                onClick={() => setIsRegistrationClosed(!isRegistrationClosed)}
+                className={`w-full py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 border cursor-pointer ${
+                  isRegistrationClosed 
+                    ? 'bg-red-100 text-red-800 border-red-300 dark:bg-red-950/60 dark:text-red-300 dark:border-red-800 shadow-xs' 
+                    : 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 shadow-xs'
+                }`}
+              >
+                <span>{isRegistrationClosed ? (language === 'ar' ? '🚫 التسجيل مغلق حالياً' : '🚫 Registration Closed') : (language === 'ar' ? '✅ التسجيل مفتوح ومتاح' : '✅ Registration Open')}</span>
+              </button>
+            </div>
           </div>
 
           <div>

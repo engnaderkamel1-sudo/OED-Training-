@@ -199,6 +199,8 @@ export const AdminDashboard: React.FC = () => {
   const [startTime, setStartTime] = useState("09:00");
   const [targetParticipants, setTargetParticipants] = useState("");
   const [feedbackLink, setFeedbackLink] = useState("");
+  const [registrationDeadline, setRegistrationDeadline] = useState("");
+  const [isRegistrationClosed, setIsRegistrationClosed] = useState(false);
 
   const DEFAULT_TO_EMAILS = `EQ-Maintenance Engineers-OC <EQ-MaintenanceEngineers-OC@orascom.com>; EQ-Maintenance Engineers-OFC <EQ-Maintenance-Engineers-OFC@orascom.com>; EQ-Maintenance Engineers-ORC <EQ-Maintenance-Engineers-ORC@orascom.com>`;
 
@@ -1277,6 +1279,8 @@ Please log in to register for this session through the OED-TTMS Application.
           targetParticipants, 
           feedbackLink: feedbackLink.trim() || undefined, 
           feedbackEnabled: false,
+          registrationDeadline: registrationDeadline.trim() || undefined,
+          isRegistrationClosed: isRegistrationClosed,
           additionalNotificationEmails: ccListArray
         });
         alert(t("sessionUpdated"));
@@ -1296,6 +1300,8 @@ Please log in to register for this session through the OED-TTMS Application.
         targetParticipants, 
         feedbackLink: feedbackLink.trim() || undefined, 
         feedbackEnabled: false, 
+        registrationDeadline: registrationDeadline.trim() || undefined,
+        isRegistrationClosed: isRegistrationClosed,
         registeredUsers: [], 
         createdAt: new Date().toISOString(),
         additionalNotificationEmails: ccListArray
@@ -1426,6 +1432,28 @@ Content-Type: text/html; charset="utf-8"
     
     playNotificationSound();
 
+    const formatDeadlineDisplay = (dStr?: string) => {
+      if (!dStr) return '';
+      try {
+        const d = new Date(dStr);
+        return d.toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+      } catch {
+        return dStr;
+      }
+    };
+
+    const deadlineInfo = session.registrationDeadline 
+      ? (language === 'ar' ? ` - آخر موعد للتسجيل: ${formatDeadlineDisplay(session.registrationDeadline)}` : ` - Registration Deadline: ${formatDeadlineDisplay(session.registrationDeadline)}`)
+      : '';
+
     if (reminderType === 'Attendance') {
       sendNativePushNotification(
         language === 'ar' ? '🟢 تذكير تسجيل الحضور اليوم' : '🟢 Daily Attendance Reminder',
@@ -1437,11 +1465,43 @@ Content-Type: text/html; charset="utf-8"
       );
       setReminderToast(language === 'ar' ? `تم إرسال تنبيه تسجيل الحضور لدورة [${session.courseTitle}] بنجاح! 🔔` : `Attendance reminder sent for [${session.courseTitle}]! 🔔`);
     } else {
+      const isFinal = reminderType === 'Final';
+      const alertTitle = isFinal
+        ? (language === 'ar' ? `🚨 تذكير نهائي بالتسجيل: ${session.courseTitle}` : `🚨 Final Registration Reminder: ${session.courseTitle}`)
+        : (language === 'ar' ? `⏰ تذكير بموعد التسجيل: ${session.courseTitle}` : `⏰ Registration Reminder: ${session.courseTitle}`);
+      
+      const alertMsg = isFinal
+        ? (language === 'ar' 
+            ? `تنبيه نهائي: سارع بالتسجيل في دورة [${session.courseTitle}] المقررة من ${session.startDate} إلى ${session.endDate}.${deadlineInfo}` 
+            : `Final call to register for [${session.courseTitle}] (${session.startDate} - ${session.endDate}).${deadlineInfo}`)
+        : (language === 'ar'
+            ? `تذكير: فتح باب التسجيل لدورة [${session.courseTitle}] (${session.startDate} - ${session.endDate}).${deadlineInfo}`
+            : `Reminder: Registration open for [${session.courseTitle}] (${session.startDate} - ${session.endDate}).${deadlineInfo}`);
+
       const validTokens = users.filter(u => u.fcmToken).map(u => u.fcmToken as string);
       if (validTokens.length > 0) {
-        sendPushNotification(language === "ar" ? "تنبيه دورة" : "Course Alert", `Reminder for ${session.courseTitle}`, validTokens);
+        sendPushNotification(alertTitle, alertMsg, validTokens);
       }
-      setReminderToast(`Alert sent for [${session.courseTitle}]!`);
+      sendNativePushNotification(alertTitle, { body: alertMsg });
+
+      // Save announcement to Firestore so it shows in notifications feed
+      try {
+        addAnnouncement({
+          id: `ann_rem_${Date.now()}`,
+          sessionId: session.id,
+          courseName: session.courseTitle,
+          title: alertTitle,
+          message: alertMsg,
+          date: new Date().toISOString(),
+          author: 'Admin',
+          isGlobal: true,
+          targetAudience: session.targetParticipants
+        });
+      } catch (annErr) {
+        console.error(annErr);
+      }
+
+      setReminderToast(alertTitle);
     }
 
     updateUpcomingSession(updatedSession);
@@ -2774,6 +2834,45 @@ Content-Type: text/html; charset="utf-8"
                           </select>
                         </div>
 
+                        {/* Registration Deadline & Registration Pause Controls */}
+                        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl border border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20">
+                          <div>
+                            <label className="block text-xs font-bold text-amber-900 dark:text-amber-300 mb-1">
+                              ⏰ {language === 'ar' ? 'آخر موعد للتسجيل (يوم وساعة)' : 'Registration Deadline (Date & Time)'}
+                            </label>
+                            <input 
+                              type="datetime-local" 
+                              value={registrationDeadline} 
+                              onChange={(e) => setRegistrationDeadline(e.target.value)} 
+                              className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-[#002D62] outline-none font-bold" 
+                              style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                            />
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 block">
+                              {language === 'ar' ? 'سيتم إيقاف التسجيل تلقائياً بعد حلول هذا الموعد وإظهاره في التنبيهات' : 'Registration locks automatically after this date & time'}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-col justify-between">
+                            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                              🔒 {language === 'ar' ? 'حالة إيقاف التسجيل اليدوي' : 'Manual Registration Lock'}
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setIsRegistrationClosed(!isRegistrationClosed)}
+                              className={`w-full py-2 px-3 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer border shadow-xs ${
+                                isRegistrationClosed
+                                  ? 'bg-red-600 text-white border-red-700 hover:bg-red-700'
+                                  : 'bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-700'
+                              }`}
+                            >
+                              <span>{isRegistrationClosed ? '🔒 التسجيل مغلق حالياً' : '🔓 التسجيل مفتوح ومتاح للمتدربين'}</span>
+                            </button>
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 block">
+                              {language === 'ar' ? 'يمكنك إيقاف أو فتح التسجيل في أي وقت دون إلغاء الدورة' : 'Toggle registration without cancelling the course'}
+                            </span>
+                          </div>
+                        </div>
+
                         {/* TO Email Recipients Section */}
                         <div 
                           className="md:col-span-2 p-4 rounded-xl border space-y-2 transition-colors"
@@ -3841,7 +3940,7 @@ Content-Type: text/html; charset="utf-8"
           session={finalizingSession} 
           registeredUsers={users.filter(u => finalizingSession.registeredUsers?.includes(u.hrCode) || finalizingSession.registeredUsers?.includes(u.id))} 
           onClose={() => setFinalizingSession(null)} 
-          onFinalize={handleSaveFinalizedGrades} 
+          onFinalize={handleFinalizeSession} 
         />
       )}
 

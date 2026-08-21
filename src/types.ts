@@ -106,6 +106,8 @@ export interface UpcomingSession {
   managerEmails?: string[];
   isDeleted?: boolean;
   status?: "Active" | "Completed" | "Cancelled";
+  isRegistrationClosed?: boolean; // إيقاف استقبال طلبات التسجيل
+  registrationDeadline?: string; // آخر موعد للتسجيل (تاريخ وساعة)
   reminderLog?: ReminderLogItem[];
   feedbackLink?: string;
   feedbackEnabled?: boolean;
@@ -170,4 +172,28 @@ export interface Suggestion {
   adminMessage?: string;
   adminMessageAt?: string;
   updatedAt?: string;
+}
+
+// --- منظومة مقترحات تعديل المحتوى التدريبي (Handouts) ---
+export type HandoutRevisionStatus = 'pending' | 'reviewing' | 'applied' | 'rejected';
+export type HandoutIssueType = 'typo' | 'technical_update' | 'missing_info' | 'diagram_enhancement' | 'other';
+
+export interface HandoutRevision {
+  id: string;
+  userId: string;
+  userName: string;
+  hrCode: string;
+  department: string;
+  courseId?: string;
+  courseTitle: string;
+  pageNumber?: string;
+  topicOrSection?: string;
+  issueType: HandoutIssueType;
+  description: string;
+  proposedCorrection: string;
+  status: HandoutRevisionStatus;
+  createdAt: string;
+  adminFeedback?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
 }

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { Language, User, Role, Course, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement, LoginLog, Suggestion } from './types';
+import { Language, User, Role, Course, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement, LoginLog, Suggestion, HandoutRevision } from './types';
 import { translations } from './i18n';
 import { collection, onSnapshot, doc, setDoc, writeBatch, deleteDoc, getDocs, query, where, limit } from 'firebase/firestore';
 import { db } from './firebase';
@@ -12,7 +12,7 @@ export const generateUUID = (): string => {
   return 'uuid_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
 };
 
-export type ViewState = 'dashboard' | 'profile' | 'coursesCatalog' | 'suggestions' | 'activityLogs';
+export type ViewState = 'dashboard' | 'profile' | 'coursesCatalog' | 'suggestions' | 'activityLogs' | 'handoutRevisions';
 
 interface AppContextType {
   language: Language;
@@ -52,6 +52,10 @@ interface AppContextType {
   suggestions: Suggestion[];
   addSuggestion: (s: Suggestion) => Promise<void>;
   updateSuggestion: (id: string, updates: Partial<Suggestion>) => Promise<void>;
+  handoutRevisions: HandoutRevision[];
+  addHandoutRevision: (revision: Omit<HandoutRevision, 'id' | 'createdAt' | 'status'>) => Promise<void>;
+  updateHandoutRevision: (id: string, updates: Partial<HandoutRevision>) => Promise<void>;
+  deleteHandoutRevision: (id: string) => Promise<void>;
   debugRole: Role;
   setDebugRole: (role: Role) => void;
   t: (key: keyof typeof translations['en']) => string;
@@ -161,6 +165,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [announcements, setAnnouncementsState] = useState<SystemAnnouncement[]>([]);
   const [loginLogs, setLoginLogsState] = useState<LoginLog[]>([]);
   const [suggestions, setSuggestionsState] = useState<Suggestion[]>([]);
+  const [handoutRevisions, setHandoutRevisionsState] = useState<HandoutRevision[]>([]);
   const [firebaseCourses, setFirebaseCoursesState] = useState<Course[]>([]);
 
   const [debugRole, setDebugRole] = useState<Role>(null);
@@ -255,6 +260,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.error("Firebase Suggestions Error:", error);
     });
 
+    const unsubRevisions = onSnapshot(collection(db, "handoutRevisions"), (snapshot) => {
+      const revs: HandoutRevision[] = [];
+      snapshot.forEach((d) => revs.push(d.data() as HandoutRevision));
+      revs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setHandoutRevisionsState(revs);
+    }, (error) => {
+      checkQuotaError(error);
+      console.error("Firebase HandoutRevisions Error:", error);
+    });
+
     const unsubVersion = onSnapshot(doc(db, "systemSettings", "appConfig"), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -311,6 +326,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       unsubSessions();
       unsubAnnouncements();
       unsubSuggestions();
+      unsubRevisions();
       unsubVersion();
       unsubKPIs();
     };
@@ -682,6 +698,39 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await setDoc(ref, clean, { merge: true });
   };
 
+  const addHandoutRevision = async (revData: Omit<HandoutRevision, 'id' | 'createdAt' | 'status'>) => {
+    const id = `rev_${generateUUID().substring(0, 10)}`;
+    const fullRev: HandoutRevision = {
+      ...revData,
+      id,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    const cleanRev = Object.fromEntries(Object.entries(fullRev).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, "handoutRevisions", id), cleanRev);
+
+    // Instant Notification for Admin
+    const adminAnnouncement: SystemAnnouncement = {
+      id: `ann_${id}`,
+      title: `📝 مقترح تعديل محتوى [${revData.courseTitle}]`,
+      message: `قام المتدرب ${revData.userName} (كود: ${revData.hrCode}) بتقديم مقترح تعديل في المادة التدريبية لدورة [${revData.courseTitle}].`,
+      date: new Date().toISOString(),
+      author: revData.userName,
+      isGlobal: false,
+      targetAudience: 'all'
+    };
+    await setDoc(doc(db, "announcements", adminAnnouncement.id), adminAnnouncement);
+  };
+
+  const updateHandoutRevision = async (id: string, updates: Partial<HandoutRevision>) => {
+    const cleanUpdates = Object.fromEntries(Object.entries(updates).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, "handoutRevisions", id), cleanUpdates, { merge: true });
+  };
+
+  const deleteHandoutRevision = async (id: string) => {
+    await deleteDoc(doc(db, "handoutRevisions", id));
+  };
+
   const addAttendanceRecord = async (sessionId: string, hrCode: string) => {
     const session = upcomingSessions.find(s => s.id === sessionId);
     if (!session) return;
@@ -735,7 +784,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!courseMap.has(titleKey)) {
           const durationVal = r.raw?.['Course Duration'] || r.duration || '1';
           courseMap.set(titleKey, {
-            id: `course_${generateUUID().substring(0, 8)}`,
+            id: `derived_${generateUUID().substring(0, 8)}`,
             title: r.courseName.trim(),
             duration: `${durationVal} ${String(durationVal).includes('day') || String(durationVal).includes('Day') ? '' : 'Days'}`,
             durationDays: String(durationVal).replace(/[^0-9]/g, '') || '1',
@@ -808,6 +857,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       announcements, addAnnouncement, deleteAnnouncement,
       loginLogs, addLoginLog,
       suggestions, addSuggestion, updateSuggestion,
+      handoutRevisions, addHandoutRevision, updateHandoutRevision, deleteHandoutRevision,
       debugRole, setDebugRole, 
       t, 
       isLoading,

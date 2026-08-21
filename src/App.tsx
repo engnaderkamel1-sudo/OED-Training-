@@ -15,6 +15,7 @@ import { Sidebar } from './components/Sidebar';
 import { ProfilePage } from './components/ProfilePage';
 import { CoursesPage } from './components/CoursesPage';
 import { SuggestionsPage } from './components/SuggestionsPage';
+import { HandoutRevisionsPage } from './components/HandoutRevisionsPage';
 import { ActivityLogsView } from './components/ActivityLogsView'; 
 import { Loader2 } from 'lucide-react';
 import { auth, db, messaging } from './firebase';
@@ -293,6 +294,7 @@ const AppContent: React.FC = () => {
                 {currentView === 'profile' && <ProfilePage />}
                 {user.role === 'admin' && currentView === 'coursesCatalog' && <CoursesPage />}
                 {currentView === 'suggestions' && <SuggestionsPage />}
+                {currentView === 'handoutRevisions' && <HandoutRevisionsPage />}
                 
                 {user.role === 'admin' && currentView === 'activityLogs' && (
                   <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
@@ -300,8 +302,8 @@ const AppContent: React.FC = () => {
                   </div>
                 )}
 
-                {user.role === 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <AdminDashboard />}
-                {user.role !== 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <TraineeDashboard />}
+                {user.role === 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && currentView !== 'handoutRevisions' && <AdminDashboard />}
+                {user.role !== 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && currentView !== 'handoutRevisions' && <TraineeDashboard />}
               </>
             )}
           </motion.div>

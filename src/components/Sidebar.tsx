@@ -88,22 +88,25 @@ export const Sidebar: React.FC = () => {
     setExpandedMenus(prev => ({ ...prev, [menuId]: !prev[menuId] }));
   };
 
-  const { users } = useAppContext();
+  const { users, handoutRevisions } = useAppContext();
 
   const pendingUsersCount = (users || []).filter(u => u && u.status === 'pending' && !u.isShadowAccount && !String(u.id).startsWith('derived_')).length;
   const pendingUpdatesCount = (users || []).filter(u => u && u.pendingUpdates && Object.keys(u.pendingUpdates).length > 0).length;
   const totalUserRequestsBadge = pendingUsersCount + pendingUpdatesCount;
+  const pendingRevisionsCount = (handoutRevisions || []).filter(r => r.status === 'pending').length;
 
   const getTraineeLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'newCourses', label: 'Available Courses', icon: CalendarDays },
     { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'handoutRevisions', label: language === 'ar' ? 'تعديلات المحتوى (Handouts)' : 'Handout Revisions', icon: BookOpen },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
   ];
 
   const getManagerLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'userManagement', label: 'User Requests', icon: Users, badge: totalUserRequestsBadge },
+    { id: 'handoutRevisions', label: language === 'ar' ? 'تعديلات المحتوى (Handouts)' : 'Handout Revisions', icon: BookOpen, badge: pendingRevisionsCount },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
   ];
 
@@ -112,6 +115,7 @@ export const Sidebar: React.FC = () => {
     { id: 'coursesCatalog', label: 'Courses Catalog', icon: BookOpen },
     { id: 'userManagement', label: 'User Requests', icon: Users, badge: totalUserRequestsBadge },
     { id: 'analytics', label: 'Analytics', icon: BarChart },
+    { id: 'handoutRevisions', label: language === 'ar' ? 'تعديلات المحتوى (Handouts)' : 'Handout Revisions', icon: BookOpen, badge: pendingRevisionsCount },
     { 
       id: 'tools_parent', 
       label: 'Training Management', 
