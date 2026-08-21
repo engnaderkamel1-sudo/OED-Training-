@@ -144,27 +144,14 @@ export const TraineeDashboard: React.FC = () => {
     });
   }, [activeUpcomingSessions, user?.hrCode, registeredCourseIds]);
 
-  // Play chime and show instant banner when a new announcement arrives in real-time
+  // Play chime when a new announcement arrives in real-time
   const prevAnnouncementsCount = React.useRef(announcements?.length || 0);
   useEffect(() => {
     if (announcements && announcements.length > prevAnnouncementsCount.current) {
       playNotificationSound();
-      const latest = announcements[0];
-      if (latest) {
-        const isDirectTarget = (latest as any).targetHrCodes && (latest as any).targetHrCodes.includes(user?.hrCode || '');
-        const isReg = latest.sessionId && (activeUpcomingSessions.some(s => s.id === latest.sessionId && s.registeredUsers?.includes(user?.hrCode || '')) || registeredCourseIds.includes(latest.sessionId));
-        
-        if (latest.isGlobal || isDirectTarget || isReg) {
-          const toastText = language === 'ar'
-            ? `🔔 ${latest.title || 'تنبيه جديد'}: ${latest.message}`
-            : `🔔 ${latest.title || 'New Alert'}: ${latest.message}`;
-          setActionToast({ message: toastText, type: 'info' });
-          setTimeout(() => setActionToast(null), 8000);
-        }
-      }
     }
     prevAnnouncementsCount.current = announcements?.length || 0;
-  }, [announcements, language, user?.hrCode, activeUpcomingSessions, registeredCourseIds]);
+  }, [announcements]);
 
   // Trigger Native Push Notification on Trainee Mobile
   useEffect(() => {

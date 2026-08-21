@@ -177,31 +177,31 @@ export const SessionCard: React.FC<SessionCardProps> = ({
         </div>
 
         {/* Session Details with High Contrast */}
-        <div className="space-y-2 text-xs sm:text-sm text-gray-800 dark:text-gray-100 font-medium">
+        <div className="space-y-2.5 text-xs sm:text-sm text-slate-900 dark:text-slate-100 font-bold">
           <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-blue-600 dark:text-[#FFC000] shrink-0" />
+            <Calendar className="h-4 w-4 text-[#002D62] dark:text-[#FFC000] shrink-0" />
             <span>
               {session.startDate === session.endDate || !session.endDate
                 ? <DataField>{session.startDate}</DataField>
-                : <><DataField>{session.startDate}</DataField> <span className="text-gray-500 dark:text-gray-400 text-xs mx-1 font-normal">{language === 'ar' ? 'إلى' : 'to'}</span> <DataField>{session.endDate}</DataField></>
+                : <><DataField>{session.startDate}</DataField> <span className="text-slate-500 dark:text-slate-400 text-xs mx-1 font-semibold">{language === 'ar' ? 'إلى' : 'to'}</span> <DataField>{session.endDate}</DataField></>
               }
             </span>
           </div>
           
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-blue-600 dark:text-[#FFC000] shrink-0" />
+            <Clock className="h-4 w-4 text-[#002D62] dark:text-[#FFC000] shrink-0" />
             <span><DataField>{session.startTime}</DataField></span>
           </div>
           
           <div className="flex items-start gap-2">
-            <MapPin className="h-4 w-4 text-blue-600 dark:text-[#FFC000] shrink-0 mt-0.5" />
-            <span className="leading-snug"><DataField>{session.location}</DataField></span>
+            <MapPin className="h-4 w-4 text-[#002D62] dark:text-[#FFC000] shrink-0 mt-0.5" />
+            <span className="leading-snug text-slate-900 dark:text-white"><DataField>{session.location}</DataField></span>
           </div>
 
           <div className="flex items-start gap-2">
-            <Users className="h-4 w-4 text-blue-600 dark:text-[#FFC000] shrink-0 mt-0.5" />
+            <Users className="h-4 w-4 text-[#002D62] dark:text-[#FFC000] shrink-0 mt-0.5" />
             <div className="flex flex-col">
-              <span className="leading-snug font-semibold"><DataField>{session.targetParticipants}</DataField></span>
+              <span className="leading-snug text-slate-900 dark:text-white"><DataField>{session.targetParticipants}</DataField></span>
               {isAdminView && (
                 <button
                   type="button"
@@ -461,37 +461,37 @@ export const SessionCard: React.FC<SessionCardProps> = ({
         /* ==================================== */
           <div className="flex items-center justify-between flex-wrap gap-2">
             {!isAdminView && (
-              <p className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
-                <Users size={13} />
+              <p className="text-xs text-emerald-950 dark:text-emerald-200 font-black flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 shadow-2xs">
+                <Users size={14} className="text-emerald-700 dark:text-emerald-400 shrink-0" />
                 <span>{attendeesCount} {language === 'ar' ? 'متدربين مسجلين' : 'registered attendees'}</span>
               </p>
             )}
             
             <div className="flex gap-2 w-full justify-end items-center flex-wrap">
               {isCancelled ? (
-                <span className="text-xs text-red-600 dark:text-red-400 font-semibold italic flex items-center gap-1">
-                  <Ban size={14} />
+                <span className="text-xs text-red-900 dark:text-red-200 bg-red-100 dark:bg-red-950/80 border-2 border-red-300 dark:border-red-800 px-3 py-1.5 rounded-xl font-black flex items-center gap-1.5 shadow-xs">
+                  <Ban size={14} className="text-red-600 dark:text-red-400 shrink-0" />
                   <span>{language === 'ar' ? 'تم إلغاء الجلسة من قبل الإدارة' : 'Session Cancelled by Admin'}</span>
                 </span>
               ) : isRegistered ? (
                 <>
-                  <span className="inline-flex items-center text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800/40 px-3 py-1 rounded-full text-xs font-bold">
-                    <CheckCircle size={15} className="mr-1 rtl:ml-1 rtl:mr-0 text-green-600 dark:text-green-400" /> {t('registered')}
+                  <span className="inline-flex items-center text-emerald-950 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-950/80 border-2 border-emerald-400 dark:border-emerald-600 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs">
+                    <CheckCircle size={15} className="mr-1 rtl:ml-1 rtl:mr-0 text-emerald-700 dark:text-emerald-400" /> {t('registered')}
                   </span>
                   <button 
                     type="button"
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onScanQR) onScanQR(session); }}
-                    className="cursor-pointer bg-[#002D62] hover:bg-blue-900 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all shadow-xs hover:scale-105 active:scale-95"
+                    className="cursor-pointer bg-[#002D62] hover:bg-blue-900 text-white font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md hover:scale-105 active:scale-95"
                   >
-                    <ScanLine size={15} />
+                    <ScanLine size={15} className="text-[#FFC000]" />
                     <span>{language === "ar" ? "مسح الحضور" : "Scan Attendance"}</span>
                   </button>
                   <button 
                     type="button"
                     onClick={() => setConfirmAction('unregister')}
-                    className="cursor-pointer bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800/40 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                    className="cursor-pointer bg-red-50 hover:bg-red-100 dark:bg-red-950/70 text-red-900 dark:text-red-200 border-2 border-red-300 dark:border-red-700 px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105 shadow-xs"
                   >
-                    <XCircle size={15} />
+                    <XCircle size={15} className="text-red-600 dark:text-red-400 shrink-0" />
                     <span>{t('cancelRegistration')}</span>
                   </button>
                   {session.feedbackEnabled && session.feedbackLink && (
@@ -500,7 +500,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="cursor-pointer bg-green-600 text-white hover:bg-green-700 px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors shadow-sm"
+                      className="cursor-pointer bg-emerald-600 text-white hover:bg-emerald-700 px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md hover:scale-105"
                     >
                       <MessageSquare size={15} />
                       <span>{language === "ar" ? "تقييم الجلسة" : "Evaluate Session"}</span>
@@ -509,17 +509,17 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 </>
               ) : isUnregistered ? (
                 <>
-                  <span className="text-xs font-black self-center bg-amber-500/20 text-amber-900 dark:text-amber-200 px-3.5 py-1.5 rounded-xl border border-amber-400/50 dark:border-amber-400/60 shadow-xs flex items-center gap-1.5">
-                    <XCircle size={14} className="text-amber-700 dark:text-amber-300 shrink-0" />
+                  <span className="text-xs font-black self-center bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3.5 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 shadow-xs flex items-center gap-1.5">
+                    <XCircle size={15} className="text-slate-600 dark:text-slate-400 shrink-0" />
                     <span>{language === 'ar' ? 'لقد قمت بإلغاء تسجيلك' : (t('youCancelledRegistration') || "You Cancelled Your Registration")}</span>
                   </span>
                   <button 
                     type="button"
                     onClick={doTraineeRegister}
-                    className="cursor-pointer bg-[#FFC000] hover:bg-yellow-400 text-[#001D42] px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-sm hover:scale-105"
+                    className="cursor-pointer bg-[#FFC000] hover:bg-yellow-400 text-[#001D42] px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md hover:scale-105"
                   >
-                    <CheckCircle size={14} className="text-[#001D42]" />
-                    <span>{t('reRegister')}</span>
+                    <RotateCcw size={15} className="text-[#001D42]" />
+                    <span>{language === 'ar' ? 'إعادة التسجيل' : 'Re-Register'}</span>
                   </button>
                 </>
               ) : (

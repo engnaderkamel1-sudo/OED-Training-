@@ -114,6 +114,15 @@ export const TopNav: React.FC = () => {
                 </p>
               </div>
 
+              {/* Integrated Orascom Logo (No Overlap) */}
+              <div className="hidden sm:flex items-center ml-3 rtl:ml-0 rtl:mr-3 pl-3 rtl:pl-0 rtl:pr-3 border-l rtl:border-l-0 rtl:border-r border-white/20">
+                <img 
+                  src="/orascom-logo.png" 
+                  alt="Orascom Construction OED" 
+                  className="h-7 w-auto object-contain brightness-0 invert opacity-90"
+                />
+              </div>
+
             </div>
 
             {/* المنتصف - الترحيب باليوزر */}
@@ -308,21 +317,6 @@ export const TopNav: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* اللوجو المتدلي */}
-        <div className="absolute top-full left-[1.5rem] sm:left-[3.5rem] rtl:left-auto rtl:right-[1.5rem] rtl:sm:right-[3.5rem] z-40">
-          <div 
-            className="rounded-b-lg border-x border-b shadow-lg px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-center -mt-[1px]"
-            style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}
-          >
-            <img 
-              src="/orascom-logo.png" 
-              alt="Orascom Construction OED" 
-              className="h-6 sm:h-9 w-auto object-contain"
-            />
-          </div>
-        </div>
-
       </nav>
 
       <AnimatePresence>

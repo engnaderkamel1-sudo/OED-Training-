@@ -5,9 +5,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment, collection, getDocs, writeBatch } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { EmailAuthProvider, reauthenticateWithCredential, signInWithEmailAndPassword } from 'firebase/auth';
-import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2 } from "lucide-react";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
 import { formatScore, formatDateToStandard } from "../utils/formatters";
@@ -615,19 +613,100 @@ Please log in to register for this session through the OED-TTMS Application.
     return list.sort((a, b) => new Date(b.history.processedAt).getTime() - new Date(a.history.processedAt).getTime());
   }, [users]);
 
+  // Real-time notification for Admin when a trainee registers for a course
+  const prevRegisteredMap = useRef<Record<string, number>>({});
+  const isFirstLoad = useRef(true);
+
+  useEffect(() => {
+    if (upcomingSessions.length === 0) return;
+
+    if (isFirstLoad.current) {
+      upcomingSessions.forEach(session => {
+        prevRegisteredMap.current[session.id] = session.registeredUsers?.length || 0;
+      });
+      isFirstLoad.current = false;
+      return;
+    }
+
+    upcomingSessions.forEach(session => {
+      const currentCount = session.registeredUsers?.length || 0;
+      const prevCount = prevRegisteredMap.current[session.id] ?? 0;
+
+      if (currentCount > prevCount) {
+        playNotificationSound();
+        const latestCode = session.registeredUsers?.[currentCount - 1];
+        const registeredUser = users.find(u => u.hrCode === latestCode || u.id === latestCode);
+        const traineeName = registeredUser?.name || latestCode || 'متدرب';
+
+        const toastMsg = language === 'ar'
+          ? `📝 تسجيل جديد: قام المتدرب [${traineeName}] بالتسجيل في دورة [${session.courseTitle}]!`
+          : `📝 New Enrollment: Trainee [${traineeName}] registered for [${session.courseTitle}]!`;
+
+        setReminderToast(toastMsg);
+        setTimeout(() => setReminderToast(null), 6000);
+
+        sendNativePushNotification(
+          language === 'ar' ? '📝 تسجيل جديد في دورة تدريبية' : '📝 New Course Enrollment',
+          { body: toastMsg }
+        );
+      }
+
+      prevRegisteredMap.current[session.id] = currentCount;
+    });
+  }, [upcomingSessions, users, language]);
+
+  // Active course reminder notification on Admin mobile
+  useEffect(() => {
+    const activeSessionsNow = upcomingSessions.filter(s => !s.isDeleted && s.status !== 'Cancelled' && s.status !== 'Completed' && isSessionActiveNow(s));
+    if (activeSessionsNow.length > 0) {
+      const activeSession = activeSessionsNow[0];
+      const adminNotifKey = `admin_notif_active_${activeSession.id}_${new Date().toISOString().split('T')[0]}`;
+      if (!sessionStorage.getItem(adminNotifKey)) {
+        sessionStorage.setItem(adminNotifKey, 'true');
+        sendNativePushNotification(
+          language === 'ar' ? '🟢 تذكير الإدارة: بدء دورة تدريبية' : '🟢 Admin Reminder: Session Started',
+          {
+            body: language === 'ar'
+              ? `بدأت دورة [${activeSession.courseTitle}] الآن. يرجى فتح وعرض رمز الـ QR في القاعة لتسجيل حضور المتدربين.`
+              : `Session [${activeSession.courseTitle}] has started. Please display the QR code for trainees.`,
+            tag: adminNotifKey
+          }
+        );
+      }
+    }
+  }, [upcomingSessions, language]);
+
+  const [showBackupPromptModal, setShowBackupPromptModal] = useState(false);
+  const [isExportingBackup, setIsExportingBackup] = useState(false);
+
   useEffect(() => {
     const checkAndRunAutoBackup = () => {
       const lastBackup = localStorage.getItem('last_auto_backup');
       const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
       if (!lastBackup || Date.now() - parseInt(lastBackup, 10) > SEVEN_DAYS_MS) {
         setTimeout(() => {
-          const success = exportCloudBackup(users, records, upcomingSessions, cleanedData || []);
-          if (success) localStorage.setItem('last_auto_backup', Date.now().toString());
-        }, 5000);
+          setShowBackupPromptModal(true);
+        }, 1500);
       }
     };
     if (users.length > 0) checkAndRunAutoBackup();
   }, [users.length]);
+
+  const handleConfirmBackup = async () => {
+    setIsExportingBackup(true);
+    let allRecords = cleanedData;
+    if (!allRecords || allRecords.length === 0) {
+      allRecords = await fetchTrainingRecords();
+    }
+    const success = exportCloudBackup(users, records, upcomingSessions, allRecords || [], courses || []);
+    if (success) {
+      localStorage.setItem('last_auto_backup', Date.now().toString());
+      setReminderToast(language === 'ar' ? 'تم تنزيل وحفظ النسخة الاحتياطية بنجاح! 💾' : 'Backup saved successfully! 💾');
+      setTimeout(() => setReminderToast(null), 4000);
+    }
+    setIsExportingBackup(false);
+    setShowBackupPromptModal(false);
+  };
 
   const DEFAULT_COURSE_STATS = [
     { courseName: "Heavy Equipment Hydraulics", attendees: 142, sessions: 18 },
@@ -3900,6 +3979,72 @@ Content-Type: text/html; charset="utf-8"
                   </div>
                 </form>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Weekly Cloud Backup Confirmation Modal */}
+      {showBackupPromptModal && (
+        <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+          <div className="bg-white dark:bg-[#0E1A32] rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-300 dark:border-slate-700 animate-scale-in">
+            <div className="bg-[#002D62] text-white p-4 sm:p-5 flex justify-between items-center border-b border-blue-900">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-amber-400 text-[#002D62] font-black shadow-xs">
+                  <Database size={22} />
+                </div>
+                <div>
+                  <h3 className="font-black text-base sm:text-lg">
+                    {language === 'ar' ? '🛡️ تذكير النسخ الاحتياطي الدوري' : '🛡️ Scheduled Cloud Backup'}
+                  </h3>
+                  <p className="text-[11px] text-blue-200">
+                    {language === 'ar' ? 'حماية وأمان بيانات المنظومة الأسبوعي' : 'Weekly System Data Protection'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBackupPromptModal(false)}
+                className="text-white/80 hover:text-white p-1.5 rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-6 space-y-4">
+              <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs sm:text-sm text-blue-950 dark:text-blue-100 font-bold leading-relaxed space-y-2">
+                <p>
+                  {language === 'ar'
+                    ? 'مر أكثر من 7 أيام منذ آخر نسخة احتياطية. هل ترغب في تنزيل وحفظ ملف Excel رسمي شامل ومحدث على جهازك الآن؟'
+                    : 'More than 7 days have passed since your last backup. Would you like to generate and download an official updated Excel backup file now?'}
+                </p>
+                <div className="pt-2 border-t border-blue-200/80 dark:border-blue-800/80 text-xs text-blue-800 dark:text-blue-200 grid grid-cols-2 gap-1.5 font-medium">
+                  <span>✓ {language === 'ar' ? 'بيانات المستخدمين والمتدربين' : 'Users & Trainees'}</span>
+                  <span>✓ {language === 'ar' ? 'دليل الدورات التدريبية' : 'Courses Catalog'}</span>
+                  <span>✓ {language === 'ar' ? 'الجلسات المجدولة والمسجلين' : 'Scheduled Sessions'}</span>
+                  <span>✓ {language === 'ar' ? 'سجل الحضور والتقييمات' : 'Attendance & Grades'}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2.5 justify-end pt-2">
+                <button
+                  type="button"
+                  disabled={isExportingBackup}
+                  onClick={() => setShowBackupPromptModal(false)}
+                  className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs sm:text-sm rounded-xl transition-colors cursor-pointer"
+                >
+                  {language === 'ar' ? 'تذكيري لاحقاً' : 'Remind Me Later'}
+                </button>
+                <button
+                  type="button"
+                  disabled={isExportingBackup}
+                  onClick={handleConfirmBackup}
+                  className="px-5 py-2.5 bg-[#002D62] hover:bg-blue-900 text-white font-black text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
+                >
+                  {isExportingBackup ? <Loader2 size={16} className="animate-spin text-amber-400" /> : <FileSpreadsheet size={16} className="text-amber-400" />}
+                  <span>{isExportingBackup ? (language === 'ar' ? 'جاري تجهيز وتنزيل الملف...' : 'Generating Backup...') : (language === 'ar' ? 'نعم، تنزيل النسخة الاحتياطية' : 'Yes, Download Backup')}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

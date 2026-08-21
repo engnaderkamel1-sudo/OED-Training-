@@ -30,7 +30,7 @@ export const GlobalAttendanceAlertBanner: React.FC = () => {
       for (const ann of announcements) {
         if (dismissedIds.includes(ann.id)) continue;
         const annTime = new Date(ann.date).getTime();
-        if (annTime > twoHoursAgo && (ann.title?.includes('حضور') || ann.title?.includes('Attendance') || ann.message?.includes('QR') || ann.message?.includes('ساعة'))) {
+        if (annTime > twoHoursAgo && (ann.title?.includes('حضور') || ann.title?.includes('Attendance') || ann.message?.includes('QR') || ann.message?.includes('ساعة') || ann.message?.includes('hour') || ann.message?.includes('Hour'))) {
           const isDirect = (ann as any).targetHrCodes && (ann as any).targetHrCodes.map((c: string) => c.toLowerCase()).includes(uCode);
           const matchingSession = upcomingSessions.find(s => s.id === ann.sessionId);
           const isReg = matchingSession && (matchingSession.registeredUsers || []).map(c => c.toLowerCase()).includes(uCode);
@@ -87,42 +87,57 @@ export const GlobalAttendanceAlertBanner: React.FC = () => {
 
   return (
     <>
-      <div className="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-[#001D42] border-b-2 border-amber-600 shadow-md sticky top-16 z-40 px-3 sm:px-6 py-2.5 transition-all animate-slide-down">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
+      <div className="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-[#001D42] border-b-2 border-amber-600 shadow-lg sticky top-16 z-40 px-3 sm:px-6 py-2.5 transition-all animate-slide-down">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2.5">
           
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <div className="p-1.5 rounded-xl bg-[#002D62] text-[#FFC000] font-black shrink-0 animate-bounce shadow-xs">
+          {/* Info Section */}
+          <div className="flex items-start gap-2.5 min-w-0 flex-1">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-[#002D62] text-[#FFC000] font-black shrink-0 animate-bounce shadow-xs mt-0.5">
               <BellRing size={18} />
             </div>
+            
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-black text-xs sm:text-sm text-[#001D42] truncate">
-                  {language === 'ar' ? `🟢 تذكير فوري: تسجيل حضور [${activeAlert.courseTitle}]` : `🟢 Urgent: Attendance Check-in for [${activeAlert.courseTitle}]`}
+                <span className="font-black text-xs sm:text-sm text-[#001D42] leading-tight">
+                  {language === 'ar' 
+                    ? `🟢 تذكير فوري: تسجيل حضور [${activeAlert.courseTitle}]` 
+                    : `🟢 Urgent: Attendance Check-in for [${activeAlert.courseTitle}]`}
                 </span>
-                <span className="bg-[#002D62] text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                <span className="bg-[#002D62] text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 shadow-2xs">
                   {language === 'ar' ? 'خلال ساعة' : '1 Hour'}
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-blue-950 font-bold truncate mt-0.5">
+              <p className="text-[11px] sm:text-xs text-blue-950 font-bold leading-snug mt-1">
                 {activeAlert.message}
               </p>
             </div>
+
+            {/* Mobile Close Button (Top-Right on Small Screens) */}
+            <button
+              type="button"
+              onClick={handleDismiss}
+              className="md:hidden text-[#001D42]/80 hover:text-[#001D42] hover:bg-black/10 p-1.5 rounded-xl transition-colors cursor-pointer shrink-0"
+              title={language === 'ar' ? 'إغلاق التنبيه' : 'Dismiss'}
+            >
+              <X size={18} />
+            </button>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+          {/* Action Button & Desktop Close */}
+          <div className="flex items-center justify-end gap-2 shrink-0 pt-1 md:pt-0">
             <button
               type="button"
               onClick={handleOpenScanner}
-              className="bg-[#002D62] hover:bg-blue-950 text-white font-black text-xs px-4 py-2 rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
+              className="w-full sm:w-auto bg-[#002D62] hover:bg-blue-950 text-white font-black text-xs sm:text-sm px-4 py-2 sm:py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-105 active:scale-95 border border-white/20"
             >
-              <ScanLine size={15} className="text-[#FFC000]" />
+              <ScanLine size={16} className="text-[#FFC000]" />
               <span>{language === 'ar' ? 'مسح رمز الـ QR الآن 📷' : 'Scan QR Code Now 📷'}</span>
             </button>
 
             <button
               type="button"
               onClick={handleDismiss}
-              className="text-[#001D42]/70 hover:text-[#001D42] hover:bg-black/10 p-1.5 rounded-xl transition-colors cursor-pointer"
+              className="hidden md:flex text-[#001D42]/80 hover:text-[#001D42] hover:bg-black/10 p-2 rounded-xl transition-colors cursor-pointer"
               title={language === 'ar' ? 'إغلاق التنبيه' : 'Dismiss'}
             >
               <X size={18} />
