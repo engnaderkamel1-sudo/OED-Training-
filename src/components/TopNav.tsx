@@ -185,17 +185,16 @@ export const TopNav: React.FC = () => {
                 )}
               </div>
               
-              <div className="min-w-0 max-w-[135px] xs:max-w-[165px] sm:max-w-none z-50 flex flex-col justify-center py-1">
+              <div className="flex-shrink-0 z-50 flex flex-col justify-center">
                 <h1 
-                  className="text-[14px] sm:text-[17px] font-extrabold tracking-tight leading-none mb-1 mt-0.5"
+                  className="text-[13px] sm:text-[17px] font-black tracking-tight leading-none"
                   style={{ color: '#ffffff' }}
                 >
                   OED-TTMS
                 </h1>
                 <p 
-                  className="text-[8px] xs:text-[9px] sm:text-[11px] font-bold leading-tight truncate sm:whitespace-normal"
+                  className="text-[7.5px] xs:text-[9px] sm:text-[11px] font-bold leading-none mt-1.5 whitespace-nowrap"
                   style={{ color: '#FFC000' }}
-                  title="Technical Training Management System"
                 >
                   Technical Training Management System
                 </p>
