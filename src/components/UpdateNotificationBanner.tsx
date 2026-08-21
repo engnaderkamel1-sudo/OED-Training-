@@ -115,12 +115,12 @@ export const UpdateNotificationBanner: React.FC = () => {
   if (!showUpdatedToast) return null;
 
   return (
-    <div className="fixed bottom-6 right-4 sm:right-6 rtl:right-auto rtl:left-4 sm:rtl:left-6 z-[999999] animate-bounce-short">
-      <div className="bg-[#002D62] text-white px-4 py-3 rounded-2xl border-2 border-[#FFC000] shadow-2xl flex items-center gap-3 backdrop-blur-md">
+    <div className="fixed top-5 left-1/2 transform -translate-x-1/2 z-[999999] animate-bounce-short w-auto max-w-[92vw] pointer-events-auto">
+      <div className="bg-[#002D62] text-white px-5 py-3 rounded-2xl border-2 border-[#FFC000] shadow-[0_15px_35px_rgba(0,0,0,0.5)] flex items-center gap-3 backdrop-blur-md">
         <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
           <CheckCircle size={18} />
         </div>
-        <div className="text-xs sm:text-sm font-black">
+        <div className="text-xs sm:text-sm font-black text-center sm:text-left rtl:sm:text-right">
           <p className="text-white">
             {language === 'ar' ? '✨ تم تحديث المنظومة تلقائياً بنجاح!' : '✨ App updated to latest version!'}
           </p>

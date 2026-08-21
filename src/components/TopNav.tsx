@@ -149,15 +149,6 @@ export const TopNav: React.FC = () => {
                 </p>
               </div>
 
-              {/* Integrated Orascom Logo (No Overlap) */}
-              <div className="hidden sm:flex items-center ml-3 rtl:ml-0 rtl:mr-3 pl-3 rtl:pl-0 rtl:pr-3 border-l rtl:border-l-0 rtl:border-r border-white/20">
-                <img 
-                  src="/orascom-logo.png" 
-                  alt="Orascom Construction OED" 
-                  className="h-7 w-auto object-contain brightness-0 invert opacity-90"
-                />
-              </div>
-
             </div>
 
             {/* المنتصف - الترحيب باليوزر */}
@@ -364,19 +355,30 @@ export const TopNav: React.FC = () => {
                     >
                       {/* User Info Header (Prominent Elevated Box - Light & Dark) */}
                       <div 
-                        className="p-3.5 rounded-xl border shadow-xs mb-2"
+                        className="p-3.5 rounded-xl border flex flex-col gap-1.5 shadow-sm transition-all"
                         style={{
-                          backgroundColor: isDark ? '#193158' : '#F0F6FF',
-                          borderColor: isDark ? 'rgba(148, 190, 255, 0.3)' : '#BFDBFE',
+                          backgroundColor: isDark ? '#142542' : '#EFF6FF',
+                          borderColor: isDark ? 'rgba(148, 190, 255, 0.35)' : '#BFDBFE'
                         }}
                       >
-                        <p 
-                          className="text-base font-black truncate"
-                          style={{ color: isDark ? '#FFFFFF' : '#002D62' }}
-                        >
-                          {user.name || 'User'}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <p 
+                            className="font-black text-sm truncate leading-snug"
+                            style={{ color: isDark ? '#FFFFFF' : '#002D62' }}
+                          >
+                            {user.name || 'User'}
+                          </p>
+                          <span 
+                            className="text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 shadow-2xs"
+                            style={{
+                              backgroundColor: user.role === 'admin' ? '#DC2626' : (user.role === 'supervisor' ? '#7C3AED' : '#002D62'),
+                              color: '#FFFFFF'
+                            }}
+                          >
+                            {user.jobRole || user.role}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
                           <span className="bg-[#FFC000] text-[#001D42] px-2 py-0.5 rounded-md font-mono font-black text-xs shadow-xs">
                             {user.hrCode || 'N/A'}
                           </span>
@@ -407,6 +409,27 @@ export const TopNav: React.FC = () => {
                       >
                         <UserCircle size={18} style={{ color: isDark ? '#FFC000' : '#002D62' }} className="shrink-0" />
                         <span>{language === 'ar' ? 'الملف الشخصي' : 'My Profile'}</span>
+                      </button>
+
+                      {/* View & Zoom Logo Button */}
+                      <button
+                        onClick={() => {
+                          setIsLogoExpanded(true);
+                          setDropdownOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer"
+                        style={{
+                          color: isDark ? '#FFFFFF' : '#1E293B',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : '#F0F7FF';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <ZoomIn size={18} style={{ color: '#FFC000' }} className="shrink-0" />
+                        <span>{language === 'ar' ? 'تكبير وعرض الشعار 🔍' : 'View & Zoom Logo 🔍'}</span>
                       </button>
 
                       {/* About System Button in Dropdown */}
@@ -475,6 +498,7 @@ export const TopNav: React.FC = () => {
         </div>
       </nav>
 
+      {/* 4K ULTRA-HD EXPANDED LOGO MODAL WITH INTUITIVE ZOOM CONTROLS */}
       <AnimatePresence>
         {isLogoExpanded && (
           <motion.div
@@ -482,8 +506,11 @@ export const TopNav: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[999999] bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-pointer"
-            onClick={() => setIsLogoExpanded(false)}
+            className="fixed inset-0 z-[999999] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 select-none"
+            onClick={() => {
+              setIsLogoExpanded(false);
+              setLogoZoom(1);
+            }}
           >
             <motion.div
               initial={{ scale: 0.6, opacity: 0 }}
@@ -491,32 +518,69 @@ export const TopNav: React.FC = () => {
               exit={{ scale: 0.6, opacity: 0 }}
               transition={{ type: "spring", stiffness: 260, damping: 25 }}
               className="relative flex flex-col items-center max-w-[95vw]"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsLogoExpanded(false);
-              }}
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Close Button on Top Right */}
+              {/* Close Button Top Right */}
               <button
                 type="button"
-                onClick={() => setIsLogoExpanded(false)}
+                onClick={() => {
+                  setIsLogoExpanded(false);
+                  setLogoZoom(1);
+                }}
                 className="absolute -top-12 right-0 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-md transition-colors cursor-pointer"
                 title={language === 'ar' ? 'إغلاق' : 'Close'}
               >
                 <X size={22} />
               </button>
 
-              {/* Clean Large Logo */}
-              <motion.img
-                layoutId="magic-logo"
-                src="/app-icon-v9.png"
-                alt="OED-TTMS Logo"
-                className="w-72 h-72 sm:w-96 sm:h-96 md:w-[460px] md:h-[460px] object-cover rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] border-4 border-[#FFC000] ring-8 ring-white/10"
-              />
+              {/* 4K Ultra-HD Crisp Logo (Never Pixelated) with Drag & Smooth Zoom */}
+              <div className="overflow-hidden rounded-3xl sm:rounded-[2.5rem] p-2 flex items-center justify-center max-w-[92vw] max-h-[60vh] sm:max-h-[68vh]">
+                <motion.img
+                  layoutId="magic-logo"
+                  src="/app-logo-hd.png"
+                  alt="OED-TTMS Ultra-HD Logo"
+                  animate={{ scale: logoZoom }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  drag={logoZoom > 1}
+                  dragConstraints={{ left: -180, right: 180, top: -180, bottom: 180 }}
+                  onClick={() => setLogoZoom(prev => prev === 1 ? 1.8 : 1)}
+                  className="w-72 h-72 sm:w-96 sm:h-96 md:w-[480px] md:h-[480px] object-cover rounded-2xl sm:rounded-[2rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] border-4 border-[#FFC000] ring-8 ring-white/10 cursor-zoom-in"
+                />
+              </div>
 
-              <div className="mt-5 text-center">
+              {/* Intuitive Bottom Zoom & Navigation Bar */}
+              <div className="flex items-center gap-2 mt-4 bg-slate-900/90 border border-white/20 backdrop-blur-xl px-4 py-2 rounded-2xl shadow-2xl z-50">
+                <button
+                  type="button"
+                  onClick={() => setLogoZoom(prev => Math.min(prev + 0.3, 3))}
+                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-[#FFC000] hover:text-[#002D62] text-white active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer font-bold text-xs"
+                >
+                  <ZoomIn size={16} />
+                  <span>{language === 'ar' ? 'تكبير (+)' : 'Zoom In'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setLogoZoom(prev => Math.max(prev - 0.3, 0.7))}
+                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-[#FFC000] hover:text-[#002D62] text-white active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer font-bold text-xs"
+                >
+                  <ZoomOut size={16} />
+                  <span>{language === 'ar' ? 'تصغير (-)' : 'Zoom Out'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setLogoZoom(1)}
+                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-blue-600 text-blue-200 hover:text-white active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer font-bold text-xs"
+                >
+                  <RotateCcw size={15} />
+                  <span>{Math.round(logoZoom * 100)}%</span>
+                </button>
+              </div>
+
+              <div className="mt-3 text-center">
                 <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">OED-TTMS</h3>
-                <p className="text-xs sm:text-sm font-bold text-[#FFC000] mt-1">Orascom Equipment Department • Technical Training System</p>
+                <p className="text-xs sm:text-sm font-bold text-[#FFC000] mt-0.5">Orascom Equipment Department • Technical Training System</p>
               </div>
             </motion.div>
           </motion.div>
