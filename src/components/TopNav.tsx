@@ -31,6 +31,7 @@ export const TopNav: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [isLogoExpanded, setIsLogoExpanded] = useState(false);
+  const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -470,45 +471,91 @@ export const TopNav: React.FC = () => {
                         boxShadow: '0 20px 35px -5px rgba(0, 0, 0, 0.25), 0 10px 15px -5px rgba(0, 0, 0, 0.1)'
                       }}
                     >
-                      {/* User Info Header */}
+                      {/* User Info Header with Clickable Avatar */}
                       <div 
-                        className="p-3.5 rounded-xl border flex flex-col gap-1.5 shadow-sm transition-all"
+                        className="p-3.5 rounded-xl border flex items-center gap-3 shadow-sm transition-all cursor-pointer hover:border-[#FFC000]"
                         style={{
                           backgroundColor: isDark ? '#142542' : '#EFF6FF',
                           borderColor: isDark ? 'rgba(148, 190, 255, 0.35)' : '#BFDBFE'
                         }}
+                        onClick={() => {
+                          setIsAvatarExpanded(true);
+                          setDropdownOpen(false);
+                        }}
+                        title={language === 'ar' ? 'اضغط لتكبير الصورة الشخصية 🔍' : 'Click to enlarge profile picture'}
                       >
-                        <div className="flex items-center gap-2">
-                          <p 
-                            className="font-black text-sm truncate leading-snug"
-                            style={{ color: isDark ? '#FFFFFF' : '#002D62' }}
-                          >
-                            {user.name || 'User'}
-                          </p>
-                          <span 
-                            className="text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 shadow-2xs"
-                            style={{
-                              backgroundColor: user.role === 'admin' ? '#DC2626' : (user.role === 'supervisor' ? '#7C3AED' : '#002D62'),
-                              color: '#FFFFFF'
+                        {user.profileImageUrl ? (
+                          <img 
+                            src={user.profileImageUrl} 
+                            alt={user.name || 'User'}
+                            className="w-12 h-12 rounded-2xl object-cover border-2 border-[#FFC000] shrink-0 shadow-xs hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <div 
+                            className="w-12 h-12 rounded-2xl flex items-center justify-center font-extrabold text-base shadow-sm shrink-0 hover:scale-105 transition-transform"
+                            style={{ 
+                              backgroundColor: '#ffffff', 
+                              color: '#002D62', 
+                              border: '2px solid #FFC000' 
                             }}
                           >
-                            {user.jobRole || user.role}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="bg-[#FFC000] text-[#001D42] px-2 py-0.5 rounded-md font-mono font-black text-xs shadow-xs">
-                            {user.hrCode || 'N/A'}
-                          </span>
-                          <span 
-                            className="text-xs font-bold truncate"
-                            style={{ color: isDark ? '#C8DBF6' : '#475569' }}
-                          >
-                            {user.department || 'General'}
-                          </span>
+                            {getInitials(user.name)}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 justify-between">
+                            <p 
+                              className="font-black text-sm truncate leading-snug"
+                              style={{ color: isDark ? '#FFFFFF' : '#002D62' }}
+                            >
+                              {user.name || 'User'}
+                            </p>
+                            <span 
+                              className="text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 shadow-2xs"
+                              style={{
+                                backgroundColor: user.role === 'admin' ? '#DC2626' : (user.role === 'supervisor' ? '#7C3AED' : '#002D62'),
+                                color: '#FFFFFF'
+                              }}
+                            >
+                              {user.jobRole || user.role}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="bg-[#FFC000] text-[#001D42] px-1.5 py-0.2 rounded font-mono font-black text-[11px] shadow-xs">
+                              {user.hrCode || 'N/A'}
+                            </span>
+                            <span 
+                              className="text-[11px] font-bold truncate"
+                              style={{ color: isDark ? '#C8DBF6' : '#475569' }}
+                            >
+                              {user.department || 'General'}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
                       <div className="my-1.5 border-t" style={{ borderColor: isDark ? 'rgba(148, 190, 255, 0.15)' : '#F1F5F9' }} />
+
+                      {/* Enlarge Profile Photo Menu Button */}
+                      <button
+                        onClick={() => {
+                          setIsAvatarExpanded(true);
+                          setDropdownOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                        style={{
+                          color: isDark ? '#FFFFFF' : '#1E293B',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : '#F0F7FF';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <UserCircle size={17} style={{ color: '#FFC000' }} className="shrink-0" />
+                        <span>{language === 'ar' ? 'تكبير الصورة الشخصية 🔍' : 'Enlarge Profile Photo 🔍'}</span>
+                      </button>
 
                       {/* App Interface Scaling / Zoom Controls (تكبير وتصغير التطبيق) */}
                       <div 
@@ -705,6 +752,70 @@ export const TopNav: React.FC = () => {
                 <p className="text-xs sm:text-sm font-extrabold text-[#FFC000] mt-1">
                   Orascom Construction Equipment Department • Technical Training Management System
                 </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* EXPANDED USER PROFILE PHOTO MODAL */}
+      <AnimatePresence>
+        {isAvatarExpanded && user && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[999999] bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-pointer select-none"
+            onClick={() => setIsAvatarExpanded(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.6, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 25 }}
+              className="relative flex flex-col items-center max-w-[95vw]"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsAvatarExpanded(false);
+              }}
+            >
+              {/* Close Button Top Right */}
+              <button
+                type="button"
+                onClick={() => setIsAvatarExpanded(false)}
+                className="absolute -top-12 right-0 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-md transition-colors cursor-pointer"
+                title={language === 'ar' ? 'إغلاق' : 'Close'}
+              >
+                <X size={22} />
+              </button>
+
+              {/* Crisp Profile Image / Avatar Display */}
+              {user.profileImageUrl ? (
+                <img
+                  src={user.profileImageUrl}
+                  alt={user.name || 'User Profile'}
+                  className="w-72 h-72 sm:w-96 sm:h-96 md:w-[460px] md:h-[460px] object-cover rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] border-4 border-[#FFC000] ring-8 ring-white/10"
+                />
+              ) : (
+                <div 
+                  className="w-72 h-72 sm:w-96 sm:h-96 md:w-[460px] md:h-[460px] rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] border-4 border-[#FFC000] ring-8 ring-white/10 bg-[#002D62] flex flex-col items-center justify-center text-white"
+                >
+                  <UserCircle size={120} className="text-[#FFC000] mb-2" />
+                  <span className="text-4xl sm:text-5xl font-black font-mono">
+                    {getInitials(user.name)}
+                  </span>
+                </div>
+              )}
+
+              <div className="mt-4 text-center">
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">{user.name || 'User'}</h3>
+                <p className="text-xs sm:text-sm font-bold text-[#FFC000] mt-0.5">
+                  {user.jobRole || user.role} • HR Code: {user.hrCode || 'N/A'}
+                </p>
+                {user.department && (
+                  <p className="text-xs text-gray-300 mt-0.5">{user.department}</p>
+                )}
               </div>
             </motion.div>
           </motion.div>

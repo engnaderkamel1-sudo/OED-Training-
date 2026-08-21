@@ -1,7 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context';
 import { User } from '../types';
-import { Upload, Save, Loader2, User as UserIcon, Mail, Phone, Building, Briefcase, Hash, Lock, ShieldCheck } from 'lucide-react';
+import { Upload, Save, Loader2, User as UserIcon, Mail, Phone, Building, Briefcase, Hash, Lock, ShieldCheck, X } from 'lucide-react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { DataField } from './DataField';
@@ -9,6 +10,7 @@ import { DataField } from './DataField';
 export const ProfilePage: React.FC = () => {
   const { user, setUser, users, setUsers, language, t } = useAppContext();
   const [isEditing, setIsEditing] = useState(false);
+  const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
 
   // Editable fields
   const [name, setName] = useState(user?.name || '');
@@ -128,9 +130,21 @@ export const ProfilePage: React.FC = () => {
             <div className="w-24 h-24 bg-white dark:bg-slate-800 rounded-full p-1 shadow-md">
               <div className="w-full h-full bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center overflow-hidden relative group">
                 {profileImage ? (
-                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                  <img 
+                    src={profileImage} 
+                    alt="Profile" 
+                    onClick={() => !isEditing && setIsAvatarExpanded(true)}
+                    className={`w-full h-full object-cover ${!isEditing ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
+                    title={!isEditing ? (language === 'ar' ? 'اضغط لتكبير الصورة 🔍' : 'Click to enlarge 🔍') : undefined}
+                  />
                 ) : (
-                  <UserIcon size={40} className="text-gray-400 dark:text-gray-300" />
+                  <div 
+                    onClick={() => !isEditing && setIsAvatarExpanded(true)}
+                    className={`w-full h-full flex items-center justify-center ${!isEditing ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
+                    title={!isEditing ? (language === 'ar' ? 'اضغط لتكبير الصورة 🔍' : 'Click to enlarge 🔍') : undefined}
+                  >
+                    <UserIcon size={40} className="text-gray-400 dark:text-gray-300" />
+                  </div>
                 )}
                 
                 {isEditing && (
@@ -354,6 +368,70 @@ export const ProfilePage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* EXPANDED USER PROFILE PHOTO MODAL */}
+      <AnimatePresence>
+        {isAvatarExpanded && user && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[999999] bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-pointer select-none"
+            onClick={() => setIsAvatarExpanded(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.6, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 25 }}
+              className="relative flex flex-col items-center max-w-[95vw]"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsAvatarExpanded(false);
+              }}
+            >
+              {/* Close Button Top Right */}
+              <button
+                type="button"
+                onClick={() => setIsAvatarExpanded(false)}
+                className="absolute -top-12 right-0 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-md transition-colors cursor-pointer"
+                title={language === 'ar' ? 'إغلاق' : 'Close'}
+              >
+                <X size={22} />
+              </button>
+
+              {/* Crisp Profile Image / Avatar Display */}
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt={user.name || 'User Profile'}
+                  className="w-72 h-72 sm:w-96 sm:h-96 md:w-[460px] md:h-[460px] object-cover rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] border-4 border-[#FFC000] ring-8 ring-white/10"
+                />
+              ) : (
+                <div 
+                  className="w-72 h-72 sm:w-96 sm:h-96 md:w-[460px] md:h-[460px] rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] border-4 border-[#FFC000] ring-8 ring-white/10 bg-[#002D62] flex flex-col items-center justify-center text-white"
+                >
+                  <UserIcon size={120} className="text-[#FFC000] mb-2" />
+                  <span className="text-4xl sm:text-5xl font-black font-mono">
+                    {(user.name || 'U').charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+
+              <div className="mt-4 text-center">
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">{user.name || 'User'}</h3>
+                <p className="text-xs sm:text-sm font-bold text-[#FFC000] mt-0.5">
+                  {user.jobRole || user.role} • HR Code: {user.hrCode || 'N/A'}
+                </p>
+                {user.department && (
+                  <p className="text-xs text-gray-300 mt-0.5">{user.department}</p>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context';
 import { mockCourses } from '../data';
-import { ExternalLink, Check, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag, Megaphone, Radio, Volume2, Sparkles, QrCode } from 'lucide-react';
+import { ExternalLink, Check, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag, Megaphone, Radio, Volume2, Sparkles, QrCode, UserCircle, X } from 'lucide-react';
 import { QRScannerModal } from './QRScannerModal';
 import { isSessionActiveNow, sendNativePushNotification } from '../utils/sessionTimeUtils';
 
@@ -106,6 +107,7 @@ export const TraineeDashboard: React.FC = () => {
   const [actionToast, setActionToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
   const [showScannerModal, setShowScannerModal] = useState(false);
   const [activeSessionForScanner, setActiveSessionForScanner] = useState<UpcomingSession | null>(null);
+  const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
 
   // Automatically fetch trainee's own records on demand (costs only 1-3 reads!)
   React.useEffect(() => {
@@ -470,10 +472,16 @@ export const TraineeDashboard: React.FC = () => {
                     <img
                       src={user.profileImageUrl}
                       alt={user.name}
-                      className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-md shrink-0"
+                      onClick={() => setIsAvatarExpanded(true)}
+                      className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-md shrink-0 cursor-pointer hover:scale-105 transition-transform"
+                      title={language === 'ar' ? 'اضغط لتكبير الصورة 🔍' : 'Click to enlarge 🔍'}
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/20 flex items-center justify-center text-white font-black text-2xl shrink-0 shadow-inner">
+                    <div 
+                      onClick={() => setIsAvatarExpanded(true)}
+                      className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/20 flex items-center justify-center text-white font-black text-2xl shrink-0 shadow-inner cursor-pointer hover:scale-105 transition-transform"
+                      title={language === 'ar' ? 'اضغط لتكبير الصورة 🔍' : 'Click to enlarge 🔍'}
+                    >
                       {(user?.name || 'T').charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -1207,6 +1215,70 @@ export const TraineeDashboard: React.FC = () => {
             }}
           />
         )}
+
+        {/* EXPANDED USER PROFILE PHOTO MODAL */}
+        <AnimatePresence>
+          {isAvatarExpanded && user && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="fixed inset-0 z-[999999] bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-pointer select-none"
+              onClick={() => setIsAvatarExpanded(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.6, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 25 }}
+                className="relative flex flex-col items-center max-w-[95vw]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsAvatarExpanded(false);
+                }}
+              >
+                {/* Close Button Top Right */}
+                <button
+                  type="button"
+                  onClick={() => setIsAvatarExpanded(false)}
+                  className="absolute -top-12 right-0 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-md transition-colors cursor-pointer"
+                  title={language === 'ar' ? 'إغلاق' : 'Close'}
+                >
+                  <X size={22} />
+                </button>
+
+                {/* Crisp Profile Image / Avatar Display */}
+                {user.profileImageUrl ? (
+                  <img
+                    src={user.profileImageUrl}
+                    alt={user.name || 'User Profile'}
+                    className="w-72 h-72 sm:w-96 sm:h-96 md:w-[460px] md:h-[460px] object-cover rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] border-4 border-[#FFC000] ring-8 ring-white/10"
+                  />
+                ) : (
+                  <div 
+                    className="w-72 h-72 sm:w-96 sm:h-96 md:w-[460px] md:h-[460px] rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] border-4 border-[#FFC000] ring-8 ring-white/10 bg-[#002D62] flex flex-col items-center justify-center text-white"
+                  >
+                    <UserCircle size={120} className="text-[#FFC000] mb-2" />
+                    <span className="text-4xl sm:text-5xl font-black font-mono">
+                      {(user.name || 'T').charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+
+                <div className="mt-4 text-center">
+                  <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">{user.name || 'User'}</h3>
+                  <p className="text-xs sm:text-sm font-bold text-[#FFC000] mt-0.5">
+                    {user.jobRole || user.role || 'Technical Staff'} • HR Code: {user.hrCode || 'N/A'}
+                  </p>
+                  {user.department && (
+                    <p className="text-xs text-gray-300 mt-0.5">{user.department}</p>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
