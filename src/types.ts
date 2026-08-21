@@ -111,6 +111,7 @@ export interface UpcomingSession {
   reminderLog?: ReminderLogItem[];
   feedbackLink?: string;
   feedbackEnabled?: boolean;
+  feedbackSentAt?: string; // تاريخ ووقت إرسال طلب التقييم من الأدمن
   additionalNotificationEmails?: string[];
 }
 

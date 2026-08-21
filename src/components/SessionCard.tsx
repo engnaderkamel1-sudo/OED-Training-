@@ -86,6 +86,22 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   const isRegistrationLocked = isRegistrationClosed || isDeadlinePassed;
   const isDateActiveForAttendance = useMemo(() => isDateInSessionRange(session), [session]);
 
+  // Check if evaluation was sent today and is open until end of today
+  const isEvaluationOpenToday = useMemo(() => {
+    if (!session.feedbackEnabled || !session.feedbackSentAt) return false;
+    try {
+      const sentDate = new Date(session.feedbackSentAt);
+      const now = new Date();
+      return (
+        sentDate.getFullYear() === now.getFullYear() &&
+        sentDate.getMonth() === now.getMonth() &&
+        sentDate.getDate() === now.getDate()
+      );
+    } catch {
+      return false;
+    }
+  }, [session.feedbackEnabled, session.feedbackSentAt]);
+
   const userCode = user?.hrCode || 'trainee';
   const isRegistered = session.registeredUsers?.includes(userCode) || registeredCourseIds.includes(session.id);
   const isUnregistered = session.unregisteredUsers?.includes(userCode);
@@ -169,7 +185,8 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       const updatedSession: UpcomingSession = {
         ...session,
         feedbackEnabled: true,
-        feedbackLink: EVALUATION_FORM_URL
+        feedbackLink: EVALUATION_FORM_URL,
+        feedbackSentAt: new Date().toISOString()
       };
       await updateUpcomingSession(updatedSession);
 
@@ -669,17 +686,32 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                     <CheckCircle size={15} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <span>{language === 'ar' ? 'تم انتهاء وتنفيذ الدورة بنجاح ✅' : 'Course Completed ✅'}</span>
                   </span>
-                  <a 
-                    href={session.feedbackLink || EVALUATION_FORM_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="cursor-pointer bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-[#001D42] px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md hover:scale-105"
-                    title={language === 'ar' ? 'تقييم الدورة التدريبية' : 'Course Evaluation'}
-                  >
-                    <Star size={14} className="fill-[#001D42] text-[#001D42]" />
-                    <span>{language === 'ar' ? 'تقييم الدورة ⭐' : 'Course Evaluation ⭐'}</span>
-                  </a>
+
+                  {/* Course Evaluation Button - Active only when sent today by Admin, otherwise Dimmed */}
+                  {isEvaluationOpenToday ? (
+                    <a 
+                      href={session.feedbackLink || EVALUATION_FORM_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="cursor-pointer bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-[#001D42] px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md hover:scale-105"
+                      title={language === 'ar' ? 'استبيان تقييم الدورة متاح اليوم' : 'Course Evaluation Open Today'}
+                    >
+                      <Star size={14} className="fill-[#001D42] text-[#001D42]" />
+                      <span>{language === 'ar' ? '⭐ تقييم الدورة التدريبية' : '⭐ Course Evaluation'}</span>
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="opacity-40 cursor-not-allowed bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs"
+                      title={language === 'ar' ? 'يتم تفعيل التقييم في يوم التقييم عند إرساله من قِبل إدارة التدريب' : 'Evaluation is opened by Training Administration'}
+                    >
+                      <Star size={14} className="text-gray-400" />
+                      <span>{language === 'ar' ? 'تقييم الدورة (مغلق)' : 'Course Evaluation (Closed)'}</span>
+                    </button>
+                  )}
+
                   {onRequestHandoutRevision && (
                     <button
                       type="button"
@@ -699,17 +731,29 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   </span>
 
                   {/* Course Evaluation link for Registered Trainees */}
-                  <a 
-                    href={session.feedbackLink || EVALUATION_FORM_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="cursor-pointer bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-[#001D42] px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md hover:scale-105"
-                    title={language === 'ar' ? 'تقييم الدورة التدريبية' : 'Course Evaluation'}
-                  >
-                    <Star size={14} className="fill-[#001D42] text-[#001D42]" />
-                    <span>{language === 'ar' ? 'تقييم الدورة ⭐' : 'Course Evaluation ⭐'}</span>
-                  </a>
+                  {isEvaluationOpenToday ? (
+                    <a 
+                      href={session.feedbackLink || EVALUATION_FORM_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="cursor-pointer bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-[#001D42] px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md hover:scale-105"
+                      title={language === 'ar' ? 'استبيان تقييم الدورة متاح اليوم' : 'Course Evaluation Open Today'}
+                    >
+                      <Star size={14} className="fill-[#001D42] text-[#001D42]" />
+                      <span>{language === 'ar' ? '⭐ تقييم الدورة' : '⭐ Course Evaluation'}</span>
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="opacity-40 cursor-not-allowed bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs"
+                      title={language === 'ar' ? 'يتم تفعيل التقييم في يوم التقييم عند إرساله من قِبل إدارة التدريب' : 'Evaluation is opened by Training Administration'}
+                    >
+                      <Star size={13} className="text-gray-400" />
+                      <span>{language === 'ar' ? 'تقييم الدورة (مغلق)' : 'Evaluation (Closed)'}</span>
+                    </button>
+                  )}
                   
                   {/* Handout revision button always available for registered/active trainee */}
                   {onRequestHandoutRevision && (
