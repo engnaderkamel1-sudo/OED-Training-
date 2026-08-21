@@ -326,6 +326,14 @@ export const SuggestionsPage: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
+      {/* الشريط الذهبي والترحيب على اليمين */}
+      <div className="w-full flex items-center justify-end border-b-2 border-[#FFC000] pb-2 mb-2 print:hidden">
+        <p className="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200 md:hidden ml-auto rtl:ml-0 rtl:mr-auto text-right">
+          {language === 'ar' ? '👋 أهلاً بك، ' : '👋 Welcome, '}
+          <span className="text-[#002D62] dark:text-[#FFC000] font-black">{user?.name?.split(' ')[0]}</span>
+        </p>
+      </div>
+
       {/* Message Modal */}
       {messagingFor && (
         <AdminMessageModal

@@ -122,7 +122,15 @@ export const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      {/* الشريط الذهبي والترحيب على اليمين */}
+      <div className="w-full flex items-center justify-end border-b-2 border-[#FFC000] pb-2 mb-2 print:hidden">
+        <p className="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200 md:hidden ml-auto rtl:ml-0 rtl:mr-auto text-right">
+          {language === 'ar' ? '👋 أهلاً بك، ' : '👋 Welcome, '}
+          <span className="text-[#002D62] dark:text-[#FFC000] font-black">{user?.name?.split(' ')[0]}</span>
+        </p>
+      </div>
+
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-gray-100 dark:border-slate-800 overflow-hidden transition-colors">
         {/* Header Cover */}
         <div className="h-32 bg-gradient-to-r from-[#002D62] to-[#0A4D9E] w-full relative">
