@@ -812,54 +812,45 @@ export const TraineeDashboard: React.FC = () => {
             {/* List Content */}
             {displayedNotifications.length === 0 ? (
               <div 
-                className="text-center py-14 px-4 border border-dashed rounded-2xl animate-fadeIn"
+                className="text-center py-12 px-4 border border-dashed rounded-2xl animate-fadeIn"
                 style={{ backgroundColor: isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(249, 250, 251, 0.8)', borderColor: borderColor }}
               >
-                <BellOff className="mx-auto h-12 w-12 mb-3 opacity-60" style={{ color: isDark ? '#64748b' : '#9ca3af' }} />
-                <p className="font-bold text-base" style={{ color: textColor }}>
+                <BellOff className="mx-auto h-10 w-10 mb-2 opacity-60" style={{ color: isDark ? '#64748b' : '#9ca3af' }} />
+                <p className="font-bold text-sm" style={{ color: textColor }}>
                   {language === 'ar' ? 'لا توجد تنبيهات في هذا القسم' : 'No notifications in this category'}
                 </p>
-                <p className="text-xs mt-1" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>
-                  {language === 'ar' ? 'ستصلك هنا كافة التنبيهات والإعلانات فور نشرها من قبل إدارة التدريب.' : 'All incoming alerts and reminders will appear here in real-time.'}
+                <p className="text-xs mt-0.5" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>
+                  {language === 'ar' ? 'ستصلك هنا كافة التنبيهات والإعلانات فور نشرها.' : 'All incoming alerts and announcements will appear here.'}
                 </p>
               </div>
             ) : (
-              <div className="space-y-3.5">
+              <div className="space-y-2.5">
                 {displayedNotifications.map((notif) => {
                   const isFinal = notif.type === 'Final';
                   const isGlobal = notif.type === 'Global';
                   const isAnnouncement = notif.type === 'Announcement';
                   const isRead = readNotifIds.includes(notif.id);
 
-                  // Accent border & Icon colors
-                  const accentColor = isGlobal 
-                    ? '#ef4444' 
-                    : isFinal 
-                      ? '#f59e0b' 
-                      : isAnnouncement 
-                        ? '#3b82f6' 
-                        : '#10b981';
-
                   return (
                     <div 
                       key={notif.id}
                       onClick={() => markNotifAsRead(notif.id)}
-                      className={`p-4 md:p-5 rounded-2xl border-2 transition-all cursor-pointer relative shadow-sm hover:shadow-md ${
-                        !isRead ? 'border-l-4 rtl:border-l rtl:border-r-4' : 'opacity-90'
+                      className={`p-3.5 rounded-xl border transition-all cursor-pointer relative shadow-2xs hover:shadow-md ${
+                        !isRead 
+                          ? 'border-l-4 rtl:border-l rtl:border-r-4 border-l-[#002D62] dark:border-l-[#FFC000] rtl:border-r-[#002D62] dark:rtl:border-r-[#FFC000]' 
+                          : 'opacity-85'
                       }`}
                       style={{
                         backgroundColor: isDark 
-                          ? (!isRead ? '#15294a' : '#10223d') 
-                          : '#ffffff',
-                        borderColor: !isRead ? accentColor : (isDark ? 'rgba(148, 190, 255, 0.2)' : '#cbd5e1'),
-                        borderLeftColor: !isRead ? accentColor : undefined,
-                        borderRightColor: !isRead ? accentColor : undefined,
+                          ? (!isRead ? '#142542' : '#0F1E36') 
+                          : (!isRead ? '#F8FAFC' : '#FFFFFF'),
+                        borderColor: !isRead ? (isDark ? 'rgba(148, 190, 255, 0.35)' : '#cbd5e1') : (isDark ? 'rgba(148, 190, 255, 0.15)' : '#E2E8F0'),
                       }}
                     >
-                      <div className="flex items-start gap-3.5">
-                        {/* Icon Avatar */}
+                      <div className="flex items-start gap-3">
+                        {/* Compact Icon */}
                         <div 
-                          className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border shadow-2xs mt-0.5"
+                          className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs mt-0.5"
                           style={{
                             backgroundColor: isGlobal 
                               ? (isDark ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2') 
@@ -884,19 +875,19 @@ export const TraineeDashboard: React.FC = () => {
                                   : (isDark ? '#34d399' : '#059669')
                           }}
                         >
-                          {isGlobal && <Radio size={20} className="animate-pulse" />}
-                          {isAnnouncement && <Megaphone size={19} />}
-                          {isFinal && <AlertTriangle size={19} />}
-                          {!isGlobal && !isAnnouncement && !isFinal && <Bell size={19} />}
+                          {isGlobal && <Radio size={16} />}
+                          {isAnnouncement && <Megaphone size={16} />}
+                          {isFinal && <AlertTriangle size={16} />}
+                          {!isGlobal && !isAnnouncement && !isFinal && <Bell size={16} />}
                         </div>
 
-                        {/* Content Body */}
+                        {/* Content */}
                         <div className="flex-1 min-w-0">
-                          {/* Top Row: Chips & Date */}
-                          <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
-                            <div className="flex items-center gap-2 flex-wrap">
+                          {/* Row 1: Badge + Title + Time + Unread indicator */}
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 min-w-0 flex-1">
                               <span 
-                                className="text-[11px] font-black px-2.5 py-0.5 rounded-lg border uppercase tracking-wider shadow-2xs"
+                                className="text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0"
                                 style={{
                                   backgroundColor: isGlobal 
                                     ? (isDark ? 'rgba(239, 68, 68, 0.15)' : '#fee2e2') 
@@ -911,96 +902,53 @@ export const TraineeDashboard: React.FC = () => {
                                       ? (isDark ? '#fcd34d' : '#92400e') 
                                       : isAnnouncement 
                                         ? (isDark ? '#93c5fd' : '#1e40af') 
-                                        : (isDark ? '#6ee7b7' : '#065f46'),
-                                  borderColor: isGlobal 
-                                    ? (isDark ? 'rgba(239, 68, 68, 0.3)' : '#fecaca') 
-                                    : isFinal 
-                                      ? (isDark ? 'rgba(245, 158, 11, 0.3)' : '#fde68a') 
-                                      : isAnnouncement 
-                                        ? (isDark ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe') 
-                                        : (isDark ? 'rgba(16, 185, 129, 0.3)' : '#a7f3d0')
+                                        : (isDark ? '#6ee7b7' : '#065f46')
                                 }}
                               >
                                 {language === 'ar' 
-                                  ? (isFinal ? 'تذكير نهائي (ساعتين)' : isGlobal ? 'إعلان عام شامل' : isAnnouncement ? 'إعلان دورة تدريبية' : 'تذكير بموعد الدورة') 
-                                  : (isFinal ? 'FINAL REMINDER (2H)' : isGlobal ? 'GLOBAL BROADCAST' : isAnnouncement ? 'COURSE ANNOUNCEMENT' : 'UPCOMING SESSION')}
+                                  ? (isFinal ? 'نهائي' : isGlobal ? 'عام' : isAnnouncement ? 'دورة' : 'تذكير') 
+                                  : (isFinal ? 'Final' : isGlobal ? 'Global' : isAnnouncement ? 'Course' : 'Reminder')}
                               </span>
 
-                              {!isRead && (
-                                <span className="inline-flex items-center gap-1 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse shadow-xs">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-                                  <span>{language === 'ar' ? 'جديد' : 'NEW'}</span>
-                                </span>
-                              )}
+                              <h4 className="font-black text-xs sm:text-sm truncate" style={{ color: isDark ? '#FFFFFF' : '#002D62' }}>
+                                {notif.title || notif.courseTitle || 'تنبيه تدريبي'}
+                              </h4>
                             </div>
 
-                            <span 
-                              className="text-[11px] font-medium flex items-center gap-1 text-gray-500 dark:text-gray-400"
-                            >
-                              <Clock size={12} />
-                              <span>{formatNotificationDate(notif.timestamp, language)}</span>
-                            </span>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">
+                                {formatNotificationDate(notif.timestamp, language)}
+                              </span>
+                              {!isRead && (
+                                <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-amber-400 shadow-xs"></span>
+                              )}
+                            </div>
                           </div>
 
-                          {/* Message / Details */}
-                          {isAnnouncement || isGlobal ? (
-                            <div className="space-y-1.5">
-                              {notif.title && (
-                                <h4 
-                                  className="font-black text-sm sm:text-base leading-snug flex items-center gap-1.5"
-                                  style={{ color: isDark ? '#FFFFFF' : '#002D62' }}
-                                >
-                                  <Sparkles size={14} className="text-[#FFC000] shrink-0" />
-                                  <span>{notif.title}</span>
-                                </h4>
-                              )}
-                              <p className="text-xs sm:text-sm text-gray-800 dark:text-gray-200 leading-relaxed font-normal whitespace-pre-wrap">
-                                {notif.message}
-                              </p>
-                              {notif.author && (
-                                <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 pt-1 flex items-center gap-1">
-                                  <span>{language === 'ar' ? 'بواسطة:' : 'From:'}</span>
-                                  <strong className="text-gray-700 dark:text-gray-300 font-bold">{notif.author}</strong>
-                                </p>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="space-y-2">
-                              <h4 
-                                className="font-black text-sm sm:text-base leading-snug"
-                                style={{ color: isDark ? '#FFFFFF' : '#002D62' }}
-                              >
-                                {notif.courseTitle}
-                              </h4>
-                              <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs shadow-2xs">
-                                <span className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                                  <span className="text-sm">📅</span>
-                                  <strong className="text-[#002D62] dark:text-[#FFC000]">{language === 'ar' ? 'التاريخ:' : 'Date:'}</strong> 
-                                  <span className="font-mono text-slate-900 dark:text-white font-black">{notif.startDate} {notif.startTime ? `(${notif.startTime})` : ''}</span>
-                                </span>
-                                {notif.location && (
-                                  <span className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                                    <span className="text-sm">📍</span>
-                                    <strong className="text-[#002D62] dark:text-[#FFC000]">{language === 'ar' ? 'المكان:' : 'Location:'}</strong> 
-                                    <span className="text-slate-900 dark:text-white font-black">{notif.location}</span>
-                                  </span>
-                                )}
-                              </div>
-                            </div>
+                          {/* Row 2: Message / Body */}
+                          {notif.message && (
+                            <p className="text-xs text-gray-700 dark:text-gray-300 leading-snug mt-1 line-clamp-2">
+                              {notif.message}
+                            </p>
                           )}
 
-                          {/* Footer: Read State Toggle */}
-                          <div className="mt-3 pt-2.5 flex justify-end items-center border-t border-gray-100 dark:border-slate-800">
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); markNotifAsRead(notif.id); }}
-                              className="text-[11px] font-bold flex items-center gap-1 hover:underline cursor-pointer"
-                              style={{ color: isRead ? (isDark ? '#64748b' : '#9ca3af') : (isDark ? '#85C0FF' : '#002D62') }}
-                            >
-                              <Check size={13} className={isRead ? 'text-gray-400' : 'text-[#FFC000]'} />
-                              <span>{isRead ? (language === 'ar' ? 'تمت القراءة ✓' : 'Read ✓') : (language === 'ar' ? 'تمييز كمقروء' : 'Mark as Read')}</span>
-                            </button>
-                          </div>
+                          {/* Row 3: Session details if applicable */}
+                          {(notif.startDate || notif.location) && (
+                            <div className="mt-2 pt-1.5 border-t border-gray-100 dark:border-slate-800/80 flex items-center gap-3 flex-wrap text-[11px] text-gray-600 dark:text-gray-300 font-medium">
+                              {notif.startDate && (
+                                <span className="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">
+                                  <span>📅</span>
+                                  <span>{notif.startDate} {notif.startTime ? `(${notif.startTime})` : ''}</span>
+                                </span>
+                              )}
+                              {notif.location && (
+                                <span className="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">
+                                  <span>📍</span>
+                                  <span className="truncate max-w-[200px]">{notif.location}</span>
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
