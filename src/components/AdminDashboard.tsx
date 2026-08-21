@@ -30,11 +30,15 @@ declare const XLSX: any;
 
 export const playNotificationSound = () => {
   try {
+    if (typeof navigator !== 'undefined' && (navigator as any).userActivation && !(navigator as any).userActivation.hasBeenActive) {
+      return;
+    }
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
     const ctx = new AudioContextClass();
     if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
+      try { ctx.close(); } catch {}
+      return;
     }
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
@@ -62,12 +66,12 @@ export const playNotificationSound = () => {
 
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       try {
-        navigator.vibrate([100, 50, 100]);
+        if (!(navigator as any).userActivation || (navigator as any).userActivation.hasBeenActive) {
+          navigator.vibrate([100, 50, 100]);
+        }
       } catch (vibErr) {}
     }
-  } catch (e) {
-    // Graceful catch for autoplay policies
-  }
+  } catch (e) {}
 };
 
 export const formatNotificationDate = (timestampStr?: string, lang: string = 'en'): string => {
