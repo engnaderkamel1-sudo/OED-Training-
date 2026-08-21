@@ -43,6 +43,8 @@ export const Sidebar: React.FC = () => {
       setTimeout(() => setIsNudging(false), 1000);
     }, 2000);
     return () => clearTimeout(nudgeTimer);
+  }, [isOpen, currentView]);
+
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     
