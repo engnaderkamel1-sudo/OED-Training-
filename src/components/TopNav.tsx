@@ -630,7 +630,9 @@ export const TopNav: React.FC = () => {
 
               <div className="mt-4 text-center">
                 <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">OED-TTMS</h3>
-                <p className="text-xs sm:text-sm font-bold text-[#FFC000] mt-0.5">Orascom Equipment Department • Technical Training System</p>
+                <p className="text-xs sm:text-sm font-extrabold text-[#FFC000] mt-1">
+                  Orascom Construction Equipment Department • Technical Training Management System
+                </p>
               </div>
             </motion.div>
           </motion.div>
