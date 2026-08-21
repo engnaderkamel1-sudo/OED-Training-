@@ -1722,38 +1722,51 @@ Content-Type: text/html; charset="utf-8"
         
         {/* --- ADMIN LIVE ATTENDANCE BANNER (Until 4:00 PM) --- */}
         {adminActiveTodaySessions.length > 0 && !dismissedLiveBannerSessionIds.includes(adminActiveTodaySessions[0].id) && (
-          <div className="mb-6 p-4.5 rounded-2xl bg-gradient-to-r from-[#002D62] via-blue-900 to-[#104080] text-white shadow-xl border-2 border-[#FFC000] flex items-center justify-between flex-wrap gap-4 animate-fade-in print:hidden relative">
-            <div className="flex items-center gap-3.5 min-w-0 flex-1">
+          <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#002D62] via-blue-900 to-[#104080] text-white shadow-xl border-2 border-[#FFC000] animate-fade-in print:hidden relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
               <div className="p-3 rounded-2xl bg-[#FFC000] text-[#002D62] font-black shrink-0 shadow-md">
                 <QrCode size={26} />
               </div>
-              <div className="min-w-0 flex-1">
-                <span className="text-[11px] font-black uppercase tracking-widest bg-yellow-400/20 text-[#FFC000] px-2.5 py-0.5 rounded-full border border-[#FFC000]/40">
-                  🔔 {language === 'ar' ? 'تذكير المحاضر / الأدمن (جلسة اليوم)' : 'Instructor & Admin Attendance Reminder'}
-                </span>
-                <h3 className="text-base sm:text-lg font-black mt-1 text-white truncate">
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center text-[11px] font-black uppercase tracking-wider bg-yellow-400/20 text-[#FFC000] px-2.5 py-0.5 rounded-full border border-[#FFC000]/40">
+                    🔔 {language === 'ar' ? 'تذكير المحاضر والأدمن (جلسة اليوم)' : 'Instructor & Admin Attendance Reminder'}
+                  </span>
+                  {/* Close button on mobile top right */}
+                  <button
+                    type="button"
+                    onClick={() => handleDismissLiveBanner(adminActiveTodaySessions[0].id)}
+                    className="md:hidden text-white/70 hover:text-white hover:bg-white/10 p-1.5 rounded-xl transition-colors cursor-pointer shrink-0"
+                    title={language === 'ar' ? 'إغلاق التنبيه' : 'Dismiss'}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <h3 className="text-base sm:text-lg font-black text-white leading-snug break-words">
                   {adminActiveTodaySessions[0].courseTitle}
                 </h3>
-                <p className="text-xs text-blue-200 font-semibold mt-0.5">
+                <p className="text-xs text-blue-200 font-semibold leading-relaxed">
                   {language === 'ar' ? 'حان موعد بدء الدورة! افتح رمز الـ QR لعرضه على شاشة القاعة للمتدربين (متاح حتى 4:00 م)' : 'Session is live! Open QR code to project on hall screen for trainees (Active until 4:00 PM)'}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 w-full md:w-auto shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-blue-800">
               <button
                 type="button"
                 onClick={() => setQrSession(adminActiveTodaySessions[0])}
-                className="px-5 py-2.5 bg-[#FFC000] hover:bg-yellow-400 text-[#002D62] font-black text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
+                className="w-full md:w-auto px-5 py-3 bg-[#FFC000] hover:bg-yellow-400 text-[#002D62] font-black text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
               >
                 <QrCode size={18} />
                 <span>{language === 'ar' ? '📱 عرض كود الـ QR على الشاشة' : '📱 Project QR Code on Screen'}</span>
               </button>
 
+              {/* Close button on desktop */}
               <button
                 type="button"
                 onClick={() => handleDismissLiveBanner(adminActiveTodaySessions[0].id)}
-                className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-colors cursor-pointer"
+                className="hidden md:inline-flex text-white/70 hover:text-white hover:bg-white/10 p-2.5 rounded-xl transition-colors cursor-pointer"
                 title={language === 'ar' ? 'إغلاق التنبيه' : 'Dismiss'}
               >
                 <X size={20} />

@@ -286,19 +286,24 @@ const AppContent: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            {!activeRole && <Login />}
-            {activeRole && currentView === 'profile' && <ProfilePage />}
-            {activeRole === 'admin' && currentView === 'coursesCatalog' && <CoursesPage />}
-            {activeRole && currentView === 'suggestions' && <SuggestionsPage />}
-            
-            {activeRole === 'admin' && currentView === 'activityLogs' && (
-              <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
-                <ActivityLogsView />
-              </div>
-            )}
+            {!user ? (
+              <Login />
+            ) : (
+              <>
+                {currentView === 'profile' && <ProfilePage />}
+                {user.role === 'admin' && currentView === 'coursesCatalog' && <CoursesPage />}
+                {currentView === 'suggestions' && <SuggestionsPage />}
+                
+                {user.role === 'admin' && currentView === 'activityLogs' && (
+                  <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
+                    <ActivityLogsView />
+                  </div>
+                )}
 
-            {activeRole === 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <AdminDashboard />}
-            {activeRole !== 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <TraineeDashboard />}
+                {user.role === 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <AdminDashboard />}
+                {user.role !== 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && <TraineeDashboard />}
+              </>
+            )}
           </motion.div>
         </main>
       </div>

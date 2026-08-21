@@ -446,40 +446,7 @@ export const TraineeDashboard: React.FC = () => {
                 </div>
               </div>
             )}
-            {/* --- ACTIVE ATTENDANCE TODAY BANNER (Until 4:00 PM) --- */}
-            {activeTodaySessions.length > 0 && (
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-700 text-white shadow-lg border-2 border-emerald-300 flex items-center justify-between flex-wrap gap-4 animate-pulse">
-                <div className="flex items-center gap-3.5">
-                  <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-md text-white shrink-0 border border-white/30">
-                    <QrCode size={28} />
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-black uppercase tracking-widest bg-emerald-950/60 text-emerald-200 px-2.5 py-0.5 rounded-full border border-emerald-300/40">
-                      {language === 'ar' ? '🟢 جلسة تسجيل الحضور نشطة الآن' : '🟢 Check-in Active Now'}
-                    </span>
-                    <h3 className="text-base sm:text-lg font-black mt-1">
-                      {activeTodaySessions[0].courseTitle}
-                    </h3>
-                    <p className="text-xs text-emerald-100 font-semibold mt-0.5">
-                      {language === 'ar' ? 'ينتهي موعد تسجيل الحضور اليوم في تمام الساعة 4:00 مساءً' : 'Attendance check-in closes today at 4:00 PM'}
-                    </p>
-                  </div>
-                </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveSessionForScanner(activeTodaySessions[0]);
-                    setShowScannerModal(true);
-                  }}
-                  className="px-5 py-3 bg-[#FFC000] hover:bg-yellow-400 text-[#002D62] font-black text-sm rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer hover:scale-105"
-                >
-                  <QrCode size={18} />
-                  <span>{language === 'ar' ? 'مسح رمز الحضور (QR)' : 'Scan Attendance QR'}</span>
-                </button>
-              </div>
-            )}
-            {/* --------------------------------- */}
 
             {/* Digital Training Passport / Profile Card */}
             <div 

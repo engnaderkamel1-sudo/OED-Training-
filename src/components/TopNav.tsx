@@ -1,5 +1,3 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { useAppContext } from '../context';
 import { 
   LogOut, 
   Moon, 
@@ -7,23 +5,51 @@ import {
   ChevronDown,
   UserCircle,
   Info,
-  Bell
+  Bell,
+  Users,
+  QrCode,
+  Calendar,
+  CheckCircle,
+  Sparkles,
+  X,
+  ArrowRight
 } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AboutModal } from './AboutModal';
+import { isSessionActiveNow } from '../utils/sessionTimeUtils';
 
 export const TopNav: React.FC = () => {
-  const { user, language, setUser, theme, toggleTheme, setCurrentView, announcements, upcomingSessions } = useAppContext();
+  const { user, language, setUser, theme, toggleTheme, setCurrentView, announcements, upcomingSessions, users } = useAppContext();
   const isDark = theme === 'dark';
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [isLogoExpanded, setIsLogoExpanded] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  // Admin and User Notification Counts
+  const pendingUsersCount = useMemo(() => {
+    if (!users || !user || user.role !== 'admin') return 0;
+    return users.filter(u => u && u.status === 'pending' && !u.isShadowAccount && !String(u.id).startsWith('derived_')).length;
+  }, [users, user]);
+
+  const pendingUpdatesCount = useMemo(() => {
+    if (!users || !user || user.role !== 'admin') return 0;
+    return users.filter(u => u && u.pendingUpdates && Object.keys(u.pendingUpdates).length > 0).length;
+  }, [users, user]);
+
+  const activeSessionsNow = useMemo(() => {
+    return (upcomingSessions || []).filter(s => !s.isDeleted && s.status !== 'Cancelled' && s.status !== 'Completed' && isSessionActiveNow(s));
+  }, [upcomingSessions]);
 
   const unreadCount = useMemo(() => {
     if (!user) return 0;
+    if (user.role === 'admin') {
+      return pendingUsersCount + pendingUpdatesCount + (activeSessionsNow.length > 0 ? 1 : 0) + (announcements?.length || 0);
+    }
     if (user.role === 'trainee') {
       const activeSessions = (upcomingSessions || []).filter(s => !s.isDeleted && s.status !== 'Cancelled');
       let count = 0;
@@ -34,12 +60,15 @@ export const TopNav: React.FC = () => {
       return count;
     }
     return (announcements || []).length;
-  }, [user, announcements, upcomingSessions]);
+  }, [user, announcements, upcomingSessions, pendingUsersCount, pendingUpdatesCount, activeSessionsNow]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdownOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setNotifDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -137,25 +166,146 @@ export const TopNav: React.FC = () => {
             {/* الجزء الأيمن: التنبيهات، الدارك مود، والقائمة المنسدلة */}
             <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0 z-50">
               {user && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (user.role === 'trainee') {
-                      setCurrentView('notifications');
-                    } else if (user.role === 'admin') {
-                      setCurrentView('dashboard');
-                    }
-                  }}
-                  className="relative p-1.5 sm:p-2 text-white cursor-pointer hover:bg-white/10 rounded-xl transition-all"
-                  title={language === 'ar' ? 'التنبيهات والإعلانات' : 'Notifications & Announcements'}
-                >
-                  <Bell size={18} className={unreadCount > 0 ? 'text-[#FFC000]' : 'text-white'} />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-0.5 right-0.5 rtl:right-auto rtl:left-0.5 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border border-[#002D62] shadow-xs animate-pulse">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
+                <div className="relative" ref={notifRef}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNotifDropdownOpen(!notifDropdownOpen);
+                      setDropdownOpen(false);
+                    }}
+                    className="relative p-1.5 sm:p-2 text-white cursor-pointer hover:bg-white/10 rounded-xl transition-all"
+                    title={language === 'ar' ? 'التنبيهات والإعلانات' : 'Notifications & Announcements'}
+                  >
+                    <Bell size={18} className={unreadCount > 0 ? 'text-[#FFC000]' : 'text-white'} />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-0.5 right-0.5 rtl:right-auto rtl:left-0.5 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border border-[#002D62] shadow-xs animate-pulse">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* NOTIFICATIONS DROPDOWN PANEL */}
+                  {notifDropdownOpen && (
+                    <div 
+                      className="absolute right-0 rtl:right-auto rtl:left-0 mt-2.5 w-80 sm:w-96 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn z-[99999] border backdrop-blur-md"
+                      style={{
+                        backgroundColor: isDark ? '#0D1E38' : '#FFFFFF',
+                        borderColor: isDark ? 'rgba(148, 190, 255, 0.4)' : '#E2E8F0',
+                        boxShadow: '0 20px 35px -5px rgba(0, 0, 0, 0.3), 0 10px 15px -5px rgba(0, 0, 0, 0.15)'
+                      }}
+                    >
+                      {/* Header */}
+                      <div className="p-3.5 bg-[#002D62] text-white flex items-center justify-between border-b border-blue-900">
+                        <div className="flex items-center gap-2">
+                          <Bell size={16} className="text-[#FFC000]" />
+                          <h4 className="font-bold text-sm text-white">
+                            {language === 'ar' ? 'التنبيهات والإشعارات' : 'Notifications Center'}
+                          </h4>
+                        </div>
+                        <span className="text-[11px] font-black bg-[#FFC000] text-[#002D62] px-2 py-0.5 rounded-full">
+                          {unreadCount} {language === 'ar' ? 'تنبيه' : 'alerts'}
+                        </span>
+                      </div>
+
+                      {/* Notification Items List */}
+                      <div className="p-2 max-h-80 overflow-y-auto divide-y divide-gray-100 dark:divide-slate-800 space-y-1">
+                        
+                        {/* Pending Users Registration Request (Admin / Manager) */}
+                        {user.role === 'admin' && pendingUsersCount > 0 && (
+                          <div 
+                            onClick={() => {
+                              setCurrentView('userManagement');
+                              setNotifDropdownOpen(false);
+                            }}
+                            className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <Users size={16} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                                <span className="font-bold text-xs text-amber-950 dark:text-amber-200">
+                                  {language === 'ar' ? `لديك ${pendingUsersCount} طلبات تسجيل حسابات جديدة` : `${pendingUsersCount} pending registration requests`}
+                                </span>
+                              </div>
+                              <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 bg-amber-200 dark:bg-amber-900/60 px-2 py-0.5 rounded-full">
+                                {language === 'ar' ? 'مراجعة' : 'Review'}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Active Sessions Live Today */}
+                        {activeSessionsNow.length > 0 && (
+                          <div 
+                            onClick={() => {
+                              if (user.role === 'admin') setCurrentView('dashboard');
+                              else setCurrentView('newCourses');
+                              setNotifDropdownOpen(false);
+                            }}
+                            className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2">
+                              <QrCode size={16} className="text-blue-600 dark:text-blue-400 shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="font-bold text-xs text-blue-950 dark:text-blue-200 truncate">
+                                  {language === 'ar' ? `دورة نشطة الآن: ${activeSessionsNow[0].courseTitle}` : `Active Session: ${activeSessionsNow[0].courseTitle}`}
+                                </p>
+                                <p className="text-[10px] text-blue-700 dark:text-blue-300 mt-0.5">
+                                  {language === 'ar' ? 'تسجيل الحضور مفتوح حالياً' : 'Attendance check-in is open'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Recent Announcements */}
+                        {(announcements || []).slice(0, 4).map((ann) => (
+                          <div 
+                            key={ann.id}
+                            className="p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors"
+                          >
+                            <div className="flex items-start gap-2">
+                              <Sparkles size={15} className="text-amber-500 shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <p className="font-bold text-xs text-gray-900 dark:text-white leading-tight">
+                                  {ann.title}
+                                </p>
+                                <p className="text-[11px] text-gray-600 dark:text-gray-300 mt-0.5 line-clamp-2">
+                                  {ann.message}
+                                </p>
+                                <span className="text-[9px] text-gray-400 dark:text-gray-500 mt-1 block">
+                                  {new Date(ann.date).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Empty State */}
+                        {unreadCount === 0 && (
+                          <div className="py-6 text-center text-xs text-gray-500 dark:text-gray-400">
+                            {language === 'ar' ? 'لا توجد تنبيهات جديدة حالياً' : 'No new notifications'}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Footer for Trainees */}
+                      {user.role === 'trainee' && (
+                        <div className="p-2 bg-gray-50 dark:bg-slate-800/80 border-t border-gray-100 dark:border-slate-800 text-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCurrentView('notifications');
+                              setNotifDropdownOpen(false);
+                            }}
+                            className="text-xs font-bold text-[#002D62] dark:text-[#85C0FF] hover:underline"
+                          >
+                            {language === 'ar' ? 'عرض جميع الإشعارات السابقة ←' : 'View all notifications ←'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
-                </button>
+                </div>
               )}
 
               <button

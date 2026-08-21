@@ -2,20 +2,28 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, CheckCircle } from 'lucide-react';
 import { useAppContext } from '../context';
 
+const CURRENT_APP_BUILD = 'v2026.08.21.3';
+
 export const UpdateNotificationBanner: React.FC = () => {
-  const { language } = useAppContext();
+  const { language, systemVersion } = useAppContext();
   const [showUpdatedToast, setShowUpdatedToast] = useState(false);
   const initialScriptRef = useRef<string | null>(null);
 
-  // 1. Check if we just completed an auto-update reload
+  // 1. Check on load if the app version/build has changed
   useEffect(() => {
     try {
-      const wasUpdated = sessionStorage.getItem('oed_just_auto_updated');
-      if (wasUpdated === 'true') {
+      const storedBuild = localStorage.getItem('oed_app_build_version');
+      const wasAutoUpdated = sessionStorage.getItem('oed_just_auto_updated');
+
+      // If build changed or auto-updated flag is present
+      if (wasAutoUpdated === 'true' || (storedBuild && storedBuild !== CURRENT_APP_BUILD)) {
         sessionStorage.removeItem('oed_just_auto_updated');
+        localStorage.setItem('oed_app_build_version', CURRENT_APP_BUILD);
         setShowUpdatedToast(true);
-        const timer = setTimeout(() => setShowUpdatedToast(false), 4500);
+        const timer = setTimeout(() => setShowUpdatedToast(false), 5000);
         return () => clearTimeout(timer);
+      } else if (!storedBuild) {
+        localStorage.setItem('oed_app_build_version', CURRENT_APP_BUILD);
       }
     } catch (e) {}
   }, []);
@@ -52,7 +60,6 @@ export const UpdateNotificationBanner: React.FC = () => {
     const performAutoUpdate = () => {
       try {
         sessionStorage.setItem('oed_just_auto_updated', 'true');
-        // Clear caches if supported
         if ('caches' in window) {
           caches.keys().then(names => {
             names.forEach(name => caches.delete(name));
@@ -82,15 +89,13 @@ export const UpdateNotificationBanner: React.FC = () => {
           // New deployment detected: Auto-update seamlessly
           performAutoUpdate();
         }
-      } catch (e) {
-        // Silent catch for network resilience
-      }
+      } catch (e) {}
     };
 
-    // Check periodically every 2 minutes
-    const interval = setInterval(checkForUpdates, 120000);
+    // Check periodically every 90 seconds
+    const interval = setInterval(checkForUpdates, 90000);
 
-    // Check when user refocuses or returns to the app
+    // Check when user refocuses or returns to the app tab
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         checkForUpdates();
@@ -112,15 +117,15 @@ export const UpdateNotificationBanner: React.FC = () => {
   return (
     <div className="fixed bottom-6 right-4 sm:right-6 rtl:right-auto rtl:left-4 sm:rtl:left-6 z-[999999] animate-bounce-short">
       <div className="bg-[#002D62] text-white px-4 py-3 rounded-2xl border-2 border-[#FFC000] shadow-2xl flex items-center gap-3 backdrop-blur-md">
-        <div className="w-7 h-7 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-          <CheckCircle size={16} />
+        <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+          <CheckCircle size={18} />
         </div>
         <div className="text-xs sm:text-sm font-black">
           <p className="text-white">
             {language === 'ar' ? '✨ تم تحديث المنظومة تلقائياً بنجاح!' : '✨ App updated to latest version!'}
           </p>
           <p className="text-[10px] text-amber-300 font-semibold">
-            {language === 'ar' ? 'أنت الآن على أحدث إصدار معتمد' : 'You are running the latest build'}
+            {language === 'ar' ? `أنت الآن على أحدث إصدار معتمد ${systemVersion ? `(v${systemVersion})` : ''}` : `You are running latest build ${systemVersion ? `(v${systemVersion})` : ''}`}
           </p>
         </div>
       </div>
