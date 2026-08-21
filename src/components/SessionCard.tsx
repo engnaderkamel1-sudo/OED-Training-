@@ -768,14 +768,27 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                     </button>
                   )}
 
-                  <button 
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onScanQR) onScanQR(session); }}
-                    className="cursor-pointer bg-[#002D62] hover:bg-blue-900 text-white font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md hover:scale-105 active:scale-95"
-                  >
-                    <ScanLine size={15} className="text-[#FFC000]" />
-                    <span>{language === "ar" ? "مسح الحضور" : "Scan Attendance"}</span>
-                  </button>
+                  {/* Scan Attendance Button - Enabled strictly on course days */}
+                  {isDateActiveForAttendance ? (
+                    <button 
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onScanQR) onScanQR(session); }}
+                      className="cursor-pointer bg-[#002D62] hover:bg-blue-900 text-white font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md hover:scale-105 active:scale-95"
+                    >
+                      <ScanLine size={15} className="text-[#FFC000]" />
+                      <span>{language === "ar" ? "مسح الحضور" : "Scan Attendance"}</span>
+                    </button>
+                  ) : (
+                    <button 
+                      type="button"
+                      disabled
+                      className="opacity-40 cursor-not-allowed bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs"
+                      title={language === 'ar' ? 'تسجيل الحضور متاح فقط أثناء أيام انعقاد الدورة الفعلية' : 'Attendance check-in is available only during active session dates'}
+                    >
+                      <ScanLine size={14} className="text-gray-400" />
+                      <span>{language === "ar" ? "مسح الحضور (مغلق)" : "Attendance (Closed)"}</span>
+                    </button>
+                  )}
                   <button 
                     type="button"
                     onClick={() => setConfirmAction('unregister')}
