@@ -1776,9 +1776,9 @@ Content-Type: text/html; charset="utf-8"
         )}
 
         {/* شريط الترحيب على الموبايل وزرار الطباعة والشريط الذهبي */}
-        <div className="flex w-full justify-between items-center border-b-2 border-[#FFC000] pb-3 mb-6 print:hidden gap-2">
-          <div className="md:hidden flex items-center gap-1.5">
-            <p className="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200">
+        <div className="flex w-full justify-end items-center border-b-2 border-[#FFC000] pb-3 mb-6 print:hidden gap-3">
+          <div className="md:hidden flex items-center gap-1.5 ml-auto rtl:ml-0 rtl:mr-auto">
+            <p className="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200 text-right">
               {language === 'ar' ? '👋 أهلاً بك، ' : '👋 Welcome, '}
               <span className="text-[#002D62] dark:text-[#FFC000] font-black">{user?.name?.split(' ')[0]}</span>
             </p>
@@ -1787,7 +1787,7 @@ Content-Type: text/html; charset="utf-8"
           {user?.role === 'admin' || user?.role === 'supervisor' ? (
             <button 
               onClick={handlePrint} 
-              className="flex items-center gap-1.5 text-white px-4 py-2 rounded-xl transition-all shadow-sm text-sm font-bold hover:opacity-90 active:scale-95 cursor-pointer ml-auto rtl:ml-0 rtl:mr-auto"
+              className="flex items-center gap-1.5 text-white px-4 py-2 rounded-xl transition-all shadow-sm text-sm font-bold hover:opacity-90 active:scale-95 cursor-pointer shrink-0"
               style={{ backgroundColor: isDark ? '#2563eb' : '#002D62' }}
             >
               <Printer size={18} />
