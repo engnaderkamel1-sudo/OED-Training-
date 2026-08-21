@@ -1775,20 +1775,12 @@ Content-Type: text/html; charset="utf-8"
           </div>
         )}
 
-        {/* شريط شعار أوراسكوم وزر الطباعة */}
-        <div className="flex w-full justify-between items-end border-b-2 border-[#FFC000] pb-2 mb-6 print:hidden">
-          <div className="bg-white px-3 py-1.5 rounded-t-xl shadow-xs border border-b-0 border-gray-200">
-            <img 
-              src="/orascom-logo.png" 
-              alt="Orascom Construction Equipment Department OED" 
-              className="h-7 sm:h-8 w-auto object-contain"
-            />
-          </div>
-
+        {/* زرار الطباعة والشريط الذهبي */}
+        <div className="flex w-full justify-end items-center border-b-2 border-[#FFC000] pb-3 mb-6 print:hidden">
           {user?.role === 'admin' || user?.role === 'supervisor' ? (
             <button 
               onClick={handlePrint} 
-              className="flex items-center gap-1.5 text-white px-4 py-2 rounded-xl transition-all shadow-sm text-sm font-bold hover:opacity-90 active:scale-95 cursor-pointer mb-1"
+              className="flex items-center gap-1.5 text-white px-4 py-2 rounded-xl transition-all shadow-sm text-sm font-bold hover:opacity-90 active:scale-95 cursor-pointer"
               style={{ backgroundColor: isDark ? '#2563eb' : '#002D62' }}
             >
               <Printer size={18} />

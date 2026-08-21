@@ -145,7 +145,7 @@ export const TopNav: React.FC = () => {
                 {!isLogoExpanded && (
                   <motion.img 
                     layoutId="magic-logo"
-                    src="/app-icon-v8.png" 
+                    src="/app-icon-v9.png" 
                     alt="OED-TTMS" 
                     className="w-full h-full object-cover rounded-full shadow-sm border border-white/20 cursor-pointer"
                     onClick={() => setIsLogoExpanded(true)}
@@ -570,6 +570,17 @@ export const TopNav: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Hanging Orascom Logo Tab - Stays sticky with the Top Navbar during scroll */}
+        <div className="absolute left-3 sm:left-6 rtl:left-auto rtl:right-3 sm:rtl:right-6 top-full z-40 pointer-events-auto">
+          <div className="bg-white px-3 py-1 sm:py-1.5 rounded-b-xl shadow-md border border-t-0 border-gray-200 flex items-center justify-center">
+            <img 
+              src="/orascom-logo.png" 
+              alt="Orascom Construction Equipment Department OED" 
+              className="h-6 sm:h-7.5 w-auto object-contain"
+            />
           </div>
         </div>
       </nav>
