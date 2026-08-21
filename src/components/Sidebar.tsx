@@ -43,12 +43,6 @@ export const Sidebar: React.FC = () => {
       setTimeout(() => setIsNudging(false), 1000);
     }, 2000);
     return () => clearTimeout(nudgeTimer);
-  }, [isOpen, currentView]);
-
-  if (!user) return null;
-
-  const role = user.role;
-
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     
@@ -76,6 +70,10 @@ export const Sidebar: React.FC = () => {
       events.forEach(evt => window.removeEventListener(evt, resetInactivityTimer));
     };
   }, [isOpen, isCollapsed]);
+
+  if (!user) return null;
+
+  const role = user.role;
 
   const handleNavClick = (id: string) => {
     setCurrentView(id);

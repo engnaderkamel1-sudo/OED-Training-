@@ -33,6 +33,9 @@ export const playNotificationSound = () => {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
     const ctx = new AudioContextClass();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
     osc1.type = 'sine';
@@ -58,10 +61,12 @@ export const playNotificationSound = () => {
     osc2.stop(ctx.currentTime + 0.55);
 
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate([100, 50, 100]);
+      try {
+        navigator.vibrate([100, 50, 100]);
+      } catch (vibErr) {}
     }
   } catch (e) {
-    console.log('Audio playback prevented or unsupported', e);
+    // Graceful catch for autoplay policies
   }
 };
 
@@ -1666,6 +1671,23 @@ Content-Type: text/html; charset="utf-8"
   const courseSessions: string[] = selectedCourseDetails ? Array.from(new Set(filteredRecords.map((r) => r.attendanceDate))) : [];
 
   // Admin Automated Attendance Reminder: ONLY sessions actively running right now (Course Date + Start Time until 4:00 PM)
+  const [dismissedLiveBannerSessionIds, setDismissedLiveBannerSessionIds] = useState<string[]>(() => {
+    try {
+      const stored = sessionStorage.getItem('oed_dismissed_admin_live_banners');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleDismissLiveBanner = (sessionId: string) => {
+    const updated = [...dismissedLiveBannerSessionIds, sessionId];
+    setDismissedLiveBannerSessionIds(updated);
+    try {
+      sessionStorage.setItem('oed_dismissed_admin_live_banners', JSON.stringify(updated));
+    } catch {}
+  };
+
   const adminActiveTodaySessions = useMemo(() => {
     return (upcomingSessions || []).filter(s => isSessionActiveNow(s));
   }, [upcomingSessions]);
@@ -1695,17 +1717,17 @@ Content-Type: text/html; charset="utf-8"
       <div className="max-w-7xl mx-auto px-4 py-8 print:p-0">
         
         {/* --- ADMIN LIVE ATTENDANCE BANNER (Until 4:00 PM) --- */}
-        {adminActiveTodaySessions.length > 0 && (
-          <div className="mb-6 p-4.5 rounded-2xl bg-gradient-to-r from-[#002D62] via-blue-900 to-[#104080] text-white shadow-xl border-2 border-[#FFC000] flex items-center justify-between flex-wrap gap-4 animate-fade-in print:hidden">
-            <div className="flex items-center gap-3.5">
+        {adminActiveTodaySessions.length > 0 && !dismissedLiveBannerSessionIds.includes(adminActiveTodaySessions[0].id) && (
+          <div className="mb-6 p-4.5 rounded-2xl bg-gradient-to-r from-[#002D62] via-blue-900 to-[#104080] text-white shadow-xl border-2 border-[#FFC000] flex items-center justify-between flex-wrap gap-4 animate-fade-in print:hidden relative">
+            <div className="flex items-center gap-3.5 min-w-0 flex-1">
               <div className="p-3 rounded-2xl bg-[#FFC000] text-[#002D62] font-black shrink-0 shadow-md">
                 <QrCode size={26} />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <span className="text-[11px] font-black uppercase tracking-widest bg-yellow-400/20 text-[#FFC000] px-2.5 py-0.5 rounded-full border border-[#FFC000]/40">
                   🔔 {language === 'ar' ? 'تذكير المحاضر / الأدمن (جلسة اليوم)' : 'Instructor & Admin Attendance Reminder'}
                 </span>
-                <h3 className="text-base sm:text-lg font-black mt-1 text-white">
+                <h3 className="text-base sm:text-lg font-black mt-1 text-white truncate">
                   {adminActiveTodaySessions[0].courseTitle}
                 </h3>
                 <p className="text-xs text-blue-200 font-semibold mt-0.5">
@@ -1714,14 +1736,25 @@ Content-Type: text/html; charset="utf-8"
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setQrSession(adminActiveTodaySessions[0])}
-              className="px-5 py-3 bg-[#FFC000] hover:bg-yellow-400 text-[#002D62] font-black text-sm rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
-            >
-              <QrCode size={18} />
-              <span>{language === 'ar' ? '📱 عرض كود الـ QR على الشاشة' : '📱 Project QR Code on Screen'}</span>
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setQrSession(adminActiveTodaySessions[0])}
+                className="px-5 py-2.5 bg-[#FFC000] hover:bg-yellow-400 text-[#002D62] font-black text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <QrCode size={18} />
+                <span>{language === 'ar' ? '📱 عرض كود الـ QR على الشاشة' : '📱 Project QR Code on Screen'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDismissLiveBanner(adminActiveTodaySessions[0].id)}
+                className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-colors cursor-pointer"
+                title={language === 'ar' ? 'إغلاق التنبيه' : 'Dismiss'}
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
         )}
 

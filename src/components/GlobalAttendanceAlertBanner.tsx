@@ -17,11 +17,9 @@ export const GlobalAttendanceAlertBanner: React.FC = () => {
 
   const [activeScannerSession, setActiveScannerSession] = useState<any | null>(null);
 
-  // Only for Trainees / non-admins
-  if (!user || user.role === 'admin') return null;
-
   // Active Attendance Sessions for this user
   const activeAlert = useMemo(() => {
+    if (!user || user.role === 'admin') return null;
     const uCode = (user.hrCode || user.id || '').trim().toLowerCase();
     
     // 1. Check direct recent announcements (< 2 hours old)

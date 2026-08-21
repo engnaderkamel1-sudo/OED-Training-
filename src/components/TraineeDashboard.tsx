@@ -11,6 +11,9 @@ export const playNotificationSound = () => {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
     const ctx = new AudioContextClass();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     
     // Tone 1 (High bell - D5)
     const osc1 = ctx.createOscillator();
@@ -39,10 +42,12 @@ export const playNotificationSound = () => {
     osc2.stop(ctx.currentTime + 0.55);
 
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate([100, 50, 100]);
+      try {
+        navigator.vibrate([100, 50, 100]);
+      } catch (vibErr) {}
     }
   } catch (e) {
-    console.log('Audio playback prevented or unsupported', e);
+    // Graceful catch
   }
 };
 
