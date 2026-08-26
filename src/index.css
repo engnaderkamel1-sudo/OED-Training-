@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
+
 /* ============================================
    ORASCOM TTMS — Professional Design System v3.0
    Brand: Navy #002D62 · Gold #FFC000 · Crisp White
@@ -60,7 +62,7 @@
 /* ============================================
    ★★★ DARK THEME — Luminous Modern Navy ★★★
    ============================================ */
-[data-theme="dark"] {
+[data-theme="dark"], .dark {
   /* Dark Theme Surfaces (Lightened & Highly Legible) */
   --bg-primary:     #0F1E36;
   --bg-secondary:   #0F1E36;
@@ -223,6 +225,93 @@ header.bg-\[\#002D62\] {
 [data-theme="dark"] .bg-amber-50\/80 {
   background-color: rgba(245, 158, 11, 0.14) !important;
   border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+/* High-Contrast Badge & Status Text in Dark Mode (WCAG AAA) */
+[data-theme="dark"] .text-blue-700,
+[data-theme="dark"] .text-blue-800,
+[data-theme="dark"] .text-blue-900,
+[data-theme="dark"] .text-blue-950,
+.dark .text-blue-700,
+.dark .text-blue-800,
+.dark .text-blue-900,
+.dark .text-blue-950 {
+  color: #93C5FD !important;
+}
+
+[data-theme="dark"] .text-amber-700,
+[data-theme="dark"] .text-amber-800,
+[data-theme="dark"] .text-amber-900,
+[data-theme="dark"] .text-amber-950,
+.dark .text-amber-700,
+.dark .text-amber-800,
+.dark .text-amber-900,
+.dark .text-amber-950 {
+  color: #FCD34D !important;
+}
+
+[data-theme="dark"] .text-emerald-700,
+[data-theme="dark"] .text-emerald-800,
+[data-theme="dark"] .text-emerald-900,
+[data-theme="dark"] .text-emerald-950,
+.dark .text-emerald-700,
+.dark .text-emerald-800,
+.dark .text-emerald-900,
+.dark .text-emerald-950 {
+  color: #6EE7B7 !important;
+}
+
+[data-theme="dark"] .text-purple-700,
+[data-theme="dark"] .text-purple-800,
+[data-theme="dark"] .text-purple-900,
+[data-theme="dark"] .text-purple-950,
+.dark .text-purple-700,
+.dark .text-purple-800,
+.dark .text-purple-900,
+.dark .text-purple-950 {
+  color: #D8B4FE !important;
+}
+
+[data-theme="dark"] .text-red-700,
+[data-theme="dark"] .text-red-800,
+[data-theme="dark"] .text-red-900,
+[data-theme="dark"] .text-red-950,
+.dark .text-red-700,
+.dark .text-red-800,
+.dark .text-red-900,
+.dark .text-red-950 {
+  color: #FDA4AF !important;
+}
+
+/* Badge Backgrounds in Dark Mode */
+[data-theme="dark"] .bg-blue-100,
+.dark .bg-blue-100 {
+  background-color: rgba(59, 130, 246, 0.22) !important;
+  border-color: rgba(59, 130, 246, 0.45) !important;
+}
+
+[data-theme="dark"] .bg-amber-100,
+.dark .bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.22) !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+}
+
+[data-theme="dark"] .bg-emerald-100,
+.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.22) !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+}
+
+[data-theme="dark"] .bg-purple-100,
+.dark .bg-purple-100 {
+  background-color: rgba(168, 85, 247, 0.22) !important;
+  border-color: rgba(168, 85, 247, 0.45) !important;
+}
+
+[data-theme="dark"] .bg-red-100,
+.dark .bg-red-100 {
+  background-color: rgba(239, 68, 68, 0.22) !important;
+  border-color: rgba(239, 68, 68, 0.45) !important;
 }
 
 /* Card Hover Animation */

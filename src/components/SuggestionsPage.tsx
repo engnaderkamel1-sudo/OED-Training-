@@ -9,17 +9,17 @@ import {
 } from 'lucide-react';
 
 const CATEGORIES: { value: SuggestionCategory; icon: React.FC<any>; color: string; activeColor: string }[] = [
-  { value: 'ui',      icon: Sparkles,  color: 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 border-sky-200 dark:border-sky-700/60', activeColor: 'bg-sky-600 text-white border-sky-600 shadow-sm' },
-  { value: 'course',  icon: BookOpen,  color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-700/60', activeColor: 'bg-blue-600 text-white border-blue-600 shadow-sm' },
-  { value: 'bug',     icon: Bug,       color: 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/60 border-red-200 dark:border-red-700/60', activeColor: 'bg-red-600 text-white border-red-600 shadow-sm' },
-  { value: 'general', icon: Lightbulb, color: 'text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700/60', activeColor: 'bg-[#FFC000] text-[#001D42] border-yellow-500 font-black shadow-sm' },
+  { value: 'ui',      icon: Sparkles,  color: 'text-sky-700 dark:text-sky-200 bg-sky-50 dark:bg-sky-500/20 border-sky-200 dark:border-sky-500/40', activeColor: 'bg-sky-600 text-white border-sky-600 shadow-sm' },
+  { value: 'course',  icon: BookOpen,  color: 'text-blue-700 dark:text-blue-200 bg-blue-50 dark:bg-blue-500/20 border-blue-200 dark:border-blue-500/40', activeColor: 'bg-blue-600 text-white border-blue-600 shadow-sm' },
+  { value: 'bug',     icon: Bug,       color: 'text-red-700 dark:text-rose-200 bg-red-50 dark:bg-rose-500/20 border-red-200 dark:border-rose-500/40', activeColor: 'bg-rose-600 text-white border-rose-600 shadow-sm' },
+  { value: 'general', icon: Lightbulb, color: 'text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-500/20 border-amber-300 dark:border-amber-500/40', activeColor: 'bg-[#FFC000] text-[#001D42] border-yellow-500 font-black shadow-sm' },
 ];
 
 const STATUS_CONFIG: Record<SuggestionStatus, { label_en: string; label_ar: string; color: string; icon: React.FC<any> }> = {
-  pending:   { label_en: 'Pending',       label_ar: 'قيد الانتظار', color: 'text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-slate-800 border-gray-300 dark:border-slate-600', icon: Clock },
-  reviewing: { label_en: 'Under Review',  label_ar: 'قيد الدراسة', color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-700',    icon: AlertCircle },
-  done:      { label_en: 'Done',          label_ar: 'تم',           color: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-700', icon: CheckCircle },
-  rejected:  { label_en: 'Rejected',      label_ar: 'مرفوض',        color: 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/60 border-red-200 dark:border-red-700',       icon: XCircle },
+  pending:   { label_en: 'Pending',       label_ar: 'قيد الانتظار', color: 'text-gray-700 dark:text-slate-200 bg-gray-100 dark:bg-slate-800 border-gray-300 dark:border-slate-700', icon: Clock },
+  reviewing: { label_en: 'Under Review',  label_ar: 'قيد الدراسة', color: 'text-blue-700 dark:text-blue-200 bg-blue-50 dark:bg-blue-500/20 border-blue-200 dark:border-blue-500/40',    icon: AlertCircle },
+  done:      { label_en: 'Done',          label_ar: 'تم',           color: 'text-emerald-700 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-500/20 border-emerald-200 dark:border-emerald-500/40', icon: CheckCircle },
+  rejected:  { label_en: 'Rejected',      label_ar: 'مرفوض',        color: 'text-red-700 dark:text-rose-200 bg-red-50 dark:bg-rose-500/20 border-red-200 dark:border-rose-500/40',       icon: XCircle },
 };
 
 // Message templates for each status change
