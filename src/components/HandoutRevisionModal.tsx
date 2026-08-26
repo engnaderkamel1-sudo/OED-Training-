@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '../context';
 import { HandoutIssueType } from '../types';
 import { X, Send, BookOpen, FileText, CheckCircle2, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
@@ -60,7 +60,7 @@ export const HandoutRevisionModal: React.FC<HandoutRevisionModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-[99999] flex items-center justify-center p-3 sm:p-4 animate-fade-in">
       <div 
-        className="bg-white dark:bg-[#0E1A30] w-full max-w-xl rounded-2xl shadow-2xl flex flex-col max-h-[92vh] border border-gray-300 dark:border-slate-700 overflow-hidden"
+        className="bg-white dark:bg-[#13233D] w-full max-w-xl rounded-2xl shadow-2xl flex flex-col max-h-[92vh] border border-gray-300 dark:border-slate-700/80 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -117,7 +117,7 @@ export const HandoutRevisionModal: React.FC<HandoutRevisionModalProps> = ({
                     onChange={(e) => setCourseTitle(e.target.value)}
                     placeholder={language === 'ar' ? 'اكتب أو اختر اسم الدورة...' : 'Enter or select course title...'}
                     list="courseTitlesList"
-                    className="w-full border border-gray-300 dark:border-slate-600 rounded-xl px-3.5 py-2.5 bg-white dark:bg-[#091426] text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-[#002D62] text-sm"
+                    className="w-full border border-gray-300 dark:border-slate-600 rounded-xl px-3.5 py-2.5 bg-white dark:bg-[#0A1628] dark:border-slate-700"
                   />
                   <datalist id="courseTitlesList">
                     {courses.map((c) => (
@@ -132,7 +132,7 @@ export const HandoutRevisionModal: React.FC<HandoutRevisionModalProps> = ({
                   value={courseTitle} 
                   onChange={(e) => setCourseTitle(e.target.value)}
                   placeholder={language === 'ar' ? 'اسم الدورة التدريبية...' : 'Course Title...'}
-                  className="w-full border border-gray-300 dark:border-slate-600 rounded-xl px-3.5 py-2.5 bg-white dark:bg-[#091426] text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-[#002D62] text-sm"
+                  className="w-full border border-gray-300 dark:border-slate-600 rounded-xl px-3.5 py-2.5 bg-white dark:bg-[#0A1628] dark:border-slate-700"
                 />
               )}
             </div>

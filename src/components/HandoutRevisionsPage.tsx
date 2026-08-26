@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context';
 import { HandoutRevision, HandoutRevisionStatus, HandoutIssueType } from '../types';
 import { 
@@ -27,59 +27,59 @@ export const HandoutRevisionsPage: React.FC = () => {
 
   const isAdmin = user?.role === 'admin';
 
-  // Issue Type Labels & Badges
+  // Issue Type Labels & Badges with unified vibrant contrast
   const getIssueTypeBadge = (type: HandoutIssueType) => {
     switch (type) {
       case 'technical_update':
         return {
           label: language === 'ar' ? 'تحديث فني' : 'Technical Update',
-          classes: 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border-blue-300 dark:border-blue-700'
+          classes: 'bg-blue-100 text-blue-900 dark:bg-blue-500/20 dark:text-blue-200 border-blue-300 dark:border-blue-500/40'
         };
       case 'missing_info':
         return {
           label: language === 'ar' ? 'معلومة ناقصة' : 'Missing Info',
-          classes: 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border-purple-300 dark:border-purple-700'
+          classes: 'bg-purple-100 text-purple-900 dark:bg-purple-500/20 dark:text-purple-200 border-purple-300 dark:border-purple-500/40'
         };
       case 'diagram_enhancement':
         return {
           label: language === 'ar' ? 'مخطط / صورة' : 'Diagram / Visual',
-          classes: 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300 dark:border-amber-700'
+          classes: 'bg-amber-100 text-amber-950 dark:bg-amber-500/20 dark:text-amber-200 border-amber-300 dark:border-amber-500/40'
         };
       case 'typo':
         return {
           label: language === 'ar' ? 'خطأ مطبعي' : 'Typo',
-          classes: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
+          classes: 'bg-emerald-100 text-emerald-950 dark:bg-emerald-500/20 dark:text-emerald-200 border-emerald-300 dark:border-emerald-500/40'
         };
       default:
         return {
           label: language === 'ar' ? 'مقترح عام' : 'General Suggestion',
-          classes: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-600'
+          classes: 'bg-slate-100 text-slate-900 dark:bg-slate-700/40 dark:text-slate-200 border-slate-300 dark:border-slate-600'
         };
     }
   };
 
-  // Status Badges
+  // Status Badges with clear high-contrast colors
   const getStatusBadge = (status: HandoutRevisionStatus) => {
     switch (status) {
       case 'applied':
         return {
           label: language === 'ar' ? 'تم التعديل في الحقيبة ✓' : 'Applied in Handout ✓',
-          classes: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-400 dark:border-emerald-600'
+          classes: 'bg-emerald-100 text-emerald-950 dark:bg-emerald-500/25 dark:text-emerald-200 border-emerald-400 dark:border-emerald-500/50'
         };
       case 'reviewing':
         return {
           label: language === 'ar' ? 'قيد المراجعة الفنية ⏳' : 'Under Review ⏳',
-          classes: 'bg-blue-100 text-blue-900 dark:bg-blue-950/80 dark:text-blue-300 border-blue-300 dark:border-blue-700'
+          classes: 'bg-blue-100 text-blue-950 dark:bg-blue-500/25 dark:text-blue-200 border-blue-400 dark:border-blue-500/50'
         };
       case 'rejected':
         return {
           label: language === 'ar' ? 'مرفوض / غير دقيق ✕' : 'Rejected ✕',
-          classes: 'bg-red-100 text-red-900 dark:bg-red-950/80 dark:text-red-300 border-red-300 dark:border-red-700'
+          classes: 'bg-red-100 text-red-950 dark:bg-red-500/25 dark:text-red-200 border-red-400 dark:border-red-500/50'
         };
       default:
         return {
           label: language === 'ar' ? 'جديد - قيد الدراسة 📋' : 'Pending Review 📋',
-          classes: 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300 dark:border-amber-700'
+          classes: 'bg-amber-100 text-amber-950 dark:bg-amber-500/25 dark:text-amber-200 border-amber-400 dark:border-amber-500/50'
         };
     }
   };
@@ -211,47 +211,47 @@ export const HandoutRevisionsPage: React.FC = () => {
 
       {/* Stats Cards (Admin / Trainee) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-[#0E1A30] p-4 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-[#002D62] dark:text-blue-300 flex items-center justify-center font-black">
+        <div className="bg-white dark:bg-[#13233D] p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-xs flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 text-[#002D62] dark:text-blue-300 flex items-center justify-center font-black">
             <FileText size={20} />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400">{language === 'ar' ? 'إجمالي المقترحات' : 'Total Revisions'}</p>
+            <p className="text-[11px] font-bold text-gray-500 dark:text-slate-400">{language === 'ar' ? 'إجمالي المقترحات' : 'Total Revisions'}</p>
             <p className="text-lg font-black text-[#002D62] dark:text-white">{totalCount}</p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#0E1A30] p-4 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 flex items-center justify-center font-black">
+        <div className="bg-white dark:bg-[#13233D] p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-xs flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center font-black">
             <Clock size={20} />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400">{language === 'ar' ? 'قيد الدراسة' : 'Pending Review'}</p>
-            <p className="text-lg font-black text-amber-700 dark:text-amber-400">{pendingCount}</p>
+            <p className="text-[11px] font-bold text-gray-500 dark:text-slate-400">{language === 'ar' ? 'قيد الدراسة' : 'Pending Review'}</p>
+            <p className="text-lg font-black text-amber-700 dark:text-amber-300">{pendingCount}</p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#0E1A30] p-4 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-xs flex items-center gap-3 col-span-2 sm:col-span-1">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-black">
+        <div className="bg-white dark:bg-[#13233D] p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-xs flex items-center gap-3 col-span-2 sm:col-span-1">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-black">
             <CheckCircle2 size={20} />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400">{language === 'ar' ? 'تم التعديل في المادة' : 'Applied in Handout'}</p>
-            <p className="text-lg font-black text-emerald-700 dark:text-emerald-400">{appliedCount}</p>
+            <p className="text-[11px] font-bold text-gray-500 dark:text-slate-400">{language === 'ar' ? 'تم التعديل في المادة' : 'Applied in Handout'}</p>
+            <p className="text-lg font-black text-emerald-700 dark:text-emerald-300">{appliedCount}</p>
           </div>
         </div>
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white dark:bg-[#0E1A30] p-4 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
+      <div className="bg-white dark:bg-[#13233D] p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
         <div className="flex-1 w-full relative">
-          <Search size={16} className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={16} className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={language === 'ar' ? 'بحث باسم الكورس، المتدرب، الكود، أو محتوى الملاحظة...' : 'Search course, trainee, HR code, or keyword...'}
-            className="w-full pl-9 rtl:pl-3 rtl:pr-9 pr-3 py-2 text-xs sm:text-sm bg-gray-50 dark:bg-[#091426] border border-gray-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-[#002D62] dark:text-white"
+            className="w-full pl-9 rtl:pl-3 rtl:pr-9 pr-3 py-2 text-xs sm:text-sm bg-gray-50 dark:bg-[#0A1628] border border-gray-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 text-gray-900 dark:text-white"
           />
         </div>
 
@@ -260,7 +260,7 @@ export const HandoutRevisionsPage: React.FC = () => {
           <select
             value={selectedCourse}
             onChange={(e) => setSelectedCourse(e.target.value)}
-            className="flex-1 md:flex-none text-xs bg-gray-50 dark:bg-[#091426] border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 font-bold dark:text-white outline-none cursor-pointer"
+            className="flex-1 md:flex-none text-xs bg-gray-50 dark:bg-[#0A1628] border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
           >
             <option value="all">{language === 'ar' ? 'جميع الكورسات' : 'All Courses'}</option>
             {distinctCourses.map((c) => (
@@ -272,7 +272,7 @@ export const HandoutRevisionsPage: React.FC = () => {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="flex-1 md:flex-none text-xs bg-gray-50 dark:bg-[#091426] border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 font-bold dark:text-white outline-none cursor-pointer"
+            className="flex-1 md:flex-none text-xs bg-gray-50 dark:bg-[#0A1628] border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
           >
             <option value="all">{language === 'ar' ? 'جميع الحالات' : 'All Statuses'}</option>
             <option value="pending">{language === 'ar' ? 'قيد الدراسة (Pending)' : 'Pending'}</option>
@@ -286,7 +286,7 @@ export const HandoutRevisionsPage: React.FC = () => {
       {/* Revisions Cards List */}
       <div className="space-y-4">
         {filteredRevisions.length === 0 ? (
-          <div className="bg-white dark:bg-[#0E1A30] rounded-2xl p-12 text-center border border-gray-200 dark:border-slate-800 space-y-3">
+          <div className="bg-white dark:bg-[#13233D] rounded-2xl p-12 text-center border border-gray-200 dark:border-slate-700/80 space-y-3">
             <BookOpen size={40} className="text-gray-300 dark:text-slate-600 mx-auto" />
             <h3 className="text-base font-bold text-gray-700 dark:text-gray-300">
               {language === 'ar' ? 'لا توجد مقترحات مطابقة للبحث' : 'No revisions found matching criteria'}
@@ -303,7 +303,7 @@ export const HandoutRevisionsPage: React.FC = () => {
             return (
               <div 
                 key={rev.id}
-                className="bg-white dark:bg-[#0E1A30] border-2 border-gray-200 dark:border-slate-800 hover:border-[#002D62] dark:hover:border-blue-500/50 rounded-2xl p-5 shadow-sm transition-all space-y-4"
+                className="bg-white dark:bg-[#13233D] border border-gray-200 dark:border-slate-700/80 hover:border-[#002D62] dark:hover:border-blue-500/50 rounded-2xl p-5 shadow-sm transition-all space-y-4"
               >
                 {/* Top Row: Course Title + Badges */}
                 <div className="flex justify-between items-start gap-2 flex-wrap">
@@ -318,13 +318,13 @@ export const HandoutRevisionsPage: React.FC = () => {
                         </span>
                       )}
                       {rev.topicOrSection && (
-                        <span className="text-xs bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-md font-bold border border-blue-200 dark:border-blue-800">
+                        <span className="text-xs bg-blue-50 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-md font-bold border border-blue-200 dark:border-blue-500/30">
                           {rev.topicOrSection}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1 flex-wrap font-medium">
-                      <span className="flex items-center gap-1 font-bold text-gray-800 dark:text-gray-200">
+                    <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-slate-400 mt-1 flex-wrap font-medium">
+                      <span className="flex items-center gap-1 font-bold text-gray-800 dark:text-slate-200">
                         <User size={13} className="text-[#002D62] dark:text-[#FFC000]" />
                         {rev.userName} ({rev.hrCode})
                       </span>
@@ -350,20 +350,20 @@ export const HandoutRevisionsPage: React.FC = () => {
 
                 {/* Description and Proposed Correction Box */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                  <div className="bg-red-50/70 dark:bg-red-950/30 p-3.5 rounded-xl border border-red-200 dark:border-red-900/50 space-y-1">
-                    <span className="text-xs font-black text-red-900 dark:text-red-300 block">
+                  <div className="bg-rose-50/80 dark:bg-rose-950/40 p-3.5 rounded-xl border border-rose-200 dark:border-rose-500/30 space-y-1">
+                    <span className="text-xs font-black text-rose-700 dark:text-rose-300 block">
                       {language === 'ar' ? '🔍 الملاحظة / الخطأ في المادة:' : '🔍 Mistake / Issue Found:'}
                     </span>
-                    <p className="text-xs sm:text-sm text-gray-800 dark:text-gray-200 leading-relaxed font-medium">
+                    <p className="text-xs sm:text-sm text-gray-900 dark:text-slate-100 leading-relaxed font-medium">
                       {rev.description}
                     </p>
                   </div>
 
-                  <div className="bg-emerald-50/70 dark:bg-emerald-950/30 p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-900/50 space-y-1">
-                    <span className="text-xs font-black text-emerald-900 dark:text-emerald-300 block">
+                  <div className="bg-emerald-50/80 dark:bg-emerald-950/40 p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-500/30 space-y-1">
+                    <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 block">
                       {language === 'ar' ? '✨ التصحيح المقترح:' : '✨ Proposed Correction:'}
                     </span>
-                    <p className="text-xs sm:text-sm text-gray-800 dark:text-gray-200 leading-relaxed font-medium">
+                    <p className="text-xs sm:text-sm text-gray-900 dark:text-slate-100 leading-relaxed font-medium">
                       {rev.proposedCorrection || (language === 'ar' ? '(لم يُحدد نص مقترح بديل)' : '(No alternative text specified)')}
                     </p>
                   </div>
@@ -371,7 +371,7 @@ export const HandoutRevisionsPage: React.FC = () => {
 
                 {/* Admin Feedback Display (For Trainees) */}
                 {rev.adminFeedback && (
-                  <div className="bg-blue-50 dark:bg-blue-950/40 p-3.5 rounded-xl border border-blue-200 dark:border-blue-900 text-xs sm:text-sm space-y-1">
+                  <div className="bg-blue-50/80 dark:bg-blue-950/40 p-3.5 rounded-xl border border-blue-200 dark:border-blue-500/30 text-xs sm:text-sm space-y-1">
                     <div className="flex items-center justify-between text-blue-900 dark:text-blue-300 font-black">
                       <span className="flex items-center gap-1.5">
                         <MessageSquare size={14} className="text-[#FFC000]" />
@@ -383,7 +383,7 @@ export const HandoutRevisionsPage: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <p className="text-gray-800 dark:text-gray-200 font-medium">
+                    <p className="text-gray-900 dark:text-slate-100 font-medium">
                       {rev.adminFeedback}
                     </p>
                   </div>
@@ -391,9 +391,9 @@ export const HandoutRevisionsPage: React.FC = () => {
 
                 {/* Admin Action Controls (For Admins Only) */}
                 {isAdmin && (
-                  <div className="pt-3 border-t border-gray-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
+                  <div className="pt-3 border-t border-gray-200 dark:border-slate-700/80 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                      <span className="text-xs font-bold text-gray-600 dark:text-slate-400">
                         {language === 'ar' ? 'تحديث الحالة:' : 'Set Status:'}
                       </span>
                       <button
@@ -402,7 +402,7 @@ export const HandoutRevisionsPage: React.FC = () => {
                         className={`text-xs px-2.5 py-1.5 rounded-lg font-bold border transition-all cursor-pointer ${
                           rev.status === 'reviewing'
                             ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                            : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-gray-300 border-gray-300 dark:border-slate-700 hover:bg-blue-50'
+                            : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-200 border-gray-300 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/30'
                         }`}
                       >
                         {language === 'ar' ? 'قيد المراجعة ⏳' : 'Reviewing'}
@@ -413,7 +413,7 @@ export const HandoutRevisionsPage: React.FC = () => {
                         className={`text-xs px-2.5 py-1.5 rounded-lg font-bold border transition-all cursor-pointer ${
                           rev.status === 'applied'
                             ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                            : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-gray-300 border-gray-300 dark:border-slate-700 hover:bg-emerald-50'
+                            : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-200 border-gray-300 dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'
                         }`}
                       >
                         {language === 'ar' ? 'تم التعديل في الكتاب ✓' : 'Applied in Handout'}
@@ -424,7 +424,7 @@ export const HandoutRevisionsPage: React.FC = () => {
                         className={`text-xs px-2.5 py-1.5 rounded-lg font-bold border transition-all cursor-pointer ${
                           rev.status === 'rejected'
                             ? 'bg-red-600 text-white border-red-600 shadow-xs'
-                            : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-gray-300 border-gray-300 dark:border-slate-700 hover:bg-red-50'
+                            : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-200 border-gray-300 dark:border-slate-700 hover:bg-red-50 dark:hover:bg-red-900/30'
                         }`}
                       >
                         {language === 'ar' ? 'مرفوض ✕' : 'Reject'}
@@ -437,7 +437,7 @@ export const HandoutRevisionsPage: React.FC = () => {
                         value={editingNotes[rev.id] !== undefined ? editingNotes[rev.id] : (rev.adminFeedback || '')}
                         onChange={(e) => setEditingNotes({ ...editingNotes, [rev.id]: e.target.value })}
                         placeholder={language === 'ar' ? 'اكتب رد أو ملاحظة للمتدرب...' : 'Write admin reply...'}
-                        className="flex-1 md:w-64 text-xs px-3 py-1.5 bg-gray-50 dark:bg-[#091426] border border-gray-300 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-[#002D62]"
+                        className="flex-1 md:w-64 text-xs px-3 py-1.5 bg-gray-50 dark:bg-[#0A1628] border border-gray-300 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 text-gray-900 dark:text-white"
                       />
                       <button
                         type="button"
@@ -451,7 +451,7 @@ export const HandoutRevisionsPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleDelete(rev.id)}
-                        className="cursor-pointer text-red-600 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                        className="cursor-pointer text-red-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
                         title={language === 'ar' ? 'حذف المقترح' : 'Delete'}
                       >
                         <Trash2 size={16} />

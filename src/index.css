@@ -197,6 +197,34 @@ header.bg-\[\#002D62\] {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
+/* Rich, Unified Dark Theme Accent Containers (High Contrast & Legibility) */
+[data-theme="dark"] .bg-rose-50,
+[data-theme="dark"] .bg-rose-50\/80,
+[data-theme="dark"] .bg-red-50,
+[data-theme="dark"] .bg-red-50\/70 {
+  background-color: rgba(225, 29, 72, 0.14) !important;
+  border-color: rgba(244, 63, 94, 0.4) !important;
+}
+
+[data-theme="dark"] .bg-emerald-50,
+[data-theme="dark"] .bg-emerald-50\/80,
+[data-theme="dark"] .bg-emerald-50\/70 {
+  background-color: rgba(16, 185, 129, 0.14) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+[data-theme="dark"] .bg-blue-50,
+[data-theme="dark"] .bg-blue-50\/80 {
+  background-color: rgba(59, 130, 246, 0.14) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+[data-theme="dark"] .bg-amber-50,
+[data-theme="dark"] .bg-amber-50\/80 {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
 /* Card Hover Animation */
 .card-hover {
   transition: transform 0.22s var(--ease-smooth), box-shadow 0.22s var(--ease-smooth);
