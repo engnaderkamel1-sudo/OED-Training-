@@ -105,7 +105,7 @@ export const isDateInSessionRange = (session?: UpcomingSession | null): boolean 
 /**
  * Sends a native browser push notification when session becomes active
  */
-export const sendNativePushNotification = (title: string, body: string, iconUrl = '/app-icon-v9.png') => {
+export const sendNativePushNotification = (title: string, body: string, iconUrl = '/app-icon.png') => {
   try {
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
       new Notification(title, {

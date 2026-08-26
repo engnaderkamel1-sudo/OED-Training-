@@ -179,7 +179,7 @@ export const TopNav: React.FC = () => {
                 {!isLogoExpanded && (
                   <motion.img 
                     layoutId="magic-logo"
-                    src="/app-icon-v9.png" 
+                    src="/app-icon.png" 
                     alt="OED-TTMS" 
                     className="w-full h-full object-cover rounded-full shadow-sm border border-white/20 cursor-pointer"
                     onClick={() => setIsLogoExpanded(true)}
@@ -761,10 +761,7 @@ export const TopNav: React.FC = () => {
               {/* Crisp Clean Logo Display */}
               <motion.img
                 layoutId="magic-logo"
-                src="/app-icon-v9.png"
-                onError={(e: any) => {
-                  e.target.src = '/app-icon.png';
-                }}
+                src="/app-icon.png"
                 alt="OED-TTMS Logo"
                 className="w-72 h-72 sm:w-96 sm:h-96 md:w-[460px] md:h-[460px] object-cover rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] border-4 border-[#FFC000] ring-8 ring-white/10"
               />

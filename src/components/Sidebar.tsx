@@ -202,7 +202,7 @@ export const Sidebar: React.FC = () => {
             style={{ borderBottom: '1px solid var(--border-color)' }}>
             
             <img
-              src="/app-icon-v8.png"
+              src="/app-icon.png"
               alt="OED-TTMS Logo"
               className="w-16 h-16 rounded-2xl object-cover shadow-md border-2 border-white/10"
             />

@@ -258,7 +258,7 @@ const AppContent: React.FC = () => {
                   <div className="relative mb-5">
                     <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden shadow-2xl border-2 border-[#FFC000]/60 p-1 bg-white/10 backdrop-blur-md">
                       <img 
-                        src="/app-icon.jpg?v=7" 
+                        src="/app-icon.png?v=10" 
                         alt="OED-TTMS Logo" 
                         className="w-full h-full object-cover rounded-2xl" 
                       />
