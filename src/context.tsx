@@ -709,15 +709,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const cleanRev = Object.fromEntries(Object.entries(fullRev).filter(([_, v]) => v !== undefined));
     await setDoc(doc(db, "handoutRevisions", id), cleanRev);
 
-    // Instant Notification for Admin
+    // Instant Notification for Admin only
     const adminAnnouncement: SystemAnnouncement = {
       id: `ann_${id}`,
-      title: `📝 مقترح تعديل محتوى [${revData.courseTitle}]`,
-      message: `قام المتدرب ${revData.userName} (كود: ${revData.hrCode}) بتقديم مقترح تعديل في المادة التدريبية لدورة [${revData.courseTitle}].`,
+      title: language === 'ar' ? `📝 مقترح تعديل محتوى [${revData.courseTitle}]` : `📝 Handout Revision Submitted [${revData.courseTitle}]`,
+      message: language === 'ar' 
+        ? `قام المتدرب ${revData.userName} (كود: ${revData.hrCode}) بتقديم مقترح تعديل في المادة التدريبية لدورة [${revData.courseTitle}].`
+        : `Trainee ${revData.userName} (HR: ${revData.hrCode}) submitted a handout revision for [${revData.courseTitle}].`,
       date: new Date().toISOString(),
       author: revData.userName,
       isGlobal: false,
-      targetAudience: 'all'
+      targetAudience: 'admin_only'
     };
     await setDoc(doc(db, "announcements", adminAnnouncement.id), adminAnnouncement);
   };

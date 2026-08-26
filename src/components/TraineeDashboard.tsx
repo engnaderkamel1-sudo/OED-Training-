@@ -254,6 +254,9 @@ export const TraineeDashboard: React.FC = () => {
 
     if (announcements && announcements.length > 0) {
       announcements.forEach(ann => {
+        // Exclude admin-only notifications from trainees
+        if (ann.targetAudience === 'admin_only' || ann.targetAudience === 'admin') return;
+
         const matchingSession = activeUpcomingSessions.find(s => s.id === ann.sessionId);
         const target = ann.targetAudience || matchingSession?.targetParticipants;
         const isRegistered = matchingSession && (matchingSession.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(matchingSession.id));

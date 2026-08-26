@@ -207,7 +207,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
         targetHrCodes: session.registeredUsers || [],
         author: 'Training Administration (OED)',
         date: new Date().toISOString(),
-        isGlobal: true
+        isGlobal: false
       });
 
       sendNativePushNotification(annTitle, { body: annMsg });
