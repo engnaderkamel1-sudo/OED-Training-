@@ -27,6 +27,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UpdateNotificationBanner } from './components/UpdateNotificationBanner';
 import { QuotaExhaustedBanner } from './components/QuotaExhaustedBanner';
 import { GlobalAttendanceAlertBanner } from './components/GlobalAttendanceAlertBanner';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const AppContent: React.FC = () => {
   const { user, isLoading, t, currentView, language, setUser } = useAppContext();
@@ -287,25 +288,29 @@ const AppContent: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            {!user ? (
-              <Login />
-            ) : (
-              <>
-                {currentView === 'profile' && <ProfilePage />}
-                {user.role === 'admin' && currentView === 'coursesCatalog' && <CoursesPage />}
-                {currentView === 'suggestions' && <SuggestionsPage />}
-                {currentView === 'handoutRevisions' && <HandoutRevisionsPage />}
-                
-                {user.role === 'admin' && currentView === 'activityLogs' && (
+            <ErrorBoundary>
+              {!user ? (
+                <Login />
+              ) : currentView === 'profile' ? (
+                <ProfilePage />
+              ) : currentView === 'suggestions' ? (
+                <SuggestionsPage />
+              ) : currentView === 'handoutRevisions' ? (
+                <HandoutRevisionsPage />
+              ) : user.role === 'admin' ? (
+                currentView === 'coursesCatalog' ? (
+                  <CoursesPage />
+                ) : currentView === 'activityLogs' ? (
                   <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
                     <ActivityLogsView />
                   </div>
-                )}
-
-                {user.role === 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && currentView !== 'handoutRevisions' && <AdminDashboard />}
-                {user.role !== 'admin' && currentView !== 'profile' && currentView !== 'coursesCatalog' && currentView !== 'suggestions' && currentView !== 'activityLogs' && currentView !== 'handoutRevisions' && <TraineeDashboard />}
-              </>
-            )}
+                ) : (
+                  <AdminDashboard />
+                )
+              ) : (
+                <TraineeDashboard />
+              )}
+            </ErrorBoundary>
           </motion.div>
         </main>
       </div>
