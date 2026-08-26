@@ -94,9 +94,14 @@ export const Login: React.FC = () => {
       setSuccessMsg("");
       const loginInput = email.trim().toLowerCase(); 
 
-      // 1. Direct Master Admin Login Bypass
-      if (loginInput === "admin" && (password === "admin123" || password === "123456")) {
+      // 1. Secure Admin Login Check
+      if (loginInput === "admin") {
         const found = users.find((u) => u.hrCode?.toLowerCase() === "admin" || u.id === "admin");
+        if (found && found.password && found.password !== password) {
+          setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
+          return;
+        }
+
         const adminUser: User = found ? { ...found, role: 'admin', status: 'approved' } : ({
           id: "admin",
           hrCode: "admin",
@@ -180,12 +185,8 @@ export const Login: React.FC = () => {
         try {
           await signInWithEmailAndPassword(auth, foundUser.email, password);
         } catch (err) {
-          // If Firebase Auth fails (e.g. email mismatch between Auth & Firestore, or requires-recent-login),
-          // verify against stored password or master credentials
-          const isValidPass = 
-            (foundUser.password && foundUser.password === password) ||
-            password === "admin123" ||
-            password === "123456";
+          // If Firebase Auth fails, verify against securely stored user password
+          const isValidPass = Boolean(foundUser.password && foundUser.password === password);
 
           if (!isValidPass) {
             setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
@@ -193,10 +194,7 @@ export const Login: React.FC = () => {
           }
         }
       } else if (foundUser) {
-        const isValidPass = 
-          (foundUser.password && foundUser.password === password) ||
-          password === "admin123" ||
-          password === "123456";
+        const isValidPass = Boolean(foundUser.password && foundUser.password === password);
 
         if (!isValidPass) {
           setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");

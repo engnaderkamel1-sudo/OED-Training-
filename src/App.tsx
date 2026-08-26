@@ -307,6 +307,10 @@ const AppContent: React.FC = () => {
                 ) : (
                   <AdminDashboard />
                 )
+              ) : user.role === 'manager' ? (
+                <ManagerDashboard />
+              ) : user.role === 'supervisor' ? (
+                <SiteSupervisorDashboard />
               ) : (
                 <TraineeDashboard />
               )}

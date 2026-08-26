@@ -1957,6 +1957,7 @@ Content-Type: text/html; charset="utf-8"
                           return pendingSortOrder === 'desc' ? timeB - timeA : timeA - timeB;
                         })
                         .length > 0 ? (
+                        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
@@ -2021,6 +2022,7 @@ Content-Type: text/html; charset="utf-8"
                             ))}
                           </tbody>
                         </table>
+                        </div>
                       ) : (
                         <p style={{ color: textMuted }}>{language === "ar" ? "لا توجد طلبات معلقة." : "No pending users."}</p>
                       )}
@@ -2036,6 +2038,7 @@ Content-Type: text/html; charset="utf-8"
                         const term = userSearchTerm.trim().toLowerCase();
                         return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term);
                       }).length > 0 ? (
+                        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
@@ -2132,6 +2135,7 @@ Content-Type: text/html; charset="utf-8"
                             ))}
                           </tbody>
                         </table>
+                        </div>
                       ) : (
                         <p style={{ color: textMuted }}>{language === "ar" ? "لا توجد طلبات تعديل." : "No pending updates."}</p>
                       )}
@@ -2147,6 +2151,7 @@ Content-Type: text/html; charset="utf-8"
                         const term = userSearchTerm.trim().toLowerCase();
                         return (item.user.name || '').toLowerCase().includes(term) || (item.user.hrCode || '').toLowerCase().includes(term) || (item.user.email || '').toLowerCase().includes(term);
                       }).length > 0 ? (
+                        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
@@ -2194,6 +2199,7 @@ Content-Type: text/html; charset="utf-8"
                             ))}
                           </tbody>
                         </table>
+                        </div>
                       ) : (
                         <p style={{ color: textMuted }}>{language === "ar" ? "لا يوجد سجل للتعديلات السابقة." : "No history of processed updates."}</p>
                       )}
@@ -2215,6 +2221,7 @@ Content-Type: text/html; charset="utf-8"
                           (u.role || '').toLowerCase().includes(term)
                         );
                       }).length > 0 ? (
+                        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
@@ -2255,15 +2262,15 @@ Content-Type: text/html; charset="utf-8"
                                 </td>
                                 <td className="p-3">
                                   <span className={`px-2 py-1 rounded text-xs font-bold ${u.status === "approved" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
-                                    {u.status === "approved" ? (language === "ar" ? "مقبول" : "Approved") : (language === "ar" ? "مرفوض" : "Rejected")}
+                                    {u.status === "approved" ? (language === "ar" ? "معتمد" : "Approved") : (language === "ar" ? "مرفوض" : "Rejected")}
                                   </span>
                                 </td>
                                 <td className="p-3 flex gap-2">
                                   <button 
-                                    onClick={() => setSelectedUserToEdit(u)} 
-                                    className="flex items-center gap-1.5 text-blue-600 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 px-3.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border border-blue-200 dark:border-blue-800 shadow-2xs"
+                                    onClick={() => handleOpenEditUser(u)} 
+                                    className="flex items-center gap-1.5 text-blue-600 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border border-blue-200 dark:border-blue-800 shadow-2xs"
                                   >
-                                    <Edit2 size={13} /> {language === "ar" ? "تعديل الصلاحيات" : "Edit"}
+                                    <Edit2 size={13} /> {language === "ar" ? "تعديل" : "Edit"}
                                   </button>
                                   <button 
                                     onClick={() => handleDeleteUser(u.id)} 
@@ -2276,6 +2283,7 @@ Content-Type: text/html; charset="utf-8"
                             ))}
                           </tbody>
                         </table>
+                        </div>
                       ) : (
                         <p style={{ color: textMuted }}>{language === "ar" ? "لا توجد طلبات مطابقة." : "No matching requests found."}</p>
                       )}
@@ -2289,6 +2297,7 @@ Content-Type: text/html; charset="utf-8"
                         const term = userSearchTerm.trim().toLowerCase();
                         return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
                       }).length > 0 ? (
+                        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b font-bold" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor, color: '#FFFFFF' }}>
@@ -2317,6 +2326,7 @@ Content-Type: text/html; charset="utf-8"
                             ))}
                           </tbody>
                         </table>
+                        </div>
                       ) : (
                         <p style={{ color: textMuted }}>{language === "ar" ? "لا يوجد متدربين محذوفين." : "No deleted trainees."}</p>
                       )}

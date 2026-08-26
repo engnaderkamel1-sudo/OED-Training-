@@ -203,25 +203,38 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => {
     setIsLoading(true);
 
-    const unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
-      const users: User[] = [];
-      snapshot.forEach((d) => {
-        const uData = d.data() as User;
-        if (!uData.id) {
-          uData.id = d.id;
-        }
-        if (uData.hrCode?.toLowerCase() === 'admin' || uData.id === 'admin') {
-          uData.role = 'admin';
-          uData.status = 'approved';
-        }
-        users.push(uData);
+    // 1. Users Listener - Scoped by Role (Protects Privacy & Conserves Quotas)
+    let unsubUsers = () => {};
+    if (!user || user.role === 'admin' || user.role === 'manager' || user.role === 'supervisor') {
+      unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
+        const usersList: User[] = [];
+        snapshot.forEach((d) => {
+          const uData = d.data() as User;
+          if (!uData.id) uData.id = d.id;
+          if (uData.hrCode?.toLowerCase() === 'admin' || uData.id === 'admin') {
+            uData.role = 'admin';
+            uData.status = 'approved';
+          }
+          usersList.push(uData);
+        });
+        setLocalUsers(usersList);
+      }, (error) => {
+        checkQuotaError(error);
+        console.error("Firebase Users Error:", error);
       });
-      setLocalUsers(users);
-    }, (error) => {
-      checkQuotaError(error);
-      console.error("Firebase Users Error:", error);
-    });
+    } else {
+      // Trainee: Only listen to their own profile document
+      unsubUsers = onSnapshot(doc(db, "users", user.id), (docSnap) => {
+        if (docSnap.exists()) {
+          const uData = { ...docSnap.data(), id: docSnap.id } as User;
+          setLocalUsers([uData]);
+        }
+      }, (error) => {
+        checkQuotaError(error);
+      });
+    }
 
+    // 2. Global Public Courses & Sessions Listeners
     const unsubCourses = onSnapshot(collection(db, "courses"), (snapshot) => {
       const crs: Course[] = [];
       snapshot.forEach((d) => crs.push(d.data() as Course));
@@ -250,25 +263,53 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.error("Firebase Announcements Error:", error);
     });
 
-    const unsubSuggestions = onSnapshot(collection(db, "suggestions"), (snapshot) => {
-      const sugs: Suggestion[] = [];
-      snapshot.forEach((d) => sugs.push(d.data() as Suggestion));
-      sugs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      setSuggestionsState(sugs);
-    }, (error) => {
-      checkQuotaError(error);
-      console.error("Firebase Suggestions Error:", error);
-    });
+    // 3. Suggestions Listener - Scoped by Role
+    let unsubSuggestions = () => {};
+    if (!user || user.role === 'admin' || user.role === 'manager') {
+      unsubSuggestions = onSnapshot(collection(db, "suggestions"), (snapshot) => {
+        const sugs: Suggestion[] = [];
+        snapshot.forEach((d) => sugs.push(d.data() as Suggestion));
+        sugs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setSuggestionsState(sugs);
+      }, (error) => {
+        checkQuotaError(error);
+        console.error("Firebase Suggestions Error:", error);
+      });
+    } else {
+      const qSugs = query(collection(db, "suggestions"), where("userId", "==", user.id));
+      unsubSuggestions = onSnapshot(qSugs, (snapshot) => {
+        const sugs: Suggestion[] = [];
+        snapshot.forEach((d) => sugs.push(d.data() as Suggestion));
+        sugs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setSuggestionsState(sugs);
+      }, (error) => {
+        checkQuotaError(error);
+      });
+    }
 
-    const unsubRevisions = onSnapshot(collection(db, "handoutRevisions"), (snapshot) => {
-      const revs: HandoutRevision[] = [];
-      snapshot.forEach((d) => revs.push(d.data() as HandoutRevision));
-      revs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      setHandoutRevisionsState(revs);
-    }, (error) => {
-      checkQuotaError(error);
-      console.error("Firebase HandoutRevisions Error:", error);
-    });
+    // 4. Handout Revisions Listener - Scoped by Role
+    let unsubRevisions = () => {};
+    if (!user || user.role === 'admin' || user.role === 'manager') {
+      unsubRevisions = onSnapshot(collection(db, "handoutRevisions"), (snapshot) => {
+        const revs: HandoutRevision[] = [];
+        snapshot.forEach((d) => revs.push(d.data() as HandoutRevision));
+        revs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setHandoutRevisionsState(revs);
+      }, (error) => {
+        checkQuotaError(error);
+        console.error("Firebase HandoutRevisions Error:", error);
+      });
+    } else {
+      const qRevs = query(collection(db, "handoutRevisions"), where("userId", "==", user.id));
+      unsubRevisions = onSnapshot(qRevs, (snapshot) => {
+        const revs: HandoutRevision[] = [];
+        snapshot.forEach((d) => revs.push(d.data() as HandoutRevision));
+        revs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setHandoutRevisionsState(revs);
+      }, (error) => {
+        checkQuotaError(error);
+      });
+    }
 
     const unsubVersion = onSnapshot(doc(db, "systemSettings", "appConfig"), (docSnap) => {
       if (docSnap.exists()) {
@@ -330,7 +371,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       unsubVersion();
       unsubKPIs();
     };
-  }, []);
+  }, [user?.id, user?.role]);
 
   const [isFetchingRecords, setIsFetchingRecords] = useState(false);
   const [recordsLoaded, setRecordsLoaded] = useState(false);
