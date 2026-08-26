@@ -10,6 +10,8 @@ const firebaseConfig = {
   appId: "1:210766524025:web:26072c0a02dee8661c6ea8"
 };
 
+const CACHE_NAME = 'oed-ttms-v11.0';
+
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
@@ -21,17 +23,24 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
-      return Promise.all(keys.map((key) => caches.delete(key)));
+      return Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
     }).then(() => self.clients.claim())
   );
 });
 
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  const notificationTitle = payload.notification.title || 'OED-TTMS';
+  const notificationTitle = payload.notification?.title || 'OED-TTMS';
   const notificationOptions = {
-    body: payload.notification.body || '',
-    icon: '/app-icon-v9.png'
+    body: payload.notification?.body || '',
+    icon: '/icon-192.png?v=11.0',
+    badge: '/icon-192.png?v=11.0'
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);

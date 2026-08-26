@@ -15,38 +15,34 @@ export default defineConfig(() => {
         injectRegister: 'auto',
         includeAssets: ['app-icon.png', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon.ico', 'orascom-logo.png'],
         manifest: {
-          id: '/?v=10',
-          name: 'OED TTMS (Technical Training Management System)',
-          short_name: 'OED-TTMS',
+          id: '/',
+          name: 'OED Training Management System • TTMS',
+          short_name: 'OED-TTMS • Training',
           description: 'Orascom Equipment Department Technical Training Management System',
           theme_color: '#002D62',
-          background_color: '#002D62',
+          background_color: '#001D42',
           display: 'standalone',
-          orientation: 'portrait',
+          orientation: 'portrait-primary',
+          start_url: '/',
+          scope: '/',
           icons: [
             {
-              src: '/app-icon.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any'
-            },
-            {
-              src: '/icon-192.png',
+              src: '/icon-192.png?v=11.0',
               sizes: '192x192',
               type: 'image/png',
-              purpose: 'maskable'
+              purpose: 'any maskable'
             },
             {
-              src: '/icon-512.png',
+              src: '/icon-512.png?v=11.0',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any maskable'
+            },
+            {
+              src: '/app-icon.png?v=11.0',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any'
-            },
-            {
-              src: '/icon-512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'maskable'
             }
           ]
         },

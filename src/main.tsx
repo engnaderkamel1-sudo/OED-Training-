@@ -13,7 +13,7 @@ if (typeof window !== 'undefined') {
     }).catch(() => {});
   }
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/firebase-messaging-sw.js').then((reg) => {
+    navigator.serviceWorker.register('/firebase-messaging-sw.js?v=11.0').then((reg) => {
       reg.update().catch(() => {});
     }).catch(() => {});
   }

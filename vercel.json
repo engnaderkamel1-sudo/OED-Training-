@@ -1,14 +1,22 @@
 {
   "rewrites": [
-    { "source": "/((?!assets/|app-icon\\.jpg|orascom-logo\\.png|favicon\\.ico|sw\\.js|workbox-.*\\.js).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/|app-icon\\.png|app-icon\\.jpg|icon-192\\.png|icon-512\\.png|apple-touch-icon\\.png|orascom-logo\\.png|favicon\\.ico|manifest\\.json|manifest\\.webmanifest|sw\\.js|firebase-messaging-sw\\.js|workbox-.*\\.js).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
-      "source": "/(index\\.html|sw\\.js|manifest\\.webmanifest|)",
+      "source": "/(index\\.html|sw\\.js|firebase-messaging-sw\\.js|manifest\\.json|manifest\\.webmanifest|app-icon\\.png|icon-192\\.png|icon-512\\.png|apple-touch-icon\\.png|favicon\\.ico)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "no-cache, no-store, must-revalidate, max-age=0"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
         }
       ]
     },
