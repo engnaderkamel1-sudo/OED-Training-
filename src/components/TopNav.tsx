@@ -37,15 +37,11 @@ export const TopNav: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  // App UI Zoom Level State (Scaling the entire Application interface)
+  // App UI Zoom Level State (Default to 100% natural, crisp, legible size)
   const [appZoom, setAppZoom] = useState<number>(() => {
     try {
       const saved = localStorage.getItem('oed_app_ui_zoom');
-      if (saved) return parseInt(saved, 10);
-      // Auto-fit compact 85% on mobile phones so everything fits on one screen
-      if (typeof window !== 'undefined' && window.innerWidth < 640) {
-        return 85;
-      }
+      if (saved && parseInt(saved, 10) >= 90) return parseInt(saved, 10);
       return 100;
     } catch {
       return 100;
@@ -59,18 +55,18 @@ export const TopNav: React.FC = () => {
     } catch (e) {}
   }, [appZoom]);
 
-  // Lock Screen Orientation to Portrait on Mobile
+  // Enable and allow free screen rotation (Landscape & Portrait)
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined' && window.screen && (window.screen as any).orientation?.lock) {
-        (window.screen as any).orientation.lock('portrait').catch(() => {});
+      if (typeof window !== 'undefined' && window.screen && (window.screen as any).orientation?.unlock) {
+        (window.screen as any).orientation.unlock().catch(() => {});
       }
     } catch (e) {}
   }, []);
 
   const handleZoomIn = () => setAppZoom(prev => Math.min(prev + 10, 130));
-  const handleZoomOut = () => setAppZoom(prev => Math.max(prev - 10, 75));
-  const handleZoomReset = () => setAppZoom(window.innerWidth < 640 ? 85 : 100);
+  const handleZoomOut = () => setAppZoom(prev => Math.max(prev - 10, 80));
+  const handleZoomReset = () => setAppZoom(100);
 
   // Read Notifications State synchronized across the system
   const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
