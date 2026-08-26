@@ -156,7 +156,14 @@ header.bg-\[\#002D62\] {
 /* ============================================
    CARDS & CONTAINERS
    ============================================ */
-.bg-white {
+.orascom-logo-badge,
+[data-theme="dark"] .orascom-logo-badge {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+}
+
+.bg-white:not(.orascom-logo-badge) {
   background-color: var(--bg-card) !important;
   color: var(--text-primary);
   transition: background-color var(--transition-theme), border-color var(--transition-theme), box-shadow var(--transition-theme);

@@ -41,7 +41,12 @@ export const TopNav: React.FC = () => {
   const [appZoom, setAppZoom] = useState<number>(() => {
     try {
       const saved = localStorage.getItem('oed_app_ui_zoom');
-      return saved ? parseInt(saved, 10) : 100;
+      if (saved) return parseInt(saved, 10);
+      // Auto-fit compact 85% on mobile phones so everything fits on one screen
+      if (typeof window !== 'undefined' && window.innerWidth < 640) {
+        return 85;
+      }
+      return 100;
     } catch {
       return 100;
     }
@@ -54,9 +59,18 @@ export const TopNav: React.FC = () => {
     } catch (e) {}
   }, [appZoom]);
 
+  // Lock Screen Orientation to Portrait on Mobile
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && window.screen && (window.screen as any).orientation?.lock) {
+        (window.screen as any).orientation.lock('portrait').catch(() => {});
+      }
+    } catch (e) {}
+  }, []);
+
   const handleZoomIn = () => setAppZoom(prev => Math.min(prev + 10, 130));
   const handleZoomOut = () => setAppZoom(prev => Math.max(prev - 10, 75));
-  const handleZoomReset = () => setAppZoom(100);
+  const handleZoomReset = () => setAppZoom(window.innerWidth < 640 ? 85 : 100);
 
   // Read Notifications State synchronized across the system
   const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
@@ -537,26 +551,6 @@ export const TopNav: React.FC = () => {
 
                       <div className="my-1.5 border-t" style={{ borderColor: isDark ? 'rgba(148, 190, 255, 0.15)' : '#F1F5F9' }} />
 
-                      {/* Enlarge Profile Photo Menu Button */}
-                      <button
-                        onClick={() => {
-                          setIsAvatarExpanded(true);
-                          setDropdownOpen(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer"
-                        style={{
-                          color: isDark ? '#FFFFFF' : '#1E293B',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : '#F0F7FF';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
-                      >
-                        <UserCircle size={17} style={{ color: '#FFC000' }} className="shrink-0" />
-                        <span>{language === 'ar' ? 'تكبير الصورة الشخصية 🔍' : 'Enlarge Profile Photo 🔍'}</span>
-                      </button>
 
                       {/* App Interface Scaling / Zoom Controls (تكبير وتصغير التطبيق) */}
                       <div 
@@ -628,26 +622,6 @@ export const TopNav: React.FC = () => {
                         <span>{language === 'ar' ? 'الملف الشخصي' : 'My Profile'}</span>
                       </button>
 
-                      {/* Handout Revisions Page Link */}
-                      <button
-                        onClick={() => {
-                          setCurrentView('handoutRevisions');
-                          setDropdownOpen(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer"
-                        style={{
-                          color: isDark ? '#FFFFFF' : '#1E293B',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : '#F0F7FF';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
-                      >
-                        <BookOpen size={18} style={{ color: '#FFC000' }} className="shrink-0" />
-                        <span>{language === 'ar' ? 'تعديلات المحتوى (Handouts)' : 'Handout Revisions'}</span>
-                      </button>
 
                       {/* About System Button in Dropdown */}
                       <button
@@ -716,11 +690,15 @@ export const TopNav: React.FC = () => {
 
         {/* Hanging Orascom Logo Tab - Stays sticky with the Top Navbar during scroll */}
         <div className="absolute left-3 sm:left-6 rtl:left-auto rtl:right-3 sm:rtl:right-6 top-full z-40 pointer-events-auto">
-          <div className="bg-white px-3 py-1 sm:py-1.5 rounded-b-xl shadow-md border border-t-0 border-gray-200 flex items-center justify-center">
+          <div 
+            className="orascom-logo-badge px-3.5 py-1 sm:py-1.5 rounded-b-xl shadow-lg border-2 border-t-0 border-white/80 flex items-center justify-center"
+            style={{ backgroundColor: '#FFFFFF', background: '#FFFFFF' }}
+          >
             <img 
-              src="/orascom-logo.png" 
+              src="/orascom-logo.png?v=12" 
               alt="Orascom Construction Equipment Department OED" 
-              className="h-6 sm:h-7.5 w-auto object-contain"
+              className="h-6 sm:h-7.5 w-auto object-contain rounded-b-lg"
+              style={{ filter: 'none', backgroundColor: '#FFFFFF', background: '#FFFFFF' }}
             />
           </div>
         </div>
