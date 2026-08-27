@@ -729,8 +729,10 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                     </button>
                   )}
                 </div>
-                <div className="flex flex-col items-center">
-                  <span className="inline-flex items-center text-emerald-950 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-950/80 border-2 border-emerald-400 dark:border-emerald-600 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs">
+              ) : isRegistered ? (
+                <>
+                  <div className="flex flex-col items-center">
+                    <span className="inline-flex items-center text-emerald-950 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-950/80 border-2 border-emerald-400 dark:border-emerald-600 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs">
                     <CheckCircle size={15} className="mr-1 rtl:ml-1 rtl:mr-0 text-emerald-700 dark:text-emerald-400" /> {t('registered')}
                   </span>
                   {session.registrationTimestamps?.[userCode] && (
