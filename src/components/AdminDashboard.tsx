@@ -2651,38 +2651,61 @@ Content-Type: text/html; charset="utf-8"
 
                 {selectedCourseFilter && selectedCourseDetails ? (
                   <div className="mb-6 print:hidden">
-                    <div className="border rounded-lg p-4 mb-4 flex flex-wrap gap-4 items-center" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
-                      <h3 className="text-lg font-bold" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>
-                        <DataField>{selectedCourseDetails.title}</DataField>
-                      </h3>
-                      <div className="flex gap-2">
-                        <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs font-semibold px-2.5 py-1 rounded">
+                    <div 
+                      className="border rounded-2xl p-5 mb-5 flex flex-wrap gap-4 items-center justify-between shadow-xs transition-colors" 
+                      style={{ backgroundColor: isDark ? '#111E38' : '#F8FAFC', borderColor: borderColor }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-[#002D62] dark:text-[#FFC000] flex items-center justify-center font-bold">
+                          <BookOpen size={20} />
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-black" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>
+                          <DataField>{selectedCourseDetails.title}</DataField>
+                        </h3>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-200 text-xs font-bold px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800">
                           {language === "ar" ? "عُقدت" : "Conducted"} {courseSessions.length} {language === "ar" ? "مرات" : "times"}
                         </span>
-                        <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs font-semibold px-2.5 py-1 rounded">
+                        <span className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800">
                           {language === "ar" ? "إجمالي الحضور" : "Total Attendees"}: {filteredRecords.length}
                         </span>
                       </div>
                     </div>
-                    <div className="space-y-4">
+
+                    <div className="space-y-3">
                       {courseSessions.map((date) => {
                         const attendeesOnDate = filteredRecords.filter((r) => r.attendanceDate === date);
                         const isExpanded = expandedDates[date];
                         return (
-                          <div key={date} className="border rounded-lg overflow-hidden" style={{ borderColor: borderColor }}>
-                            <button onClick={() => toggleDateExpansion(date)} className="w-full px-4 py-3 flex justify-between items-center transition-colors" style={{ backgroundColor: tableHeaderBg }}>
-                              <span className="font-bold" style={{ color: textColor }}>{formatDateToStandard(date)}</span>
-                              <span className="text-sm" style={{ color: textMuted }}>{attendeesOnDate.length} {language === "ar" ? "حاضرين" : "attendees"}</span>
+                          <div 
+                            key={date} 
+                            className="border rounded-2xl overflow-hidden shadow-2xs transition-all" 
+                            style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                          >
+                            <button 
+                              onClick={() => toggleDateExpansion(date)} 
+                              className="w-full px-4 sm:px-5 py-3.5 flex justify-between items-center transition-colors cursor-pointer hover:bg-blue-50/50 dark:hover:bg-slate-800/60" 
+                              style={{ backgroundColor: isDark ? '#15243F' : '#FFFFFF' }}
+                            >
+                              <span className="font-extrabold text-sm sm:text-base" style={{ color: textColor }}>
+                                {formatDateToStandard(date)}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                  {attendeesOnDate.length} {language === "ar" ? "حاضرين" : "attendees"}
+                                </span>
+                              </div>
                             </button>
                             {isExpanded && (
-                              <div className="p-4 overflow-x-auto" style={{ backgroundColor: cardColor }}>
+                              <div className="p-4 overflow-x-auto border-t" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                                 <table className="w-full text-left border-collapse text-sm">
                                   <thead>
                                     <tr className="border-b" style={{ borderColor: borderColor, color: textMuted }}>
-                                      <th className="pb-2 font-medium">{language === "ar" ? "الاسم" : "Name"}</th>
-                                      <th className="pb-2 font-medium">{language === "ar" ? "القسم" : "Department"}</th>
-                                      <th className="pb-2 font-medium">{language === "ar" ? "الدرجة" : "Score"}</th>
-                                      <th className="p-3 align-top"><div className="font-semibold mb-2">{language === "ar" ? "إجراءات" : "Actions"}</div></th>
+                                      <th className="pb-2 font-bold">{language === "ar" ? "الاسم" : "Name"}</th>
+                                      <th className="pb-2 font-bold">{language === "ar" ? "القسم" : "Department"}</th>
+                                      <th className="pb-2 font-bold">{language === "ar" ? "الدرجة" : "Score"}</th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -2690,9 +2713,9 @@ Content-Type: text/html; charset="utf-8"
                                       const u = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}`);
                                       return (
                                         <tr key={r.id} className="border-b last:border-0 transition-colors hover:opacity-80" style={{ borderColor: borderColor, color: textColor }}>
-                                          <td className="py-2"><DataField>{u?.name || r.traineeName}</DataField></td>
-                                          <td className="py-2"><DataField>{u?.department || r.department}</DataField></td>
-                                          <td className="py-2 font-bold text-[#FFC000]">{r.score}</td>
+                                          <td className="py-2.5 font-medium"><DataField>{u?.name || r.traineeName}</DataField></td>
+                                          <td className="py-2.5 font-medium"><DataField>{u?.department || r.department}</DataField></td>
+                                          <td className="py-2.5 font-black text-[#FFC000]">{r.score}</td>
                                         </tr>
                                       );
                                     })}
@@ -3302,7 +3325,7 @@ Content-Type: text/html; charset="utf-8"
                           {editingSessionId ? (language === "ar" ? "تحديث الجلسة" : "Update Session") : (language === "ar" ? "نشر التنبيه" : "Publish & Push")}
                         </button>
                         {editingSessionId && (
-                          <button type="button" onClick={handleCancelEdit} className="font-bold py-3 px-4 rounded transition-colors" style={{ backgroundColor: tableHeaderBg, color: textColor }}>
+                          <button type="button" onClick={handleCancelEdit} className="font-bold py-3 px-4 rounded-xl border transition-colors bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 cursor-pointer">
                             {language === "ar" ? "إلغاء التعديل" : "Cancel Edit"}
                           </button>
                         )}
@@ -3371,7 +3394,7 @@ Content-Type: text/html; charset="utf-8"
                     </div>
 
                     {currentDisplayedSessions.length === 0 ? (
-                      <div className="text-center py-12 px-4 border border-dashed rounded-2xl transition-colors" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
+                      <div className="text-center py-12 px-4 border border-dashed rounded-2xl transition-colors" style={{ backgroundColor: isDark ? '#111E38' : '#F8FAFC', borderColor: borderColor }}>
                         <Calendar className="mx-auto h-12 w-12 mb-3" style={{ color: textMuted }} />
                         <p className="font-bold text-sm" style={{ color: textMuted }}>
                           {sessionStatusTab === 'completed'

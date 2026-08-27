@@ -224,9 +224,11 @@ const AppContent: React.FC = () => {
         }}
       />
       <TopNav />
-      <GlobalAttendanceAlertBanner />
-      <QuotaExhaustedBanner />
-      <UpdateNotificationBanner />
+      <div className="pt-16 flex flex-col">
+        <GlobalAttendanceAlertBanner />
+        <QuotaExhaustedBanner />
+        <UpdateNotificationBanner />
+      </div>
       {/* الكلاسات الأساسية للتطبيق */}
       <div className="flex min-h-[calc(100vh-4rem)] relative print:bg-white print:min-h-0 transition-colors duration-300">
         {user && <Sidebar />}
