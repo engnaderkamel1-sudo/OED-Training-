@@ -23,7 +23,12 @@ export interface SingleTraineeInfo {
   name: string;
   hrCode: string;
   department: string;
+  jobRole?: string;
   profileImageUrl?: string;
+  totalCourses?: number;
+  totalSessions?: number;
+  attendedDays?: number;
+  avgScore?: number | null;
 }
 
 export interface ReportOptions {
@@ -243,37 +248,80 @@ export const generateReportHTML = (options: ReportOptions): string => {
 </head>
 <body>
   <div class="header">
-    <div class="logo-box" style="border: none; background: transparent; padding: 0;">
-      <img src="/orascom_logo.png" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="OED Logo" />
+    <div class="logo-box" style="border: none; background: transparent; padding: 0; width: auto; height: auto; display: flex; align-items: center;">
+      <img src="/orascom-logo.png" style="height: 48px; max-height: 48px; width: auto; object-fit: contain; display: block;" alt="Orascom Construction Equipment Department OED" />
     </div>
     <div class="dept-title">
       <h2>OED - Technical Training Department</h2>
-      <p>${isAr ? 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø¹Ø¯Ø§Øª' : 'Equipment Department'}</p>
+      <p>${isAr ? 'إدارة المعدات' : 'Equipment Department'}</p>
     </div>
   </div>
 
   <div class="doc-title">${title}</div>
-  <div class="doc-date">${isAr ? 'ØªÙ… Ø§Ù„Ø¥Ù†Ø´Ø§Ø¡ ÙÙŠ:' : 'Generated on:'} ${currentDate}</div>
+  <div class="doc-date">${isAr ? 'تم الإنشاء في:' : 'Generated on:'} ${currentDate}</div>
 
   ${singleTrainee ? `
-    <div class="trainee-card">
-      ${singleTrainee.profileImageUrl ? `
-        <div style="width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: 2px solid #e5e7eb; flex-shrink: 0;">
-          <img src="${singleTrainee.profileImageUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Trainee" />
+    <div class="trainee-card" style="display: flex; flex-direction: column; gap: 14px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          ${singleTrainee.profileImageUrl ? `
+            <div style="width: 62px; height: 62px; border-radius: 12px; overflow: hidden; border: 2px solid #FFC000; flex-shrink: 0; background: #fff;">
+              <img src="${singleTrainee.profileImageUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Trainee" />
+            </div>
+          ` : `
+            <div style="width: 62px; height: 62px; border-radius: 12px; background: #002D62; color: #FFC000; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; flex-shrink: 0;">
+              ${(singleTrainee.name || 'TR').substring(0, 2).toUpperCase()}
+            </div>
+          `}
+          <div>
+            <div style="font-size: 18px; font-weight: 900; color: #002D62; margin-bottom: 3px; display: flex; align-items: center; gap: 8px;">
+              <span>${singleTrainee.name}</span>
+              <span style="font-size: 12px; font-family: monospace; font-weight: 700; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 9999px; border: 1px solid #bae6fd;">#${singleTrainee.hrCode}</span>
+            </div>
+            <div style="font-size: 12px; color: #64748b; font-weight: 600; display: flex; gap: 12px;">
+              <span>🏢 ${singleTrainee.department}</span>
+              ${singleTrainee.jobRole ? `<span>👷‍♂️ ${singleTrainee.jobRole}</span>` : ''}
+            </div>
+          </div>
         </div>
-      ` : ''}
-      <div style="display: flex; flex-wrap: wrap; gap: 16px; flex: 1;">
-        <div class="trainee-field">
-          <label>${isAr ? 'Ø§Ù„Ø§Ø³Ù…' : 'Name'}</label>
-          <span>${singleTrainee.name}</span>
+      </div>
+
+      <!-- 4 Executive KPI Badges in Print Report -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+        <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 8px; text-align: center;">
+          <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 2px;">
+            ${isAr ? 'إجمالي الدورات' : 'Total Courses'}
+          </div>
+          <div style="font-size: 18px; font-weight: 900; color: #002D62;">
+            ${singleTrainee.totalCourses !== undefined ? singleTrainee.totalCourses : new Set(records.map(r => r.courseName || r.courseId)).size}
+          </div>
         </div>
-        <div class="trainee-field">
-          <label>${isAr ? 'Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ÙˆØ¸ÙŠÙÙŠ' : 'HR Code'}</label>
-          <span style="color: #1f2937">${singleTrainee.hrCode}</span>
+
+        <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 8px; text-align: center;">
+          <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 2px;">
+            ${isAr ? 'إجمالي الجلسات' : 'Total Sessions'}
+          </div>
+          <div style="font-size: 18px; font-weight: 900; color: #0284c7;">
+            ${singleTrainee.totalSessions !== undefined ? singleTrainee.totalSessions : records.length}
+          </div>
         </div>
-        <div class="trainee-field">
-          <label>${isAr ? 'Ø§Ù„Ù‚Ø³Ù…' : 'Department'}</label>
-          <span style="color: #1f2937; font-weight: 500">${singleTrainee.department}</span>
+
+        <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 8px; text-align: center;">
+          <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 2px;">
+            ${isAr ? 'أيام التدريب' : 'Training Days'}
+          </div>
+          <div style="font-size: 18px; font-weight: 900; color: #d97706;">
+            ${singleTrainee.attendedDays !== undefined ? singleTrainee.attendedDays : records.reduce((acc, r) => acc + (parseInt(String(r.raw?.['Attended Days'] || r.attendedDays || 1), 10) || 1), 0)}
+          </div>
+        </div>
+
+        <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 8px; text-align: center;">
+          <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 2px;">
+            ${isAr ? 'متوسط الدرجات' : 'Avg Score'}
+          </div>
+          <div style="font-size: 18px; font-weight: 900; color: #16a34a;">
+            ${singleTrainee.avgScore !== undefined && singleTrainee.avgScore !== null ? `${singleTrainee.avgScore}%` : 'N/A'}
+          </div>
         </div>
       </div>
     </div>

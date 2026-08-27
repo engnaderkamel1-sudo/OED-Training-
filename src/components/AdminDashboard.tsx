@@ -1527,9 +1527,20 @@ Content-Type: text/html; charset="utf-8"
   const getAdminReportOptions = (): ReportOptions => {
     return {
       title: isSingleTraineeFiltered ? (language === "ar" ? "تقرير متدرب" : "Trainee Report") : (language === "ar" ? "تقرير شامل" : "Full Report"),
-      language: (language === "ar" ? "ar" : "en") as "ar" | "en", records: filteredRecords,
-      singleTrainee: singleTrainee ? { name: singleTrainee.name, hrCode: singleTrainee.hrCode, department: singleTrainee.department, profileImageUrl: singleTrainee.profileImageUrl } : null,
-      fileName: isSingleTraineeFiltered ? `Report_${singleTrainee?.hrCode}.pdf` : "OED_Report.pdf",
+      language: (language === "ar" ? "ar" : "en") as "ar" | "en", 
+      records: filteredRecords,
+      singleTrainee: singleTraineeProfile ? { 
+        name: singleTraineeProfile.name, 
+        hrCode: singleTraineeProfile.hrCode, 
+        department: singleTraineeProfile.department, 
+        jobRole: singleTraineeProfile.jobRole,
+        profileImageUrl: singleTraineeProfile.imageUrl,
+        totalCourses: singleTraineeProfile.totalCourses,
+        totalSessions: singleTraineeProfile.totalSessions,
+        attendedDays: singleTraineeProfile.attendedDays,
+        avgScore: singleTraineeProfile.avgScore
+      } : (singleTrainee ? { name: singleTrainee.name, hrCode: singleTrainee.hrCode, department: singleTrainee.department, profileImageUrl: singleTrainee.profileImageUrl } : null),
+      fileName: isSingleTraineeFiltered ? `Report_${singleTraineeProfile?.hrCode || singleTrainee?.hrCode}.pdf` : "OED_Report.pdf",
     };
   };
 
@@ -1791,6 +1802,7 @@ Content-Type: text/html; charset="utf-8"
       department,
       jobRole,
       totalCourses: uniqueCourses,
+      totalSessions: filteredRecords.length,
       attendedDays,
       avgScore
     };
@@ -2478,43 +2490,60 @@ Content-Type: text/html; charset="utf-8"
                         </div>
                       </div>
 
-                      {/* Trainee Executive KPI Cards */}
-                      <div className="grid grid-cols-3 gap-3 w-full md:w-auto self-center">
+                      {/* Trainee Executive KPI Cards (4 Cards) */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 w-full md:w-auto self-center">
+                        {/* 1. Total Courses */}
                         <div 
-                          className="p-3 sm:p-4 rounded-xl border text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px] shadow-2xs" 
+                          className="p-3 sm:p-4 rounded-xl border text-center flex flex-col items-center justify-center min-w-[85px] sm:min-w-[110px] shadow-2xs" 
                           style={{ backgroundColor: isDark ? '#13233D' : '#F8FAFC', borderColor }}
                         >
                           <BookOpen size={18} className="text-[#002D62] dark:text-[#60a5fa] mb-1" />
-                          <span className="text-[11px] font-bold mb-1" style={{ color: textMuted }}>
+                          <span className="text-[10px] sm:text-[11px] font-bold mb-1" style={{ color: textMuted }}>
                             {language === 'ar' ? 'إجمالي الدورات' : 'Total Courses'}
                           </span>
-                          <span className="text-xl sm:text-2xl font-black" style={{ color: textColor }}>
+                          <span className="text-lg sm:text-2xl font-black" style={{ color: textColor }}>
                             {singleTraineeProfile.totalCourses}
                           </span>
                         </div>
 
+                        {/* 2. Total Sessions */}
                         <div 
-                          className="p-3 sm:p-4 rounded-xl border text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px] shadow-2xs" 
+                          className="p-3 sm:p-4 rounded-xl border text-center flex flex-col items-center justify-center min-w-[85px] sm:min-w-[110px] shadow-2xs" 
+                          style={{ backgroundColor: isDark ? '#13233D' : '#F8FAFC', borderColor }}
+                        >
+                          <Clock size={18} className="text-blue-600 dark:text-blue-400 mb-1" />
+                          <span className="text-[10px] sm:text-[11px] font-bold mb-1" style={{ color: textMuted }}>
+                            {language === 'ar' ? 'إجمالي الجلسات' : 'Total Sessions'}
+                          </span>
+                          <span className="text-lg sm:text-2xl font-black text-blue-600 dark:text-blue-400">
+                            {singleTraineeProfile.totalSessions}
+                          </span>
+                        </div>
+
+                        {/* 3. Attended Days */}
+                        <div 
+                          className="p-3 sm:p-4 rounded-xl border text-center flex flex-col items-center justify-center min-w-[85px] sm:min-w-[110px] shadow-2xs" 
                           style={{ backgroundColor: isDark ? '#13233D' : '#F8FAFC', borderColor }}
                         >
                           <Calendar size={18} className="text-[#FFC000] mb-1" />
-                          <span className="text-[11px] font-bold mb-1" style={{ color: textMuted }}>
+                          <span className="text-[10px] sm:text-[11px] font-bold mb-1" style={{ color: textMuted }}>
                             {language === 'ar' ? 'أيام التدريب' : 'Training Days'}
                           </span>
-                          <span className="text-xl sm:text-2xl font-black text-[#FFC000]">
+                          <span className="text-lg sm:text-2xl font-black text-[#FFC000]">
                             {singleTraineeProfile.attendedDays}
                           </span>
                         </div>
 
+                        {/* 4. Average Score */}
                         <div 
-                          className="p-3 sm:p-4 rounded-xl border text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px] shadow-2xs" 
+                          className="p-3 sm:p-4 rounded-xl border text-center flex flex-col items-center justify-center min-w-[85px] sm:min-w-[110px] shadow-2xs" 
                           style={{ backgroundColor: isDark ? '#13233D' : '#F8FAFC', borderColor }}
                         >
                           <CheckCircle size={18} className="text-emerald-500 mb-1" />
-                          <span className="text-[11px] font-bold mb-1" style={{ color: textMuted }}>
+                          <span className="text-[10px] sm:text-[11px] font-bold mb-1" style={{ color: textMuted }}>
                             {language === 'ar' ? 'متوسط الدرجات' : 'Avg Score'}
                           </span>
-                          <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                          <span className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
                             {singleTraineeProfile.avgScore !== null ? `${singleTraineeProfile.avgScore}%` : 'N/A'}
                           </span>
                         </div>
