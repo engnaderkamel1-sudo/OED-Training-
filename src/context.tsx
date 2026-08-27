@@ -4,6 +4,7 @@ import { translations } from './i18n';
 import { collection, onSnapshot, doc, getDoc, setDoc, writeBatch, deleteDoc, getDocs, query, where, limit } from 'firebase/firestore';
 import { db } from './firebase';
 import { APP_VERSION } from './version';
+import { sanitizeUserForStorage } from './utils/cryptoUtils';
 
 export const generateUUID = (): string => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -103,10 +104,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const stored = localStorage.getItem('oed_training_user');
       if (!stored) return null;
       const parsed = JSON.parse(stored);
-      if (parsed && (parsed.hrCode?.toLowerCase() === 'admin' || parsed.id === 'admin')) {
-        parsed.role = 'admin';
-        parsed.status = 'approved';
-      }
       return parsed;
     } catch {
       return null;
@@ -114,10 +111,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   const setUser = (newUser: User | null) => {
-    if (newUser && (newUser.hrCode?.toLowerCase() === 'admin' || newUser.id === 'admin')) {
-      newUser.role = 'admin';
-      newUser.status = 'approved';
-    }
     if (!newUser) {
       try {
         localStorage.removeItem('oed_current_view');
@@ -151,7 +144,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem('oed_training_user', JSON.stringify(user));
+      localStorage.setItem('oed_training_user', JSON.stringify(sanitizeUserForStorage(user)));
     } else {
       localStorage.removeItem('oed_training_user');
     }
@@ -210,7 +203,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             console.warn("Security Alert: User role mismatch detected. Restoring verified server role.");
             const correctedUser = { ...user, role: actualData.role, status: actualData.status };
             setUserState(correctedUser);
-            localStorage.setItem('oed_training_user', JSON.stringify(correctedUser));
+            localStorage.setItem('oed_training_user', JSON.stringify(sanitizeUserForStorage(correctedUser)));
           }
         }
       }).catch(() => {});
@@ -299,7 +292,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // 3. Suggestions Listener - Scoped by Role
     let unsubSuggestions = () => {};
-    if (!user || user.role === 'admin' || user.role === 'manager') {
+    if (!user) {
+      // SECURITY: Never leak suggestions to unauthenticated visitors
+      setSuggestionsState([]);
+    } else if (user.role === 'admin' || user.role === 'manager') {
       unsubSuggestions = onSnapshot(collection(db, "suggestions"), (snapshot) => {
         const sugs: Suggestion[] = [];
         snapshot.forEach((d) => sugs.push(d.data() as Suggestion));
@@ -323,7 +319,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // 4. Handout Revisions Listener - Scoped by Role
     let unsubRevisions = () => {};
-    if (!user || user.role === 'admin' || user.role === 'manager') {
+    if (!user) {
+      // SECURITY: Never leak revisions to unauthenticated visitors
+      setHandoutRevisionsState([]);
+    } else if (user.role === 'admin' || user.role === 'manager') {
       unsubRevisions = onSnapshot(collection(db, "handoutRevisions"), (snapshot) => {
         const revs: HandoutRevision[] = [];
         snapshot.forEach((d) => revs.push(d.data() as HandoutRevision));
@@ -518,7 +517,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setGlobalKPIs(newKPIs);
         try {
           localStorage.setItem('oed_cached_global_kpis', JSON.stringify(newKPIs));
-          await setDoc(doc(db, "systemSettings", "globalKPIs"), newKPIs, { merge: true });
+          if (user?.role === 'admin') {
+            await setDoc(doc(db, "systemSettings", "globalKPIs"), newKPIs, { merge: true });
+          }
         } catch (e) {}
       }
 
@@ -562,6 +563,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [localUsers, user]);
 
   const setUpcomingSessions = (sessions: UpcomingSession[] | ((prev: UpcomingSession[]) => UpcomingSession[])) => {
+    if (user?.role !== 'admin') {
+      console.warn("Security: Only admin can modify upcoming sessions in batch.");
+      return;
+    }
     const updated = typeof sessions === 'function' ? sessions(upcomingSessions) : sessions;
     const batch = writeBatch(db);
     updated.forEach(session => {
@@ -595,6 +600,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const registerTrainee = async (sessionId: string, userCode: string) => {
+    const callerHr = (user?.hrCode || user?.id || '').trim().toLowerCase();
+    const targetCode = (userCode || '').trim().toLowerCase();
+    if (user?.role !== 'admin' && user?.role !== 'manager' && callerHr !== targetCode) {
+      console.warn("Security Alert: Unauthorized registration attempt for another user:", userCode);
+      return;
+    }
     const session = upcomingSessions.find(s => s.id === sessionId);
     if (session) {
       const currentRegistered = session.registeredUsers || [];
@@ -613,6 +624,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const unregisterTrainee = async (sessionId: string, userCode: string) => {
+    const callerHr = (user?.hrCode || user?.id || '').trim().toLowerCase();
+    const targetCode = (userCode || '').trim().toLowerCase();
+    if (user?.role !== 'admin' && user?.role !== 'manager' && callerHr !== targetCode) {
+      console.warn("Security Alert: Unauthorized unregistration attempt for another user:", userCode);
+      return;
+    }
     const session = upcomingSessions.find(s => s.id === sessionId);
     if (session) {
       const currentRegistered = session.registeredUsers || [];

@@ -680,21 +680,6 @@ export const TopNav: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Hanging Orascom Logo Tab - Stays sticky with the Top Navbar during scroll */}
-        <div className="absolute left-3 sm:left-6 rtl:left-auto rtl:right-3 sm:rtl:right-6 top-full z-40 pointer-events-auto">
-          <div 
-            className="orascom-logo-badge px-3.5 py-1 sm:py-1.5 rounded-b-xl shadow-lg border-2 border-t-0 border-white/90 flex items-center justify-center"
-            style={{ backgroundColor: '#FFFFFF', background: '#FFFFFF' }}
-          >
-            <img 
-              src="/orascom-logo.png?v=14" 
-              alt="Orascom Construction Equipment Department OED" 
-              className="h-6.5 sm:h-8 w-auto object-contain block"
-              style={{ filter: 'none', backgroundColor: '#FFFFFF', background: '#FFFFFF' }}
-            />
-          </div>
-        </div>
       </nav>
 
       {/* EXPANDED LOGO MODAL */}

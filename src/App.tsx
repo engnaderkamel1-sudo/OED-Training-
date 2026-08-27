@@ -41,7 +41,7 @@ const AppContent: React.FC = () => {
         try {
           const permission = await Notification.requestPermission();
           if (permission === 'granted') {
-            const vapidKey = 'BLkYiBtoSBZjrTlPYF2yP5WVndyWBCmOV5b1WPuLRhCn-8F9Rx6F3e7SQIznNQwgEl7m7DoKLoGl2F_lY55OxX4'; 
+            const vapidKey = import.meta.env?.VITE_FIREBASE_VAPID_KEY || 'BLkYiBtoSBZjrTlPYF2yP5WVndyWBCmOV5b1WPuLRhCn-8F9Rx6F3e7SQIznNQwgEl7m7DoKLoGl2F_lY55OxX4'; 
             let registration;
             if ('serviceWorker' in navigator) {
               registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
@@ -116,24 +116,13 @@ const AppContent: React.FC = () => {
     let timeoutId: NodeJS.Timeout;
     let isIdle = false;
 
-    // --- دالة جلب اللوكيشن المحدثة باستخدام API أقوى ومحاولة بديلة ---
+    // Safe session context without third-party IP leakage
     const fetchUserLocation = async () => {
       try {
-        const response = await fetch('https://ipinfo.io/json');
-        const data = await response.json();
-        if (!data || !data.ip) return "Unknown";
-        return `${data.city || 'Unknown City'}, ${data.country || ''} (${data.ip})`;
-      } catch (error) {
-        console.error("Location fetch failed:", error);
-        
-        // محاولة بديلة لو الأول فشل (هيجيب الـ IP بس)
-        try {
-           const backupRes = await fetch('https://api.ipify.org?format=json');
-           const backupData = await backupRes.json();
-           return `IP Only: ${backupData.ip}`;
-        } catch(e) {
-           return "Unknown Location";
-        }
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local';
+        return `Secure Session (${timeZone})`;
+      } catch {
+        return "Secure Session";
       }
     };
 
@@ -155,10 +144,11 @@ const AppContent: React.FC = () => {
       }
     };
 
-    const hasLoggedInitialStart = sessionStorage.getItem('initial_session_logged');
+    const sessionKey = `initial_session_logged_${user.id}`;
+    const hasLoggedInitialStart = sessionStorage.getItem(sessionKey);
     if (!hasLoggedInitialStart) {
       logSessionActivity('system_login');
-      sessionStorage.setItem('initial_session_logged', 'true');
+      sessionStorage.setItem(sessionKey, 'true');
     }
 
     const handleBecomeIdle = () => {

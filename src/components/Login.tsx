@@ -10,6 +10,7 @@ import { doc, getDoc, setDoc, collection, query, where, getDocs, limit } from "f
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { getLoginMeta, getLocationFromIP } from "../utils/loginUtils";
 import { APP_VERSION } from "../version";
+import { hashPassword, verifyPassword, sanitizeUserForStorage } from "../utils/cryptoUtils";
 
 export const Login: React.FC = () => {
   const { t, language, setUser, users, setUsers, uniqueDepartments, addLoginLog, systemVersion } = useAppContext();
@@ -101,25 +102,30 @@ export const Login: React.FC = () => {
           if (adminDoc.exists()) found = adminDoc.data() as User;
         } catch (e) {}
 
-        if (found && found.password && found.password !== password) {
+        // SECURITY: Admin account MUST exist in Firestore and password MUST match
+        if (!found || !found.password) {
           setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
           return;
         }
 
-        const adminUser: User = found ? { ...found, role: 'admin', status: 'approved' } : ({
-          id: "admin",
-          hrCode: "admin",
-          name: "Master Admin",
-          department: "Training",
-          role: "admin",
-          phone: "01000000000",
-          status: "approved",
-          password: password,
-          email: "admin@orascom.com"
-        } as User);
+        const isMatch = await verifyPassword(password, found.password);
+        if (!isMatch) {
+          setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
+          return;
+        }
+
+        // Transparent upgrade if admin password was stored as plain text
+        if (found.password === password.trim()) {
+          try {
+            const hashedAdmin = await hashPassword(password);
+            await setDoc(doc(db, "users", "admin"), { password: hashedAdmin }, { merge: true });
+          } catch (e) {}
+        }
+
+        const adminUser: User = { ...found, role: 'admin', status: 'approved' };
         setUser(adminUser);
         localStorage.setItem("savedUserId", adminUser.id);
-        localStorage.setItem("oed_training_user", JSON.stringify(adminUser));
+        localStorage.setItem("oed_training_user", JSON.stringify(sanitizeUserForStorage(adminUser)));
         
         try {
           const loginMeta = getLoginMeta();
@@ -184,25 +190,9 @@ export const Login: React.FC = () => {
             if (!querySnap.empty) {
               foundUser = querySnap.docs[0].data() as User;
             } else {
-              // Auto-recover user document in Firestore if registered in Auth earlier
-              const cleanHrCode = `TMP-${userCredential.user.uid.slice(0, 6)}`;
-              const recoveredUser: User = {
-                id: `u_${userCredential.user.uid}`,
-                hrCode: cleanHrCode,
-                name: loginInput.split('@')[0],
-                email: loginInput,
-                phone: '',
-                department: 'Heavy Machinery',
-                role: 'trainee',
-                jobRole: 'Engineer',
-                status: 'pending',
-                createdAt: new Date().toISOString(),
-                password: password,
-                isGuest: true
-              } as any;
-              await setDoc(doc(db, "users", recoveredUser.id), recoveredUser);
-              foundUser = recoveredUser;
-              setUsers(prev => [...prev, recoveredUser]);
+              // SECURITY: Do not auto-recover deleted accounts
+              setError(language === "ar" ? "هذا الحساب غير مسجل في النظام" : "Account not found in system");
+              return;
             }
           }
         } catch (authErr: any) {
@@ -214,42 +204,40 @@ export const Login: React.FC = () => {
         try {
           await signInWithEmailAndPassword(auth, foundUser.email, password);
         } catch (err) {
-          // If Firebase Auth fails, verify against securely stored user password
-          const isValidPass = Boolean(foundUser.password && foundUser.password === password);
+          // If Firebase Auth fails, verify against securely stored user password (hash or plain)
+          const isValidPass = await verifyPassword(password, foundUser.password);
 
           if (!isValidPass) {
             setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
             return;
           }
+
+          // Transparent upgrade if password was stored as plain text
+          if (foundUser.password && foundUser.password === password.trim()) {
+            try {
+              const hashedPass = await hashPassword(password);
+              await setDoc(doc(db, "users", foundUser.id), { password: hashedPass }, { merge: true });
+            } catch (e) {}
+          }
         }
       } else if (foundUser) {
-        const isValidPass = Boolean(foundUser.password && foundUser.password === password);
+        const isValidPass = await verifyPassword(password, foundUser.password);
 
         if (!isValidPass) {
           setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
           return;
         }
-      } else {
-        if (loginInput === "admin") {
-          foundUser = {
-            id: "admin",
-            hrCode: "admin",
-            name: "Master Admin",
-            email: "admin@orascom.com",
-            department: "Training",
-            role: "admin",
-            phone: "01000000000",
-            status: "approved",
-            password: password
-          } as User;
-        } else if (loginInput === "hr1001" && password === "123456") {
-          foundUser = { id: "u1", hrCode: "HR1001", name: "Ahmed Hassan", department: "Heavy Machinery", role: "trainee", phone: "01000000001", status: "approved", password: "123456" };
-        } else if (loginInput === "sup1001" && password === "123456") {
-          foundUser = { id: "s1", hrCode: "SUP1001", name: "Omar Supervisor", department: "Heavy Machinery", role: "supervisor", phone: "01000000002", status: "approved", password: "123456" };
-        } else {
-          setError(language === "ar" ? "الحساب غير موجود" : "Account not found");
-          return;
+
+        // Transparent upgrade if password was stored as plain text
+        if (foundUser.password && foundUser.password === password.trim()) {
+          try {
+            const hashedPass = await hashPassword(password);
+            await setDoc(doc(db, "users", foundUser.id), { password: hashedPass }, { merge: true });
+          } catch (e) {}
         }
+      } else {
+        setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
+        return;
       }
 
       // Ensure Admin accounts are always approved with role admin
@@ -267,6 +255,7 @@ export const Login: React.FC = () => {
       } else {
         setUser(foundUser);
         localStorage.setItem("savedUserId", foundUser.id);
+        localStorage.setItem("oed_training_user", JSON.stringify(sanitizeUserForStorage(foundUser)));
 
         const loginMeta = getLoginMeta();
         let ipAddress = undefined;
@@ -430,6 +419,7 @@ export const Login: React.FC = () => {
         .filter(e => e.trim() !== "")
         .map(e => `${e.trim().toLowerCase()}@orascom.com`);
 
+      const hashedPassword = await hashPassword(password);
       const newUser: User = {
         id: targetUserId,
         hrCode: cleanHrCode,
@@ -442,7 +432,7 @@ export const Login: React.FC = () => {
         status: "pending",
         createdAt: new Date().toISOString(),
         managerEmails: formattedManagerEmails,
-        password: password,
+        password: hashedPassword,
         profileImageUrl: profileImage || '',
         isGuest: registerMode === 'temporary', 
         guestExpiryDate: registerMode === 'temporary' ? expiryDate.toISOString() : '',
@@ -777,9 +767,6 @@ export const Login: React.FC = () => {
                 <label className="block text-sm font-bold text-gray-700 mb-1">{language === "ar" ? "الصلاحية" : "Role"}</label>
                 <select value={accessRole} onChange={(e) => setAccessRole(e.target.value as Role)} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]" dir={language === "ar" ? "rtl" : "ltr"}>
                   <option value="trainee">{language === "ar" ? "متدرب" : "Trainee"}</option>
-                  {registerMode === 'official' && (
-                    <option value="admin">{language === "ar" ? "مسؤول النظام (Admin)" : "Admin"}</option>
-                  )}
                 </select>
               </div>
             </div>

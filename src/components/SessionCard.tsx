@@ -181,6 +181,11 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   };
 
   const doSendEvaluationAlert = async () => {
+    // SECURITY: Only admin can broadcast evaluation alerts and announcements
+    if (user?.role !== 'admin') {
+      alert(language === 'ar' ? 'غير مصرح لك بإرسال تنبيهات التقييم' : 'Unauthorized: Only admin can send evaluation alerts');
+      return;
+    }
     try {
       const updatedSession: UpcomingSession = {
         ...session,

@@ -86,7 +86,7 @@ export const GlobalAttendanceAlertBanner: React.FC = () => {
   return (
     <>
       <div className="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-[#001D42] border-b-2 border-amber-600 shadow-lg sticky top-16 z-40 px-3 sm:px-6 py-2.5 transition-all animate-slide-down">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2.5 pl-12 sm:pl-0 rtl:pl-0 rtl:pr-12 sm:rtl:pr-0">
           
           {/* Info Section */}
           <div className="flex items-start gap-2.5 min-w-0 flex-1">

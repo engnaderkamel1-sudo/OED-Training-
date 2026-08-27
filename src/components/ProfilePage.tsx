@@ -6,6 +6,7 @@ import { Upload, Save, Loader2, User as UserIcon, Mail, Phone, Building, Briefca
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { DataField } from './DataField';
+import { sanitizeUserForStorage } from '../utils/cryptoUtils';
 
 export const ProfilePage: React.FC = () => {
   const { user, setUser, users, setUsers, language, t } = useAppContext();
@@ -103,7 +104,7 @@ export const ProfilePage: React.FC = () => {
       };
       setUser(updatedUser);
       try {
-        localStorage.setItem('oed_training_user', JSON.stringify(updatedUser));
+        localStorage.setItem('oed_training_user', JSON.stringify(sanitizeUserForStorage(updatedUser)));
       } catch (e) {}
       
       if (setUsers && Array.isArray(users)) {

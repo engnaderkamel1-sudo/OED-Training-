@@ -11,7 +11,7 @@ interface EditUserModalProps {
 }
 
 export const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose }) => {
-  const { language, setUsers, users, isDark } = useAppContext();
+  const { language, setUsers, users, isDark, user: currentUser } = useAppContext();
 
   const [hrCode, setHrCode] = useState(user.hrCode || '');
   const [name, setName] = useState(user.name || '');
@@ -25,6 +25,20 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose }) =
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // SECURITY: Verify current user is admin
+    if (currentUser?.role !== 'admin') {
+      alert(language === 'ar' ? 'غير مصرح لك بتعديل بيانات المستخدمين' : 'Unauthorized: Only administrators can edit users');
+      return;
+    }
+
+    const cleanHr = hrCode.trim().toUpperCase();
+    // SECURITY: Prevent HR Code hijacking / duplicates
+    if (cleanHr && users.some(u => u.id !== user.id && (u.hrCode || '').trim().toUpperCase() === cleanHr)) {
+      alert(language === 'ar' ? 'الرقم الوظيفي مسجل بالفعل لمستخدم آخر' : 'This HR Code is already assigned to another user');
+      return;
+    }
+
     setIsSaving(true);
     try {
       const sanitizedUser = {

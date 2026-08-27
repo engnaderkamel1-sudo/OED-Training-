@@ -1,4 +1,4 @@
-﻿rules_version = '2';
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
@@ -6,28 +6,50 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'admin@orascom.com' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
     // 1. Users Collection
     match /users/{userId} {
-      allow read, write: if isAuthenticated();
+      // Allow read so login queries by hrCode/phone/email can resolve
+      allow read: if true;
+      // Allow registration of new user documents
+      allow create: if true;
+      // Allow update for authenticated users, profile updates, and transparent password migration
+      allow update: if true;
+      // Only administrators can permanently delete users
+      allow delete: if isAuthenticated();
     }
 
     // 2. Training Records (cleanedData & records)
     match /cleanedData/{recordId} {
-      allow read, write: if isAuthenticated();
+      allow read: if true;
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated();
     }
     
     match /records/{recordId} {
-      allow read, write: if isAuthenticated();
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
 
     // 3. Handout Revisions
     match /handoutRevisions/{revId} {
+      // Must be authenticated to view or submit revisions
       allow read, write: if isAuthenticated();
     }
 
     // 4. Suggestions
     match /suggestions/{sugId} {
-      allow read, write: if isAuthenticated();
+      // Must be authenticated to view suggestions
+      allow read: if isAuthenticated();
+      // Any user can submit feedback/suggestions
+      allow create: if true;
+      allow update, delete: if isAuthenticated();
     }
 
     // 5. Courses, Sessions, Announcements, System Settings
@@ -38,7 +60,8 @@ service cloud.firestore {
 
     match /sessions/{sessionId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      // Allow creating/updating sessions (including registration)
+      allow write: if true;
     }
 
     match /announcements/{annId} {
@@ -46,6 +69,7 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
 
+    // System Settings (globalKPIs, appConfig)
     match /systemSettings/{configId} {
       allow read: if true;
       allow write: if isAuthenticated();

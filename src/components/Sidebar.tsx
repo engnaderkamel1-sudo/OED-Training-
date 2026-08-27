@@ -185,7 +185,7 @@ export const Sidebar: React.FC = () => {
       <aside
         className={`
           fixed top-0 h-[100dvh] border-r rtl:border-r-0 rtl:border-l
-          shadow-2xl w-72 shrink-0 transition-all duration-300 ease-in-out z-[9999] overflow-y-auto print:hidden
+          shadow-2xl w-72 shrink-0 transition-all duration-300 ease-in-out z-[9999] overflow-y-auto print:hidden flex flex-col justify-between
           ${isOpen
             ? 'translate-x-0'
             : isCollapsed
@@ -197,7 +197,7 @@ export const Sidebar: React.FC = () => {
           borderColor: 'var(--border-card)',
         }}
       >
-        <div className="p-4 flex flex-col gap-1.5 pb-24">
+        <div className="p-4 flex flex-col gap-1.5 flex-1">
           <div className="pb-4 mb-2 flex flex-col items-center justify-center gap-2"
             style={{ borderBottom: '1px solid var(--border-color)' }}>
             
@@ -317,6 +317,26 @@ export const Sidebar: React.FC = () => {
               </motion.button>
             );
           })}
+        </div>
+
+        {/* Footer: Official Orascom Construction Logo Badge */}
+        <div 
+          className="p-4 mt-auto border-t shrink-0 flex flex-col items-center justify-center gap-1.5 select-none" 
+          style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-card)' }}
+        >
+          <div 
+            className="bg-white px-3.5 py-1.5 rounded-xl shadow-xs border border-gray-200 flex items-center justify-center w-full max-w-[200px]"
+          >
+            <img 
+              src="/orascom-logo.png?v=14" 
+              alt="Orascom Construction Equipment Department OED" 
+              className="h-7 w-auto object-contain block"
+              style={{ filter: 'none', backgroundColor: '#FFFFFF', background: '#FFFFFF' }}
+            />
+          </div>
+          <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 text-center tracking-tight">
+            © {new Date().getFullYear()} Orascom Construction
+          </p>
         </div>
       </aside>
     </>

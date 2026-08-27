@@ -72,6 +72,12 @@ export const formatNotificationDate = (timestampStr?: string, lang: string = 'en
   });
 };
 
+const isCodeInList = (list?: string[], code?: string): boolean => {
+  if (!list || !code) return false;
+  const clean = code.trim().toLowerCase();
+  return list.some(c => (c || '').trim().toLowerCase() === clean);
+};
+
 import { DataField } from './DataField';
 import { SessionCard } from './SessionCard';
 import { UpcomingSession } from '../types';
@@ -151,7 +157,7 @@ export const TraineeDashboard: React.FC = () => {
   // Automated Attendance Window: ONLY sessions actively running right now (Course Date + Start Time until 4:00 PM)
   const activeTodaySessions = useMemo(() => {
     return activeUpcomingSessions.filter(session => {
-      const isRegistered = session.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(session.id);
+      const isRegistered = isCodeInList(session.registeredUsers, user?.hrCode) || registeredCourseIds.includes(session.id);
       return isRegistered && isSessionActiveNow(session);
     });
   }, [activeUpcomingSessions, user?.hrCode, registeredCourseIds]);
@@ -211,7 +217,7 @@ export const TraineeDashboard: React.FC = () => {
     };
 
     activeUpcomingSessions.forEach(session => {
-      const isRegistered = session.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(session.id);
+      const isRegistered = isCodeInList(session.registeredUsers, user?.hrCode) || registeredCourseIds.includes(session.id);
       
       // Automated Attendance Window Notification (Active only when course is running right now)
       if (isRegistered && isSessionActiveNow(session)) {
@@ -259,8 +265,8 @@ export const TraineeDashboard: React.FC = () => {
 
         const matchingSession = activeUpcomingSessions.find(s => s.id === ann.sessionId);
         const target = ann.targetAudience || matchingSession?.targetParticipants;
-        const isRegistered = matchingSession && (matchingSession.registeredUsers?.includes(user?.hrCode || '') || registeredCourseIds.includes(matchingSession.id));
-        const isDirectTarget = (ann as any).targetHrCodes && (ann as any).targetHrCodes.includes(user?.hrCode || '');
+        const isRegistered = matchingSession && (isCodeInList(matchingSession.registeredUsers, user?.hrCode) || registeredCourseIds.includes(matchingSession.id));
+        const isDirectTarget = isCodeInList((ann as any).targetHrCodes, user?.hrCode);
 
         if (ann.isGlobal || isDirectTarget || isRegistered || isTargetMatch(target)) {
           list.push({
@@ -1228,7 +1234,7 @@ export const TraineeDashboard: React.FC = () => {
               const targetSession = upcomingSessions.find(s => s.id === targetId) || activeSessionForScanner;
               const cTitle = targetSession?.courseTitle || 'Technical Course';
 
-              const isAlreadyRegistered = targetSession?.registeredUsers?.includes(userCode) || registeredCourseIds.includes(targetId);
+              const isAlreadyRegistered = isCodeInList(targetSession?.registeredUsers, userCode) || registeredCourseIds.includes(targetId);
 
               if (isAlreadyRegistered) {
                 const alreadyMsg = language === 'ar'
