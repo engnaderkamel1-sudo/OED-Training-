@@ -319,22 +319,18 @@ export const Sidebar: React.FC = () => {
           })}
         </div>
 
-        {/* Footer: Official Orascom Construction Logo Badge */}
+        {/* Footer: Official Orascom Construction Logo */}
         <div 
-          className="p-4 mt-auto border-t shrink-0 flex flex-col items-center justify-center gap-1.5 select-none" 
-          style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-card)' }}
+          className="p-4 mt-auto border-t shrink-0 flex flex-col items-center justify-center gap-2 select-none" 
+          style={{ borderColor: 'var(--border-color)' }}
         >
-          <div 
-            className="bg-white px-3.5 py-1.5 rounded-xl shadow-xs border border-gray-200 flex items-center justify-center w-full max-w-[200px]"
-          >
-            <img 
-              src="/orascom-logo.png?v=14" 
-              alt="Orascom Construction Equipment Department OED" 
-              className="h-7 w-auto object-contain block"
-              style={{ filter: 'none', backgroundColor: '#FFFFFF', background: '#FFFFFF' }}
-            />
-          </div>
-          <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 text-center tracking-tight">
+          <img 
+            src="/orascom-logo.png?v=14" 
+            alt="Orascom Construction Equipment Department OED" 
+            className="h-11 sm:h-12 w-auto max-w-[220px] object-contain block dark:bg-white/90 dark:px-3 dark:py-1 dark:rounded-xl"
+            style={{ filter: 'none' }}
+          />
+          <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 text-center tracking-tight">
             © {new Date().getFullYear()} Orascom Construction
           </p>
         </div>

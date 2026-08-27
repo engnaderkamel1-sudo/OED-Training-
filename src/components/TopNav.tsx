@@ -63,11 +63,11 @@ export const TopNav: React.FC = () => {
   const handleFontDecrease = () => setFontScale(prev => Math.max(prev - 10, 85));
   const handleFontReset = () => setFontScale(100);
 
-  // Lock Screen Orientation to Portrait on Mobile
+  // Allow natural screen rotation on mobile and tablets
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined' && window.screen && (window.screen as any).orientation?.lock) {
-        (window.screen as any).orientation.lock('portrait').catch(() => {});
+      if (typeof window !== 'undefined' && window.screen && (window.screen as any).orientation?.unlock) {
+        (window.screen as any).orientation.unlock();
       }
     } catch (e) {}
   }, []);
