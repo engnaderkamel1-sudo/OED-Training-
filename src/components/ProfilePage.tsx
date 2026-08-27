@@ -87,33 +87,75 @@ export const ProfilePage: React.FC = () => {
 
     setIsSaving(true);
     try {
-      const updateData = {
-        name: enforceEnglish(name).trim(),
-        phone: phone.trim(),
-        department: department.trim(),
-        profileImageUrl: profileImage || null
-      };
+      const sanitizedName = enforceEnglish(name).trim();
+      const sanitizedDept = department.trim();
+      const sanitizedPhone = phone.trim();
 
-      // 1. Direct write to Firestore in 1 atomic write (0 reads)
-      await setDoc(doc(db, 'users', user.id), updateData, { merge: true });
+      const isAdmin = user.role === 'admin';
+      const isCriticalDataChanged = (sanitizedName !== user.name) || (sanitizedDept !== user.department);
 
-      // 2. Update local context & localStorage immediately
-      const updatedUser: User = {
-        ...user,
-        ...updateData
-      };
-      setUser(updatedUser);
-      try {
-        localStorage.setItem('oed_training_user', JSON.stringify(sanitizeUserForStorage(updatedUser)));
-      } catch (e) {}
-      
-      if (setUsers && Array.isArray(users)) {
-        setUsers(users.map((u) => u && u.id === user.id ? updatedUser : u));
+      if (!isAdmin && isCriticalDataChanged) {
+        // Submit as pending update for admin approval
+        const pendingPayload: any = {
+          ...(user.pendingUpdates || {}),
+          requestedAt: new Date().toISOString()
+        };
+        if (sanitizedName !== user.name) pendingPayload.name = sanitizedName;
+        if (sanitizedDept !== user.department) pendingPayload.department = sanitizedDept;
+        if (sanitizedPhone !== user.phone) pendingPayload.phone = sanitizedPhone;
+
+        const updateDocData: any = {
+          pendingUpdates: pendingPayload,
+          profileImageUrl: profileImage || null
+        };
+
+        await setDoc(doc(db, 'users', user.id), updateDocData, { merge: true });
+
+        const updatedUser: User = {
+          ...user,
+          pendingUpdates: pendingPayload,
+          profileImageUrl: profileImage || null
+        };
+        setUser(updatedUser);
+        try {
+          localStorage.setItem('oed_training_user', JSON.stringify(sanitizeUserForStorage(updatedUser)));
+        } catch (e) {}
+
+        if (setUsers && Array.isArray(users)) {
+          setUsers(users.map((u) => u && u.id === user.id ? updatedUser : u));
+        }
+
+        setSuccess(language === 'ar' ? 'تم إرسال طلب تعديل البيانات بنجاح إلى الإدارة للمراجعة والاعتماد!' : 'Data update request submitted to Admin for review & approval!');
+        setIsEditing(false);
+        setTimeout(() => setSuccess(''), 5000);
+      } else {
+        // Direct save for Admin or non-critical changes (phone/image)
+        const updateData: any = {
+          name: isAdmin ? sanitizedName : user.name,
+          department: isAdmin ? sanitizedDept : user.department,
+          phone: sanitizedPhone,
+          profileImageUrl: profileImage || null
+        };
+
+        await setDoc(doc(db, 'users', user.id), updateData, { merge: true });
+
+        const updatedUser: User = {
+          ...user,
+          ...updateData
+        };
+        setUser(updatedUser);
+        try {
+          localStorage.setItem('oed_training_user', JSON.stringify(sanitizeUserForStorage(updatedUser)));
+        } catch (e) {}
+
+        if (setUsers && Array.isArray(users)) {
+          setUsers(users.map((u) => u && u.id === user.id ? updatedUser : u));
+        }
+
+        setSuccess(language === 'ar' ? 'تم حفظ وتحديث بيانات الملف الشخصي بنجاح!' : 'Profile updated successfully!');
+        setIsEditing(false);
+        setTimeout(() => setSuccess(''), 4000);
       }
-      
-      setSuccess(language === 'ar' ? 'تم حفظ وتحديث بيانات الملف الشخصي بنجاح!' : 'Profile updated successfully!');
-      setIsEditing(false);
-      setTimeout(() => setSuccess(''), 4000);
     } catch (err: any) {
       console.error("Profile update error:", err);
       setError(err.message || (language === 'ar' ? 'حدث خطأ أثناء حفظ البيانات' : 'Failed to update profile'));
@@ -188,6 +230,39 @@ export const ProfilePage: React.FC = () => {
           {success && (
             <div className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 p-3 rounded-xl mb-6 text-xs sm:text-sm border border-emerald-200 dark:border-emerald-800 font-medium">
               {success}
+            </div>
+          )}
+
+          {user.pendingUpdates && (
+            <div className="bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 p-4 rounded-xl mb-6 text-xs sm:text-sm font-semibold flex items-start gap-3 shadow-xs">
+              <Clock size={18} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-slate-900 dark:text-white mb-1">
+                  {language === 'ar' ? '⏳ لديك طلب تعديل بيانات قيد المراجعة والموافقة من قِبل إدارة التدريب:' : '⏳ You have a pending data update request under review by Admin:'}
+                </p>
+                <div className="flex flex-wrap gap-2 mt-1.5">
+                  {user.pendingUpdates.name && (
+                    <span className="bg-white dark:bg-slate-800 px-2.5 py-1 rounded-md border border-amber-300 dark:border-amber-700 text-xs font-mono">
+                      {language === 'ar' ? 'الاسم الجديد: ' : 'New Name: '} <strong>{user.pendingUpdates.name}</strong>
+                    </span>
+                  )}
+                  {user.pendingUpdates.department && (
+                    <span className="bg-white dark:bg-slate-800 px-2.5 py-1 rounded-md border border-amber-300 dark:border-amber-700 text-xs font-mono">
+                      {language === 'ar' ? 'الإدارة الجديدة: ' : 'New Dept: '} <strong>{user.pendingUpdates.department}</strong>
+                    </span>
+                  )}
+                  {user.pendingUpdates.hrCode && (
+                    <span className="bg-white dark:bg-slate-800 px-2.5 py-1 rounded-md border border-amber-300 dark:border-amber-700 text-xs font-mono">
+                      {language === 'ar' ? 'الكود الجديد: ' : 'New HR: '} <strong>{user.pendingUpdates.hrCode}</strong>
+                    </span>
+                  )}
+                  {user.pendingUpdates.email && (
+                    <span className="bg-white dark:bg-slate-800 px-2.5 py-1 rounded-md border border-amber-300 dark:border-amber-700 text-xs font-mono">
+                      {language === 'ar' ? 'الإيميل الجديد: ' : 'New Email: '} <strong>{user.pendingUpdates.email}</strong>
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

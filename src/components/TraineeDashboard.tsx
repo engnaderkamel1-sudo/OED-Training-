@@ -656,16 +656,6 @@ export const TraineeDashboard: React.FC = () => {
                             >
                               {language === 'ar' ? 'النتيجة:' : 'Score:'} {scoreVal}%
                             </span>
-
-                            <button
-                              type="button"
-                              onClick={() => setHandoutRevisionCourseTitle(course?.title || r.courseName || '')}
-                              className="cursor-pointer bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 px-2 py-0.5 rounded-md text-[11px] font-bold transition-all flex items-center gap-1 shadow-2xs hover:scale-105"
-                              title={language === 'ar' ? 'اقتراح تعديل في مذكرة أو محتوى هذه الدورة' : 'Suggest Handout Revision for this Course'}
-                            >
-                              <BookOpen size={12} className="text-amber-600 dark:text-amber-400" />
-                              <span>{language === 'ar' ? 'تعديل المحتوى' : 'Revision'}</span>
-                            </button>
                           </div>
                         </div>
                       </div>

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context';
 import { 
   collection, 
@@ -54,6 +54,11 @@ export const SystemErrorsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'resolved'>('all');
   const [expandedErrorId, setExpandedErrorId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [simulateCrash, setSimulateCrash] = useState(false);
+
+  if (simulateCrash) {
+    throw new Error("تجربة محاكاة عطل برمجي لفحص شاشة الطوارئ وإرسال التقرير (Simulated Error Boundary Test)");
+  }
 
   // Subscribe to real-time error reports
   useEffect(() => {
@@ -180,6 +185,15 @@ export const SystemErrorsPage: React.FC = () => {
               <span>{isAr ? 'تنظيف المحلول' : 'Clear Resolved'}</span>
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => setSimulateCrash(true)}
+            className="px-3.5 py-2 rounded-xl text-xs font-black bg-amber-500 hover:bg-amber-600 active:scale-95 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm border border-amber-600"
+            title={isAr ? 'تجربة ظهور شاشة الخطأ وزر الرجوع وإرسال التقرير' : 'Simulate Error Screen & Recovery'}
+          >
+            <span>🧪 {isAr ? 'تجربة شاشة الخطأ' : 'Test Error Screen'}</span>
+          </button>
 
           <button
             type="button"

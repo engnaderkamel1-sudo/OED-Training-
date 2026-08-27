@@ -217,6 +217,11 @@ export const AttendanceReminderModal: React.FC<AttendanceReminderModalProps> = (
                           <span>•</span>
                           <span className="truncate">{u.department || 'OED'}</span>
                         </div>
+                        {session.registrationTimestamps?.[u.hrCode || u.id] && (
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold block mt-0.5">
+                            {language === 'ar' ? `سجّل في: ${new Date(session.registrationTimestamps[u.hrCode || u.id]).toLocaleString('ar-EG', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true })}` : `Registered: ${new Date(session.registrationTimestamps[u.hrCode || u.id]).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true })}`}
+                          </span>
+                        )}
                       </div>
                     </div>
 

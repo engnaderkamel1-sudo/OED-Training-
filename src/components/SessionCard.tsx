@@ -729,11 +729,25 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                     </button>
                   )}
                 </div>
-              ) : isRegistered ? (
-                <>
+                <div className="flex flex-col items-center">
                   <span className="inline-flex items-center text-emerald-950 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-950/80 border-2 border-emerald-400 dark:border-emerald-600 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs">
                     <CheckCircle size={15} className="mr-1 rtl:ml-1 rtl:mr-0 text-emerald-700 dark:text-emerald-400" /> {t('registered')}
                   </span>
+                  {session.registrationTimestamps?.[userCode] && (
+                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 mt-1 font-mono flex items-center gap-1">
+                      <Clock size={10} />
+                      <span>
+                        {new Date(session.registrationTimestamps[userCode]).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true
+                        })}
+                      </span>
+                    </span>
+                  )}
+                </div>
 
                   {/* Course Evaluation link for Registered Trainees */}
                   {isEvaluationOpenToday ? (
@@ -889,49 +903,68 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {registeredTrainees.map((trainee, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 rounded-xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-800/60 flex items-center justify-between gap-3 shadow-2xs hover:bg-blue-50/50 dark:hover:bg-slate-800 transition-colors"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-full bg-[#002D62] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-xs border border-white/20">
-                          {trainee.profileImageUrl ? (
-                            <img src={trainee.profileImageUrl} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <span>{trainee.name?.slice(0, 2).toUpperCase() || 'TR'}</span>
+                  {registeredTrainees.map((trainee, idx) => {
+                    const traineeCode = trainee.hrCode || trainee.id || '';
+                    const regTimestamp = session.registrationTimestamps?.[traineeCode];
+                    const regTimeFormatted = regTimestamp ? new Date(regTimestamp).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    }) : null;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="p-3.5 rounded-xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-800/60 flex items-center justify-between gap-3 shadow-2xs hover:bg-blue-50/50 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-full bg-[#002D62] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-xs border border-white/20">
+                            {trainee.profileImageUrl ? (
+                              <img src={trainee.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <span>{trainee.name?.slice(0, 2).toUpperCase() || 'TR'}</span>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white truncate">
+                              {trainee.name}
+                            </h4>
+                            <p className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-0.5">
+                              <span className="font-mono font-bold text-[#002D62] dark:text-[#FFC000]">{trainee.hrCode}</span>
+                              <span>•</span>
+                              <span className="truncate">{trainee.department || 'General'}</span>
+                            </p>
+                            {regTimeFormatted && (
+                              <p className="text-[10.5px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 mt-1 font-mono">
+                                <Clock size={11} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <span>{language === 'ar' ? `تاريخ ووقت التسجيل: ${regTimeFormatted}` : `Registered at: ${regTimeFormatted}`}</span>
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="text-right rtl:text-left shrink-0">
+                          {trainee.phone && (
+                            <a
+                              href={`tel:${trainee.phone}`}
+                              className="text-xs font-semibold text-blue-600 dark:text-blue-400 block hover:underline"
+                              dir="ltr"
+                            >
+                              {trainee.phone}
+                            </a>
+                          )}
+                          {trainee.email && (
+                            <span className="text-[10px] text-gray-400 block truncate max-w-[150px]">
+                              {trainee.email}
+                            </span>
                           )}
                         </div>
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white truncate">
-                            {trainee.name}
-                          </h4>
-                          <p className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-0.5">
-                            <span className="font-mono font-bold text-[#002D62] dark:text-[#FFC000]">{trainee.hrCode}</span>
-                            <span>•</span>
-                            <span className="truncate">{trainee.department || 'General'}</span>
-                          </p>
-                        </div>
                       </div>
-
-                      <div className="text-right rtl:text-left shrink-0">
-                        {trainee.phone && (
-                          <a
-                            href={`tel:${trainee.phone}`}
-                            className="text-xs font-semibold text-blue-600 dark:text-blue-400 block hover:underline"
-                            dir="ltr"
-                          >
-                            {trainee.phone}
-                          </a>
-                        )}
-                        {trainee.email && (
-                          <span className="text-[10px] text-gray-400 block truncate max-w-[150px]">
-                            {trainee.email}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

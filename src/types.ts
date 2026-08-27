@@ -24,13 +24,19 @@ export interface User {
   guestExpiryDate?: string; // تاريخ انتهاء الحساب المؤقت
   isShadowAccount?: boolean; // حساب وهمي لتسجيل الحضور اليدوي
   pendingUpdates?: { 
+    name?: string;
+    department?: string;
     email?: string; 
     hrCode?: string; 
+    phone?: string;
     requestedAt?: string; 
-  }; // طلبات تعديل البيانات قيد المراجعة
-  updateHistory?: { // <--- تم نقلها هنا داخل الـ User
+  }; // بيانات تعديل البيانات تحت المراجعة
+  updateHistory?: { // <--- سجل العمليات السابقة لكل User
+    name?: string;
+    department?: string;
     hrCode?: string;
     email?: string;
+    phone?: string;
     status: 'approved' | 'rejected';
     processedAt: string;
     requestedAt?: string;
@@ -111,7 +117,7 @@ export interface UpcomingSession {
   reminderLog?: ReminderLogItem[];
   feedbackLink?: string;
   feedbackEnabled?: boolean;
-  feedbackSentAt?: string; // تاريخ ووقت إرسال طلب التقييم من الأدمن
+  registrationTimestamps?: Record<string, string>; // كود المتدرب -> تاريخ ووقت التسجيل ISO
   additionalNotificationEmails?: string[];
 }
 

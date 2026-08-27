@@ -626,10 +626,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         ? currentRegistered
         : [...currentRegistered, userCode];
       const updatedUnregistered = currentUnregistered.filter(code => code !== userCode);
+      
+      const nowIso = new Date().toISOString();
+      const currentTimestamps = session.registrationTimestamps || {};
+      const updatedTimestamps = {
+        ...currentTimestamps,
+        [userCode]: currentTimestamps[userCode] || nowIso
+      };
+
       const updatedSession = {
         ...session,
         registeredUsers: updatedRegistered,
-        unregisteredUsers: updatedUnregistered
+        unregisteredUsers: updatedUnregistered,
+        registrationTimestamps: updatedTimestamps
       };
       await setDoc(doc(db, "sessions", sessionId), updatedSession);
     }
@@ -650,10 +659,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const updatedUnregistered = currentUnregistered.includes(userCode)
         ? currentUnregistered
         : [...currentUnregistered, userCode];
+
+      const currentTimestamps = { ...(session.registrationTimestamps || {}) };
+      delete currentTimestamps[userCode];
+
       const updatedSession = {
         ...session,
         registeredUsers: updatedRegistered,
-        unregisteredUsers: updatedUnregistered
+        unregisteredUsers: updatedUnregistered,
+        registrationTimestamps: currentTimestamps
       };
       await setDoc(doc(db, "sessions", sessionId), updatedSession);
     }
@@ -802,9 +816,44 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const addSuggestion = async (s: Suggestion) => {
-    const clean = Object.fromEntries(Object.entries(s).filter(([_, v]) => v !== undefined));
-    await setDoc(doc(db, "suggestions", s.id), clean);
+  const addSuggestion = async (s: any) => {
+    const id = s.id || `sug_${generateUUID().substring(0, 10)}`;
+    const fullSug: Suggestion = {
+      id,
+      userId: s.userId || user?.id || user?.hrCode || 'user',
+      userName: s.userName || user?.name || user?.hrCode || 'User',
+      hrCode: s.hrCode || user?.hrCode || 'N/A',
+      department: s.department || user?.department || '',
+      category: s.category || 'general',
+      title: s.title || '',
+      description: s.description || '',
+      status: s.status || 'pending',
+      createdAt: s.createdAt || new Date().toISOString(),
+      updatedAt: s.updatedAt || new Date().toISOString(),
+      adminMessage: s.adminMessage,
+      adminMessageAt: s.adminMessageAt,
+      adminNote: s.adminNote
+    };
+    const clean = Object.fromEntries(Object.entries(fullSug).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, "suggestions", id), clean);
+
+    // Instant Notification for Admin
+    try {
+      const adminAnnouncement: SystemAnnouncement = {
+        id: `ann_${id}`,
+        title: language === 'ar' ? `💡 اقتراح جديد من [${fullSug.userName}]` : `💡 New Suggestion Submitted by [${fullSug.userName}]`,
+        message: language === 'ar' 
+          ? `قام ${fullSug.userName} (كود: ${fullSug.hrCode}) بتقديم اقتراح جديد بعنوان: "${fullSug.title}".`
+          : `${fullSug.userName} (HR: ${fullSug.hrCode}) submitted a new suggestion: "${fullSug.title}".`,
+        date: new Date().toISOString(),
+        author: fullSug.userName,
+        isGlobal: false,
+        targetAudience: 'admin_only'
+      };
+      await setDoc(doc(db, "announcements", adminAnnouncement.id), adminAnnouncement);
+    } catch (e) {
+      console.warn("Could not dispatch admin announcement for suggestion:", e);
+    }
   };
 
   const updateSuggestion = async (id: string, updates: Partial<Suggestion>) => {

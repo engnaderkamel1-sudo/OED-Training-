@@ -103,19 +103,54 @@ export const isDateInSessionRange = (session?: UpcomingSession | null): boolean 
 };
 
 /**
- * Sends a native browser push notification when session becomes active
+ * Sends a native browser push notification (fully compatible with Android Mobile ServiceWorker & Desktop)
  */
-export const sendNativePushNotification = (title: string, body: string, iconUrl = '/app-icon.png') => {
+export const sendNativePushNotification = (
+  title: string, 
+  bodyOrOptions?: string | { body?: string; icon?: string; tag?: string }, 
+  iconUrl = '/icon-192.png'
+) => {
   try {
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      new Notification(title, {
-        body,
-        icon: iconUrl,
-        badge: iconUrl,
-        tag: 'oed-active-session',
-      });
+    if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') {
+      return;
+    }
+
+    const bodyText = typeof bodyOrOptions === 'string' 
+      ? bodyOrOptions 
+      : (bodyOrOptions?.body || '');
+    
+    const icon = (typeof bodyOrOptions === 'object' && bodyOrOptions?.icon) 
+      ? bodyOrOptions.icon 
+      : iconUrl;
+
+    const notifOptions: any = {
+      body: bodyText,
+      icon: icon || '/icon-192.png',
+      badge: '/icon-192.png',
+      vibrate: [200, 100, 200],
+      tag: (typeof bodyOrOptions === 'object' && bodyOrOptions?.tag) || `oed-notif-${Date.now()}`,
+      renotify: true,
+      data: { url: '/' }
+    };
+
+    // 1. Android / Mobile Chrome strictly requires ServiceWorkerRegistration.showNotification()
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready
+        .then((registration) => {
+          registration.showNotification(title, notifOptions);
+        })
+        .catch(() => {
+          try {
+            new Notification(title, notifOptions);
+          } catch (e) {
+            console.warn('Fallback notification failed:', e);
+          }
+        });
+    } else {
+      // 2. Desktop Fallback
+      new Notification(title, notifOptions);
     }
   } catch (err) {
-    console.warn('Native notification error:', err);
+    console.warn('Native notification dispatch error:', err);
   }
 };

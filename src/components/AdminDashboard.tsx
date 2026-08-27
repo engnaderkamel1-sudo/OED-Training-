@@ -623,7 +623,7 @@ Please log in to register for this session through the OED-TTMS Application.
   const allTrainees = users.filter((u) => u.role === "trainee");
   
   // -- GET USERS WITH PENDING DATA UPDATES --
-  const usersWithPendingUpdates = users.filter(u => u.pendingUpdates && (u.pendingUpdates.email || u.pendingUpdates.hrCode));
+  const usersWithPendingUpdates = users.filter(u => u.pendingUpdates && (u.pendingUpdates.email || u.pendingUpdates.hrCode || u.pendingUpdates.name || u.pendingUpdates.department || u.pendingUpdates.phone));
 
   // -- GET HISTORY OF PROCESSED UPDATES --
   const processedUpdatesList = useMemo(() => {
@@ -981,6 +981,9 @@ Please log in to register for this session through the OED-TTMS Application.
       const userRef = doc(db, 'users', user.id);
       const updatePayload: any = {};
       
+      if (user.pendingUpdates.name) updatePayload.name = user.pendingUpdates.name;
+      if (user.pendingUpdates.department) updatePayload.department = user.pendingUpdates.department;
+      if (user.pendingUpdates.phone) updatePayload.phone = user.pendingUpdates.phone;
       if (user.pendingUpdates.hrCode) updatePayload.hrCode = user.pendingUpdates.hrCode;
       if (user.pendingUpdates.email) updatePayload.email = user.pendingUpdates.email;
       
@@ -990,6 +993,9 @@ Please log in to register for this session through the OED-TTMS Application.
         processedAt: new Date().toISOString(),
         requestedAt: user.pendingUpdates.requestedAt || new Date().toISOString()
       };
+      if (user.pendingUpdates.name) newHistoryRecord.name = user.pendingUpdates.name;
+      if (user.pendingUpdates.department) newHistoryRecord.department = user.pendingUpdates.department;
+      if (user.pendingUpdates.phone) newHistoryRecord.phone = user.pendingUpdates.phone;
       if (user.pendingUpdates.hrCode) newHistoryRecord.hrCode = user.pendingUpdates.hrCode;
       if (user.pendingUpdates.email) newHistoryRecord.email = user.pendingUpdates.email;
       
@@ -1021,6 +1027,9 @@ Please log in to register for this session through the OED-TTMS Application.
         processedAt: new Date().toISOString(),
         requestedAt: user.pendingUpdates.requestedAt || new Date().toISOString()
       };
+      if (user.pendingUpdates.name) newHistoryRecord.name = user.pendingUpdates.name;
+      if (user.pendingUpdates.department) newHistoryRecord.department = user.pendingUpdates.department;
+      if (user.pendingUpdates.phone) newHistoryRecord.phone = user.pendingUpdates.phone;
       if (user.pendingUpdates.hrCode) newHistoryRecord.hrCode = user.pendingUpdates.hrCode;
       if (user.pendingUpdates.email) newHistoryRecord.email = user.pendingUpdates.email;
 
@@ -1051,6 +1060,9 @@ Please log in to register for this session through the OED-TTMS Application.
       const newPendingUpdates: any = {
         ...user.pendingUpdates
       };
+      if (updateEditFormData.name) newPendingUpdates.name = updateEditFormData.name;
+      if (updateEditFormData.department) newPendingUpdates.department = updateEditFormData.department;
+      if (updateEditFormData.phone) newPendingUpdates.phone = updateEditFormData.phone;
       if (updateEditFormData.hrCode) newPendingUpdates.hrCode = updateEditFormData.hrCode;
       if (updateEditFormData.email) newPendingUpdates.email = updateEditFormData.email;
       
@@ -2163,14 +2175,50 @@ Content-Type: text/html; charset="utf-8"
                                 <td className="p-3">
                                   {editingUpdateUserId === u.id ? (
                                     <div className="space-y-2">
+                                      {u.pendingUpdates?.name && (
+                                        <div>
+                                          <span className="text-xs text-gray-500 block">{language === "ar" ? "الاسم:" : "Name:"}</span>
+                                          <input 
+                                            type="text" 
+                                            value={updateEditFormData.name !== undefined ? updateEditFormData.name : (u.pendingUpdates.name || "")} 
+                                            onChange={(e) => setUpdateEditFormData({ ...updateEditFormData, name: e.target.value })} 
+                                            className="border rounded px-2 py-1 w-full mt-1 text-sm focus:ring-[#002D62] outline-none font-bold" 
+                                            style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                                          />
+                                        </div>
+                                      )}
+                                      {u.pendingUpdates?.department && (
+                                        <div>
+                                          <span className="text-xs text-gray-500 block">{language === "ar" ? "الإدارة:" : "Department:"}</span>
+                                          <input 
+                                            type="text" 
+                                            value={updateEditFormData.department !== undefined ? updateEditFormData.department : (u.pendingUpdates.department || "")} 
+                                            onChange={(e) => setUpdateEditFormData({ ...updateEditFormData, department: e.target.value })} 
+                                            className="border rounded px-2 py-1 w-full mt-1 text-sm focus:ring-[#002D62] outline-none" 
+                                            style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                                          />
+                                        </div>
+                                      )}
+                                      {u.pendingUpdates?.phone && (
+                                        <div>
+                                          <span className="text-xs text-gray-500 block">{language === "ar" ? "الهاتف:" : "Phone:"}</span>
+                                          <input 
+                                            type="text" 
+                                            value={updateEditFormData.phone !== undefined ? updateEditFormData.phone : (u.pendingUpdates.phone || "")} 
+                                            onChange={(e) => setUpdateEditFormData({ ...updateEditFormData, phone: e.target.value })} 
+                                            className="border rounded px-2 py-1 w-full mt-1 text-sm focus:ring-[#002D62] outline-none" 
+                                            style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
+                                          />
+                                        </div>
+                                      )}
                                       {u.pendingUpdates?.hrCode && (
                                         <div>
                                           <span className="text-xs text-gray-500 block">{language === "ar" ? "الكود الوظيفي:" : "HR Code:"}</span>
                                           <input 
                                             type="text" 
-                                            value={updateEditFormData.hrCode || ""} 
+                                            value={updateEditFormData.hrCode !== undefined ? updateEditFormData.hrCode : (u.pendingUpdates.hrCode || "")} 
                                             onChange={(e) => setUpdateEditFormData({ ...updateEditFormData, hrCode: e.target.value })} 
-                                            className="border rounded px-2 py-1 w-full mt-1 text-sm focus:ring-[#002D62] outline-none" 
+                                            className="border rounded px-2 py-1 w-full mt-1 text-sm focus:ring-[#002D62] outline-none font-mono" 
                                             style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
                                           />
                                         </div>
@@ -2180,9 +2228,9 @@ Content-Type: text/html; charset="utf-8"
                                           <span className="text-xs text-gray-500 block">{language === "ar" ? "الإيميل:" : "Email:"}</span>
                                           <input 
                                             type="email" 
-                                            value={updateEditFormData.email || ""} 
+                                            value={updateEditFormData.email !== undefined ? updateEditFormData.email : (u.pendingUpdates.email || "")} 
                                             onChange={(e) => setUpdateEditFormData({ ...updateEditFormData, email: e.target.value })} 
-                                            className="border rounded px-2 py-1 w-full mt-1 text-sm focus:ring-[#002D62] outline-none" 
+                                            className="border rounded px-2 py-1 w-full mt-1 text-sm focus:ring-[#002D62] outline-none font-mono" 
                                             style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
                                             dir="ltr"
                                           />
@@ -2190,19 +2238,40 @@ Content-Type: text/html; charset="utf-8"
                                       )}
                                     </div>
                                   ) : (
-                                    <div>
+                                    <div className="space-y-1">
+                                      {u.pendingUpdates?.name && (
+                                        <div>
+                                          <span className="text-xs text-gray-500 block">{language === "ar" ? "الاسم:" : "Name:"}</span>
+                                          <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.name}</span>
+                                          <span className="font-bold text-green-600">➔ {u.pendingUpdates.name}</span>
+                                        </div>
+                                      )}
+                                      {u.pendingUpdates?.department && (
+                                        <div>
+                                          <span className="text-xs text-gray-500 block">{language === "ar" ? "الإدارة:" : "Department:"}</span>
+                                          <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.department || 'N/A'}</span>
+                                          <span className="font-bold text-green-600">➔ {u.pendingUpdates.department}</span>
+                                        </div>
+                                      )}
+                                      {u.pendingUpdates?.phone && (
+                                        <div>
+                                          <span className="text-xs text-gray-500 block">{language === "ar" ? "الهاتف:" : "Phone:"}</span>
+                                          <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.phone || 'N/A'}</span>
+                                          <span className="font-bold text-green-600">➔ {u.pendingUpdates.phone}</span>
+                                        </div>
+                                      )}
                                       {u.pendingUpdates?.hrCode && (
-                                        <div className="mb-1">
+                                        <div>
                                           <span className="text-xs text-gray-500 block">{language === "ar" ? "الكود الوظيفي:" : "HR Code:"}</span>
                                           <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.hrCode}</span>
-                                          <span className="font-bold text-green-600">➔ {u.pendingUpdates.hrCode}</span>
+                                          <span className="font-bold text-green-600 font-mono">➔ {u.pendingUpdates.hrCode}</span>
                                         </div>
                                       )}
                                       {u.pendingUpdates?.email && (
                                         <div>
                                           <span className="text-xs text-gray-500 block">{language === "ar" ? "الإيميل:" : "Email:"}</span>
                                           <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.email || 'N/A'}</span>
-                                          <span className="font-bold text-green-600">➔ {u.pendingUpdates.email}</span>
+                                          <span className="font-bold text-green-600 font-mono">➔ {u.pendingUpdates.email}</span>
                                         </div>
                                       )}
                                     </div>
@@ -2226,7 +2295,7 @@ Content-Type: text/html; charset="utf-8"
                                       <button onClick={() => handleApproveUpdate(u)} className="flex items-center text-green-600 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded hover:opacity-80 font-bold">
                                         <CheckCircle size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "موافق" : "Approve"}
                                       </button>
-                                      <button onClick={() => { setEditingUpdateUserId(u.id); setUpdateEditFormData({ hrCode: u.pendingUpdates?.hrCode, email: u.pendingUpdates?.email }); }} className="flex items-center text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded hover:opacity-80 font-bold">
+                                      <button onClick={() => { setEditingUpdateUserId(u.id); setUpdateEditFormData({ name: u.pendingUpdates?.name, department: u.pendingUpdates?.department, phone: u.pendingUpdates?.phone, hrCode: u.pendingUpdates?.hrCode, email: u.pendingUpdates?.email }); }} className="flex items-center text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded hover:opacity-80 font-bold">
                                         <Edit2 size={16} className="mr-1 rtl:ml-1 rtl:mr-0" /> {language === "ar" ? "تعديل" : "Edit"}
                                       </button>
                                       <button onClick={() => handleRejectUpdate(u)} className="flex items-center text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded hover:opacity-80 font-bold">

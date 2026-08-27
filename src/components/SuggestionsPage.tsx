@@ -267,8 +267,9 @@ export const SuggestionsPage: React.FC = () => {
       setCategory('general');
       setSuccessMsg(language === 'ar' ? 'تم إرسال اقتراحك بنجاح!' : 'Suggestion submitted successfully!');
       setTimeout(() => setSuccessMsg(''), 4000);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error("Suggestion submission error:", err);
+      alert(language === 'ar' ? `حدث خطأ أثناء الإرسال: ${err.message || err}` : `Submission error: ${err.message || err}`);
     } finally {
       setSubmitting(false);
     }
