@@ -260,25 +260,68 @@ export const TraineeDashboard: React.FC = () => {
 
     if (announcements && announcements.length > 0) {
       announcements.forEach(ann => {
-        // Exclude admin-only notifications from trainees
-        if (ann.targetAudience === 'admin_only' || ann.targetAudience === 'admin') return;
+        // Exclude admin-only notifications and administrative alerts from trainees
+        if (
+          ann.targetAudience === 'admin_only' ||
+          ann.targetAudience === 'admin' ||
+          (ann.targetAudience && String(ann.targetAudience).toLowerCase().includes('admin')) ||
+          (ann as any).targetRoles?.includes('admin') ||
+          ann.id?.startsWith('ann_rev_') ||
+          ann.id?.startsWith('ann_sug_') ||
+          ann.title?.includes('مقترح تعديل') ||
+          ann.title?.includes('Handout Revision') ||
+          ann.title?.includes('💡 اقتراح') ||
+          ann.title?.includes('🚨 System Error') ||
+          ann.title?.includes('Admin Alert')
+        ) {
+          return;
+        }
 
         const matchingSession = activeUpcomingSessions.find(s => s.id === ann.sessionId);
-        const target = ann.targetAudience || matchingSession?.targetParticipants;
         const isRegistered = matchingSession && (isCodeInList(matchingSession.registeredUsers, user?.hrCode) || registeredCourseIds.includes(matchingSession.id));
         const isDirectTarget = isCodeInList((ann as any).targetHrCodes, user?.hrCode);
 
+        // 1. If announcement is targeted to specific HR codes, only recipients can see it
+        if ((ann as any).targetHrCodes && Array.isArray((ann as any).targetHrCodes) && (ann as any).targetHrCodes.length > 0) {
+          if (!isDirectTarget && !isRegistered) {
+            return;
+          }
+        }
+
+        // 2. Evaluation or Registered-Only announcements: ONLY for trainees registered in this course
+        const isEvaluationNotif = ann.targetAudience === 'registered_only' || ann.link?.includes('forms') || ann.title?.includes('تقييم') || ann.title?.includes('Evaluation');
+        if (isEvaluationNotif) {
+          if (isRegistered || isDirectTarget) {
+            list.push({
+              id: ann.id,
+              sessionId: ann.sessionId || 'session',
+              courseTitle: ann.courseName || (language === 'ar' ? 'تقييم الدورة' : 'Course Evaluation'),
+              startDate: '',
+              type: 'Announcement',
+              timestamp: ann.date,
+              title: ann.title,
+              message: ann.message,
+              author: ann.author,
+              link: ann.link
+            });
+          }
+          return;
+        }
+
+        // 3. Regular course announcements or Global announcements:
+        const target = ann.targetAudience || matchingSession?.targetParticipants;
         if (ann.isGlobal || isDirectTarget || isRegistered || isTargetMatch(target)) {
           list.push({
             id: ann.id,
             sessionId: ann.sessionId || 'global',
-            courseTitle: ann.courseName || (language === 'ar' ? 'تنبيه إداري' : 'Admin Alert'),
+            courseTitle: ann.courseName || (language === 'ar' ? 'تنبيه إداري' : 'Course Announcement'),
             startDate: '',
             type: ann.isGlobal ? 'Global' : 'Announcement',
             timestamp: ann.date,
             title: ann.title,
             message: ann.message,
-            author: ann.author
+            author: ann.author,
+            link: ann.link
           });
         }
       });

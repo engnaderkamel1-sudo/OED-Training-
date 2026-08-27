@@ -101,13 +101,10 @@ export class ErrorBoundary extends Component<Props, State> {
             <AlertTriangle size={38} className="animate-bounce" />
           </div>
 
-          {/* English Primary Title with Arabic Subtitle */}
-          <h2 className="text-2xl sm:text-3xl font-black text-[#002D62] dark:text-white mb-2 tracking-tight">
+          {/* Primary Title */}
+          <h2 className="text-2xl sm:text-3xl font-black text-[#002D62] dark:text-white mb-3 tracking-tight">
             There is an error on this page
           </h2>
-          <div className="text-sm font-bold text-amber-600 dark:text-amber-400 mb-3">
-            (يوجد خطأ في الصفحة)
-          </div>
 
           {/* Description */}
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-6 max-w-lg font-medium leading-relaxed">
@@ -142,12 +139,7 @@ export class ErrorBoundary extends Component<Props, State> {
             ) : (
               <>
                 <Send size={18} className="text-[#FFC000]" />
-                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 text-left rtl:text-right">
-                  <span>Send Error Report & Return to Home</span>
-                  <span className="text-xs font-normal text-amber-200">
-                    (إرسال تقرير الخطأ والعودة إلى الصفحة الرئيسية)
-                  </span>
-                </div>
+                <span>Send Error Report & Return to Home</span>
                 <Home size={18} className="hidden sm:block text-[#FFC000]" />
               </>
             )}

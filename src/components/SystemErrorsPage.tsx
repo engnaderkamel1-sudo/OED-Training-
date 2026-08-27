@@ -57,7 +57,7 @@ export const SystemErrorsPage: React.FC = () => {
   const [simulateCrash, setSimulateCrash] = useState(false);
 
   if (simulateCrash) {
-    throw new Error("تجربة محاكاة عطل برمجي لفحص شاشة الطوارئ وإرسال التقرير (Simulated Error Boundary Test)");
+    throw new Error("Simulated client error for testing error screen and automated reporting (OED-TTMS)");
   }
 
   // Subscribe to real-time error reports

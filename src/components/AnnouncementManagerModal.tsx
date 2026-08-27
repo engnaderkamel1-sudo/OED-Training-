@@ -1,5 +1,7 @@
-import React from 'react';
-import { X, Trash2, Globe, Megaphone } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Trash2, Globe, Megaphone, Loader2 } from 'lucide-react';
+import { collection, getDocs, writeBatch } from 'firebase/firestore';
+import { db } from '../firebase';
 import { useAppContext } from '../context';
 import { formatDateToStandard } from '../utils/formatters';
 
@@ -9,11 +11,54 @@ interface AnnouncementManagerModalProps {
 
 export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> = ({ onClose }) => {
   const { announcements, deleteAnnouncement, language } = useAppContext();
+  const [isClearingAll, setIsClearingAll] = useState(false);
 
   // Sort by date descending
   const sortedAnnouncements = [...announcements].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
+
+  const handleClearAllAnnouncements = async () => {
+    const confirmMsg = language === 'ar' 
+      ? 'هل أنت متأكد من تصفير وحذف جميع التنبيهات والإعلانات؟ سيتم حذفها نهائياً من حسابات كافة المتدربين والمسؤولين.' 
+      : 'Are you sure you want to purge and reset all announcements & notifications for all users and admins?';
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsClearingAll(true);
+    try {
+      // 1. Delete announcements
+      const annSnap = await getDocs(collection(db, "announcements"));
+      const batch = writeBatch(db);
+      annSnap.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+
+      // 2. Delete system_announcements
+      const sysAnnSnap = await getDocs(collection(db, "system_announcements"));
+      const batch2 = writeBatch(db);
+      sysAnnSnap.forEach(d => batch2.delete(d.ref));
+      await batch2.commit();
+
+      // 3. Clear user alert flags
+      const usersSnap = await getDocs(collection(db, "users"));
+      const batch3 = writeBatch(db);
+      usersSnap.forEach(d => {
+        batch3.update(d.ref, { hasUnreadNotifications: false });
+      });
+      await batch3.commit();
+
+      try {
+        localStorage.removeItem('oed_read_notifications');
+      } catch (e) {}
+
+      alert(language === 'ar' ? 'تم تصفير وحذف جميع التنبيهات بنجاح!' : 'All announcements and notifications purged successfully!');
+      onClose();
+    } catch (e: any) {
+      console.error(e);
+      alert('Error: ' + e.message);
+    } finally {
+      setIsClearingAll(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 z-[99999] flex items-center justify-center p-4">
@@ -23,9 +68,22 @@ export const AnnouncementManagerModal: React.FC<AnnouncementManagerModalProps> =
           <h2 className="text-lg font-bold text-gray-900">
             {language === 'ar' ? 'إدارة التنبيهات المرسلة' : 'Manage Announcements'}
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition-colors">
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {sortedAnnouncements.length > 0 && (
+              <button 
+                type="button"
+                onClick={handleClearAllAnnouncements}
+                disabled={isClearingAll}
+                className="text-xs font-bold bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer border border-red-300 disabled:opacity-50"
+              >
+                {isClearingAll ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                <span>{isClearingAll ? '...' : (language === 'ar' ? 'تصفير وحذف الكل' : 'Purge All')}</span>
+              </button>
+            )}
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition-colors cursor-pointer">
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="p-4 overflow-y-auto flex-1 bg-gray-100">

@@ -159,25 +159,63 @@ export const TopNav: React.FC = () => {
     return (upcomingSessions || []).filter(s => !s.isDeleted && s.status !== 'Cancelled' && s.status !== 'Completed' && isSessionActiveNow(s));
   }, [upcomingSessions]);
 
+  const filteredAnnouncementsForUser = useMemo(() => {
+    if (!announcements || announcements.length === 0) return [];
+    if (!user) return [];
+    if (user.role === 'admin') return announcements;
+
+    return announcements.filter(ann => {
+      // Exclude admin-only notifications from trainees
+      if (
+        ann.targetAudience === 'admin_only' ||
+        ann.targetAudience === 'admin' ||
+        (ann.targetAudience && String(ann.targetAudience).toLowerCase().includes('admin')) ||
+        (ann as any).targetRoles?.includes('admin') ||
+        ann.id?.startsWith('ann_rev_') ||
+        ann.id?.startsWith('ann_sug_') ||
+        ann.title?.includes('مقترح تعديل') ||
+        ann.title?.includes('Handout Revision') ||
+        ann.title?.includes('💡 اقتراح') ||
+        ann.title?.includes('🚨 System Error') ||
+        ann.title?.includes('Admin Alert')
+      ) {
+        return false;
+      }
+
+      const matchingSession = (upcomingSessions || []).find(s => s.id === ann.sessionId);
+      const isRegistered = matchingSession && (matchingSession.registeredUsers || []).includes(user.hrCode);
+      const isDirectTarget = Array.isArray((ann as any).targetHrCodes) && (ann as any).targetHrCodes.includes(user.hrCode);
+
+      // 1. If targeted to specific HR codes
+      if ((ann as any).targetHrCodes && Array.isArray((ann as any).targetHrCodes) && (ann as any).targetHrCodes.length > 0) {
+        return isDirectTarget || isRegistered;
+      }
+
+      // 2. If evaluation or registered-only
+      const isEvaluationNotif = ann.targetAudience === 'registered_only' || ann.link?.includes('forms') || ann.title?.includes('تقييم') || ann.title?.includes('Evaluation');
+      if (isEvaluationNotif) {
+        return isRegistered || isDirectTarget;
+      }
+
+      if (ann.isGlobal) return true;
+      if (isRegistered || isDirectTarget) return true;
+
+      const target = ann.targetAudience || matchingSession?.targetParticipants;
+      if (target === 'all' || target === 'mixed') return true;
+      if (target === 'engineers' && (user.jobRole === 'engineer' || user.department?.toLowerCase().includes('eng'))) return true;
+      if (target === 'technicians' && user.jobRole === 'technician') return true;
+      return false;
+    });
+  }, [announcements, user, upcomingSessions]);
+
   const unreadCount = useMemo(() => {
     if (!user) return 0;
     if (user.role === 'admin') {
       const unreadAnnouncements = (announcements || []).filter(a => !readNotifIds.includes(a.id)).length;
       return pendingUsersCount + pendingUpdatesCount + (activeSessionsNow.length > 0 ? 1 : 0) + unreadAnnouncements;
     }
-    if (user.role === 'trainee') {
-      const activeSessions = (upcomingSessions || []).filter(s => !s.isDeleted && s.status !== 'Cancelled');
-      let count = 0;
-      (announcements || []).forEach(a => {
-        if (!readNotifIds.includes(a.id)) {
-          if (a.isGlobal) count++;
-          else if (a.sessionId && activeSessions.some(s => s.id === a.sessionId && (s.registeredUsers || []).includes(user.hrCode))) count++;
-        }
-      });
-      return count;
-    }
-    return (announcements || []).filter(a => !readNotifIds.includes(a.id)).length;
-  }, [user, announcements, upcomingSessions, pendingUsersCount, pendingUpdatesCount, activeSessionsNow, readNotifIds]);
+    return filteredAnnouncementsForUser.filter(a => !readNotifIds.includes(a.id)).length;
+  }, [user, announcements, filteredAnnouncementsForUser, pendingUsersCount, pendingUpdatesCount, activeSessionsNow, readNotifIds]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -381,7 +419,7 @@ export const TopNav: React.FC = () => {
                         )}
 
                         {/* Recent Announcements */}
-                        {(announcements || []).slice(0, 5).map((ann) => {
+                        {filteredAnnouncementsForUser.slice(0, 5).map((ann) => {
                           const isRead = readNotifIds.includes(ann.id);
                           return (
                             <div 

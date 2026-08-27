@@ -400,10 +400,35 @@ Please log in to register for this session through the OED-TTMS Application.
       }
 
       if (wipeOptions.announcements) {
-        const annSnap = await getDocs(collection(db, "system_announcements"));
+        // 1. Delete announcements
+        const annSnap = await getDocs(collection(db, "announcements"));
         const batch7 = writeBatch(db);
         annSnap.forEach(d => batch7.delete(d.ref));
         await batch7.commit();
+
+        // 2. Delete system_announcements
+        const sysAnnSnap = await getDocs(collection(db, "system_announcements"));
+        const batch7b = writeBatch(db);
+        sysAnnSnap.forEach(d => batch7b.delete(d.ref));
+        await batch7b.commit();
+
+        // 3. Delete error reports
+        const errSnap = await getDocs(collection(db, "error_reports"));
+        const batch7c = writeBatch(db);
+        errSnap.forEach(d => batch7c.delete(d.ref));
+        await batch7c.commit();
+
+        // 4. Clear unread notifications flag from all users
+        const usersSnap = await getDocs(collection(db, "users"));
+        const batch7d = writeBatch(db);
+        usersSnap.forEach(d => {
+          batch7d.update(d.ref, { hasUnreadNotifications: false });
+        });
+        await batch7d.commit();
+
+        try {
+          localStorage.removeItem('oed_read_notifications');
+        } catch (e) {}
       }
 
       if (wipeOptions.kpis) {
@@ -661,7 +686,7 @@ Please log in to register for this session through the OED-TTMS Application.
         playNotificationSound();
         const latestCode = session.registeredUsers?.[currentCount - 1];
         const registeredUser = users.find(u => u.hrCode === latestCode || u.id === latestCode);
-        const traineeName = registeredUser?.name || latestCode || 'متدرب';
+        const traineeName = registeredUser?.name || latestCode || (language === 'ar' ? 'متدرب' : 'Trainee');
 
         const toastMsg = language === 'ar'
           ? `📝 تسجيل جديد: قام المتدرب [${traineeName}] بالتسجيل في دورة [${session.courseTitle}]!`
@@ -4436,6 +4461,18 @@ Content-Type: text/html; charset="utf-8"
                         />
                         <span className="font-bold text-slate-900 dark:text-white">
                           {language === 'ar' ? 'سجلات النشاط وتسجيل الدخول (activity_logs & login_logs)' : 'Activity & login logs'}
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 transition-colors cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={wipeOptions.announcements}
+                          onChange={(e) => setWipeOptions({ ...wipeOptions, announcements: e.target.checked })}
+                          className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
+                        />
+                        <span className="font-bold text-slate-900 dark:text-white">
+                          {language === 'ar' ? 'تصفير وحذف جميع التنبيهات والإعلانات للمستخدمين والمسؤولين (announcements & alerts)' : 'System announcements, notifications & alerts (announcements & alerts)'}
                         </span>
                       </label>
 

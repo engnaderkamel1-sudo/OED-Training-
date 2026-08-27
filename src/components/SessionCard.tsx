@@ -208,7 +208,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
         title: annTitle,
         message: annMsg,
         link: EVALUATION_FORM_URL,
-        targetAudience: session.targetParticipants || 'mixed',
+        targetAudience: 'registered_only',
         targetHrCodes: session.registeredUsers || [],
         author: 'Training Administration (OED)',
         date: new Date().toISOString(),
@@ -218,7 +218,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       sendNativePushNotification(annTitle, { body: annMsg });
       playNotificationSound();
 
-      alert(language === 'ar' ? '⭐ تم إرسال تنبيه ورابط تقييم الدورة بنجاح لجميع المتدربين!' : '⭐ Course evaluation alert & link sent successfully!');
+      alert(language === 'ar' ? '⭐ تم إرسال تنبيه ورابط تقييم الدورة بنجاح للمتدربين المسجلين في الدورة فقط!' : '⭐ Course evaluation alert sent to registered trainees only!');
     } catch (error: any) {
       console.error("Evaluation alert error:", error);
       alert('Error: ' + (error.message || error));
