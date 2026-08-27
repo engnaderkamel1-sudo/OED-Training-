@@ -120,10 +120,14 @@ export const HandoutRevisionsPage: React.FC = () => {
     });
   }, [handoutRevisions, selectedCourse, selectedStatus, searchTerm, isAdmin, user]);
 
-  // KPI Counts
-  const pendingCount = (handoutRevisions || []).filter(r => r.status === 'pending').length;
-  const appliedCount = (handoutRevisions || []).filter(r => r.status === 'applied').length;
-  const totalCount = (handoutRevisions || []).length;
+  // KPI Counts (Global for Admin, Personal for Trainee)
+  const userScopeRevisions = useMemo(() => {
+    return (handoutRevisions || []).filter(r => isAdmin || (user && (r.userId === user.id || r.hrCode === user.hrCode)));
+  }, [handoutRevisions, isAdmin, user]);
+
+  const pendingCount = userScopeRevisions.filter(r => r.status === 'pending').length;
+  const appliedCount = userScopeRevisions.filter(r => r.status === 'applied').length;
+  const totalCount = userScopeRevisions.length;
 
   const handleUpdateStatus = async (id: string, newStatus: HandoutRevisionStatus) => {
     try {
@@ -209,14 +213,16 @@ export const HandoutRevisionsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Cards (Admin / Trainee) */}
+      {/* KPI Counts (Admin: Global, Trainee: Personal Requests) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div className="bg-white dark:bg-[#13233D] p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-xs flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 text-[#002D62] dark:text-blue-300 flex items-center justify-center font-black">
             <FileText size={20} />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-gray-500 dark:text-slate-400">{language === 'ar' ? 'إجمالي المقترحات' : 'Total Revisions'}</p>
+            <p className="text-[11px] font-bold text-gray-500 dark:text-slate-400">
+              {isAdmin ? (language === 'ar' ? 'إجمالي المقترحات' : 'Total Revisions') : (language === 'ar' ? 'إجمالي طلباتي' : 'My Total Requests')}
+            </p>
             <p className="text-lg font-black text-[#002D62] dark:text-white">{totalCount}</p>
           </div>
         </div>
@@ -242,46 +248,48 @@ export const HandoutRevisionsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters Bar */}
-      <div className="bg-white dark:bg-[#13233D] p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
-        <div className="flex-1 w-full relative">
-          <Search size={16} className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={language === 'ar' ? 'بحث باسم الكورس، المتدرب، الكود، أو محتوى الملاحظة...' : 'Search course, trainee, HR code, or keyword...'}
-            className="w-full pl-9 rtl:pl-3 rtl:pr-9 pr-3 py-2 text-xs sm:text-sm bg-gray-50 dark:bg-[#0A1628] border border-gray-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 text-gray-900 dark:text-white"
-          />
-        </div>
+      {/* Filters & Search Bar — Admin Only */}
+      {isAdmin && (
+        <div className="bg-white dark:bg-[#13233D] p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
+          <div className="flex-1 w-full relative">
+            <Search size={16} className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={language === 'ar' ? 'بحث باسم الكورس، المتدرب، الكود، أو محتوى الملاحظة...' : 'Search course, trainee, HR code, or keyword...'}
+              className="w-full pl-9 rtl:pl-3 rtl:pr-9 pr-3 py-2 text-xs sm:text-sm bg-gray-50 dark:bg-[#0A1628] border border-gray-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 text-gray-900 dark:text-white"
+            />
+          </div>
 
-        <div className="flex gap-2 w-full md:w-auto flex-wrap">
-          {/* Course Filter */}
-          <select
-            value={selectedCourse}
-            onChange={(e) => setSelectedCourse(e.target.value)}
-            className="flex-1 md:flex-none text-xs bg-gray-50 dark:bg-[#0A1628] border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
-          >
-            <option value="all">{language === 'ar' ? 'جميع الكورسات' : 'All Courses'}</option>
-            {distinctCourses.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+          <div className="flex gap-2 w-full md:w-auto flex-wrap">
+            {/* Course Filter */}
+            <select
+              value={selectedCourse}
+              onChange={(e) => setSelectedCourse(e.target.value)}
+              className="flex-1 md:flex-none text-xs bg-gray-50 dark:bg-[#0A1628] border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
+            >
+              <option value="all">{language === 'ar' ? 'جميع الكورسات' : 'All Courses'}</option>
+              {distinctCourses.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
 
-          {/* Status Filter */}
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="flex-1 md:flex-none text-xs bg-gray-50 dark:bg-[#0A1628] border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
-          >
-            <option value="all">{language === 'ar' ? 'جميع الحالات' : 'All Statuses'}</option>
-            <option value="pending">{language === 'ar' ? 'قيد الدراسة (Pending)' : 'Pending'}</option>
-            <option value="reviewing">{language === 'ar' ? 'قيد المراجعة الفنية (Reviewing)' : 'Reviewing'}</option>
-            <option value="applied">{language === 'ar' ? 'تم التعديل (Applied)' : 'Applied'}</option>
-            <option value="rejected">{language === 'ar' ? 'مرفوض (Rejected)' : 'Rejected'}</option>
-          </select>
+            {/* Status Filter */}
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="flex-1 md:flex-none text-xs bg-gray-50 dark:bg-[#0A1628] border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
+            >
+              <option value="all">{language === 'ar' ? 'جميع الحالات' : 'All Statuses'}</option>
+              <option value="pending">{language === 'ar' ? 'قيد الدراسة (Pending)' : 'Pending'}</option>
+              <option value="reviewing">{language === 'ar' ? 'قيد المراجعة الفنية (Reviewing)' : 'Reviewing'}</option>
+              <option value="applied">{language === 'ar' ? 'تم التعديل (Applied)' : 'Applied'}</option>
+              <option value="rejected">{language === 'ar' ? 'مرفوض (Rejected)' : 'Rejected'}</option>
+            </select>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Revisions Cards List */}
       <div className="space-y-4">
