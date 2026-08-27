@@ -50,8 +50,16 @@ export const TopNav: React.FC = () => {
 
   useEffect(() => {
     try {
-      (document.documentElement.style as any).zoom = `${appZoom}%`;
-      localStorage.setItem('oed_app_ui_zoom', appZoom.toString());
+      if (typeof window !== 'undefined') {
+        if (window.innerWidth < 768) {
+          // On mobile devices, keep native 100% responsive flow and remove any stale shrink zoom
+          (document.documentElement.style as any).zoom = '100%';
+          localStorage.removeItem('oed_app_ui_zoom');
+        } else {
+          (document.documentElement.style as any).zoom = `${appZoom}%`;
+          localStorage.setItem('oed_app_ui_zoom', appZoom.toString());
+        }
+      }
     } catch (e) {}
   }, [appZoom]);
 
@@ -684,16 +692,16 @@ export const TopNav: React.FC = () => {
           </div>
         </div>
 
-        {/* Hanging Orascom Logo Tab - Stays sticky with the Top Navbar during scroll */}
-        <div className="absolute left-3 sm:left-6 rtl:left-auto rtl:right-3 sm:rtl:right-6 top-full z-40 pointer-events-auto">
+        {/* Hanging Orascom Logo Tab - Positioned cleanly underneath the App Logo */}
+        <div className="absolute start-14 sm:start-20 top-full z-40 pointer-events-auto">
           <div 
-            className="orascom-logo-badge px-4 py-1.5 sm:px-5 sm:py-2 rounded-b-2xl shadow-xl border-2 border-t-0 border-white flex items-center justify-center overflow-visible"
+            className="orascom-logo-badge px-3 py-1 sm:px-4 sm:py-1.5 rounded-b-xl shadow-xl border-2 border-t-0 border-white/90 flex items-center justify-center"
             style={{ backgroundColor: '#FFFFFF', background: '#FFFFFF' }}
           >
             <img 
-              src="/orascom-logo.png?v=13" 
+              src="/orascom-logo.png?v=14" 
               alt="Orascom Construction Equipment Department OED" 
-              className="h-6.5 sm:h-8 w-auto object-contain block"
+              className="h-7 sm:h-8.5 w-auto object-contain block"
               style={{ filter: 'none', backgroundColor: '#FFFFFF', background: '#FFFFFF' }}
             />
           </div>

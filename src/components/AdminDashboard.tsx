@@ -2483,8 +2483,8 @@ Content-Type: text/html; charset="utf-8"
                     </div>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto border rounded-lg shadow-sm print:hidden" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                    <table className="w-full text-left border-collapse text-sm">
+                  <div className="overflow-x-auto border rounded-xl shadow-sm print:hidden" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                    <table className="min-w-[850px] w-full text-left border-collapse text-sm">
                       <thead>
                         <tr className="border-b !text-white" style={{ backgroundColor: tableHeaderBg, borderColor: borderColor }}>
                           <th className="p-3 !text-white" style={{ color: '#FFFFFF' }}>
