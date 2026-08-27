@@ -37,11 +37,11 @@ export const TopNav: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  // App UI Zoom Level State (Default to 100% natural, crisp, legible size)
-  const [appZoom, setAppZoom] = useState<number>(() => {
+  // Font Size Accessibility Scale (Controls Typography fontSize on <html> without page zoom or viewport distortion)
+  const [fontScale, setFontScale] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem('oed_app_ui_zoom');
-      if (saved && parseInt(saved, 10) >= 90) return parseInt(saved, 10);
+      const saved = localStorage.getItem('oed_app_font_scale');
+      if (saved) return parseInt(saved, 10);
       return 100;
     } catch {
       return 100;
@@ -50,18 +50,16 @@ export const TopNav: React.FC = () => {
 
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined') {
-        if (window.innerWidth < 768) {
-          // On mobile devices, keep native 100% responsive flow and remove any stale shrink zoom
-          (document.documentElement.style as any).zoom = '100%';
-          localStorage.removeItem('oed_app_ui_zoom');
-        } else {
-          (document.documentElement.style as any).zoom = `${appZoom}%`;
-          localStorage.setItem('oed_app_ui_zoom', appZoom.toString());
-        }
+      if (typeof document !== 'undefined') {
+        document.documentElement.style.fontSize = `${fontScale}%`;
+        localStorage.setItem('oed_app_font_scale', fontScale.toString());
       }
     } catch (e) {}
-  }, [appZoom]);
+  }, [fontScale]);
+
+  const handleFontIncrease = () => setFontScale(prev => Math.min(prev + 10, 130));
+  const handleFontDecrease = () => setFontScale(prev => Math.max(prev - 10, 85));
+  const handleFontReset = () => setFontScale(100);
 
   // Lock Screen Orientation to Portrait on Mobile
   useEffect(() => {
@@ -71,10 +69,6 @@ export const TopNav: React.FC = () => {
       }
     } catch (e) {}
   }, []);
-
-  const handleZoomIn = () => setAppZoom(prev => Math.min(prev + 10, 130));
-  const handleZoomOut = () => setAppZoom(prev => Math.max(prev - 10, 80));
-  const handleZoomReset = () => setAppZoom(100);
 
   // Read Notifications State synchronized across the system
   const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
@@ -411,26 +405,28 @@ export const TopNav: React.FC = () => {
                 </div>
               )}
 
-              {/* App UI Zoom Controls in Navbar for Desktop/Tablet */}
-              <div className="hidden lg:flex items-center bg-white/10 rounded-xl p-0.5 border border-white/15">
+
+
+              {/* Discrete Font Size Controls in TopBar for Desktop */}
+              <div className="hidden md:flex items-center bg-white/10 rounded-xl p-0.5 border border-white/15">
                 <button
                   type="button"
-                  onClick={handleZoomOut}
-                  disabled={appZoom <= 75}
+                  onClick={handleFontDecrease}
+                  disabled={fontScale <= 85}
                   className="px-2 py-1 text-white hover:text-[#FFC000] text-xs font-black disabled:opacity-40 transition-colors cursor-pointer"
-                  title={language === 'ar' ? 'تصغير الواجهة (A-)' : 'Zoom Out App'}
+                  title={language === 'ar' ? 'تصغير الخط' : 'Smaller Font'}
                 >
                   A-
                 </button>
                 <span className="text-[10px] font-mono text-amber-300 px-1 font-black">
-                  {appZoom}%
+                  {fontScale}%
                 </span>
                 <button
                   type="button"
-                  onClick={handleZoomIn}
-                  disabled={appZoom >= 130}
+                  onClick={handleFontIncrease}
+                  disabled={fontScale >= 130}
                   className="px-2 py-1 text-white hover:text-[#FFC000] text-xs font-black disabled:opacity-40 transition-colors cursor-pointer"
-                  title={language === 'ar' ? 'تكبير الواجهة (A+)' : 'Zoom In App'}
+                  title={language === 'ar' ? 'تكبير الخط' : 'Larger Font'}
                 >
                   A+
                 </button>
@@ -553,10 +549,7 @@ export const TopNav: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="my-1.5 border-t" style={{ borderColor: isDark ? 'rgba(148, 190, 255, 0.15)' : '#F1F5F9' }} />
-
-
-                      {/* App Interface Scaling / Zoom Controls (تكبير وتصغير التطبيق) */}
+                      {/* Font Size Scaling (تكبير وتصغير حجم الخط فقط دون تغيير أبعاد الصفحة) */}
                       <div 
                         className="p-2.5 rounded-xl border flex flex-col gap-1.5 shadow-2xs my-1"
                         style={{
@@ -566,49 +559,45 @@ export const TopNav: React.FC = () => {
                       >
                         <div className="flex items-center justify-between text-xs font-bold" style={{ color: isDark ? '#FFFFFF' : '#1E293B' }}>
                           <span className="flex items-center gap-1.5">
-                            <ZoomIn size={14} className="text-[#FFC000]" />
-                            <span>{language === 'ar' ? 'حجم التطبيق (Zoom)' : 'App UI Zoom'}</span>
+                            <span className="text-[#FFC000] font-black text-xs px-1.5 py-0.5 bg-[#FFC000]/15 rounded">Aa</span>
+                            <span>{language === 'ar' ? 'حجم الخط (Text Size)' : 'Font Size'}</span>
                           </span>
                           <span className="font-mono font-black text-[#FFC000] bg-[#FFC000]/10 px-2 py-0.5 rounded-md text-[11px]">
-                            {appZoom}%
+                            {fontScale}%
                           </span>
                         </div>
 
                         <div className="flex items-center gap-1.5 pt-0.5">
                           <button
                             type="button"
-                            onClick={handleZoomOut}
-                            disabled={appZoom <= 75}
+                            onClick={handleFontDecrease}
+                            disabled={fontScale <= 85}
                             className="flex-1 py-1.5 rounded-lg bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 disabled:opacity-40 text-xs font-black transition-all flex items-center justify-center gap-1 cursor-pointer text-gray-800 dark:text-gray-200"
-                            title={language === 'ar' ? 'تصغير الواجهة' : 'Zoom Out App'}
+                            title={language === 'ar' ? 'تصغير الخط (A-)' : 'Decrease Font Size'}
                           >
-                            <ZoomOut size={12} />
                             <span>A-</span>
                           </button>
 
                           <button
                             type="button"
-                            onClick={handleZoomReset}
+                            onClick={handleFontReset}
                             className="py-1.5 px-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold transition-all cursor-pointer"
-                            title={language === 'ar' ? 'الحجم الافتراضي' : 'Reset to 100%'}
+                            title={language === 'ar' ? 'الخط الافتراضي 100%' : 'Default Font Size 100%'}
                           >
                             <RotateCcw size={12} />
                           </button>
 
                           <button
                             type="button"
-                            onClick={handleZoomIn}
-                            disabled={appZoom >= 130}
+                            onClick={handleFontIncrease}
+                            disabled={fontScale >= 130}
                             className="flex-1 py-1.5 rounded-lg bg-[#002D62] text-white hover:bg-blue-900 dark:bg-amber-400 dark:text-[#001D42] dark:hover:bg-amber-300 disabled:opacity-40 text-xs font-black transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
-                            title={language === 'ar' ? 'تكبير الواجهة' : 'Zoom In App'}
+                            title={language === 'ar' ? 'تكبير الخط (A+)' : 'Increase Font Size'}
                           >
-                            <ZoomIn size={12} />
                             <span>A+</span>
                           </button>
                         </div>
                       </div>
-
-                      {/* My Profile Button */}
                       <button
                         onClick={openProfile}
                         className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer"
