@@ -95,21 +95,50 @@ export const Login: React.FC = () => {
       const loginInput = email.trim().toLowerCase(); 
 
       // 1. Secure Admin Login Check
-      if (loginInput === "admin") {
+      if (loginInput === "admin" || loginInput === "admin@orascom.com") {
         let found: User | undefined = undefined;
         try {
           const adminDoc = await getDoc(doc(db, "users", "admin"));
-          if (adminDoc.exists()) found = adminDoc.data() as User;
+          if (adminDoc.exists()) found = { ...adminDoc.data(), id: "admin" } as User;
         } catch (e) {}
 
-        // SECURITY: Admin account MUST exist in Firestore and password MUST match
-        if (!found || !found.password) {
-          setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
-          return;
+        if (!found) {
+          try {
+            const q = query(collection(db, "users"), where("hrCode", "in", ["admin", "ADMIN", "Admin"]), limit(1));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+              found = { ...snap.docs[0].data(), id: snap.docs[0].id } as User;
+            }
+          } catch (e) {}
         }
 
-        const isMatch = await verifyPassword(password, found.password);
-        if (!isMatch) {
+        if (!found) {
+          try {
+            const q = query(collection(db, "users"), where("role", "==", "admin"), limit(1));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+              found = { ...snap.docs[0].data(), id: snap.docs[0].id } as User;
+            }
+          } catch (e) {}
+        }
+
+        let isMatch = false;
+
+        // Try Firebase Auth if email available
+        if (found?.email) {
+          try {
+            await signInWithEmailAndPassword(auth, found.email, password);
+            isMatch = true;
+          } catch (e) {}
+        }
+
+        // Try direct verifyPassword against stored hash / password
+        if (!isMatch && found?.password) {
+          isMatch = await verifyPassword(password, found.password);
+        }
+
+        // If not found or password doesn't match
+        if (!found || !isMatch) {
           setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
           return;
         }
@@ -118,7 +147,7 @@ export const Login: React.FC = () => {
         if (found.password === password.trim()) {
           try {
             const hashedAdmin = await hashPassword(password);
-            await setDoc(doc(db, "users", "admin"), { password: hashedAdmin }, { merge: true });
+            await setDoc(doc(db, "users", found.id || "admin"), { password: hashedAdmin }, { merge: true });
           } catch (e) {}
         }
 
@@ -134,7 +163,7 @@ export const Login: React.FC = () => {
           const locationInfo = ipAddress ? await getLocationFromIP(ipAddress) : { city: 'Unknown', country: 'Unknown' };
 
           try {
-            await setDoc(doc(db, "users", "admin"), {
+            await setDoc(doc(db, "users", adminUser.id || "admin"), {
               ...adminUser,
               lastLogin: new Date().toISOString(),
               lastDevice: loginMeta.device,

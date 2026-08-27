@@ -20,7 +20,8 @@ import {
   RotateCcw,
   BookOpen,
   Download,
-  Smartphone
+  Smartphone,
+  Camera
 } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
@@ -707,6 +708,52 @@ export const TopNav: React.FC = () => {
                       >
                         <Bell size={18} className="text-emerald-500 shrink-0" />
                         <span>{language === 'ar' ? 'تفعيل إشعارات الهاتف 🔔' : 'Enable Push Notifications 🔔'}</span>
+                      </button>
+
+                      {/* Enable Camera Access Button */}
+                      <button
+                        onClick={async () => {
+                          setDropdownOpen(false);
+                          if (typeof navigator !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                            try {
+                              const stream = await navigator.mediaDevices.getUserMedia({
+                                video: { facingMode: 'environment' }
+                              });
+                              stream.getTracks().forEach(t => t.stop());
+                              alert(
+                                language === 'ar'
+                                  ? '✅ تم تفعيل إذن الكاميرا بنجاح! يمكنك الآن مسح رمز الـ QR لتسجيل الحضور بسهولة.'
+                                  : '✅ Camera permission granted successfully! You can now scan attendance QR codes.'
+                              );
+                            } catch (err: any) {
+                              console.warn("Camera request error:", err);
+                              alert(
+                                language === 'ar'
+                                  ? '⚠️ تم رفض إذن الكاميرا.\nيرجى الضغط على علامة القفل 🔒 بجوار رابط الموقع أعلى المتصفح، ثم السماح للكاميرا (Allow Camera).'
+                                  : '⚠️ Camera permission denied.\nPlease tap the lock icon 🔒 next to the website URL at the top of your browser and set Camera to Allow.'
+                              );
+                            }
+                          } else {
+                            alert(
+                              language === 'ar'
+                                ? '⚠️ جهازك أو متصفحك لا يدعم فتح الكاميرا مباشرة.'
+                                : '⚠️ Your browser or device does not support camera access.'
+                            );
+                          }
+                        }}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer"
+                        style={{
+                          color: isDark ? '#FFFFFF' : '#1E293B',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.08)' : '#F0F7FF';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <Camera size={18} className="text-amber-500 shrink-0" />
+                        <span>{language === 'ar' ? 'تفعيل إذن الكاميرا 📷' : 'Enable Camera Access 📷'}</span>
                       </button>
 
                       {/* Install App on Mobile (PWA Standalone) */}

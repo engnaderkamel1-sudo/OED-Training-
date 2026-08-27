@@ -26,9 +26,30 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
   const [cameraLoading, setCameraLoading] = useState(true);
   const scannerRef = useRef<any>(null);
 
-  const userCode = (user?.hrCode || user?.id || '').trim().toLowerCase();
-
   const handleProcessCode = (rawCode: string) => {
+    setError(null);
+    const rawText = rawCode.trim();
+    if (!rawText) return;
+
+    // 1. Extract clean session ID from QR payload (e.g. "session_123_2026-08-27" -> "session_123")
+    const cleanSessionId = rawText.includes('_') ? rawText.split('_')[0] : rawText;
+
+    // 2. Strict Session Search: Find the matching session in upcomingSessions
+    const targetSession = upcomingSessions.find(
+      s => s.id.toLowerCase() === cleanSessionId.toLowerCase() || 
+           s.id.toLowerCase() === rawText.toLowerCase()
+    );
+
+    // 3. If session does NOT exist in the system, REJECT IMMEDIATELY!
+    if (!targetSession) {
+      setError(
+        language === 'ar'
+          ? '❌ رمز غير صالح: لا توجد دورة تدريبية مسجلة بهذا الرمز في المنظومة. يرجى مسح رمز الـ QR المعروض داخل القاعة.'
+          : '❌ Invalid Code: No active training session found with this code. Please scan the QR code displayed in the hall.'
+      );
+      return;
+    }
+
     if (scannerRef.current) {
       try {
         scannerRef.current.clear();
@@ -36,25 +57,21 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
       scannerRef.current = null;
     }
 
-    const rawText = rawCode.trim();
-    const cleanSessionId = rawText.includes('_') ? rawText.split('_')[0] : rawText;
+    const cTitle = targetSession.courseTitle || (language === 'ar' ? 'الدورة التدريبية' : 'Training Course');
 
-    // Find target session
-    const targetSession = upcomingSessions.find(s => s.id === cleanSessionId) || propSession;
-    const cTitle = targetSession?.courseTitle || (language === 'ar' ? 'الدورة التدريبية' : 'Training Course');
-
-    // 1. Check if already recorded/registered
-    const isAlreadyRegistered = targetSession && (targetSession.registeredUsers || []).map(c => c.toLowerCase()).includes(userCode);
+    // 4. Strict Check: Is user already registered/attended? (Case-insensitive)
+    const cleanUserCode = (user?.hrCode || user?.id || '').trim().toLowerCase();
+    const isAlreadyRegistered = (targetSession.registeredUsers || []).some(
+      code => (code || '').trim().toLowerCase() === cleanUserCode
+    );
 
     if (isAlreadyRegistered) {
       setAlreadyRecorded({ courseTitle: cTitle });
       return;
     }
 
-    // 2. If new registration:
-    if (targetSession) {
-      registerTrainee(targetSession.id, user?.hrCode || user?.id || 'trainee');
-    }
+    // 5. Register trainee in database
+    registerTrainee(targetSession.id, user?.hrCode || user?.id || 'trainee');
 
     setSuccess(
       language === 'ar' 
@@ -64,8 +81,8 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
 
     if (onScanSuccess) {
       setTimeout(() => {
-        onScanSuccess(cleanSessionId);
-      }, 1200);
+        onScanSuccess(targetSession.id);
+      }, 1500);
     }
   };
 
@@ -100,7 +117,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
     if (!(window as any).Html5QrcodeScanner) {
       setError(
         language === 'ar'
-          ? 'فشل تحميل مكتبة المسح. يرجى التأكد من اتصال الإنترنت أو استخدام خيار الإدخال اليدوي.'
+          ? 'فشل تحميل مكتبة المسح. يرجى التأكد من اتصال الإنترنت.'
           : 'Failed to load scanner library. Please check your internet connection.'
       );
       setCameraLoading(false);
@@ -112,9 +129,10 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
         "qr-reader",
         { 
           fps: 15, 
-          qrbox: { width: 260, height: 260 },
+          qrbox: { width: 240, height: 240 },
           aspectRatio: 1.0,
-          showTorchButtonIfSupported: true
+          showTorchButtonIfSupported: true,
+          rememberLastUsedCamera: true
         },
         false
       );
@@ -125,8 +143,8 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
         handleProcessCode(decodedText);
       };
 
-      const onScanFailure = (err: any) => {
-        // Continuous frame reading
+      const onScanFailure = () => {
+        // Continuous frame scanning
       };
 
       scanner.render(onScan, onScanFailure);
@@ -135,8 +153,8 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
       console.error("Scanner render error:", scannerErr);
       setError(
         language === 'ar'
-          ? 'تعذر تشغيل الكاميرا. يمكنك كتابة كود الحضور يدوياً بالأسفل.'
-          : 'Could not initialize camera. You can enter the session code manually below.'
+          ? 'تعذر تشغيل الكاميرا. يرجى مراجعة إذن المتصفح.'
+          : 'Could not initialize camera. Please check browser permissions.'
       );
       setCameraLoading(false);
     }
@@ -237,8 +255,8 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
                 {language === 'ar' ? 'إتمام وإغلاق' : 'Done & Close'}
               </button>
             </div>
-          ) : permissionDenied || error ? (
-            /* 3. Camera Error State */
+          ) : permissionDenied ? (
+            /* 3. Camera Permission Denied State */
             <div className="text-center py-4 space-y-4 w-full animate-fade-in">
               <div className="w-14 h-14 rounded-2xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-300 flex items-center justify-center mx-auto border border-red-300 dark:border-red-800 shadow-sm">
                 <ShieldAlert size={28} />
@@ -265,6 +283,12 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
           ) : (
             /* 4. Live Scanning View */
             <div className="w-full flex flex-col items-center">
+              {error && (
+                <div className="w-full mb-3 p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-xl text-xs font-bold text-red-700 dark:text-red-300 text-center animate-fade-in">
+                  {error}
+                </div>
+              )}
+
               <div className="w-full max-w-[280px] sm:max-w-[300px] overflow-hidden rounded-2xl border-2 border-slate-300 dark:border-slate-700 shadow-md relative bg-black aspect-square flex items-center justify-center">
                 {cameraLoading && (
                   <div className="absolute inset-0 z-10 bg-slate-900 flex flex-col items-center justify-center text-white gap-2 p-4 text-center">
@@ -283,7 +307,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
             </div>
           )}
 
-          {/* Manual Code Input Fallback */}
+          {/* Manual Code Input with Strict Validation */}
           {!success && !alreadyRecorded && (
             <div className="w-full mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
               {!showManualInput ? (
@@ -298,7 +322,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
               ) : (
                 <form onSubmit={handleManualSubmit} className="space-y-2 animate-fade-in">
                   <label className="block text-xs font-black text-slate-800 dark:text-gray-200">
-                    {language === 'ar' ? 'أدخل كود الجلسة (Session ID / Code):' : 'Enter Session ID or Code:'}
+                    {language === 'ar' ? 'أدخل كود الجلسة المعروض بالقاعة:' : 'Enter Hall Session Code:'}
                   </label>
                   <div className="flex gap-2">
                     <input
@@ -324,6 +348,64 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
         </div>
 
       </div>
+
+      <style>{`
+        #qr-reader {
+          border: none !important;
+          background-color: #000000 !important;
+        }
+        #qr-reader__scan_region {
+          background-color: #000000 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+        #qr-reader__dashboard_section_csr {
+          color: #ffffff !important;
+          text-align: center !important;
+          padding: 8px !important;
+        }
+        #qr-reader__dashboard_section_csr select {
+          background-color: #1e293b !important;
+          color: #ffffff !important;
+          border: 1px solid #475569 !important;
+          padding: 6px 12px !important;
+          border-radius: 8px !important;
+          font-weight: bold !important;
+          margin: 6px 0 !important;
+          max-width: 90% !important;
+          font-size: 12px !important;
+        }
+        #qr-reader__dashboard_section_csr button,
+        #qr-reader__dashboard_section_csr a,
+        #qr-reader button,
+        #qr-reader a {
+          background: linear-gradient(135deg, #FFC000 0%, #F59E0B 100%) !important;
+          color: #002D62 !important;
+          font-weight: 900 !important;
+          padding: 8px 16px !important;
+          border-radius: 10px !important;
+          text-decoration: none !important;
+          display: inline-block !important;
+          margin: 6px 4px !important;
+          border: none !important;
+          font-size: 12px !important;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+          cursor: pointer !important;
+        }
+        #qr-reader span, #qr-reader label, #qr-reader div {
+          color: #ffffff !important;
+        }
+        #qr-reader__status_span {
+          color: #FFC000 !important;
+          font-size: 12px !important;
+        }
+        #qr-reader__dashboard_section_swaplink {
+          color: #FFC000 !important;
+          font-weight: bold !important;
+          text-decoration: underline !important;
+        }
+      `}</style>
     </div>
   );
 };

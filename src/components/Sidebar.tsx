@@ -198,30 +198,14 @@ export const Sidebar: React.FC = () => {
         }}
       >
         <div className="p-4 flex flex-col gap-1.5 flex-1">
-          <div className="pb-4 mb-2 flex flex-col items-center justify-center gap-2"
+          <div className="pb-3 mb-2 flex flex-col items-center justify-center pt-2"
             style={{ borderBottom: '1px solid var(--border-color)' }}>
             
             <img
               src="/app-icon.png"
               alt="OED-TTMS Logo"
-              className="w-16 h-16 rounded-2xl object-cover shadow-md border-2 border-white/10"
+              className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-contain drop-shadow-lg border-2 border-white/20 hover:scale-105 transition-transform duration-300 cursor-pointer"
             />
-            
-            <div className="text-center mt-2 w-full px-2">
-              {/* التعديل الأول: الاسم الجديد مع ضبط الألوان لتعمل في الوضعين */}
-              <div 
-                className="font-extrabold text-[11px] leading-snug tracking-wide text-[#002D62] dark:text-white mb-1 transition-colors"
-              >
-                Orascom Construction Equipment Department
-              </div>
-              {/* التعديل الثاني: الاسم الجديد مع الاحتفاظ باللون الأصفر */}
-              <div 
-                className="text-[10px] font-bold" 
-                style={{ color: 'var(--oc-gold)' }}
-              >
-                Technical Training Management System
-              </div>
-            </div>
           </div>
 
           <div className="text-xs font-bold uppercase tracking-wider mb-1 px-3"
