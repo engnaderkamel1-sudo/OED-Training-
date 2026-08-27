@@ -1701,7 +1701,19 @@ Content-Type: text/html; charset="utf-8"
         if (dept !== searchDepartment) return false;
       }
       if (selectedCourseFilter) {
-        if (r.courseId !== selectedCourseFilter && r.courseName !== selectedCourseFilter) return false;
+        const filterCourseObj = dynamicCourses.find(c => c.id === selectedCourseFilter || c.title === selectedCourseFilter);
+        const targetTitle = (filterCourseObj?.title || selectedCourseFilter).trim().toLowerCase();
+        const targetId = (filterCourseObj?.id || selectedCourseFilter).trim().toLowerCase();
+        const rName = (r.courseName || '').trim().toLowerCase();
+        const rId = (r.courseId || '').trim().toLowerCase();
+        
+        const isMatch = rName === targetTitle || 
+                        rId === targetTitle || 
+                        rId === targetId ||
+                        r.courseId === selectedCourseFilter || 
+                        r.courseName === selectedCourseFilter ||
+                        (targetTitle && rName && (rName.includes(targetTitle) || targetTitle.includes(rName)));
+        if (!isMatch) return false;
       }
       if (fromDateFilter || toDateFilter) {
         const recordDateStr = r.attendanceDate || r.date || r.raw?.["Date"] || r.raw?.["Attendance Date"];
@@ -2437,22 +2449,7 @@ Content-Type: text/html; charset="utf-8"
                   <h2 className="text-2xl font-bold border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>
                     {language === "ar" ? "السجلات الشاملة" : "Global Records"}
                   </h2>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* -- SYSTEM ERRORS MODAL BUTTON -- */}
-                    <button 
-                      type="button"
-                      onClick={() => setShowSystemErrorsModal(true)} 
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold transition-all shadow-xs cursor-pointer bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 relative hover:scale-105"
-                    >
-                      <ShieldAlert size={16} className="text-red-500" />
-                      <span>{language === "ar" ? "سجل أخطاء النظام" : "System Errors"}</span>
-                      {unresolvedErrorsCount > 0 && (
-                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-red-600 text-white animate-pulse">
-                          {unresolvedErrorsCount}
-                        </span>
-                      )}
-                    </button>
-
+                  <div className="flex gap-2">
                     {/* -- NEW MANUAL ADD BUTTON -- */}
                     <button 
                       onClick={() => setShowManualAddModal(true)} 
@@ -2730,7 +2727,16 @@ Content-Type: text/html; charset="utf-8"
                           <th className="p-3 !text-white" style={{ color: '#FFFFFF' }}>
                             <div className="font-extrabold mb-2 text-sm !text-white tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "القسم" : "Department"}</div>
                             <div className="relative">
-                              <select value={searchDepartment} onChange={(e) => setSearchDepartment(e.target.value)} className="w-full border rounded-md px-2 py-1 text-xs focus:ring-[#FFC000] appearance-none pr-6 shadow-2xs font-medium" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}>
+                              <select 
+                                value={searchDepartment} 
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setSearchDepartment(val);
+                                  fetchTrainingRecords({ department: val });
+                                }} 
+                                className="w-full border rounded-md px-2 py-1 text-xs focus:ring-[#FFC000] appearance-none pr-6 shadow-2xs font-medium" 
+                                style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
+                              >
                                 <option value="">{language === "ar" ? "الكل" : "All"}</option>
                                 {dynamicDepartments.map((d) => <option key={d} value={d}>{d}</option>)}
                               </select>
@@ -2740,9 +2746,18 @@ Content-Type: text/html; charset="utf-8"
                           <th className="p-3 !text-white" style={{ color: '#FFFFFF' }}>
                             <div className="font-extrabold mb-2 text-sm !text-white tracking-wide" style={{ color: '#FFFFFF' }}>{language === "ar" ? "الدورة التدريبية" : "Course Name"}</div>
                             <div className="relative">
-                              <select value={selectedCourseFilter} onChange={(e) => setSelectedCourseFilter(e.target.value)} className="w-full border rounded-md px-2 py-1 text-xs focus:ring-[#FFC000] appearance-none pr-6 shadow-2xs font-medium" style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}>
+                              <select 
+                                value={selectedCourseFilter} 
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setSelectedCourseFilter(val);
+                                  fetchTrainingRecords({ courseName: val });
+                                }} 
+                                className="w-full border rounded-md px-2 py-1 text-xs focus:ring-[#FFC000] appearance-none pr-6 shadow-2xs font-medium" 
+                                style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
+                              >
                                 <option value="">{language === "ar" ? "الكل" : "All"}</option>
-                                {dynamicCourses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+                                {dynamicCourses.map((c) => <option key={c.id} value={c.title || c.id}>{c.title}</option>)}
                               </select>
                               {selectedCourseFilter && <button onClick={() => setSelectedCourseFilter("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                             </div>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context';
 import { motion, AnimatePresence } from 'framer-motion';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
 import { 
   User, 
   FileText, 
@@ -28,6 +30,7 @@ import {
 export const Sidebar: React.FC = () => {
   const { user, language, t, currentView, setCurrentView } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
+  const [openErrorsCount, setOpenErrorsCount] = useState(0);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     tools_parent: true,
     system_monitoring: true
@@ -110,6 +113,17 @@ export const Sidebar: React.FC = () => {
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
   ];
 
+  useEffect(() => {
+    if (role !== 'admin') return;
+    const unsubscribe = onSnapshot(collection(db, 'error_reports'), (snapshot) => {
+      const count = snapshot.docs.filter(d => d.data().status !== 'resolved').length;
+      setOpenErrorsCount(count);
+    }, (err) => {
+      console.warn('Error listening to error reports count in Sidebar:', err);
+    });
+    return () => unsubscribe();
+  }, [role]);
+
   const getAdminLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'coursesCatalog', label: 'Courses Catalog', icon: BookOpen },
@@ -130,7 +144,9 @@ export const Sidebar: React.FC = () => {
       id: 'system_monitoring', 
       label: 'System Monitoring', 
       icon: ShieldAlert,
+      badge: openErrorsCount,
       subLinks: [
+        { id: 'systemErrors', label: language === 'ar' ? 'سجل أخطاء النظام' : 'System Error Reports', icon: ShieldAlert, badge: openErrorsCount },
         { id: 'tools_usage', label: 'Firebase Quota', icon: Activity },
         { id: 'activityLogs', label: 'Activity Logs', icon: FileText },
         { id: 'system_version', label: language === 'ar' ? 'إصدار المنظومة' : 'System Version', icon: Tag },

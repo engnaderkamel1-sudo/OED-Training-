@@ -456,19 +456,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (effectiveFilter?.department && effectiveFilter.department.trim()) {
         queryConstraints.push(where("department", "==", effectiveFilter.department.trim()));
       }
+      if (effectiveFilter?.courseName && effectiveFilter.courseName.trim()) {
+        queryConstraints.push(where("courseName", "==", effectiveFilter.courseName.trim()));
+      }
 
       let snapshot;
       if (queryConstraints.length > 0) {
-        snapshot = await getDocs(query(q, ...queryConstraints));
-      } else if (user && user.role === 'admin') {
-        // Only Master Admin can fetch wide/global records limit(1000)
-        snapshot = await getDocs(query(q, limit(1000)));
-      } else {
-        snapshot = { forEach: () => {} } as any;
+        try {
+          snapshot = await getDocs(query(q, ...queryConstraints));
+        } catch (queryErr) {
+          console.warn("Filtered query fallback to broad fetch:", queryErr);
+        }
       }
 
       const data: CleanedRecord[] = [];
-      snapshot.forEach((d: any) => data.push(d.data() as CleanedRecord));
+      if (snapshot && !snapshot.empty) {
+        snapshot.forEach((d: any) => data.push(d.data() as CleanedRecord));
+      }
+
+      // If specific query returned 0 or no query constraints, and user is admin:
+      // Fetch broad data so client-side flexible filter can match partial titles, different cases, etc.
+      if (data.length === 0 && user && user.role === 'admin') {
+        const broadSnap = await getDocs(query(q, limit(1000)));
+        broadSnap.forEach((d: any) => data.push(d.data() as CleanedRecord));
+      }
+
       setCleanedDataState(data);
       setRecordsLoaded(true);
 

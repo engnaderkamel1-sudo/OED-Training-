@@ -28,6 +28,7 @@ import { UpdateNotificationBanner } from './components/UpdateNotificationBanner'
 import { QuotaExhaustedBanner } from './components/QuotaExhaustedBanner';
 import { GlobalAttendanceAlertBanner } from './components/GlobalAttendanceAlertBanner';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { SystemErrorsPage } from './components/SystemErrorsPage';
 
 const AppContent: React.FC = () => {
   const { user, isLoading, t, currentView, language, setUser } = useAppContext();
@@ -293,6 +294,10 @@ const AppContent: React.FC = () => {
                 ) : currentView === 'activityLogs' ? (
                   <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
                     <ActivityLogsView />
+                  </div>
+                ) : currentView === 'systemErrors' ? (
+                  <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
+                    <SystemErrorsPage />
                   </div>
                 ) : (
                   <AdminDashboard />
