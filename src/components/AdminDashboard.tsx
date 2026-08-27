@@ -1719,17 +1719,83 @@ Content-Type: text/html; charset="utf-8"
       }
     });
     return { 
-      totalCourses: coursesSet.size || (globalKPIs.totalCourses || 21), 
-      totalSessions: sessionsSet.size || (globalKPIs.totalSessions || 124), 
-      totalParticipants: filteredRecords.length || (globalKPIs.totalParticipants || 984), 
-      totalEngineers: eng || (globalKPIs.totalEngineers || 765), 
-      totalTechnicians: tech || (globalKPIs.totalTechnicians || 117), 
-      totalOperators: op || (globalKPIs.totalOperators || 102) 
+      totalCourses: coursesSet.size, 
+      totalSessions: sessionsSet.size, 
+      totalParticipants: filteredRecords.length, 
+      totalEngineers: eng, 
+      totalTechnicians: tech, 
+      totalOperators: op 
     };
   }, [filteredRecords, users, globalKPIs, hasActiveFilters, isFullReportView, courses.length, upcomingSessions.length]);
 
-  const uniqueTraineeHrCodes = useMemo(() => Array.from(new Set(filteredRecords.map((r) => users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}`)?.hrCode).filter(Boolean))), [filteredRecords, users]);
-  const isSingleTraineeFiltered = uniqueTraineeHrCodes.length === 1;
+  const uniqueTraineeHrCodes = useMemo(() => {
+    return Array.from(
+      new Set(
+        filteredRecords.map((r) => {
+          const u = users.find((u) => u.id === r.userId || u.hrCode === r.hrCode || u.hrCode === r.userId || u.hrCode === `HR${r.userId}`);
+          return u?.hrCode || r.hrCode || r.userId;
+        }).filter(Boolean)
+      )
+    );
+  }, [filteredRecords, users]);
+
+  const isSingleTraineeFiltered = Boolean(
+    (searchHrCode.trim() && filteredRecords.length > 0) || 
+    (uniqueTraineeHrCodes.length === 1 && filteredRecords.length > 0)
+  );
+
+  const singleTraineeProfile = useMemo(() => {
+    if (!isSingleTraineeFiltered || filteredRecords.length === 0) return null;
+    const firstRec = filteredRecords[0];
+    const targetHr = uniqueTraineeHrCodes[0] || searchHrCode.trim() || firstRec.hrCode || firstRec.userId;
+    const u = users.find(u => 
+      u.hrCode?.toLowerCase() === targetHr?.toLowerCase() || 
+      u.id?.toLowerCase() === targetHr?.toLowerCase() ||
+      `HR${u.hrCode}`.toLowerCase() === targetHr?.toLowerCase() ||
+      u.name?.toLowerCase() === (firstRec.traineeName || '').toLowerCase()
+    );
+
+    const name = u?.name || firstRec.traineeName || targetHr;
+    const hrCode = u?.hrCode || firstRec.hrCode || targetHr;
+    const imageUrl = u?.profileImageUrl || firstRec.raw?.["Profile Image"] || firstRec.raw?.["Photo"];
+    const department = u?.department || firstRec.department || "Equipment Department";
+    const jobRole = u?.jobRole || u?.role || firstRec.role || (language === 'ar' ? 'مهندس معدات' : 'Equipment Engineer');
+
+    // Total Unique Courses
+    const uniqueCourses = new Set(filteredRecords.map(r => r.courseName || r.courseId)).size;
+
+    // Attended Days sum
+    const attendedDays = filteredRecords.reduce((acc, r) => {
+      const days = parseInt(r.raw?.["Attended Days"] || r.daysAttended || r.raw?.["Course Duration"] || '1', 10);
+      return acc + (isNaN(days) ? 1 : days);
+    }, 0);
+
+    // Average Score
+    const validScores: number[] = [];
+    filteredRecords.forEach(r => {
+      const rawScore = r.raw?.["Score"] || r.score;
+      if (rawScore !== undefined && rawScore !== null && rawScore !== '') {
+        const parsed = parseFloat(String(rawScore).replace('%', '').trim());
+        if (!isNaN(parsed)) validScores.push(parsed);
+      }
+    });
+
+    const avgScore = validScores.length > 0 
+      ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length) 
+      : null;
+
+    return {
+      name,
+      hrCode,
+      imageUrl,
+      department,
+      jobRole,
+      totalCourses: uniqueCourses,
+      attendedDays,
+      avgScore
+    };
+  }, [isSingleTraineeFiltered, filteredRecords, uniqueTraineeHrCodes, searchHrCode, users, language]);
+
   const singleTrainee = isSingleTraineeFiltered ? users.find((u) => u.hrCode === uniqueTraineeHrCodes[0]) : null;
   const selectedCourseDetails = selectedCourseFilter ? dynamicCourses.find((c) => c.id === selectedCourseFilter) : null;
   const courseSessions: string[] = selectedCourseDetails ? Array.from(new Set(filteredRecords.map((r) => r.attendanceDate))) : [];
@@ -2357,38 +2423,140 @@ Content-Type: text/html; charset="utf-8"
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 print:hidden">
-                  <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                    <BookOpen className="mb-2" size={24} style={{ color: isDark ? '#60a5fa' : '#002D62' }} />
-                    <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "إجمالي الدورات" : "Total Courses"}</span>
-                    <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalCourses || (recordsLoaded ? 0 : courses.length)}</span>
+                {isSingleTraineeFiltered && singleTraineeProfile ? (
+                  /* Trainee Executive Profile Banner (When filtering by single employee) */
+                  <div 
+                    className="mb-6 p-5 sm:p-6 rounded-2xl border shadow-sm print:hidden transition-all animate-fade-in" 
+                    style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                  >
+                    <div className="flex flex-col md:flex-row items-center md:items-stretch justify-between gap-6">
+                      
+                      {/* Trainee Profile Information */}
+                      <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left rtl:sm:text-right">
+                        {/* Avatar */}
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shadow-md border-2 border-[#FFC000] shrink-0 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                          {singleTraineeProfile.imageUrl ? (
+                            <img 
+                              src={singleTraineeProfile.imageUrl} 
+                              alt={singleTraineeProfile.name} 
+                              className="w-full h-full object-cover" 
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-[#002D62] text-[#FFC000] font-black text-2xl">
+                              {singleTraineeProfile.name?.substring(0, 2).toUpperCase() || 'TR'}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Text details */}
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                            <h3 className="text-xl sm:text-2xl font-black" style={{ color: isDark ? '#FFFFFF' : '#002D62' }}>
+                              {singleTraineeProfile.name}
+                            </h3>
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-blue-100 dark:bg-blue-900/40 text-[#002D62] dark:text-blue-300 border border-blue-300 dark:border-blue-700">
+                              #{singleTraineeProfile.hrCode}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-0.5">
+                            <span 
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border shadow-2xs"
+                              style={{ backgroundColor: isDark ? '#1E293B' : '#F1F5F9', borderColor }}
+                            >
+                              <Tag size={13} className="text-[#FFC000]" />
+                              <span>{singleTraineeProfile.department}</span>
+                            </span>
+                            <span 
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border shadow-2xs"
+                              style={{ backgroundColor: isDark ? '#1E293B' : '#F1F5F9', borderColor }}
+                            >
+                              <HardHat size={13} className="text-amber-500" />
+                              <span>{singleTraineeProfile.jobRole}</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Trainee Executive KPI Cards */}
+                      <div className="grid grid-cols-3 gap-3 w-full md:w-auto self-center">
+                        <div 
+                          className="p-3 sm:p-4 rounded-xl border text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px] shadow-2xs" 
+                          style={{ backgroundColor: isDark ? '#13233D' : '#F8FAFC', borderColor }}
+                        >
+                          <BookOpen size={18} className="text-[#002D62] dark:text-[#60a5fa] mb-1" />
+                          <span className="text-[11px] font-bold mb-1" style={{ color: textMuted }}>
+                            {language === 'ar' ? 'إجمالي الدورات' : 'Total Courses'}
+                          </span>
+                          <span className="text-xl sm:text-2xl font-black" style={{ color: textColor }}>
+                            {singleTraineeProfile.totalCourses}
+                          </span>
+                        </div>
+
+                        <div 
+                          className="p-3 sm:p-4 rounded-xl border text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px] shadow-2xs" 
+                          style={{ backgroundColor: isDark ? '#13233D' : '#F8FAFC', borderColor }}
+                        >
+                          <Calendar size={18} className="text-[#FFC000] mb-1" />
+                          <span className="text-[11px] font-bold mb-1" style={{ color: textMuted }}>
+                            {language === 'ar' ? 'أيام التدريب' : 'Training Days'}
+                          </span>
+                          <span className="text-xl sm:text-2xl font-black text-[#FFC000]">
+                            {singleTraineeProfile.attendedDays}
+                          </span>
+                        </div>
+
+                        <div 
+                          className="p-3 sm:p-4 rounded-xl border text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px] shadow-2xs" 
+                          style={{ backgroundColor: isDark ? '#13233D' : '#F8FAFC', borderColor }}
+                        >
+                          <CheckCircle size={18} className="text-emerald-500 mb-1" />
+                          <span className="text-[11px] font-bold mb-1" style={{ color: textMuted }}>
+                            {language === 'ar' ? 'متوسط الدرجات' : 'Avg Score'}
+                          </span>
+                          <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                            {singleTraineeProfile.avgScore !== null ? `${singleTraineeProfile.avgScore}%` : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+
+                    </div>
                   </div>
-                  <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                    <Calendar className="text-[#FFC000] mb-2" size={24} />
-                    <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "إجمالي الجلسات" : "Total Sessions"}</span>
-                    <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalSessions || (recordsLoaded ? 0 : upcomingSessions.length)}</span>
+                ) : (
+                  /* Global KPI Summary Cards */
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 print:hidden">
+                    <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                      <BookOpen className="mb-2" size={24} style={{ color: isDark ? '#60a5fa' : '#002D62' }} />
+                      <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "إجمالي الدورات" : "Total Courses"}</span>
+                      <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalCourses || (recordsLoaded ? 0 : courses.length)}</span>
+                    </div>
+                    <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                      <Calendar className="text-[#FFC000] mb-2" size={24} />
+                      <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "إجمالي الجلسات" : "Total Sessions"}</span>
+                      <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalSessions || (recordsLoaded ? 0 : upcomingSessions.length)}</span>
+                    </div>
+                    <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                      <Users className="text-green-600 dark:text-green-400 mb-2" size={24} />
+                      <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "إجمالي المشاركين" : "Total Participants"}</span>
+                      <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalParticipants}</span>
+                    </div>
+                    <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                      <HardHat className="text-blue-500 mb-2" size={24} />
+                      <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "المهندسين" : "Total Engineers"}</span>
+                      <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalEngineers}</span>
+                    </div>
+                    <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                      <Wrench className="text-purple-500 mb-2" size={24} />
+                      <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "الفنيين" : "Total Technicians"}</span>
+                      <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalTechnicians}</span>
+                    </div>
+                    <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                      <Settings className="text-gray-500 dark:text-gray-400 mb-2" size={24} />
+                      <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "المشغلين" : "Total Operators"}</span>
+                      <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalOperators}</span>
+                    </div>
                   </div>
-                  <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                    <Users className="text-green-600 dark:text-green-400 mb-2" size={24} />
-                    <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "إجمالي المشاركين" : "Total Participants"}</span>
-                    <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalParticipants}</span>
-                  </div>
-                  <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                    <HardHat className="text-blue-500 mb-2" size={24} />
-                    <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "المهندسين" : "Total Engineers"}</span>
-                    <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalEngineers}</span>
-                  </div>
-                  <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                    <Wrench className="text-purple-500 mb-2" size={24} />
-                    <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "الفنيين" : "Total Technicians"}</span>
-                    <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalTechnicians}</span>
-                  </div>
-                  <div className="p-4 rounded-lg border shadow-sm flex flex-col items-center justify-center text-center transition-colors duration-300" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                    <Settings className="text-gray-500 dark:text-gray-400 mb-2" size={24} />
-                    <span className="text-xs font-semibold mb-1" style={{ color: textMuted }}>{language === "ar" ? "المشغلين" : "Total Operators"}</span>
-                    <span className="text-xl font-bold" style={{ color: textColor }}>{kpiStats.totalOperators}</span>
-                  </div>
-                </div>
+                )}
 
                 {/* On-Demand Server Query Action Bar */}
                 <div className="mb-6 p-4 rounded-xl border flex flex-wrap items-center justify-between gap-3 shadow-2xs print:hidden" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
