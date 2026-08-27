@@ -1835,8 +1835,8 @@ Content-Type: text/html; charset="utf-8"
   }, [isSingleTraineeFiltered, filteredRecords, uniqueTraineeHrCodes, searchHrCode, users, language]);
 
   const singleTrainee = isSingleTraineeFiltered ? users.find((u) => u.hrCode === uniqueTraineeHrCodes[0]) : null;
-  const selectedCourseDetails = selectedCourseFilter ? dynamicCourses.find((c) => c.id === selectedCourseFilter) : null;
-  const courseSessions: string[] = selectedCourseDetails ? Array.from(new Set(filteredRecords.map((r) => r.attendanceDate))) : [];
+  const selectedCourseDetails = selectedCourseFilter ? (dynamicCourses.find((c) => c.id === selectedCourseFilter || c.title === selectedCourseFilter) || { id: selectedCourseFilter, title: selectedCourseFilter }) : null;
+  const courseSessions: string[] = selectedCourseDetails ? Array.from(new Set(filteredRecords.map((r) => r.attendanceDate || r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'] || 'N/A'))).filter(Boolean) : [];
 
   // Admin Automated Attendance Reminder: ONLY sessions actively running right now (Course Date + Start Time until 4:00 PM)
   const [dismissedLiveBannerSessionIds, setDismissedLiveBannerSessionIds] = useState<string[]>(() => {
@@ -2676,7 +2676,7 @@ Content-Type: text/html; charset="utf-8"
 
                     <div className="space-y-3">
                       {courseSessions.map((date) => {
-                        const attendeesOnDate = filteredRecords.filter((r) => r.attendanceDate === date);
+                        const attendeesOnDate = filteredRecords.filter((r) => (r.attendanceDate || r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'] || 'N/A') === date);
                         const isExpanded = expandedDates[date];
                         return (
                           <div 
@@ -2703,19 +2703,41 @@ Content-Type: text/html; charset="utf-8"
                                 <table className="w-full text-left border-collapse text-sm">
                                   <thead>
                                     <tr className="border-b" style={{ borderColor: borderColor, color: textMuted }}>
+                                      <th className="pb-2 font-bold">{language === "ar" ? "الكود" : "HR Code"}</th>
                                       <th className="pb-2 font-bold">{language === "ar" ? "الاسم" : "Name"}</th>
                                       <th className="pb-2 font-bold">{language === "ar" ? "القسم" : "Department"}</th>
                                       <th className="pb-2 font-bold">{language === "ar" ? "الدرجة" : "Score"}</th>
+                                      <th className="pb-2 font-bold">{language === "ar" ? "إجراءات" : "Actions"}</th>
                                     </tr>
                                   </thead>
                                   <tbody>
                                     {attendeesOnDate.map((r) => {
                                       const u = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}`);
+                                      const recHrCode = u?.hrCode || r.hrCode || r.userId || r.raw?.['HR Code'] || r.raw?.['ID'] || '';
                                       return (
                                         <tr key={r.id} className="border-b last:border-0 transition-colors hover:opacity-80" style={{ borderColor: borderColor, color: textColor }}>
-                                          <td className="py-2.5 font-medium"><DataField>{u?.name || r.traineeName}</DataField></td>
+                                          <td className="py-2.5 font-bold font-mono text-xs">{recHrCode}</td>
+                                          <td className="py-2.5 font-medium"><DataField>{u?.name || r.traineeName || r.name}</DataField></td>
                                           <td className="py-2.5 font-medium"><DataField>{u?.department || r.department}</DataField></td>
                                           <td className="py-2.5 font-black text-[#FFC000]">{r.score}</td>
+                                          <td className="py-2.5 flex items-center gap-1.5">
+                                            <button 
+                                              type="button"
+                                              onClick={() => setEditingRecord(r)} 
+                                              className="p-1 rounded-md text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/40 transition-colors"
+                                              title={language === 'ar' ? 'تعديل' : 'Edit'}
+                                            >
+                                              <Edit2 size={13} />
+                                            </button>
+                                            <button 
+                                              type="button"
+                                              onClick={() => handleDeleteRecord(r.id)} 
+                                              className="p-1 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                                              title={language === 'ar' ? 'حذف' : 'Delete'}
+                                            >
+                                              <Trash2 size={13} />
+                                            </button>
+                                          </td>
                                         </tr>
                                       );
                                     })}
