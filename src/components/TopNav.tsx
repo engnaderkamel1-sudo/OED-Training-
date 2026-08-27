@@ -18,7 +18,9 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  BookOpen
+  BookOpen,
+  Download,
+  Smartphone
 } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
@@ -69,6 +71,48 @@ export const TopNav: React.FC = () => {
       }
     } catch (e) {}
   }, []);
+
+  // PWA Standalone Detection & Installation Prompt
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
+  const [isStandaloneMode, setIsStandaloneMode] = useState<boolean>(() => {
+    try {
+      if (typeof window === 'undefined') return false;
+      return window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true || document.referrer.includes('android-app://');
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredInstallPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (deferredInstallPrompt) {
+      try {
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setDeferredInstallPrompt(null);
+          setIsStandaloneMode(true);
+        }
+      } catch (err) {
+        console.error("Install prompt error:", err);
+      }
+    } else {
+      alert(
+        language === 'ar'
+          ? 'لتثبيت التطبيق على هاتفك وتشغيله كتطبيق مستقل بدون متصفح:\n1. اضغط على زر القائمة في كروم (ثلاث نقاط ⋮ أعلى الشاشة).\n2. اضغط على "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية" (Install app / Add to Home screen).\n3. سيتم تثبيت أيقونة التطبيق الرسمية على جهازك وفتحه بدون شريط عنوان المتصفح.'
+          : 'To install the app on your mobile without browser address bar:\n1. Open Chrome menu (3 dots ⋮ at top).\n2. Tap "Install app" or "Add to Home screen".\n3. An official OED-TTMS app icon will be created on your home screen.'
+      );
+    }
+  };
 
   // Read Notifications State synchronized across the system
   const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
@@ -664,6 +708,21 @@ export const TopNav: React.FC = () => {
                         <Bell size={18} className="text-emerald-500 shrink-0" />
                         <span>{language === 'ar' ? 'تفعيل إشعارات الهاتف 🔔' : 'Enable Push Notifications 🔔'}</span>
                       </button>
+
+                      {/* Install App on Mobile (PWA Standalone) */}
+                      {!isStandaloneMode && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            handleInstallApp();
+                          }}
+                          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-black transition-colors cursor-pointer bg-gradient-to-r from-amber-500/15 to-yellow-400/15 border border-amber-400/30 text-amber-900 dark:text-amber-300 my-1 hover:bg-amber-400/25"
+                        >
+                          <Smartphone size={18} className="text-amber-500 shrink-0 animate-bounce" />
+                          <span>{language === 'ar' ? '📲 تثبيت التطبيق على الموبايل' : '📲 Install Mobile App'}</span>
+                        </button>
+                      )}
 
                       {/* Logout Button */}
                       <button

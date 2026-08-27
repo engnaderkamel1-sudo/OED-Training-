@@ -34,6 +34,19 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// PWA Fetch handler required for Chrome Standalone App Installation
+self.addEventListener('fetch', (event) => {
+  // Let network handle request, fallback to cache if offline
+  if (event.request.method !== 'GET' || event.request.url.startsWith('chrome-extension') || event.request.url.includes('firestore.googleapis.com')) {
+    return;
+  }
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      return caches.match(event.request).then((res) => res || Promise.reject('offline'));
+    })
+  );
+});
+
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
   const notificationTitle = payload.notification?.title || 'OED-TTMS';
