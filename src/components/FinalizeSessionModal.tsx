@@ -76,8 +76,7 @@ export const FinalizeSessionModal: React.FC<FinalizeSessionModalProps> = ({
         <tr>
           <td style="font-size: 28px; font-weight: bold; color: #7f7f7f;">Training Register</td>
           <td style="text-align: right;">
-            <div style="font-size: 20px; font-weight: 900; font-style: italic; color: #002D62; letter-spacing: 1px;">ORASCOM</div>
-            <div style="font-size: 9px; font-weight: bold; color: #4c6d99; letter-spacing: 1px;">EQUIPMENT DEPARTMENT</div>
+            <img src="/orascom-logo.png" style="height: 48px; width: auto; object-fit: contain;" alt="Orascom Construction Equipment Department OED" />
           </td>
         </tr>
       </table>

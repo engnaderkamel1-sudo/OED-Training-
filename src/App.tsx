@@ -131,12 +131,12 @@ const AppContent: React.FC = () => {
         const locationStr = await fetchUserLocation();
 
         await addDoc(collection(db, 'activity_logs'), {
-          userId: user.id,
-          userName: user.name,
-          hrCode: user.hrCode,
-          role: user.role,
-          action: actionType,
-          location: locationStr, 
+          userId: user.id || 'anonymous',
+          userName: user.name || 'User',
+          hrCode: user.hrCode || user.id || 'N/A',
+          role: user.role || 'trainee',
+          action: actionType || 'activity',
+          location: locationStr || 'Secure Session', 
           timestamp: serverTimestamp(),
         });
       } catch (error) {

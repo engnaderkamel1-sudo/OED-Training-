@@ -328,9 +328,8 @@ export const TrainingRegisterPreviewModal: React.FC<TrainingRegisterPreviewModal
       <body>
         <div class="header">
           <h1>Training Register</h1>
-          <div class="logo-area">
-            <div class="orascom">ORASCOM</div>
-            <div class="oed">EQUIPMENT DEPARTMENT</div>
+          <div class="logo-area" style="display: flex; align-items: center; justify-content: flex-end;">
+            <img src="/orascom-logo.png" style="height: 48px; width: auto; object-fit: contain;" alt="Orascom Construction Equipment Department OED" />
           </div>
         </div>
 

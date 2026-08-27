@@ -60,7 +60,7 @@ export const generateReportHTML = (options: ReportOptions): string => {
   ];
 
   const cols = options.columns || (singleTrainee 
-    ? defaultCols.filter(c => !['hrCode', 'name', 'department'].includes(c.key))
+    ? defaultCols.filter(c => !['hrCode', 'name', 'department', 'role'].includes(c.key))
     : defaultCols);
 
   const getRecordValue = (r: ReportRecord, key: string) => {
@@ -619,7 +619,7 @@ export const downloadTrainingRegisterPDF = async (session: import("./types").Upc
     <body>
       <div class="header">
         <h1>Training Register</h1>
-        <img src="/orascom_logo.png" alt="Orascom Equipment Department" />
+        <img src="/orascom-logo.png" style="height: 48px; width: auto; object-fit: contain;" alt="Orascom Construction Equipment Department OED" />
       </div>
 
       <table class="info-table">

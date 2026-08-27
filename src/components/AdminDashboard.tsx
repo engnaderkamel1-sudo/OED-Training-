@@ -1,9 +1,10 @@
+import { SystemErrorsModal } from './SystemErrorsModal';
 import { FirebaseUsageModal } from './FirebaseUsageModal';
 import { EditRecordModal } from './EditRecordModal';
 import { EditUserModal } from './EditUserModal';
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useAppContext } from "../context";
-import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment, collection, getDocs, writeBatch } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment, collection, getDocs, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2 } from "lucide-react";
 import { mockCourses, mockRequests } from "../data";
@@ -262,6 +263,19 @@ Please log in to register for this session through the OED-TTMS Application.
   const [resourceLink, setResourceLink] = useState("");
   const [selectedCourseForResource, setSelectedCourseForResource] = useState(mockCourses[0]?.id || "");
   const [showUsageModal, setShowUsageModal] = useState(false);
+  const [showSystemErrorsModal, setShowSystemErrorsModal] = useState(false);
+  const [unresolvedErrorsCount, setUnresolvedErrorsCount] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'error_reports'), (snapshot) => {
+      const openCount = snapshot.docs.filter(d => d.data().status !== 'resolved').length;
+      setUnresolvedErrorsCount(openCount);
+    }, (err) => {
+      console.warn('Error listening to error reports:', err);
+    });
+    return () => unsubscribe();
+  }, []);
+
   const [editingRecord, setEditingRecord] = useState<any | null>(null);
   const [exactMatchFilter, setExactMatchFilter] = useState(false);
   const [searchHrCode, setSearchHrCode] = useState("");
@@ -2423,7 +2437,22 @@ Content-Type: text/html; charset="utf-8"
                   <h2 className="text-2xl font-bold border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>
                     {language === "ar" ? "السجلات الشاملة" : "Global Records"}
                   </h2>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* -- SYSTEM ERRORS MODAL BUTTON -- */}
+                    <button 
+                      type="button"
+                      onClick={() => setShowSystemErrorsModal(true)} 
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold transition-all shadow-xs cursor-pointer bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 relative hover:scale-105"
+                    >
+                      <ShieldAlert size={16} className="text-red-500" />
+                      <span>{language === "ar" ? "سجل أخطاء النظام" : "System Errors"}</span>
+                      {unresolvedErrorsCount > 0 && (
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-red-600 text-white animate-pulse">
+                          {unresolvedErrorsCount}
+                        </span>
+                      )}
+                    </button>
+
                     {/* -- NEW MANUAL ADD BUTTON -- */}
                     <button 
                       onClick={() => setShowManualAddModal(true)} 
@@ -4411,6 +4440,11 @@ Content-Type: text/html; charset="utf-8"
             </div>
           </div>
         </div>
+      )}
+
+      {/* System Errors Modal (Admin Only) */}
+      {showSystemErrorsModal && (
+        <SystemErrorsModal onClose={() => setShowSystemErrorsModal(false)} />
       )}
     </div>
   );

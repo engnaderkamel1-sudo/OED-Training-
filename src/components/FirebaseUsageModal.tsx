@@ -21,6 +21,7 @@ export const FirebaseUsageModal: React.FC<FirebaseUsageModalProps> = ({ onClose 
   } = useAppContext();
 
   const isDark = theme === 'dark';
+  const firebaseConsoleUrl = 'https://console.firebase.google.com';
 
   // Close on Escape key
   useEffect(() => {
