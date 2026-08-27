@@ -63,11 +63,11 @@ export const TopNav: React.FC = () => {
     } catch (e) {}
   }, [appZoom]);
 
-  // Enable and allow free screen rotation (Landscape & Portrait)
+  // Lock Screen Orientation to Portrait on Mobile
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined' && window.screen && (window.screen as any).orientation?.unlock) {
-        (window.screen as any).orientation.unlock().catch(() => {});
+      if (typeof window !== 'undefined' && window.screen && (window.screen as any).orientation?.lock) {
+        (window.screen as any).orientation.lock('portrait').catch(() => {});
       }
     } catch (e) {}
   }, []);
@@ -692,16 +692,16 @@ export const TopNav: React.FC = () => {
           </div>
         </div>
 
-        {/* Hanging Orascom Logo Tab - Positioned cleanly underneath the App Logo */}
-        <div className="absolute start-14 sm:start-20 top-full z-40 pointer-events-auto">
+        {/* Hanging Orascom Logo Tab - Stays sticky with the Top Navbar during scroll */}
+        <div className="absolute left-3 sm:left-6 rtl:left-auto rtl:right-3 sm:rtl:right-6 top-full z-40 pointer-events-auto">
           <div 
-            className="orascom-logo-badge px-3 py-1 sm:px-4 sm:py-1.5 rounded-b-xl shadow-xl border-2 border-t-0 border-white/90 flex items-center justify-center"
+            className="orascom-logo-badge px-3.5 py-1 sm:py-1.5 rounded-b-xl shadow-lg border-2 border-t-0 border-white/90 flex items-center justify-center"
             style={{ backgroundColor: '#FFFFFF', background: '#FFFFFF' }}
           >
             <img 
               src="/orascom-logo.png?v=14" 
               alt="Orascom Construction Equipment Department OED" 
-              className="h-7 sm:h-8.5 w-auto object-contain block"
+              className="h-6.5 sm:h-8 w-auto object-contain block"
               style={{ filter: 'none', backgroundColor: '#FFFFFF', background: '#FFFFFF' }}
             />
           </div>

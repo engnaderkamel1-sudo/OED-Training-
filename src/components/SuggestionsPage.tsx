@@ -598,11 +598,6 @@ export const SuggestionsPage: React.FC = () => {
                       </div>
                     )}
 
-                    {s.adminNote && (
-                      <div className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-sm text-amber-800">
-                        <span className="font-bold">{t('adminNote')}: </span>{s.adminNote}
-                      </div>
-                    )}
                     <p className="text-xs text-gray-400">
                       {new Date(s.createdAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}
                     </p>

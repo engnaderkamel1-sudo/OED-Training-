@@ -6,8 +6,7 @@ import {
   Briefcase, Clock, ArrowRight, UserPlus
 } from "lucide-react";
 import { auth, db } from "../firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
-import { doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { getLoginMeta, getLocationFromIP } from "../utils/loginUtils";
 import { APP_VERSION } from "../version";
@@ -96,7 +95,12 @@ export const Login: React.FC = () => {
 
       // 1. Secure Admin Login Check
       if (loginInput === "admin") {
-        const found = users.find((u) => u.hrCode?.toLowerCase() === "admin" || u.id === "admin");
+        let found: User | undefined = undefined;
+        try {
+          const adminDoc = await getDoc(doc(db, "users", "admin"));
+          if (adminDoc.exists()) found = adminDoc.data() as User;
+        } catch (e) {}
+
         if (found && found.password && found.password !== password) {
           setError(language === "ar" ? "بيانات الدخول غير صحيحة" : "Invalid credentials");
           return;
@@ -138,12 +142,37 @@ export const Login: React.FC = () => {
         return;
       }
 
-      let foundUser = users.find((u) => 
-        u.email?.toLowerCase() === loginInput || 
-        u.hrCode?.toLowerCase() === loginInput || 
-        u.phone === loginInput ||
-        u.phone === `0${loginInput}`
-      );
+      // 2. Targeted Firestore Query for ONLY the logging-in user (0 Leaked Accounts)
+      let foundUser: User | undefined = undefined;
+      try {
+        // Query by uppercase hrCode
+        let qUser = query(collection(db, "users"), where("hrCode", "==", loginInput.toUpperCase()), limit(1));
+        let snap = await getDocs(qUser);
+        if (snap.empty) {
+          // Query by original/lowercase hrCode
+          qUser = query(collection(db, "users"), where("hrCode", "==", loginInput), limit(1));
+          snap = await getDocs(qUser);
+        }
+        if (snap.empty) {
+          // Query by email
+          qUser = query(collection(db, "users"), where("email", "==", loginInput), limit(1));
+          snap = await getDocs(qUser);
+        }
+        if (snap.empty) {
+          // Query by phone
+          qUser = query(collection(db, "users"), where("phone", "==", loginInput), limit(1));
+          snap = await getDocs(qUser);
+          if (snap.empty) {
+            qUser = query(collection(db, "users"), where("phone", "==", `0${loginInput}`), limit(1));
+            snap = await getDocs(qUser);
+          }
+        }
+        if (!snap.empty) {
+          foundUser = { ...snap.docs[0].data(), id: snap.docs[0].id } as User;
+        }
+      } catch (queryErr) {
+        console.error("Login user query error:", queryErr);
+      }
 
       // If not in local users list, attempt direct Firebase Auth & Firestore query fallback
       if (!foundUser && loginInput.includes('@')) {

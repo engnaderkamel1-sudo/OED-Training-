@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { Language, User, Role, Course, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement, LoginLog, Suggestion, HandoutRevision } from './types';
 import { translations } from './i18n';
-import { collection, onSnapshot, doc, setDoc, writeBatch, deleteDoc, getDocs, query, where, limit } from 'firebase/firestore';
+import { collection, onSnapshot, doc, getDoc, setDoc, writeBatch, deleteDoc, getDocs, query, where, limit } from 'firebase/firestore';
 import { db } from './firebase';
 import { APP_VERSION } from './version';
 
@@ -200,12 +200,32 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch (e) {}
   };
 
+  // Server-side role verification guard against localStorage tampering
+  useEffect(() => {
+    if (user?.id) {
+      getDoc(doc(db, "users", user.id)).then(snap => {
+        if (snap.exists()) {
+          const actualData = snap.data() as User;
+          if (actualData.role && (actualData.role !== user.role || actualData.status !== user.status)) {
+            console.warn("Security Alert: User role mismatch detected. Restoring verified server role.");
+            const correctedUser = { ...user, role: actualData.role, status: actualData.status };
+            setUserState(correctedUser);
+            localStorage.setItem('oed_training_user', JSON.stringify(correctedUser));
+          }
+        }
+      }).catch(() => {});
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     setIsLoading(true);
 
-    // 1. Users Listener - Scoped by Role (Protects Privacy & Conserves Quotas)
+    // 1. Users Listener - Strictly Scoped by Role (Zero Data Leaks & Privacy Enforcement)
     let unsubUsers = () => {};
-    if (!user || user.role === 'admin' || user.role === 'manager' || user.role === 'supervisor') {
+    if (!user) {
+      // SECURITY: Never download users collection when unauthenticated!
+      setLocalUsers([]);
+    } else if (user.role === 'admin') {
       unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
         const usersList: User[] = [];
         snapshot.forEach((d) => {
@@ -222,8 +242,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         checkQuotaError(error);
         console.error("Firebase Users Error:", error);
       });
+    } else if (user.role === 'manager' || user.role === 'supervisor') {
+      // Managers & Supervisors only listen to employees in their own department
+      const qDeptUsers = query(collection(db, "users"), where("department", "==", user.department || ""));
+      unsubUsers = onSnapshot(qDeptUsers, (snapshot) => {
+        const usersList: User[] = [];
+        snapshot.forEach((d) => {
+          const uData = d.data() as User;
+          if (!uData.id) uData.id = d.id;
+          usersList.push(uData);
+        });
+        setLocalUsers(usersList);
+      }, (error) => {
+        checkQuotaError(error);
+      });
     } else {
-      // Trainee: Only listen to their own profile document
+      // Trainee: Strictly listen ONLY to their own single profile document
       unsubUsers = onSnapshot(doc(db, "users", user.id), (docSnap) => {
         if (docSnap.exists()) {
           const uData = { ...docSnap.data(), id: docSnap.id } as User;
@@ -406,25 +440,36 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const fetchTrainingRecords = async (filter?: { hrCode?: string; name?: string; department?: string; courseName?: string; fromDate?: string; toDate?: string }) => {
     setIsFetchingRecords(true);
     try {
+      // STRICT PRIVACY GUARD: Trainees can strictly and only fetch their own HR Code records
+      let effectiveFilter = filter;
+      if (user && user.role === 'trainee') {
+        effectiveFilter = { hrCode: user.hrCode };
+      } else if (user && (user.role === 'manager' || user.role === 'supervisor')) {
+        effectiveFilter = { ...filter, department: user.department || filter?.department };
+      }
+
       let q = collection(db, "cleanedData");
       const queryConstraints: any[] = [];
 
-      if (filter?.hrCode && filter.hrCode.trim()) {
-        queryConstraints.push(where("hrCode", "==", filter.hrCode.trim()));
+      if (effectiveFilter?.hrCode && effectiveFilter.hrCode.trim()) {
+        queryConstraints.push(where("hrCode", "==", effectiveFilter.hrCode.trim()));
       }
-      if (filter?.department && filter.department.trim()) {
-        queryConstraints.push(where("department", "==", filter.department.trim()));
+      if (effectiveFilter?.department && effectiveFilter.department.trim()) {
+        queryConstraints.push(where("department", "==", effectiveFilter.department.trim()));
       }
 
       let snapshot;
       if (queryConstraints.length > 0) {
         snapshot = await getDocs(query(q, ...queryConstraints));
-      } else {
+      } else if (user && user.role === 'admin') {
+        // Only Master Admin can fetch wide/global records limit(1000)
         snapshot = await getDocs(query(q, limit(1000)));
+      } else {
+        snapshot = { forEach: () => {} } as any;
       }
 
       const data: CleanedRecord[] = [];
-      snapshot.forEach((d) => data.push(d.data() as CleanedRecord));
+      snapshot.forEach((d: any) => data.push(d.data() as CleanedRecord));
       setCleanedDataState(data);
       setRecordsLoaded(true);
 

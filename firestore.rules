@@ -1,0 +1,54 @@
+﻿rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // 1. Users Collection
+    match /users/{userId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // 2. Training Records (cleanedData & records)
+    match /cleanedData/{recordId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    match /records/{recordId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // 3. Handout Revisions
+    match /handoutRevisions/{revId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // 4. Suggestions
+    match /suggestions/{sugId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // 5. Courses, Sessions, Announcements, System Settings
+    match /courses/{courseId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /announcements/{annId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /systemSettings/{configId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+  }
+}
