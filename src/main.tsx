@@ -6,7 +6,7 @@ import './index.css';
 // Ensure active service worker update
 if (typeof window !== 'undefined') {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/firebase-messaging-sw.js?v=11.0').then((reg) => {
+    navigator.serviceWorker.register('/firebase-messaging-sw.js?v=12.0').then((reg) => {
       reg.update().catch(() => {});
     }).catch(() => {});
   }
