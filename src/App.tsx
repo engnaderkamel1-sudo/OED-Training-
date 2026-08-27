@@ -29,6 +29,7 @@ import { QuotaExhaustedBanner } from './components/QuotaExhaustedBanner';
 import { GlobalAttendanceAlertBanner } from './components/GlobalAttendanceAlertBanner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { SystemErrorsPage } from './components/SystemErrorsPage';
+import { AppIconUpdateModal } from './components/AppIconUpdateModal';
 
 const AppContent: React.FC = () => {
   const { user, isLoading, t, currentView, language, setUser } = useAppContext();
@@ -224,6 +225,7 @@ const AppContent: React.FC = () => {
         }}
       />
       <TopNav />
+      <AppIconUpdateModal />
       <div className="pt-16 flex flex-col">
         <GlobalAttendanceAlertBanner />
         <QuotaExhaustedBanner />
