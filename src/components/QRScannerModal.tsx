@@ -31,8 +31,23 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
     const rawText = rawCode.trim();
     if (!rawText) return;
 
-    // 1. Extract clean session ID from QR payload (e.g. "session_123_2026-08-27" -> "session_123")
+    // 1. Extract clean session ID from QR payload (e.g. "session_123_2026-08-28" -> "session_123")
     const cleanSessionId = rawText.includes('_') ? rawText.split('_')[0] : rawText;
+
+    // Security Check: Verify QR Date Payload against Today
+    if (rawText.includes('_')) {
+      const parts = rawText.split('_');
+      const qrDate = parts[parts.length - 1];
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (qrDate && qrDate.length === 10 && qrDate !== todayStr) {
+        setError(
+          language === 'ar'
+            ? '❌ رمز QR منتهي الصلاحية: تم إنشاء هذا الرمز في تاريخ سابق ولا يمكن استخدامه اليوم.'
+            : '❌ Expired QR Code: This QR code was generated on a previous date and cannot be used today.'
+        );
+        return;
+      }
+    }
 
     // 2. Strict Session Search: Find the matching session in upcomingSessions
     const targetSession = upcomingSessions.find(
