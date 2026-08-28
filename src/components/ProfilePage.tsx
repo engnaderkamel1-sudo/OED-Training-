@@ -17,15 +17,17 @@ export const ProfilePage: React.FC = () => {
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [department, setDepartment] = useState(user?.department || '');
-  const [profileImage, setProfileImage] = useState<string | undefined>(user?.profileImageUrl);
   
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [arabicWarning, setArabicWarning] = useState(false);
+
   // Update local state if context user changes
   useEffect(() => {
-    if (user && !isEditing) {
+    if (user) {
       setName(user.name);
       setPhone(user.phone || '');
       setDepartment(user.department);
@@ -35,7 +37,13 @@ export const ProfilePage: React.FC = () => {
 
   if (!user) return null;
 
-  const enforceEnglish = (val: string) => val.replace(/[^a-zA-Z0-9@.\-_+ ]/g, '');
+  const enforceEnglish = (val: string) => {
+    if (/[\u0600-\u06FF]/.test(val)) {
+      setArabicWarning(true);
+      setTimeout(() => setArabicWarning(false), 4000);
+    }
+    return val.replace(/[^a-zA-Z0-9@.\-_+ ]/g, '');
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -340,6 +348,13 @@ export const ProfilePage: React.FC = () => {
             </div>
           ) : (
             <form onSubmit={handleSave} className="space-y-6">
+              {arabicWarning && (
+                <div className="bg-amber-50 dark:bg-amber-950/50 border-2 border-amber-500 text-amber-900 dark:text-amber-200 p-3 rounded-xl text-xs font-extrabold flex items-center gap-2 animate-bounce shadow-md">
+                  <span className="text-base">⚠️</span>
+                  <span>{language === 'ar' ? 'يرجى إدخال البيانات باللغة الإنجليزية فقط' : 'Please enter all details in English only'}</span>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -361,7 +376,7 @@ export const ProfilePage: React.FC = () => {
                   <input
                     type="text"
                     value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
+                    onChange={(e) => setDepartment(enforceEnglish(e.target.value))}
                     className="w-full border dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-[#002D62] outline-none text-xs sm:text-sm"
                     required
                   />
