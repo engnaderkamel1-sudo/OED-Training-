@@ -39,8 +39,15 @@ export const Login: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState("");
   const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [arabicWarning, setArabicWarning] = useState(false);
 
-  const enforceEnglish = (val: string) => val.replace(/[^a-zA-Z0-9@.\-_ ]/g, '');
+  const enforceEnglish = (val: string) => {
+    if (/[\u0600-\u06FF]/.test(val)) {
+      setArabicWarning(true);
+      setTimeout(() => setArabicWarning(false), 4000);
+    }
+    return val.replace(/[^a-zA-Z0-9@.\-_ ]/g, '');
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -375,23 +382,17 @@ export const Login: React.FC = () => {
       // 6. Mandatory Department
       const finalDepartment = department === '__custom__' ? customDepartment.trim() : department.trim();
       if (!finalDepartment) {
-        setError(language === "ar" ? "الرجاء تحديد أو كتابة اسم القسم" : "Please select or enter the department name");
+        setError(language === "ar" ? "الرجاء تحديد أو كتابة اسم القسم باللغة الإنجليزية" : "Please select or enter the department name in English");
         return;
       }
 
-      // 7. Mandatory Job Role
-      if (!jobRole) {
-        setError(language === "ar" ? "الرجاء تحديد المسمى الوظيفي" : "Please select your job role");
-        return;
-      }
-
-      // 8. Mandatory Manager Email 1 (For Official Trainees)
-      if (accessRole === 'trainee' && registerMode === 'official' && (!managerEmail1 || !managerEmail1.trim())) {
+      // 7. Mandatory Manager Email 1 (For Official Trainees)
+      if (registerMode === 'official' && (!managerEmail1 || !managerEmail1.trim())) {
         setError(language === "ar" ? "يرجى إدخال البريد الإلكتروني للمدير المباشر 1 (إلزامي)" : "Please enter Manager 1 Email (Required)");
         return;
       }
 
-      // 9. Mandatory Password & Confirmation
+      // 8. Mandatory Password & Confirmation
       if (!password || password.length < 6) {
         setError(language === "ar" ? "كلمة المرور يجب أن تكون 6 أحرف أو أرقام على الأقل" : "Password must be at least 6 characters");
         return;
@@ -794,46 +795,51 @@ export const Login: React.FC = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">{language === "ar" ? "المسمى الوظيفي" : "Job Role"}</label>
-                <select value={jobRole} onChange={(e) => setJobRole(e.target.value)} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]" dir={language === "ar" ? "rtl" : "ltr"}>
-                  <option value="Engineer">{language === "ar" ? "مهندس" : "Engineer"}</option>
-                  <option value="Technician">{language === "ar" ? "فني" : "Technician"}</option>
-                  <option value="Operator">{language === "ar" ? "مشغل" : "Operator"}</option>
-                </select>
+            {/* Real-time Arabic Warning Toast */}
+            {arabicWarning && (
+              <div className="bg-amber-50 dark:bg-amber-950/50 border-2 border-amber-500 text-amber-900 dark:text-amber-200 p-3 rounded-xl text-xs font-extrabold flex items-center gap-2 animate-bounce shadow-md">
+                <span className="text-base">⚠️</span>
+                <span>{language === 'ar' ? 'يرجى إدخال البيانات باللغة الإنجليزية فقط' : 'Please enter all details in English only'}</span>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">{language === "ar" ? "الصلاحية" : "Role"}</label>
-                <select value={accessRole} onChange={(e) => setAccessRole(e.target.value as Role)} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002D62]" dir={language === "ar" ? "rtl" : "ltr"}>
-                  <option value="trainee">{language === "ar" ? "متدرب" : "Trainee"}</option>
-                </select>
-              </div>
-            </div>
+            )}
 
-            {/* Manager Emails - Only if trainee */}
-            {accessRole === "trainee" && (
+            {/* Manager Emails */}
+            {registerMode === 'official' && (
               <div className="space-y-3 border border-gray-200 bg-gray-50/50 p-4 rounded-xl mt-4">
-                <h4 className="text-sm font-bold text-gray-700">{language === "ar" ? "إيميلات الإدارة" : "Management Emails"}</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-gray-700">{language === "ar" ? "إيميلات الإدارة" : "Management Emails"}</h4>
+                  <span className="text-[11px] text-gray-500 font-medium">
+                    {language === "ar" ? "1 إلزامي • 2 اختياري" : "1 Required • 2 Optional"}
+                  </span>
+                </div>
                 
                 <div className="grid grid-cols-1 gap-3">
                   <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      {language === "ar" ? "إيميل المدير المباشر 1" : "Manager 1 Email"} <span className="text-red-500">* ({language === "ar" ? "إلزامي" : "Required"})</span>
+                    </label>
                     <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62] bg-white" dir="ltr">
-                      <input type="text" value={managerEmail1} onChange={(e) => setManagerEmail1(enforceEnglish(e.target.value))} className="w-full px-3 py-2 text-sm outline-none" required placeholder={language === "ar" ? "مدير 1 (إلزامي)" : "Manager 1 (Required)"} />
+                      <input type="text" value={managerEmail1} onChange={(e) => setManagerEmail1(enforceEnglish(e.target.value))} className="w-full px-3 py-2 text-sm outline-none" required placeholder={language === "ar" ? "اسم المستخدم (إلزامي)" : "username (required)"} />
                       <span className="bg-gray-100 px-3 py-2 border-l border-gray-300 text-gray-600 font-bold text-xs flex items-center shrink-0">@orascom.com</span>
                     </div>
                   </div>
                   
                   <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      {language === "ar" ? "إيميل المدير 2" : "Manager 2 Email"} <span className="text-gray-400 font-normal">({language === "ar" ? "اختياري" : "Optional"})</span>
+                    </label>
                     <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62] bg-white" dir="ltr">
-                      <input type="text" value={managerEmail2} onChange={(e) => setManagerEmail2(enforceEnglish(e.target.value))} className="w-full px-3 py-2 text-sm outline-none" placeholder={language === "ar" ? "مدير 2 (اختياري)" : "Manager 2 (Optional)"} />
+                      <input type="text" value={managerEmail2} onChange={(e) => setManagerEmail2(enforceEnglish(e.target.value))} className="w-full px-3 py-2 text-sm outline-none" placeholder={language === "ar" ? "اختياري" : "optional"} />
                       <span className="bg-gray-100 px-3 py-2 border-l border-gray-300 text-gray-600 font-bold text-xs flex items-center shrink-0">@orascom.com</span>
                     </div>
                   </div>
                   
                   <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      {language === "ar" ? "إيميل المدير 3" : "Manager 3 Email"} <span className="text-gray-400 font-normal">({language === "ar" ? "اختياري" : "Optional"})</span>
+                    </label>
                     <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#002D62] bg-white" dir="ltr">
-                      <input type="text" value={managerEmail3} onChange={(e) => setManagerEmail3(enforceEnglish(e.target.value))} className="w-full px-3 py-2 text-sm outline-none" placeholder={language === "ar" ? "مدير 3 (اختياري)" : "Manager 3 (Optional)"} />
+                      <input type="text" value={managerEmail3} onChange={(e) => setManagerEmail3(enforceEnglish(e.target.value))} className="w-full px-3 py-2 text-sm outline-none" placeholder={language === "ar" ? "اختياري" : "optional"} />
                       <span className="bg-gray-100 px-3 py-2 border-l border-gray-300 text-gray-600 font-bold text-xs flex items-center shrink-0">@orascom.com</span>
                     </div>
                   </div>
