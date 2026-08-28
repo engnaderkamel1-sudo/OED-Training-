@@ -1012,17 +1012,32 @@ Please log in to register for this session through the OED-TTMS Application.
       if (user.pendingUpdates.hrCode) updatePayload.hrCode = user.pendingUpdates.hrCode;
       if (user.pendingUpdates.email) updatePayload.email = user.pendingUpdates.email;
       
-      // Save to History (no undefined fields)
+      // Save to History (with old and new values for audit trail)
       const newHistoryRecord: any = {
         status: 'approved',
         processedAt: new Date().toISOString(),
         requestedAt: user.pendingUpdates.requestedAt || new Date().toISOString()
       };
-      if (user.pendingUpdates.name) newHistoryRecord.name = user.pendingUpdates.name;
-      if (user.pendingUpdates.department) newHistoryRecord.department = user.pendingUpdates.department;
-      if (user.pendingUpdates.phone) newHistoryRecord.phone = user.pendingUpdates.phone;
-      if (user.pendingUpdates.hrCode) newHistoryRecord.hrCode = user.pendingUpdates.hrCode;
-      if (user.pendingUpdates.email) newHistoryRecord.email = user.pendingUpdates.email;
+      if (user.pendingUpdates.name) {
+        newHistoryRecord.name = user.pendingUpdates.name;
+        newHistoryRecord.oldName = user.name || '';
+      }
+      if (user.pendingUpdates.department) {
+        newHistoryRecord.department = user.pendingUpdates.department;
+        newHistoryRecord.oldDepartment = user.department || '';
+      }
+      if (user.pendingUpdates.phone) {
+        newHistoryRecord.phone = user.pendingUpdates.phone;
+        newHistoryRecord.oldPhone = user.phone || '';
+      }
+      if (user.pendingUpdates.hrCode) {
+        newHistoryRecord.hrCode = user.pendingUpdates.hrCode;
+        newHistoryRecord.oldHrCode = user.hrCode || '';
+      }
+      if (user.pendingUpdates.email) {
+        newHistoryRecord.email = user.pendingUpdates.email;
+        newHistoryRecord.oldEmail = user.email || '';
+      }
       
       const existingHistory = user.updateHistory || [];
       updatePayload.updateHistory = [...existingHistory, newHistoryRecord];
@@ -1046,17 +1061,32 @@ Please log in to register for this session through the OED-TTMS Application.
     try {
       const userRef = doc(db, 'users', user.id);
       
-      // Save to History (no undefined fields)
+      // Save to History (with old and new values for audit trail)
       const newHistoryRecord: any = {
         status: 'rejected',
         processedAt: new Date().toISOString(),
         requestedAt: user.pendingUpdates.requestedAt || new Date().toISOString()
       };
-      if (user.pendingUpdates.name) newHistoryRecord.name = user.pendingUpdates.name;
-      if (user.pendingUpdates.department) newHistoryRecord.department = user.pendingUpdates.department;
-      if (user.pendingUpdates.phone) newHistoryRecord.phone = user.pendingUpdates.phone;
-      if (user.pendingUpdates.hrCode) newHistoryRecord.hrCode = user.pendingUpdates.hrCode;
-      if (user.pendingUpdates.email) newHistoryRecord.email = user.pendingUpdates.email;
+      if (user.pendingUpdates.name) {
+        newHistoryRecord.name = user.pendingUpdates.name;
+        newHistoryRecord.oldName = user.name || '';
+      }
+      if (user.pendingUpdates.department) {
+        newHistoryRecord.department = user.pendingUpdates.department;
+        newHistoryRecord.oldDepartment = user.department || '';
+      }
+      if (user.pendingUpdates.phone) {
+        newHistoryRecord.phone = user.pendingUpdates.phone;
+        newHistoryRecord.oldPhone = user.phone || '';
+      }
+      if (user.pendingUpdates.hrCode) {
+        newHistoryRecord.hrCode = user.pendingUpdates.hrCode;
+        newHistoryRecord.oldHrCode = user.hrCode || '';
+      }
+      if (user.pendingUpdates.email) {
+        newHistoryRecord.email = user.pendingUpdates.email;
+        newHistoryRecord.oldEmail = user.email || '';
+      }
 
       const existingHistory = user.updateHistory || [];
       const updatePayload: any = {
@@ -2369,33 +2399,48 @@ Content-Type: text/html; charset="utf-8"
                                 <td className="p-3"><UserAvatarWithName user={item.user} /></td>
                                 <td className="p-3">
                                   {item.history.name && (
-                                    <div className="mb-1 text-sm">
-                                      <span className="text-xs text-gray-500 mr-1 rtl:ml-1">{language === "ar" ? "الاسم:" : "Name:"}</span>
-                                      <span className="font-bold">{item.history.name}</span>
+                                    <div className="mb-1.5 text-sm">
+                                      <span className="text-xs text-gray-500 block">{language === "ar" ? "الاسم:" : "Name:"}</span>
+                                      {item.history.oldName && (
+                                        <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{item.history.oldName}</span>
+                                      )}
+                                      <span className="font-bold text-green-600">➔ {item.history.name}</span>
                                     </div>
                                   )}
                                   {item.history.phone && (
-                                    <div className="mb-1 text-sm">
-                                      <span className="text-xs text-gray-500 mr-1 rtl:ml-1">{language === "ar" ? "الهاتف:" : "Phone:"}</span>
-                                      <span className="font-bold font-mono" dir="ltr">{item.history.phone}</span>
+                                    <div className="mb-1.5 text-sm">
+                                      <span className="text-xs text-gray-500 block">{language === "ar" ? "الهاتف:" : "Phone:"}</span>
+                                      {item.history.oldPhone && (
+                                        <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0 font-mono" dir="ltr">{item.history.oldPhone}</span>
+                                      )}
+                                      <span className="font-bold text-green-600 font-mono" dir="ltr">➔ {item.history.phone}</span>
                                     </div>
                                   )}
                                   {item.history.department && (
-                                    <div className="mb-1 text-sm">
-                                      <span className="text-xs text-gray-500 mr-1 rtl:ml-1">{language === "ar" ? "القسم:" : "Department:"}</span>
-                                      <span className="font-bold">{item.history.department}</span>
+                                    <div className="mb-1.5 text-sm">
+                                      <span className="text-xs text-gray-500 block">{language === "ar" ? "القسم:" : "Department:"}</span>
+                                      {item.history.oldDepartment && (
+                                        <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{item.history.oldDepartment}</span>
+                                      )}
+                                      <span className="font-bold text-green-600">➔ {item.history.department}</span>
                                     </div>
                                   )}
                                   {item.history.email && (
-                                    <div className="text-sm">
-                                      <span className="text-xs text-gray-500 mr-1 rtl:ml-1">{language === "ar" ? "الإيميل:" : "Email:"}</span>
-                                      <span className="font-bold">{item.history.email}</span>
+                                    <div className="mb-1.5 text-sm">
+                                      <span className="text-xs text-gray-500 block">{language === "ar" ? "الإيميل:" : "Email:"}</span>
+                                      {item.history.oldEmail && (
+                                        <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0 font-mono">{item.history.oldEmail}</span>
+                                      )}
+                                      <span className="font-bold text-green-600 font-mono">➔ {item.history.email}</span>
                                     </div>
                                   )}
                                   {item.history.hrCode && (
-                                    <div className="mb-1 text-sm">
-                                      <span className="text-xs text-gray-500 mr-1 rtl:ml-1">{language === "ar" ? "الكود:" : "HR Code:"}</span>
-                                      <span className="font-bold">{item.history.hrCode}</span>
+                                    <div className="mb-1.5 text-sm">
+                                      <span className="text-xs text-gray-500 block">{language === "ar" ? "الكود:" : "HR Code:"}</span>
+                                      {item.history.oldHrCode && (
+                                        <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0 font-mono">{item.history.oldHrCode}</span>
+                                      )}
+                                      <span className="font-bold text-green-600 font-mono">➔ {item.history.hrCode}</span>
                                     </div>
                                   )}
                                 </td>
