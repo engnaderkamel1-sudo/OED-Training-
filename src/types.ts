@@ -31,12 +31,17 @@ export interface User {
     phone?: string;
     requestedAt?: string; 
   }; // بيانات تعديل البيانات تحت المراجعة
-  updateHistory?: { // <--- سجل العمليات السابقة لكل User
+  updateHistory?: { // <--- سجل التعديلات السابقة داخل User
     name?: string;
+    oldName?: string;
     department?: string;
+    oldDepartment?: string;
     hrCode?: string;
+    oldHrCode?: string;
     email?: string;
+    oldEmail?: string;
     phone?: string;
+    oldPhone?: string;
     status: 'approved' | 'rejected';
     processedAt: string;
     requestedAt?: string;
