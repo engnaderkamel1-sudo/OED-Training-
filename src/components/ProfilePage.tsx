@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context';
 import { User } from '../types';
-import { Upload, Save, Loader2, User as UserIcon, Mail, Phone, Building, Briefcase, Hash, Lock, ShieldCheck, X } from 'lucide-react';
+import { Upload, Save, Loader2, User as UserIcon, Mail, Phone, Building, Briefcase, Hash, Lock, ShieldCheck, X, Clock } from 'lucide-react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { DataField } from './DataField';
