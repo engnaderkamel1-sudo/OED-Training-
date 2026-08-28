@@ -2368,16 +2368,34 @@ Content-Type: text/html; charset="utf-8"
                               <tr key={`${item.user.id}_${index}`} className="border-b transition-colors" style={{ borderColor: borderColor, color: textColor }}>
                                 <td className="p-3"><UserAvatarWithName user={item.user} /></td>
                                 <td className="p-3">
-                                  {item.history.hrCode && (
+                                  {item.history.name && (
                                     <div className="mb-1 text-sm">
-                                      <span className="text-xs text-gray-500 mr-1 rtl:ml-1">{language === "ar" ? "الكود:" : "HR Code:"}</span>
-                                      <span className="font-bold">{item.history.hrCode}</span>
+                                      <span className="text-xs text-gray-500 mr-1 rtl:ml-1">{language === "ar" ? "الاسم:" : "Name:"}</span>
+                                      <span className="font-bold">{item.history.name}</span>
+                                    </div>
+                                  )}
+                                  {item.history.phone && (
+                                    <div className="mb-1 text-sm">
+                                      <span className="text-xs text-gray-500 mr-1 rtl:ml-1">{language === "ar" ? "الهاتف:" : "Phone:"}</span>
+                                      <span className="font-bold font-mono" dir="ltr">{item.history.phone}</span>
+                                    </div>
+                                  )}
+                                  {item.history.department && (
+                                    <div className="mb-1 text-sm">
+                                      <span className="text-xs text-gray-500 mr-1 rtl:ml-1">{language === "ar" ? "القسم:" : "Department:"}</span>
+                                      <span className="font-bold">{item.history.department}</span>
                                     </div>
                                   )}
                                   {item.history.email && (
                                     <div className="text-sm">
                                       <span className="text-xs text-gray-500 mr-1 rtl:ml-1">{language === "ar" ? "الإيميل:" : "Email:"}</span>
                                       <span className="font-bold">{item.history.email}</span>
+                                    </div>
+                                  )}
+                                  {item.history.hrCode && (
+                                    <div className="mb-1 text-sm">
+                                      <span className="text-xs text-gray-500 mr-1 rtl:ml-1">{language === "ar" ? "الكود:" : "HR Code:"}</span>
+                                      <span className="font-bold">{item.history.hrCode}</span>
                                     </div>
                                   )}
                                 </td>
