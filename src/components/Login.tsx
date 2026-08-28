@@ -550,6 +550,14 @@ export const Login: React.FC = () => {
           )}
         </div>
 
+        {/* Real-time Arabic Warning Toast (Top of Card) */}
+        {arabicWarning && (
+          <div className="mb-5 bg-amber-50 border-2 border-amber-500 text-amber-950 p-3.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 animate-bounce shadow-lg">
+            <span className="text-lg shrink-0">⚠️</span>
+            <span className="text-center">{language === 'ar' ? 'يرجى الكتابة بالحروف الإنجليزية فقط (English Only)' : 'Please type in English characters only'}</span>
+          </div>
+        )}
+
         {/* 1. حالة تسجيل الدخول (Login) */}
         {!isRegistering ? (
           <form onSubmit={handleLogin} className="space-y-4 animate-fadeIn">
@@ -560,7 +568,7 @@ export const Login: React.FC = () => {
               <input
                 type="text"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(enforceEnglish(e.target.value))}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#002D62] outline-none transition-shadow"
                 dir="ltr"
                 placeholder="e.g. 010xxxxxxxx or HR Code"
@@ -783,8 +791,8 @@ export const Login: React.FC = () => {
                   <input
                     type="text"
                     value={customDepartment}
-                    onChange={(e) => setCustomDepartment(e.target.value)}
-                    placeholder={language === 'ar' ? 'اكتب اسم القسم الجديد هنا...' : 'Enter new department name...'}
+                    onChange={(e) => setCustomDepartment(enforceEnglish(e.target.value))}
+                    placeholder={language === 'ar' ? 'اكتب اسم القسم الجديد بالإنجليزية...' : 'Enter new department name in English...'}
                     className="w-full border-2 border-[#002D62] rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50/40"
                     required
                   />
