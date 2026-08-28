@@ -225,7 +225,6 @@ const AppContent: React.FC = () => {
         }}
       />
       <TopNav />
-      <AppIconUpdateModal />
       <div className="pt-16 flex flex-col">
         <GlobalAttendanceAlertBanner />
         <QuotaExhaustedBanner />
