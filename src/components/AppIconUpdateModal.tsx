@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, X, Smartphone, ShieldCheck, Share2, PlusSquare, ArrowDown, Download } from 'lucide-react';
 import { useAppContext } from '../context';
 
@@ -54,13 +54,16 @@ export const AppIconUpdateModal: React.FC = () => {
         setShowModal(false);
       }
       setDeferredPrompt(null);
+    } else if (isInstalled) {
+      // If already inside standalone PWA, launch in external Chrome browser to install the updated icon
+      const targetUrl = 'https://oed-training.vercel.app';
+      try {
+        window.location.href = `intent://${targetUrl.replace('https://', '')}#Intent;scheme=https;package=com.android.chrome;end`;
+      } catch {
+        window.open(targetUrl, '_blank');
+      }
     } else {
-      // Fallback: alert instructions for Android
-      alert(
-        isAr 
-          ? 'لتثبيت الأيقونة الجديدة: اضغط على خيارات المتصفح (الثلاث نقاط ⋮ بأعلى أو أسفل الشاشة) ثم اختر [إضافة إلى الشاشة الرئيسية / تثبيت التطبيق].'
-          : 'To install the new icon: Tap your browser menu (⋮) and select [Add to Home Screen / Install App].'
-      );
+      window.open('https://oed-training.vercel.app', '_blank');
     }
   };
 
@@ -104,9 +107,13 @@ export const AppIconUpdateModal: React.FC = () => {
 
         {/* Description */}
         <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-5 leading-relaxed">
-          {isAr 
-            ? 'احصل على الأيقونة الرسمية المحدثة لنظام OED-TTMS مباشرة على شاشة هاتفك الرئيسية.'
-            : 'Get the official updated OED-TTMS app icon directly on your home screen.'}
+          {isInstalled
+            ? (isAr 
+                ? 'أنت تعمل حالياً من داخل التطبيق المثبت. لتثبيت الأيقونة الجديدة فوراً على شاشتك الرئيسية اضغط الزر أدناه ليتم فتح الرابط وتثبيته مباشرة.'
+                : 'You are currently inside the installed app. Tap below to launch in Chrome and add the updated icon.')
+            : (isAr 
+                ? 'احصل على الأيقونة الرسمية المحدثة لنظام OED-TTMS مباشرة على شاشة هاتفك الرئيسية.'
+                : 'Get the official updated OED-TTMS app icon directly on your home screen.')}
         </p>
 
         {/* Conditional Instructions: iOS vs Android */}
@@ -152,11 +159,12 @@ export const AppIconUpdateModal: React.FC = () => {
               className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#002D62] via-blue-800 to-[#002D62] text-[#FFC000] hover:text-white font-black text-sm shadow-xl hover:shadow-2xl active:scale-98 transition-all flex items-center justify-center gap-2.5 cursor-pointer border border-[#FFC000]/40"
             >
               <Download size={18} className="text-[#FFC000]" />
-              <span>{isAr ? '⚡ تثبيت الأيقونة على الشاشة الآن' : '⚡ Install App Icon to Home Screen'}</span>
+              <span>
+                {isInstalled
+                  ? (isAr ? '🌐 فتح وتثبيت الأيقونة الجديدة فوراً' : '🌐 Open & Install New Icon Now')
+                  : (isAr ? '⚡ تثبيت الأيقونة على الشاشة الآن' : '⚡ Install App Icon to Home Screen')}
+              </span>
             </button>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400">
-              {isAr ? 'سيظهر لك خيار النظام للتأكيد، اضغط (تثبيت / Install)' : 'Tap (Install) on the system prompt to confirm.'}
-            </p>
           </div>
         )}
 
