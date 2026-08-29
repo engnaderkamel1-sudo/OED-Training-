@@ -34,6 +34,17 @@ import { PWAInstallBanner } from './components/PWAInstallBanner';
 
 const AppContent: React.FC = () => {
   const { user, isLoading, t, currentView, language, setUser } = useAppContext();
+  const [minSplashDone, setMinSplashDone] = useState(false);
+
+  // Guarantee that the dynamic splash screen is visible for at least 3 seconds on app launch
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinSplashDone(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const showAppLoading = isLoading || !minSplashDone;
 
   // ============================================
   // Notifications Permission
@@ -240,7 +251,7 @@ const AppContent: React.FC = () => {
         {user && <Sidebar />}
         <main className="flex-1 flex flex-col relative w-full min-w-0">
           <AnimatePresence>
-            {isLoading ? (
+            {showAppLoading ? (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -269,7 +280,7 @@ const AppContent: React.FC = () => {
                       className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden shadow-xl border-2 border-white p-1 bg-white"
                     >
                       <img 
-                        src="/app-icon.png?v=12.0" 
+                        src="/app-icon.png?v=13.0" 
                         alt="OED-TTMS Logo" 
                         className="w-full h-full object-cover rounded-xl" 
                       />
@@ -303,7 +314,7 @@ const AppContent: React.FC = () => {
           </AnimatePresence>
           
           <motion.div 
-            className={`flex-grow transition-opacity duration-300 ${isLoading ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}
+            className={`flex-grow transition-opacity duration-300 ${showAppLoading ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
