@@ -2654,7 +2654,16 @@ Content-Type: text/html; charset="utf-8"
                   <h2 className="text-2xl font-bold border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>
                     {language === "ar" ? "السجلات الشاملة" : "Global Records"}
                   </h2>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <button 
+                      onClick={handleSecurityMigration}
+                      disabled={isMigrating}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer hover:scale-105"
+                      title={language === 'ar' ? 'ترحيل أمني للبيانات الحساسة' : 'Security Migration'}
+                    >
+                      <ShieldAlert size={15} />
+                      <span>{isMigrating ? (language === 'ar' ? 'جاري الترحيل...' : 'Migrating...') : (language === 'ar' ? 'ترحيل أمني 🛡️' : 'Security Migration 🛡️')}</span>
+                    </button>
                     {/* -- NEW MANUAL ADD BUTTON -- */}
                     <button 
                       onClick={() => setShowManualAddModal(true)} 
