@@ -455,6 +455,54 @@ Please log in to register for this session through the OED-TTMS Application.
     }
   };
 
+  // ═══════════════════════════════════════════════════════════════
+  // SECURITY MIGRATION: Move sensitive fields to userSecrets vault
+  // Removes password, fcmToken, lastIp, lastDevice, lastBrowser,
+  // lastCity, lastCountry from public users collection
+  // ═══════════════════════════════════════════════════════════════
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationResult, setMigrationResult] = useState<string | null>(null);
+
+  const handleSecurityMigration = async () => {
+    if (!window.confirm('This will migrate all sensitive fields (password, IP, FCM token) from the public users collection to the protected userSecrets vault. Continue?')) return;
+    setIsMigrating(true);
+    setMigrationResult(null);
+    try {
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const SENSITIVE_FIELDS = ['password', 'fcmToken', 'lastIp', 'lastDevice', 'lastBrowser', 'lastCity', 'lastCountry'];
+      let migratedCount = 0;
+      let cleanedCount = 0;
+
+      for (const userDoc of usersSnap.docs) {
+        const data = userDoc.data();
+        const secretsPayload: Record<string, any> = {};
+        const cleanPayload: Record<string, any> = {};
+
+        SENSITIVE_FIELDS.forEach(field => {
+          if (data[field] !== undefined && data[field] !== null) {
+            secretsPayload[field] = data[field];
+            cleanPayload[field] = deleteField();
+          }
+        });
+
+        if (Object.keys(secretsPayload).length > 0) {
+          // Move sensitive data to protected userSecrets vault
+          await setDoc(doc(db, 'userSecrets', userDoc.id), secretsPayload, { merge: true });
+          // Remove sensitive data from the public users document
+          await updateDoc(doc(db, 'users', userDoc.id), cleanPayload);
+          migratedCount++;
+        }
+        cleanedCount++;
+      }
+
+      setMigrationResult(`✅ Migration complete! Secured ${migratedCount} user documents out of ${cleanedCount} total. All sensitive fields moved to protected vault.`);
+    } catch (err: any) {
+      setMigrationResult(`❌ Migration error: ${err.message}`);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
   const handleExecuteRecordsSearch = async (fetchAll = false) => {
     if (fetchAll) {
       setIsFullReportView(true);
