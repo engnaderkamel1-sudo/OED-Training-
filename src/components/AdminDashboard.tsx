@@ -98,7 +98,7 @@ export const AdminDashboard: React.FC = () => {
   const [viewingImage, setViewingImage] = useState<string | null>(null);
   const [showNewCourseModal, setShowNewCourseModal] = useState(false);
   const [newCourseTitle, setNewCourseTitle] = useState("");
-  const [newCourseCategory, setNewCourseCategory] = useState("Technical");
+  const [newCourseAudience, setNewCourseAudience] = useState("engineers");
   const [isSavingNewCourse, setIsSavingNewCourse] = useState(false);
 
   const {
@@ -4744,7 +4744,8 @@ Content-Type: text/html; charset="utf-8"
                   await addCourse({
                     id: courseId,
                     title: trimmed,
-                    category: newCourseCategory,
+                    targetAudience: newCourseAudience,
+                    category: 'Technical',
                     description: '',
                     duration: '3 Days'
                   });
@@ -4779,20 +4780,18 @@ Content-Type: text/html; charset="utf-8"
 
               <div>
                 <label className="block text-xs font-bold mb-1" style={{ color: textMuted }}>
-                  {language === 'ar' ? 'التصنيف / الفئة' : 'Category'}
+                  {language === 'ar' ? 'الفئة المستهدفة (Audience) *' : 'Target Audience *'}
                 </label>
                 <select
-                  value={newCourseCategory}
-                  onChange={(e) => setNewCourseCategory(e.target.value)}
-                  className="w-full border rounded-xl px-3 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#002D62]"
+                  value={newCourseAudience}
+                  onChange={(e) => setNewCourseAudience(e.target.value)}
+                  className="w-full border rounded-xl px-3 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#002D62]"
                   style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
                 >
-                  <option value="Technical">Technical</option>
-                  <option value="Mechanical">Mechanical</option>
-                  <option value="Electrical">Electrical</option>
-                  <option value="Hydraulics">Hydraulics</option>
-                  <option value="Safety & HSE">Safety & HSE</option>
-                  <option value="Operations">Operations</option>
+                  <option value="engineers">{language === 'ar' ? 'المهندسين (Engineers)' : 'Engineers'}</option>
+                  <option value="technicians">{language === 'ar' ? 'الفنيين (Technicians)' : 'Technicians'}</option>
+                  <option value="operators">{language === 'ar' ? 'السائقين والمشغلين (Operators)' : 'Operators'}</option>
+                  <option value="mixed">{language === 'ar' ? 'الجميع (Mixed / All)' : 'Mixed / All'}</option>
                 </select>
               </div>
 
