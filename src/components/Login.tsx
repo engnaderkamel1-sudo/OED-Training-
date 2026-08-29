@@ -318,11 +318,21 @@ export const Login: React.FC = () => {
           lastIp: ipAddress || 'N/A'
         };
 
+        // Write sensitive metadata to protected userSecrets (NOT the public users collection)
         try {
-          await setDoc(doc(db, "users", foundUser.id), activityData, { merge: true });
+          await setDoc(doc(db, "userSecrets", foundUser.id), activityData, { merge: true });
         } catch (actErr) {
           console.warn("Error updating user activity:", actErr);
         }
+
+        // Remove any legacy sensitive fields from the public user document
+        try {
+          await setDoc(doc(db, "users", foundUser.id), {
+            lastLogin: activityData.lastLogin,
+            lastIp: null, lastDevice: null, lastBrowser: null,
+            lastCity: null, lastCountry: null
+          }, { merge: true });
+        } catch (_) {}
       }
     } finally {
       setIsSubmitting(false);
