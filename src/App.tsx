@@ -36,11 +36,11 @@ const AppContent: React.FC = () => {
   const { user, isLoading, t, currentView, language, setUser } = useAppContext();
   const [minSplashDone, setMinSplashDone] = useState(false);
 
-  // Guarantee that the dynamic splash screen is visible for at least 3 seconds on app launch
+  // Guarantee that the dynamic splash screen is visible for 5 seconds on app launch
   useEffect(() => {
     const timer = setTimeout(() => {
       setMinSplashDone(true);
-    }, 3000);
+    }, 5000);
     return () => clearTimeout(timer);
   }, []);
 
