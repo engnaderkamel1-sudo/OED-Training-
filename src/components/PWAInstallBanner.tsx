@@ -1,11 +1,11 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Download, X, Share, PlusSquare } from 'lucide-react';
+import { Download, X, Share, PlusSquare, Smartphone } from 'lucide-react';
 import { useAppContext } from '../context';
 
 export const PWAInstallBanner: React.FC = () => {
   const { language } = useAppContext();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isStandalone, setIsStandalone] = useState(true);
+  const [isStandalone, setIsStandalone] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -57,23 +57,23 @@ export const PWAInstallBanner: React.FC = () => {
     } else if (isIOS) {
       setShowIOSGuide(true);
     } else {
-      // Fallback guide for other browsers
+      // Fallback guide for other browsers / Chrome when prompt is triggered manually
       alert(
         language === 'ar'
           ? 'لتثبيت التطبيق على هاتفك:\n1. اضغط على زر القائمة في كروم (ثلاث نقاط ⋮ أعلى الشاشة).\n2. اضغط على "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية" (Install App).'
-          : 'To install the app:\n1. Open browser menu (3 dots ⋮ at top).\n2. Tap "Install app" or "Add to Home screen".'
+          : 'To install the app on your mobile:\n1. Open Chrome menu (3 dots ⋮ at top right).\n2. Tap "Install app" or "Add to Home screen".'
       );
     }
   };
 
   return (
     <>
-      {/* --- TOP SMART INSTALL BANNER --- */}
+      {/* --- SMART FLOATING INSTALL BAR (Unmissable Bottom Floating Card) --- */}
       <div 
-        className="fixed top-0 left-0 right-0 z-[999999] bg-[#0F1E36]/95 text-white backdrop-blur-md px-3.5 py-2.5 shadow-2xl border-b border-blue-900/60 flex items-center justify-between gap-3 animate-fadeIn"
+        className="fixed bottom-4 left-3 right-3 sm:left-auto sm:right-6 sm:max-w-md z-[9999999] bg-[#001D42]/95 text-white backdrop-blur-md px-4 py-3 rounded-2xl shadow-2xl border-2 border-[#FFC000]/60 flex items-center justify-between gap-3 animate-slideUp"
       >
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md shrink-0 border border-white/20 bg-white p-0.5">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="w-11 h-11 rounded-xl overflow-hidden shadow-md shrink-0 border border-white/30 bg-white p-0.5 relative">
             <img 
               src="/app-icon.png?v=13.0" 
               alt="OED Logo" 
@@ -81,13 +81,11 @@ export const PWAInstallBanner: React.FC = () => {
             />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <h4 className="font-extrabold text-sm text-white truncate leading-tight">
-                {language === 'ar' ? 'تثبيت تطبيق OED-TTMS' : 'Install OED-TTMS App'}
-              </h4>
-            </div>
-            <p className="text-[11px] text-slate-300 truncate">
-              oed-training.vercel.app • {language === 'ar' ? 'تطبيق سريع وبدون إنترنت' : 'Fast, Offline-Ready'}
+            <h4 className="font-black text-sm text-white truncate leading-tight flex items-center gap-1.5">
+              <span>{language === 'ar' ? 'تثبيت تطبيق OED-TTMS' : 'Install OED-TTMS App'}</span>
+            </h4>
+            <p className="text-[11px] text-amber-300 font-bold truncate">
+              {language === 'ar' ? '⚡ تجربة سريعة بدون متصفح' : '⚡ Fast App & Offline Ready'}
             </p>
           </div>
         </div>
@@ -95,14 +93,14 @@ export const PWAInstallBanner: React.FC = () => {
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleInstallClick}
-            className="px-4 py-1.5 bg-[#FFC000] hover:bg-yellow-400 active:scale-95 text-[#002D62] font-black text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 bg-[#FFC000] hover:bg-yellow-400 active:scale-95 text-[#002D62] font-black text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105"
           >
-            <Download size={14} className="stroke-[3]" />
+            <Download size={15} className="stroke-[3]" />
             <span>{language === 'ar' ? 'تثبيت' : 'Install'}</span>
           </button>
           <button
             onClick={() => setIsDismissed(true)}
-            className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+            className="text-slate-400 hover:text-white p-1.5 rounded-lg transition-colors cursor-pointer"
             title={language === 'ar' ? 'إغلاق' : 'Close'}
           >
             <X size={18} />
@@ -112,12 +110,12 @@ export const PWAInstallBanner: React.FC = () => {
 
       {/* --- iOS Safari Install Guide Modal --- */}
       {showIOSGuide && (
-        <div className="fixed inset-0 z-[9999999] flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-fadeIn">
+        <div className="fixed inset-0 z-[99999999] flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-fadeIn">
           <div className="w-full max-w-md bg-[#0F1E36] text-white border border-blue-900/60 rounded-3xl p-6 shadow-2xl space-y-4 animate-slideUp">
             <div className="flex justify-between items-center border-b border-slate-700/60 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-[#FFC000] text-[#002D62] flex items-center justify-center font-bold">
-                  <Download size={18} />
+                  <Smartphone size={18} />
                 </div>
                 <h3 className="font-bold text-base">
                   {language === 'ar' ? 'تثبيت التطبيق على iPhone / iPad' : 'Install on iPhone / iPad'}
@@ -137,7 +135,7 @@ export const PWAInstallBanner: React.FC = () => {
                   <Share size={18} />
                 </div>
                 <span>
-                  {language === 'ar' ? '1. اضغط على زر المشاركة (Share) في أسفل متصفح Safari.' : '1. Tap the Share button at the bottom of Safari.'}
+                  {language === 'ar' ? '1. اضغط على زر المشاركة (Share ⎋) في أسفل متصفح Safari.' : '1. Tap the Share button (⎋) at the bottom of Safari.'}
                 </span>
               </div>
 
@@ -146,14 +144,14 @@ export const PWAInstallBanner: React.FC = () => {
                   <PlusSquare size={18} />
                 </div>
                 <span>
-                  {language === 'ar' ? '2. مرر للأسفل واختر "إضافة إلى الشاشة الرئيسية" (Add to Home Screen).' : '2. Scroll down and tap "Add to Home Screen".'}
+                  {language === 'ar' ? '2. مرر للأسفل واختر "إضافة إلى الشاشة الرئيسية" (Add to Home Screen ➕).' : '2. Scroll down and tap "Add to Home Screen ➕".'}
                 </span>
               </div>
             </div>
 
             <button
               onClick={() => setShowIOSGuide(false)}
-              className="w-full py-2.5 bg-[#FFC000] text-[#002D62] font-black rounded-xl text-sm"
+              className="w-full py-2.5 bg-[#FFC000] text-[#002D62] font-black rounded-xl text-sm cursor-pointer"
             >
               {language === 'ar' ? 'فهمت، حسناً' : 'Got it!'}
             </button>
