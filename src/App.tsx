@@ -243,35 +243,56 @@ const AppContent: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#001D42]"
+                transition={{ duration: 0.35 }}
+                className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-gradient-to-b from-[#F8FAFC] via-[#F1F5F9] to-[#E2E8F0]"
               >
                 <motion.div 
-                  initial={{ scale: 0.85, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="flex flex-col items-center justify-center p-6 text-center"
+                  initial={{ scale: 0.88, opacity: 0, y: 15 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="flex flex-col items-center justify-center p-6 text-center max-w-sm"
                 >
-                  <div className="relative mb-5">
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden shadow-2xl border-2 border-[#FFC000]/60 p-1 bg-white/10 backdrop-blur-md">
+                  {/* Dynamic Logo with Rotating Glowing Aura */}
+                  <div className="relative mb-6">
+                    {/* Pulsing Backlight Ring */}
+                    <div className="absolute -inset-3 rounded-full bg-gradient-to-tr from-[#FFC000]/40 via-blue-500/20 to-[#002D62]/30 blur-xl animate-pulse -z-10"></div>
+                    
+                    {/* Spinning Border Ring */}
+                    <div className="absolute -inset-1.5 rounded-3xl border-2 border-dashed border-[#FFC000]/70 animate-[spin_8s_linear_infinite] pointer-events-none"></div>
+
+                    {/* Logo Card */}
+                    <motion.div 
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden shadow-xl border-2 border-white p-1 bg-white"
+                    >
                       <img 
-                        src="/app-icon.png?v=10" 
+                        src="/app-icon.png?v=12.0" 
                         alt="OED-TTMS Logo" 
-                        className="w-full h-full object-cover rounded-2xl" 
+                        className="w-full h-full object-cover rounded-xl" 
                       />
-                    </div>
-                    <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FFC000] to-blue-400 opacity-40 blur-lg -z-10 animate-pulse"></div>
+                    </motion.div>
                   </div>
 
-                  <h1 className="text-2xl sm:text-3xl font-black text-white tracking-wider mb-1">
+                  <h1 className="text-2xl sm:text-3xl font-black text-[#002D62] tracking-wider mb-1">
                     OED-TTMS
                   </h1>
-                  <p className="text-xs sm:text-sm font-bold text-[#FFC000] tracking-wide mb-6">
+                  <p className="text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-600 tracking-wide mb-6">
                     Technical Training Management System
                   </p>
 
-                  <div className="flex items-center gap-2 text-white/80 text-xs font-semibold bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm border border-white/10">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#FFC000]" />
+                  {/* Dynamic Loading Progress Bar */}
+                  <div className="w-52 h-2 bg-slate-200/80 rounded-full overflow-hidden relative shadow-inner mb-3 border border-slate-300/60">
+                    <motion.div 
+                      className="h-full rounded-full bg-gradient-to-r from-[#002D62] via-[#FFC000] to-[#002D62]"
+                      animate={{ x: [-150, 200] }}
+                      transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                      style={{ width: "60%" }}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 text-slate-600 text-xs font-bold bg-white/80 px-4 py-1.5 rounded-full shadow-xs border border-slate-200">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#002D62]" />
                     <span>{language === 'ar' ? 'جاري تهيئة المنظومة...' : 'Loading System...'}</span>
                   </div>
                 </motion.div>
