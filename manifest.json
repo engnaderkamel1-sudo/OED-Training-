@@ -1,5 +1,5 @@
 {
-  "id": "/",
+  "id": "/?app_id=oed_ttms_2026_v13",
   "name": "OED Training Management System • TTMS",
   "short_name": "OED-TTMS",
   "description": "Technical Training Management System - Orascom Construction Equipment Department",
@@ -8,7 +8,7 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "window-controls-overlay"],
   "background_color": "#F4F6FA",
-  "theme_color": "#002D62",
+  "theme_color": "#F4F6FA",
   "orientation": "any",
   "prefer_related_applications": false,
   "icons": [
