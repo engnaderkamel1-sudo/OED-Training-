@@ -20,6 +20,7 @@ export interface User {
   hasUnreadNotifications?: boolean;
   fcmToken?: string;
   // --- الخصائص الجديدة ---
+  isDemoUser?: boolean; // وضع المعاينة التنفيذية التفاعلية
   isGuest?: boolean; // حساب مؤقت
   guestExpiryDate?: string; // تاريخ انتهاء الحساب المؤقت
   isShadowAccount?: boolean; // حساب وهمي لتسجيل الحضور اليدوي
