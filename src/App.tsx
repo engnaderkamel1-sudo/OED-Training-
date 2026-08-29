@@ -31,6 +31,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { SystemErrorsPage } from './components/SystemErrorsPage';
 import { AppIconUpdateModal } from './components/AppIconUpdateModal';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
+import { ExecutiveDemoBanner } from './components/ExecutiveDemoBanner';
 
 const AppContent: React.FC = () => {
   const { user, isLoading, t, currentView, language, setUser } = useAppContext();
@@ -239,6 +240,7 @@ const AppContent: React.FC = () => {
           },
         }}
       />
+      <ExecutiveDemoBanner />
       <PWAInstallBanner />
       <TopNav />
       <div className="pt-16 flex flex-col">
