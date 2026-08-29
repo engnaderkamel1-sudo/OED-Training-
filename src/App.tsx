@@ -53,8 +53,11 @@ const AppContent: React.FC = () => {
               serviceWorkerRegistration: registration 
             });
             if (currentToken && currentToken !== user.fcmToken) {
-              const userRef = doc(db, 'users', user.id);
-              await setDoc(userRef, { fcmToken: currentToken }, { merge: true });
+              // Store FCM token in protected userSecrets collection (not publicly readable users)
+              const secretRef = doc(db, 'userSecrets', user.id);
+              await setDoc(secretRef, { fcmToken: currentToken }, { merge: true });
+              // Clear any legacy fcmToken from the public users document
+              await setDoc(doc(db, 'users', user.id), { fcmToken: null }, { merge: true });
             }
           }
         } catch (error) {
