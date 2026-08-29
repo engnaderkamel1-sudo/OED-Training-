@@ -2,9 +2,31 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Allow seamless read & write for all collections with application-level security
-    match /{document=**} {
-      allow read, write: if true;
+    // 1. Users collection: Strictly block creating admin or self-approved users
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if request.resource.data.role == 'trainee' && request.resource.data.status == 'pending';
+      allow update, delete: if true;
     }
+
+    // 2. Secret Vault: Write allowed for registration/login, read blocked
+    match /userSecrets/{userId} {
+      allow create, update: if true;
+      allow read, delete: if false;
+    }
+
+    // 3. Application Collections: Fully accessible for UI listeners without auth errors
+    match /courses/{id} { allow read, write: if true; }
+    match /sessions/{id} { allow read, write: if true; }
+    match /announcements/{id} { allow read, write: if true; }
+    match /system_announcements/{id} { allow read, write: if true; }
+    match /cleanedData/{id} { allow read, write: if true; }
+    match /records/{id} { allow read, write: if true; }
+    match /suggestions/{id} { allow read, write: if true; }
+    match /handoutRevisions/{id} { allow read, write: if true; }
+    match /error_reports/{id} { allow read, write: if true; }
+    match /activity_logs/{id} { allow read, write: if true; }
+    match /login_logs/{id} { allow read, write: if true; }
+    match /systemSettings/{id} { allow read, write: if true; }
   }
 }
