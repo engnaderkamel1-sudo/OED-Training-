@@ -96,12 +96,16 @@ const parseScore = (score: any): number => {
 
 export const AdminDashboard: React.FC = () => {
   const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [showNewCourseModal, setShowNewCourseModal] = useState(false);
+  const [newCourseTitle, setNewCourseTitle] = useState("");
+  const [newCourseCategory, setNewCourseCategory] = useState("Technical");
+  const [isSavingNewCourse, setIsSavingNewCourse] = useState(false);
 
   const {
     t, language, user, users, setUsers, records, setRecords, upcomingSessions,
     setUpcomingSessions, addUpcomingSession, updateUpcomingSession, cancelSession,
     reactivateSession, cleanedData, loginLogs, currentView, setCurrentView, addAnnouncement, theme,
-    systemVersion, updateSystemVersion, fetchTrainingRecords, isFetchingRecords, recordsLoaded, courses, globalKPIs
+    systemVersion, updateSystemVersion, fetchTrainingRecords, isFetchingRecords, recordsLoaded, courses, addCourse, globalKPIs
   } = useAppContext();
 
   // Unified Dark/Light Mode Palette (Orascom Brand Theme)
@@ -753,27 +757,6 @@ Please log in to register for this session through the OED-TTMS Application.
     });
   }, [upcomingSessions, users, language]);
 
-  // Active course reminder notification on Admin mobile
-  useEffect(() => {
-    const activeSessionsNow = upcomingSessions.filter(s => !s.isDeleted && s.status !== 'Cancelled' && s.status !== 'Completed' && isSessionActiveNow(s));
-    if (activeSessionsNow.length > 0) {
-      const activeSession = activeSessionsNow[0];
-      const adminNotifKey = `admin_notif_active_${activeSession.id}_${new Date().toISOString().split('T')[0]}`;
-      if (!sessionStorage.getItem(adminNotifKey)) {
-        sessionStorage.setItem(adminNotifKey, 'true');
-        sendNativePushNotification(
-          language === 'ar' ? '🟢 تذكير الإدارة: بدء دورة تدريبية' : '🟢 Admin Reminder: Session Started',
-          {
-            body: language === 'ar'
-              ? `بدأت دورة [${activeSession.courseTitle}] الآن. يرجى فتح وعرض رمز الـ QR في القاعة لتسجيل حضور المتدربين.`
-              : `Session [${activeSession.courseTitle}] has started. Please display the QR code for trainees.`,
-            tag: adminNotifKey
-          }
-        );
-      }
-    }
-  }, [upcomingSessions, language]);
-
   const [showBackupPromptModal, setShowBackupPromptModal] = useState(false);
   const [isExportingBackup, setIsExportingBackup] = useState(false);
 
@@ -857,15 +840,6 @@ Please log in to register for this session through the OED-TTMS Application.
       if (title && !courseTitles.has(title.toLowerCase())) {
         courseTitles.add(title.toLowerCase());
         result.push({ id: (r as any).courseId || title, title });
-      }
-    });
-
-    // 4. Default OED training courses (fallback so dropdown is ALWAYS full!)
-    DEFAULT_COURSE_STATS.forEach((c) => {
-      const title = c.courseName.trim();
-      if (title && !courseTitles.has(title.toLowerCase())) {
-        courseTitles.add(title.toLowerCase());
-        result.push({ id: title, title });
       }
     });
 
@@ -3253,7 +3227,19 @@ Content-Type: text/html; charset="utf-8"
                     <form onSubmit={handleCreateSession} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="md:col-span-2">
-                          <label className="block text-sm font-medium mb-1" style={{ color: textMuted }}>{language === "ar" ? "اسم الدورة" : "Course Name"}</label>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block text-sm font-medium" style={{ color: textMuted }}>
+                              {language === "ar" ? "اسم الدورة" : "Course Name"}
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setShowNewCourseModal(true)}
+                              className="text-xs font-bold text-[#002D62] dark:text-[#70B2FF] hover:underline flex items-center gap-1 cursor-pointer bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700"
+                            >
+                              <PlusCircle size={13} />
+                              <span>{language === "ar" ? "+ إضافة دورة جديدة" : "+ Add New Course"}</span>
+                            </button>
+                          </div>
                           <select 
                             required 
                             value={selectedCourseId} 
@@ -3366,7 +3352,7 @@ Content-Type: text/html; charset="utf-8"
                                   : 'bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-700'
                               }`}
                             >
-                              <span>{isRegistrationClosed ? '🔒 التسجيل مغلق حالياً' : '🔓 التسجيل مفتوح ومتاح للمتدربين'}</span>
+                              <span>{isRegistrationClosed ? (language === 'ar' ? '🔒 التسجيل مغلق حالياً' : '🔒 Registration is Closed') : (language === 'ar' ? '🔓 التسجيل مفتوح ومتاح للمتدربين' : '🔓 Registration Open for Trainees')}</span>
                             </button>
                             <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 block">
                               {language === 'ar' ? 'يمكنك إيقاف أو فتح التسجيل في أي وقت دون إلغاء الدورة' : 'Toggle registration without cancelling the course'}
@@ -4715,6 +4701,120 @@ Content-Type: text/html; charset="utf-8"
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- ADD NEW COURSE MODAL --- */}
+      {showNewCourseModal && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fadeIn">
+          <div 
+            className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col border animate-scaleIn"
+            style={{ 
+              backgroundColor: isDark ? '#0D1E38' : '#FFFFFF', 
+              borderColor: isDark ? 'rgba(148, 190, 255, 0.4)' : '#E2E8F0' 
+            }}
+          >
+            <div className="bg-[#002D62] text-white px-5 py-4 flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#FFC000] text-[#001D42] flex items-center justify-center font-bold">
+                  <PlusCircle size={18} />
+                </div>
+                <h3 className="font-bold text-base">
+                  {language === 'ar' ? 'إضافة دورة تدريبية جديدة' : 'Add New Training Course'}
+                </h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowNewCourseModal(false)} 
+                className="text-gray-300 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form 
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!newCourseTitle.trim()) return;
+                setIsSavingNewCourse(true);
+                try {
+                  const trimmed = newCourseTitle.trim();
+                  const courseId = `course_${Date.now()}`;
+                  await addCourse({
+                    id: courseId,
+                    title: trimmed,
+                    category: newCourseCategory,
+                    description: '',
+                    duration: '3 Days'
+                  });
+                  setSelectedCourseId(trimmed);
+                  setNewCourseTitle("");
+                  setShowNewCourseModal(false);
+                  setReminderToast(language === 'ar' ? `✅ تم إضافة دورة [${trimmed}] واختيارها!` : `✅ Course [${trimmed}] added & selected!`);
+                  setTimeout(() => setReminderToast(null), 4000);
+                } catch (err: any) {
+                  alert(err.message || 'Error adding course');
+                } finally {
+                  setIsSavingNewCourse(false);
+                }
+              }} 
+              className="p-5 space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-bold mb-1" style={{ color: textMuted }}>
+                  {language === 'ar' ? 'اسم / عنوان الدورة *' : 'Course Title / Name *'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={newCourseTitle}
+                  onChange={(e) => setNewCourseTitle(e.target.value)}
+                  placeholder="e.g. Caterpillar Electronic Technician (ET)"
+                  className="w-full border rounded-xl px-3 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#002D62]"
+                  style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold mb-1" style={{ color: textMuted }}>
+                  {language === 'ar' ? 'التصنيف / الفئة' : 'Category'}
+                </label>
+                <select
+                  value={newCourseCategory}
+                  onChange={(e) => setNewCourseCategory(e.target.value)}
+                  className="w-full border rounded-xl px-3 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#002D62]"
+                  style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
+                >
+                  <option value="Technical">Technical</option>
+                  <option value="Mechanical">Mechanical</option>
+                  <option value="Electrical">Electrical</option>
+                  <option value="Hydraulics">Hydraulics</option>
+                  <option value="Safety & HSE">Safety & HSE</option>
+                  <option value="Operations">Operations</option>
+                </select>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2 border-t border-gray-200 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setShowNewCourseModal(false)}
+                  className="px-4 py-2 text-xs font-bold border rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                  style={{ borderColor: borderColor, color: textColor }}
+                >
+                  {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingNewCourse || !newCourseTitle.trim()}
+                  className="px-5 py-2 text-xs font-bold bg-[#002D62] hover:bg-blue-900 text-white rounded-xl shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                >
+                  {isSavingNewCourse ? <Loader2 size={14} className="animate-spin" /> : <PlusCircle size={14} />}
+                  <span>{language === 'ar' ? 'حفظ واختيار الدورة' : 'Save & Select Course'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
