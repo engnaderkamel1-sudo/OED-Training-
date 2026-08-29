@@ -77,6 +77,8 @@ interface AppContextType {
   };
   isQuotaExhausted: boolean;
   dismissQuotaAlert: () => void;
+  isExecutiveDemoEnabled: boolean;
+  toggleExecutiveDemo: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -350,6 +352,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (data.version) {
           setSystemVersionState(data.version);
         }
+        if (data.isExecutiveDemoEnabled !== undefined) {
+          setIsExecutiveDemoEnabled(data.isExecutiveDemoEnabled);
+        }
       }
     }, (error) => {
       checkQuotaError(error);
@@ -545,6 +550,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const [systemVersion, setSystemVersionState] = useState<string>(APP_VERSION.version);
+
+  const [isExecutiveDemoEnabled, setIsExecutiveDemoEnabled] = useState<boolean>(true);
+
+  const toggleExecutiveDemo = async () => {
+    const nextState = !isExecutiveDemoEnabled;
+    setIsExecutiveDemoEnabled(nextState);
+    try {
+      await setDoc(doc(db, "systemSettings", "appConfig"), { 
+        isExecutiveDemoEnabled: nextState,
+        updatedAt: new Date().toISOString() 
+      }, { merge: true });
+    } catch (e) {
+      console.error("Error toggling executive demo access:", e);
+    }
+  };
 
   const updateSystemVersion = async (newVersion: string) => {
     const cleanVer = newVersion.trim().replace(/^v/i, '');
@@ -1037,6 +1057,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       globalKPIs,
       isQuotaExhausted,
       dismissQuotaAlert,
+      isExecutiveDemoEnabled,
+      toggleExecutiveDemo,
     }}>
       <div dir={language === 'ar' ? 'rtl' : 'ltr'} className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${language === 'ar' ? 'font-arabic' : 'font-sans'}`}>
         {children}
