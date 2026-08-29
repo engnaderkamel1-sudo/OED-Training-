@@ -17,8 +17,12 @@ service cloud.firestore {
 
     // 1. Users Collection
     match /users/{userId} {
-      // Allow read so login queries by hrCode/phone/email can resolve safely
-      allow read: if true;
+      // Public read ONLY for non-sensitive fields (for login lookup by hrCode/email/phone)
+      // Own user can read their own full document
+      // Admin can read everything
+      allow read: if isAdmin() || 
+                     request.auth != null && request.auth.uid == userId ||
+                     (resource.data.keys().hasOnly(['hrCode','name','department','jobRole','role','status','id','phone','email','profileImageUrl','managerEmail1','managerEmail2','managerEmail3']));
       
       // Allow registration: new users can only create trainee accounts with pending status
       allow create: if (request.resource.data.role == 'trainee' && request.resource.data.status == 'pending') || isAdmin();
@@ -105,6 +109,12 @@ service cloud.firestore {
     match /systemSettings/{configId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // 9. User Secrets (password hash, FCM token, IP, device info)
+    // NEVER readable publicly - only by the user themselves or admin
+    match /userSecrets/{userId} {
+      allow read, write: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
     }
   }
 }
