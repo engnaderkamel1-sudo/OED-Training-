@@ -3200,43 +3200,45 @@ Content-Type: text/html; charset="utf-8"
                   </form>
                 </div>
 
-                {/* VIP Executive Demo Master Switch Card */}
-                <div className="border rounded-2xl p-6 shadow-sm mb-6 transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                  <div className="flex items-center justify-between flex-wrap gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                        <Sparkles size={24} />
+                {/* VIP Executive Demo Master Switch Card (Admin Only - Hidden from Demo Guests) */}
+                {!user?.isDemoUser && (
+                  <div className="border rounded-2xl p-6 shadow-sm mb-6 transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                    <div className="flex items-center justify-between flex-wrap gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                          <Sparkles size={24} />
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-bold text-[#002D62] dark:text-[#93C5FD]">
+                            {language === "ar" ? "صلاحية العرض التقديمي للمديرين (VIP Executive Demo)" : "VIP Executive Presentation Demo Access"}
+                          </h2>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {language === "ar" 
+                              ? "التحكم في فتح أو إغلاق ميزة الدخول الفوري عبر الـ QR Code المطبوع في العرض التقديمي" 
+                              : "Master Switch to open or lock 1-click sandbox access via Presentation QR Code"}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-[#002D62] dark:text-[#93C5FD]">
-                          {language === "ar" ? "صلاحية العرض التقديمي للمديرين (VIP Executive Demo)" : "VIP Executive Presentation Demo Access"}
-                        </h2>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {language === "ar" 
-                            ? "التحكم في فتح أو إغلاق ميزة الدخول الفوري عبر الـ QR Code المطبوع في العرض التقديمي" 
-                            : "Master Switch to open or lock 1-click sandbox access via Presentation QR Code"}
-                        </p>
-                      </div>
-                    </div>
 
-                    <button
-                      type="button"
-                      onClick={toggleExecutiveDemo}
-                      className={`px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 ${
-                        isExecutiveDemoEnabled
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                          : 'bg-red-600 hover:bg-red-700 text-white'
-                      }`}
-                    >
-                      {isExecutiveDemoEnabled ? <CheckCircle size={18} /> : <Ban size={18} />}
-                      <span>
-                        {isExecutiveDemoEnabled 
-                          ? (language === 'ar' ? '🟢 متاح ومفتوح للتجربة (Open)' : '🟢 Executive Demo: ACTIVE (Open)') 
-                          : (language === 'ar' ? '🔴 مغلق ومحمي (Locked)' : '🔴 Executive Demo: LOCKED (Closed)')}
-                      </span>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={toggleExecutiveDemo}
+                        className={`px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 ${
+                          isExecutiveDemoEnabled
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                            : 'bg-red-600 hover:bg-red-700 text-white'
+                        }`}
+                      >
+                        {isExecutiveDemoEnabled ? <CheckCircle size={18} /> : <Ban size={18} />}
+                        <span>
+                          {isExecutiveDemoEnabled 
+                            ? (language === 'ar' ? '🟢 متاح ومفتوح للتجربة (Open)' : '🟢 Executive Demo: ACTIVE (Open)') 
+                            : (language === 'ar' ? '🔴 مغلق ومحمي (Locked)' : '🔴 Executive Demo: LOCKED (Closed)')}
+                        </span>
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               )}
 
               {["tools", "tools_manage"].includes(currentView) && (
