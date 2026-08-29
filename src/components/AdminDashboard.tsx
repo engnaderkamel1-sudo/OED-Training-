@@ -3199,50 +3199,50 @@ Content-Type: text/html; charset="utf-8"
                     </button>
                   </form>
                 </div>
-
-                {/* VIP Executive Demo Master Switch Card (Admin Only - Hidden from Demo Guests) */}
-                {!user?.isDemoUser && (
-                  <div className="border rounded-2xl p-6 shadow-sm mb-6 transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                    <div className="flex items-center justify-between flex-wrap gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                          <Sparkles size={24} />
-                        </div>
-                        <div>
-                          <h2 className="text-xl font-bold text-[#002D62] dark:text-[#93C5FD]">
-                            {language === "ar" ? "صلاحية العرض التقديمي للمديرين (VIP Executive Demo)" : "VIP Executive Presentation Demo Access"}
-                          </h2>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {language === "ar" 
-                              ? "التحكم في فتح أو إغلاق ميزة الدخول الفوري عبر الـ QR Code المطبوع في العرض التقديمي" 
-                              : "Master Switch to open or lock 1-click sandbox access via Presentation QR Code"}
-                          </p>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={toggleExecutiveDemo}
-                        className={`px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 ${
-                          isExecutiveDemoEnabled
-                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                            : 'bg-red-600 hover:bg-red-700 text-white'
-                        }`}
-                      >
-                        {isExecutiveDemoEnabled ? <CheckCircle size={18} /> : <Ban size={18} />}
-                        <span>
-                          {isExecutiveDemoEnabled 
-                            ? (language === 'ar' ? '🟢 متاح ومفتوح للتجربة (Open)' : '🟢 Executive Demo: ACTIVE (Open)') 
-                            : (language === 'ar' ? '🔴 مغلق ومحمي (Locked)' : '🔴 Executive Demo: LOCKED (Closed)')}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                )}
               )}
 
-              {["tools", "tools_manage"].includes(currentView) && (
+              {["tools", "tools_manage", "tools_reports"].includes(currentView) && (
                 <>
+                  {/* VIP Executive Demo Master Switch Card (Admin Only - Hidden from Demo Guests) */}
+                  {!user?.isDemoUser && (
+                    <div className="border-2 border-[#FFC000]/60 rounded-2xl p-5 shadow-md mb-6 transition-colors bg-gradient-to-r from-blue-950/40 via-blue-900/20 to-blue-950/40">
+                      <div className="flex items-center justify-between flex-wrap gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-3 rounded-xl bg-[#FFC000] text-[#001D42] shadow-md font-bold">
+                            <Sparkles size={22} />
+                          </div>
+                          <div>
+                            <h2 className="text-lg sm:text-xl font-black text-[#002D62] dark:text-[#FFC000]">
+                              {language === "ar" ? "صلاحية العرض التقديمي للمديرين (VIP Executive Demo Pass)" : "VIP Executive Presentation Demo Access"}
+                            </h2>
+                            <p className="text-xs text-slate-500 dark:text-slate-300 font-semibold">
+                              {language === "ar" 
+                                ? "مفتاح التحكم الرئيسي لفتح أو إغلاق ميزة الدخول الفوري عبر الـ QR Code في العرض التقديمي" 
+                                : "Master Switch to open or lock 1-click sandbox access via Presentation QR Code"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={toggleExecutiveDemo}
+                          className={`px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm flex items-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+                            isExecutiveDemoEnabled
+                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-2 border-emerald-400'
+                              : 'bg-red-600 hover:bg-red-700 text-white border-2 border-red-400'
+                          }`}
+                        >
+                          {isExecutiveDemoEnabled ? <CheckCircle size={18} /> : <Ban size={18} />}
+                          <span>
+                            {isExecutiveDemoEnabled 
+                              ? (language === 'ar' ? '🟢 متاح ومفتوح للتجربة (ACTIVE - OPEN)' : '🟢 VIP Demo: ACTIVE (OPEN)') 
+                              : (language === 'ar' ? '🔴 مغلق ومحمي (LOCKED)' : '🔴 VIP Demo: LOCKED (CLOSED)')}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="border rounded-lg p-6 shadow-sm flex flex-col items-center justify-center transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                       <span className="text-sm font-semibold uppercase tracking-wider mb-2" style={{ color: textMuted }}>{language === "ar" ? "إجمالي الجلسات المتاحة" : "Total Sessions"}</span>
