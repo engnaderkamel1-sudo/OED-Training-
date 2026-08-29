@@ -30,6 +30,7 @@ import { GlobalAttendanceAlertBanner } from './components/GlobalAttendanceAlertB
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { SystemErrorsPage } from './components/SystemErrorsPage';
 import { AppIconUpdateModal } from './components/AppIconUpdateModal';
+import { PWAInstallBanner } from './components/PWAInstallBanner';
 
 const AppContent: React.FC = () => {
   const { user, isLoading, t, currentView, language, setUser } = useAppContext();
@@ -227,6 +228,7 @@ const AppContent: React.FC = () => {
           },
         }}
       />
+      <PWAInstallBanner />
       <TopNav />
       <div className="pt-16 flex flex-col">
         <GlobalAttendanceAlertBanner />
