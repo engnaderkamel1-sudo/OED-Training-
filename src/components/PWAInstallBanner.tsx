@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Download, X, Share, PlusSquare, Smartphone } from 'lucide-react';
 import { useAppContext } from '../context';
 
@@ -85,7 +85,7 @@ export const PWAInstallBanner: React.FC = () => {
               <span>{language === 'ar' ? 'تثبيت تطبيق OED-TTMS' : 'Install OED-TTMS App'}</span>
             </h4>
             <p className="text-[11px] text-amber-300 font-bold truncate">
-              {language === 'ar' ? '⚡ تجربة سريعة بدون متصفح' : '⚡ Fast App & Offline Ready'}
+              {language === 'ar' ? '⚡ تطبيق سريع وتزامن سحابي حي' : '⚡ Fast Fullscreen App • Real-Time Sync'}
             </p>
           </div>
         </div>
