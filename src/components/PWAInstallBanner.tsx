@@ -85,7 +85,7 @@ export const PWAInstallBanner: React.FC = () => {
               <span>{language === 'ar' ? 'تثبيت تطبيق OED-TTMS' : 'Install OED-TTMS App'}</span>
             </h4>
             <p className="text-[11px] text-amber-300 font-bold truncate">
-              {language === 'ar' ? '⚡ تطبيق سريع وتزامن سحابي حي' : '⚡ Fast Fullscreen App • Real-Time Sync'}
+              {language === 'ar' ? '🏛️ البوابة الرسمية للتدريب الفني - OED' : '🏛️ Official OED Technical Training Portal'}
             </p>
           </div>
         </div>
