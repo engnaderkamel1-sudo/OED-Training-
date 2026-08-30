@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence } from "firebase/auth";
 import { getMessaging } from "firebase/messaging";
 
 const firebaseConfig = {
@@ -23,6 +23,9 @@ export const db = initializeFirestore(app, {
   })
 });
 
-export const auth = getAuth(app);
+// Modern direct local persistence without unnecessary external OAuth iframe calls
+export const auth = initializeAuth(app, {
+  persistence: [indexedDBLocalPersistence, browserLocalPersistence]
+});
 export const messaging = typeof window !== 'undefined' && 'serviceWorker' in navigator ? getMessaging(app) : null;
 
