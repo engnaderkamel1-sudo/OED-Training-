@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppContext, generateUUID } from '../context';
 import { Course } from '../types';
+import { sanitizeUrl } from '../utils/securityUtils';
 import { 
   BookOpen, 
   Plus, 
@@ -213,7 +214,7 @@ export const CoursesPage: React.FC = () => {
                     <td className="p-4">
                       {c.materialLink || c.sharedResourceLink ? (
                         <a
-                          href={c.materialLink || c.sharedResourceLink}
+                          href={sanitizeUrl(c.materialLink || c.sharedResourceLink)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-xs font-bold transition-colors border border-blue-200 dark:border-blue-700/50"
