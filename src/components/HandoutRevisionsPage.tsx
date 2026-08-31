@@ -267,7 +267,7 @@ export const HandoutRevisionsPage: React.FC = () => {
             <select
               value={selectedCourse}
               onChange={(e) => setSelectedCourse(e.target.value)}
-              className="flex-1 md:flex-none text-xs bg-gray-50 dark:bg-[#0A1628] border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
+              className="flex-1 md:flex-none text-xs bg-gray-50 dark:bg-[#0A1628] border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 cursor-pointer transition-all"
             >
               <option value="all">{language === 'ar' ? 'جميع الكورسات' : 'All Courses'}</option>
               {distinctCourses.map((c) => (
@@ -279,7 +279,7 @@ export const HandoutRevisionsPage: React.FC = () => {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="flex-1 md:flex-none text-xs bg-gray-50 dark:bg-[#0A1628] border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
+              className="flex-1 md:flex-none text-xs bg-gray-50 dark:bg-[#0A1628] border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 cursor-pointer transition-all"
             >
               <option value="all">{language === 'ar' ? 'جميع الحالات' : 'All Statuses'}</option>
               <option value="pending">{language === 'ar' ? 'قيد الدراسة (Pending)' : 'Pending'}</option>
