@@ -1,3 +1,4 @@
+import { escapeHtml } from '../utils/securityUtils';
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Printer, Save, FileText, Plus, Trash2, Check, Download, AlertCircle } from 'lucide-react';
 import { UpcomingSession, User, TrainingRecord, CleanedRecord } from '../types';
