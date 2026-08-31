@@ -312,80 +312,75 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   return (
     <>
     <div className={cardClasses}>
-      {/* Header & Badges (Clean Accordion Trigger Bar) */}
+      {/* Header & Badges (Clean Accordion Trigger Bar - UI/UX Pro Max) */}
       <div 
         onClick={() => setIsExpanded(prev => !prev)}
-        className={`flex flex-col gap-1.5 cursor-pointer select-none transition-all hover:opacity-95 ${
+        className={`flex flex-col gap-2.5 cursor-pointer select-none transition-all hover:opacity-95 ${
           isExpanded ? 'mb-4 pb-3 border-b border-gray-100 dark:border-slate-800' : ''
         }`}
         title={isExpanded ? (language === 'ar' ? 'انقر لإغلاق تفاصيل الدورة' : 'Click to collapse session') : (language === 'ar' ? 'انقر لفتح تفاصيل وأزرار الدورة' : 'Click to expand session details & actions')}
       >
-        {/* Top-Left Micro Status Tag (Above Title) */}
-        {(isCancelled || isCompleted || isRegistrationClosed) && (
-          <div className="flex items-center self-start mb-0.5">
-            {isCancelled ? (
-              <span className="text-[9.5px] font-black uppercase tracking-wider bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full border border-red-200 dark:border-red-800/70 shadow-2xs flex items-center gap-1">
-                <Ban size={10} />
-                <span>{language === 'ar' ? 'ملغاة' : 'Cancelled'}</span>
-              </span>
-            ) : isCompleted ? (
-              <span className="text-[9.5px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/70 shadow-2xs flex items-center gap-1">
-                <CheckCircle size={10} />
-                <span>{language === 'ar' ? 'منفذة ✓' : 'Completed ✓'}</span>
-              </span>
-            ) : isRegistrationClosed ? (
-              <span className="text-[9.5px] font-black uppercase tracking-wider bg-amber-50 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-700/70 shadow-2xs flex items-center gap-1">
-                <Ban size={10} />
-                <span>{language === 'ar' ? 'مغلق' : 'Reg Closed'}</span>
-              </span>
-            ) : null}
-          </div>
-        )}
-
-        {/* Main Row: Title (Left) and Badges (Right) */}
-        <div className="flex justify-between items-center gap-2 flex-wrap">
-          {/* Left: Expand Icon + Course Title */}
+        {/* Row 1: Expand Icon + Course Title (Left) & Status Badge (Right) */}
+        <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <span className="p-1.5 rounded-xl bg-blue-50 dark:bg-slate-800 text-[#002D62] dark:text-[#FFC000] border border-blue-200 dark:border-slate-700 shadow-2xs shrink-0">
-              {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+            <span className="p-1.5 rounded-xl bg-blue-50 dark:bg-slate-800 text-[#002D62] dark:text-[#FFC000] border border-blue-200 dark:border-slate-700 shadow-2xs shrink-0 mt-0.5">
+              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </span>
-            <h3 className={`font-black text-base sm:text-lg leading-tight transition-colors ${
+            <h3 className={`font-black text-base sm:text-lg leading-snug transition-colors ${
               isCancelled ? 'text-gray-800 dark:text-gray-100 line-through' : 'text-[#002D62] dark:text-white hover:text-blue-600 dark:hover:text-[#FFC000]'
             }`}>
               <DataField>{session.courseTitle}</DataField>
             </h3>
           </div>
-          
-          {/* Right: Symmetrical Record & Session Badges */}
-          <div className="flex items-center gap-1.5 flex-wrap shrink-0">
-            {/* 1. Master Record Serial Badge */}
-            {(session.sessionNumber || (session as any).serialNumber) && (
-              <span 
-                className="text-xs bg-blue-50 dark:bg-blue-950/80 text-[#002D62] dark:text-blue-200 px-3 py-1.5 rounded-xl font-black border border-blue-200 dark:border-blue-700/80 shadow-2xs flex items-center gap-1.5"
-                title={language === 'ar' ? 'الرقم المسلسل بالسجل التدريبي العام' : 'Master Log Record Number'}
-              >
-                <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300 opacity-90">
-                  {language === 'ar' ? '📋 رقم السجل:' : '📋 Record No:'}
-                </span>
-                <span className="font-mono font-black text-xs text-[#002D62] dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2 py-0.5 rounded-lg border border-blue-200 dark:border-blue-800">
-                  #{formatSessionRecordNumber(session.sessionNumber)}
-                </span>
-              </span>
-            )}
 
-            {/* 2. Course Session Iteration Badge */}
+          {/* Status Badge (Top-Right Micro Chip) */}
+          {isCancelled ? (
+            <span className="text-[10px] font-black uppercase tracking-wider bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 px-2.5 py-1 rounded-full border border-red-200 dark:border-red-800/70 shadow-2xs flex items-center gap-1 shrink-0">
+              <Ban size={11} />
+              <span>{language === 'ar' ? 'ملغاة' : 'Cancelled'}</span>
+            </span>
+          ) : isCompleted ? (
+            <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/70 shadow-2xs flex items-center gap-1 shrink-0">
+              <CheckCircle size={11} />
+              <span>{language === 'ar' ? 'منفذة ✓' : 'Completed ✓'}</span>
+            </span>
+          ) : isRegistrationClosed ? (
+            <span className="text-[10px] font-black uppercase tracking-wider bg-amber-50 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 px-2.5 py-1 rounded-full border border-amber-200 dark:border-amber-700/70 shadow-2xs flex items-center gap-1 shrink-0">
+              <Ban size={11} />
+              <span>{language === 'ar' ? 'مغلق' : 'Reg Closed'}</span>
+            </span>
+          ) : null}
+        </div>
+
+        {/* Row 2: Symmetrical Badges Bar (Dedicated Row - Zero Collision) */}
+        <div className="flex items-center gap-2 flex-wrap pt-0.5">
+          {/* 1. Master Record Serial Badge */}
+          {(session.sessionNumber || (session as any).serialNumber) && (
             <span 
-              className="text-xs bg-indigo-50 dark:bg-indigo-950/80 text-indigo-950 dark:text-indigo-200 px-3 py-1.5 rounded-xl font-black border border-indigo-200 dark:border-indigo-700/80 shadow-2xs flex items-center gap-1.5"
-              title={language === 'ar' ? 'جلسة الدورة' : 'Session'}
+              className="text-xs bg-blue-50/90 dark:bg-blue-950/80 text-[#002D62] dark:text-blue-200 px-3 py-1.5 rounded-xl font-black border border-blue-200 dark:border-blue-700/80 shadow-2xs flex items-center gap-1.5"
+              title={language === 'ar' ? 'الرقم المسلسل بالسجل التدريبي العام' : 'Master Log Record Number'}
             >
-              <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 opacity-90">
-                {language === 'ar' ? '🔄 الجلسة:' : '🔄 Session:'}
+              <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300 opacity-90">
+                {language === 'ar' ? '📋 رقم السجل:' : '📋 Record No:'}
               </span>
-              <span className="font-black text-xs text-indigo-900 dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2.5 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                {formatCourseIteration(session.sessionIteration)}
+              <span className="font-mono font-black text-xs text-[#002D62] dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2 py-0.5 rounded-lg border border-blue-200 dark:border-blue-800">
+                #{formatSessionRecordNumber(session.sessionNumber)}
               </span>
             </span>
-          </div>
+          )}
+
+          {/* 2. Course Session Iteration Badge */}
+          <span 
+            className="text-xs bg-indigo-50/90 dark:bg-indigo-950/80 text-indigo-950 dark:text-indigo-200 px-3 py-1.5 rounded-xl font-black border border-indigo-200 dark:border-indigo-700/80 shadow-2xs flex items-center gap-1.5"
+            title={language === 'ar' ? 'جلسة الدورة' : 'Session'}
+          >
+            <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 opacity-90">
+              {language === 'ar' ? '🔄 الجلسة:' : '🔄 Session:'}
+            </span>
+            <span className="font-black text-xs text-indigo-900 dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2.5 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
+              {formatCourseIteration(session.sessionIteration)}
+            </span>
+          </span>
         </div>
       </div>
 
