@@ -265,7 +265,7 @@ export const TopNav: React.FC = () => {
 
   return (
     <>
-      <nav className={`fixed ${user?.isDemoUser ? 'top-[36px] sm:top-[38px]' : 'top-0'} inset-x-0 z-50 bg-[#002D62] dark:bg-[#0D1B33] border-b border-transparent dark:border-b-[#FFC000]/30 text-white shadow-md print:hidden">
+      <nav className={`fixed ${user?.isDemoUser ? 'top-[36px] sm:top-[38px]' : 'top-0'} inset-x-0 z-50 bg-[#002D62] dark:bg-[#0D1B33] border-b border-transparent dark:border-b-[#FFC000]/30 text-white shadow-md print:hidden transition-all`}>
         <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             
@@ -386,7 +386,7 @@ export const TopNav: React.FC = () => {
                               <div className="flex items-center gap-2">
                                 <Users size={16} className="text-amber-600 dark:text-amber-400 shrink-0" />
                                 <span className="font-bold text-xs text-amber-950 dark:text-amber-200">
-                                  {language === 'ar' ? ('لديك ' + pendingUsersCount + ' طلبات تسجيل حسابات جديدة') : (pendingUsersCount + ' pending registration requests')}
+                                  {language === 'ar' ? `لديك ${pendingUsersCount} طلبات تسجيل حسابات جديدة` : `${pendingUsersCount} pending registration requests`}
                                 </span>
                               </div>
                               <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 bg-amber-200 dark:bg-amber-900/60 px-2 py-0.5 rounded-full">
@@ -410,7 +410,7 @@ export const TopNav: React.FC = () => {
                               <QrCode size={16} className="text-blue-600 dark:text-blue-400 shrink-0" />
                               <div className="min-w-0 flex-1">
                                 <p className="font-bold text-xs text-blue-950 dark:text-blue-200 truncate">
-                                  {language === 'ar' ? ('دورة نشطة الآن: ' + activeSessionsNow[0].courseTitle) : ('Active Session: ' + activeSessionsNow[0].courseTitle)}
+                                  {language === 'ar' ? `دورة نشطة الآن: ${activeSessionsNow[0].courseTitle}` : `Active Session: ${activeSessionsNow[0].courseTitle}`}
                                 </p>
                                 <p className="text-[10px] text-blue-700 dark:text-blue-300 mt-0.5">
                                   {language === 'ar' ? 'تسجيل الحضور مفتوح حالياً' : 'Attendance check-in is open'}
