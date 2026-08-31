@@ -2160,7 +2160,7 @@ Content-Type: text/html; charset="utf-8"
           <div className="md:hidden flex items-center gap-1.5 ml-auto rtl:ml-0 rtl:mr-auto">
             <p className="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200 text-right">
               {language === 'ar' ? '👋 أهلاً بك، ' : '👋 Welcome, '}
-              <span className="text-[#002D62] dark:text-[#FFC000] font-black">{user?.name?.split(' ')[0]}</span>
+              <span className="text-[#002D62] dark:text-[#FFC000] font-black">{user?.isDemoUser ? 'Guest' : (user?.name?.split(' ')[0] || 'User')}</span>
             </p>
           </div>
 
