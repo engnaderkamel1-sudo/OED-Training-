@@ -1,3 +1,4 @@
+import { escapeHtml } from './securityUtils';
 import html2pdf from 'html2pdf.js';
 import { formatScore, formatDateToStandard } from './formatters';
 
@@ -64,28 +65,39 @@ export const generateReportHTML = (options: ReportOptions): string => {
     : defaultCols);
 
   const getRecordValue = (r: ReportRecord, key: string) => {
+    let rawVal = '';
     switch (key) {
       case 'hrCode':
-        return r.hrCode || r.raw?.['HR Code'] || r.raw?.['ID'] || '';
+        rawVal = String(r.hrCode || r.raw?.['HR Code'] || r.raw?.['ID'] || '');
+        break;
       case 'name':
-        return r.name || r.raw?.['Trainee Name'] || r.raw?.['Name'] || '';
+        rawVal = String(r.name || r.raw?.['Trainee Name'] || r.raw?.['Name'] || '');
+        break;
       case 'role':
-        return r.role || r.raw?.['Role'] || r.raw?.['Job Title'] || '';
+        rawVal = String(r.role || r.raw?.['Role'] || r.raw?.['Job Title'] || '');
+        break;
       case 'department':
-        return r.department || r.raw?.['Department'] || '';
+        rawVal = String(r.department || r.raw?.['Department'] || '');
+        break;
       case 'courseName':
-        return r.courseName || r.raw?.['Course Name'] || r.raw?.['Course'] || '';
+        rawVal = String(r.courseName || r.raw?.['Course Name'] || r.raw?.['Course'] || '');
+        break;
       case 'duration':
-        return r.raw?.['Course Duration'] || r.duration || r.totalDays || 'N/A';
+        rawVal = String(r.raw?.['Course Duration'] || r.duration || r.totalDays || 'N/A');
+        break;
       case 'attendedDays':
-        return r.raw?.['Attended Days'] || r.attendedDays || r.daysAttended || 'N/A';
+        rawVal = String(r.raw?.['Attended Days'] || r.attendedDays || r.daysAttended || 'N/A');
+        break;
       case 'score':
-        return formatScore(r.raw?.['Score'] || r.score);
+        rawVal = String(formatScore(r.raw?.['Score'] || r.score));
+        break;
       case 'date':
-        return formatDateToStandard(r.date || r.attendanceDate || r.raw?.['Date'] || r.raw?.['Attendance Date']);
+        rawVal = String(formatDateToStandard(r.date || r.attendanceDate || r.raw?.['Date'] || r.raw?.['Attendance Date']));
+        break;
       default:
-        return '';
+        rawVal = '';
     }
+    return escapeHtml(rawVal);
   };
 
   const rowsHTML = records.map(r => `
