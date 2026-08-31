@@ -45,6 +45,10 @@ interface AppContextType {
   restoreUpcomingSession: (id: string) => void;
   registerTrainee: (sessionId: string, userCode: string) => void;
   unregisterTrainee: (sessionId: string, userCode: string) => void;
+  joinSessionWaitlist: (sessionId: string, userCode: string, traineeName?: string) => Promise<void>;
+  leaveSessionWaitlist: (sessionId: string, userCode: string) => Promise<void>;
+  approveWaitlistRequest: (sessionId: string, userCode: string) => Promise<void>;
+  rejectWaitlistRequest: (sessionId: string, userCode: string) => Promise<void>;
   announcements: SystemAnnouncement[];
   addAnnouncement: (announcement: SystemAnnouncement) => void;
   deleteAnnouncement: (id: string) => void;
@@ -693,6 +697,164 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const joinSessionWaitlist = async (sessionId: string, userCode: string, traineeName?: string) => {
+    const session = upcomingSessions.find(s => s.id === sessionId);
+    if (!session) return;
+    const currentWaitlist = session.waitlistUsers || [];
+    if (currentWaitlist.includes(userCode)) return;
+
+    const nowIso = new Date().toISOString();
+    const currentTimestamps = session.waitlistTimestamps || {};
+    const updatedTimestamps = {
+      ...currentTimestamps,
+      [userCode]: nowIso
+    };
+
+    const updatedSession: UpcomingSession = {
+      ...session,
+      waitlistUsers: [...currentWaitlist, userCode],
+      waitlistTimestamps: updatedTimestamps
+    };
+    await setDoc(doc(db, "sessions", sessionId), updatedSession);
+
+    // Send high-priority notification to Admin
+    try {
+      const annDocRef = doc(collection(db, 'announcements'));
+      const displayName = traineeName || userCode;
+      await setDoc(annDocRef, {
+        id: annDocRef.id,
+        sessionId: session.id,
+        courseName: session.courseTitle,
+        title: language === 'ar' ? `📋 طلب انضمام لقائمة الانتظار: ${session.courseTitle}` : `📋 Waitlist Request: ${session.courseTitle}`,
+        message: language === 'ar' 
+          ? `طلب المتدرب [${displayName}] (${userCode}) الانضمام لقائمة الانتظار لدورة [${session.courseTitle}]. يمكنك مراجعة الطلب واعتماده من كشف الدورة.`
+          : `Trainee [${displayName}] (${userCode}) requested to join the waitlist for [${session.courseTitle}].`,
+        targetAudience: 'admin_only',
+        author: 'System Notification',
+        date: new Date().toISOString(),
+        isGlobal: false
+      });
+    } catch (e) {
+      console.error("Error creating waitlist admin notification:", e);
+    }
+  };
+
+  const leaveSessionWaitlist = async (sessionId: string, userCode: string) => {
+    const session = upcomingSessions.find(s => s.id === sessionId);
+    if (!session) return;
+    const currentWaitlist = session.waitlistUsers || [];
+    const updatedWaitlist = currentWaitlist.filter(c => c !== userCode);
+
+    const currentTimestamps = { ...(session.waitlistTimestamps || {}) };
+    delete currentTimestamps[userCode];
+
+    const updatedSession: UpcomingSession = {
+      ...session,
+      waitlistUsers: updatedWaitlist,
+      waitlistTimestamps: currentTimestamps
+    };
+    await setDoc(doc(db, "sessions", sessionId), updatedSession);
+  };
+
+  const approveWaitlistRequest = async (sessionId: string, userCode: string) => {
+    if (user?.role !== 'admin') {
+      console.warn("Security Alert: Only admin can approve waitlist requests.");
+      return;
+    }
+    const session = upcomingSessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    const currentWaitlist = session.waitlistUsers || [];
+    const updatedWaitlist = currentWaitlist.filter(c => c !== userCode);
+    const waitlistTimestamps = { ...(session.waitlistTimestamps || {}) };
+    delete waitlistTimestamps[userCode];
+
+    const currentRegistered = session.registeredUsers || [];
+    const updatedRegistered = currentRegistered.includes(userCode)
+      ? currentRegistered
+      : [...currentRegistered, userCode];
+    const currentUnregistered = (session.unregisteredUsers || []).filter(c => c !== userCode);
+
+    const nowIso = new Date().toISOString();
+    const regTimestamps = {
+      ...(session.registrationTimestamps || {}),
+      [userCode]: nowIso
+    };
+
+    const updatedSession: UpcomingSession = {
+      ...session,
+      waitlistUsers: updatedWaitlist,
+      waitlistTimestamps: waitlistTimestamps,
+      registeredUsers: updatedRegistered,
+      unregisteredUsers: currentUnregistered,
+      registrationTimestamps: regTimestamps
+    };
+    await setDoc(doc(db, "sessions", sessionId), updatedSession);
+
+    // Send targeted notification ONLY to this specific trainee
+    try {
+      const annDocRef = doc(collection(db, 'announcements'));
+      await setDoc(annDocRef, {
+        id: annDocRef.id,
+        sessionId: session.id,
+        courseName: session.courseTitle,
+        title: language === 'ar' ? `🎉 تمت الموافقة على طلب انضمامك لدورة: ${session.courseTitle}` : `🎉 Waitlist Approved: ${session.courseTitle}`,
+        message: language === 'ar'
+          ? `يسعدنا إبلاغك بأنه تمت الموافقة على طلبك وتم تسجيلك رسمياً في دورة [${session.courseTitle}] المنعقدة بتاريخ ${session.startDate} في ${session.location}. نتمنى لك تدريباً موفقاً!`
+          : `Your waitlist request for [${session.courseTitle}] has been approved! You are now officially enrolled for ${session.startDate}.`,
+        targetAudience: 'individual',
+        targetHrCodes: [userCode],
+        author: 'Training Administration (OED)',
+        date: new Date().toISOString(),
+        isGlobal: false
+      });
+    } catch (e) {
+      console.error("Error creating waitlist approval notification:", e);
+    }
+  };
+
+  const rejectWaitlistRequest = async (sessionId: string, userCode: string) => {
+    if (user?.role !== 'admin') {
+      console.warn("Security Alert: Only admin can reject waitlist requests.");
+      return;
+    }
+    const session = upcomingSessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    const currentWaitlist = session.waitlistUsers || [];
+    const updatedWaitlist = currentWaitlist.filter(c => c !== userCode);
+    const waitlistTimestamps = { ...(session.waitlistTimestamps || {}) };
+    delete waitlistTimestamps[userCode];
+
+    const updatedSession: UpcomingSession = {
+      ...session,
+      waitlistUsers: updatedWaitlist,
+      waitlistTimestamps: waitlistTimestamps
+    };
+    await setDoc(doc(db, "sessions", sessionId), updatedSession);
+
+    // Send targeted polite rejection notification ONLY to this specific trainee
+    try {
+      const annDocRef = doc(collection(db, 'announcements'));
+      await setDoc(annDocRef, {
+        id: annDocRef.id,
+        sessionId: session.id,
+        courseName: session.courseTitle,
+        title: language === 'ar' ? `اعتذار بشأن طلب الانضمام لدورة: ${session.courseTitle}` : `Waitlist Update: ${session.courseTitle}`,
+        message: language === 'ar'
+          ? `نعتذر عن عدم إمكانية إضافتك لدورة [${session.courseTitle}] نظراً لاكتمال الطاقة الاستيعابية للجلسة بالكامل. سيتم إشعاركم فور فتح مواعيد جديدة لنفس الدورة.`
+          : `We regret that we cannot enroll you in [${session.courseTitle}] due to full capacity. You will be notified when new sessions are scheduled.`,
+        targetAudience: 'individual',
+        targetHrCodes: [userCode],
+        author: 'Training Administration (OED)',
+        date: new Date().toISOString(),
+        isGlobal: false
+      });
+    } catch (e) {
+      console.error("Error creating waitlist rejection notification:", e);
+    }
+  };
+
   const addUpcomingSession = async (session: UpcomingSession) => {
     const sessionWithId: UpcomingSession = {
       ...session,
@@ -1040,6 +1202,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       upcomingSessions, setUpcomingSessions,
       addUpcomingSession, updateUpcomingSession, deleteUpcomingSession, restoreUpcomingSession,
       cancelSession, reactivateSession, registerTrainee, unregisterTrainee,
+      joinSessionWaitlist, leaveSessionWaitlist, approveWaitlistRequest, rejectWaitlistRequest,
       announcements, addAnnouncement, deleteAnnouncement,
       loginLogs, addLoginLog,
       suggestions, addSuggestion, updateSuggestion,
