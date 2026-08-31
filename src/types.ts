@@ -124,6 +124,8 @@ export interface UpcomingSession {
   feedbackLink?: string;
   feedbackEnabled?: boolean;
   registrationTimestamps?: Record<string, string>; // كود المتدرب -> تاريخ ووقت التسجيل ISO
+  waitlistUsers?: string[]; // قائمة المتدربين في قائمة الانتظار
+  waitlistTimestamps?: Record<string, string>; // كود المتدرب -> تاريخ طلب الانتظار ISO
   additionalNotificationEmails?: string[];
 }
 
