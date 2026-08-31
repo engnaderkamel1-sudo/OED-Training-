@@ -15,7 +15,7 @@ export const importExcelData = async (file: File) => {
         {
           id: '830557',
           name: 'Amir Samir',
-          department: 'Heavy Machinery',
+          department: 'ORC - Katamia - Workshop',
           phone: '01000000001',
           role: 'trainee',
           status: 'approved'
@@ -23,7 +23,7 @@ export const importExcelData = async (file: File) => {
         {
           id: '830548',
           name: 'Keroles Amged',
-          department: 'Electrical',
+          department: 'OC - Katamia - Workshop',
           phone: '01000000002',
           role: 'trainee',
           status: 'approved'
@@ -68,7 +68,7 @@ export const importFromOneDrive = async (link: string) => {
         {
           id: '830557',
           name: 'Amir Samir',
-          department: 'Heavy Machinery',
+          department: 'ORC - Katamia - Workshop',
           phone: '01000000001',
           role: 'trainee',
           status: 'approved'
@@ -76,7 +76,7 @@ export const importFromOneDrive = async (link: string) => {
         {
           id: '830548',
           name: 'Keroles Amged',
-          department: 'Electrical',
+          department: 'OC - Katamia - Workshop',
           phone: '01000000002',
           role: 'trainee',
           status: 'approved'
