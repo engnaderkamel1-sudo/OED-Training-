@@ -51,7 +51,8 @@ export const ExecutiveDemoBanner: React.FC = () => {
     sessionStorage.setItem('oed_vip_role', targetRole);
 
     if (targetRole === 'trainee') {
-      const foundUser = localUsers.find(u => u.hrCode === '830557' || u.id === '830557');
+      const usersList = Array.isArray(localUsers) ? localUsers : [];
+      const foundUser = usersList.find(u => u.hrCode === '830557' || u.id === '830557');
       const activeTrainee = foundUser ? { ...foundUser, name: 'Amir Samir', role: 'trainee' as const, isDemoUser: true } : VIP_TRAINEE_USER;
       setUser(activeTrainee);
     } else {
