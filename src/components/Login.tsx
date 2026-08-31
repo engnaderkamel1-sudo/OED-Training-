@@ -644,29 +644,6 @@ export const Login: React.FC = () => {
               </button>
             </div>
 
-            {/* VIP Executive Guest Access Button */}
-            {isExecutiveDemoEnabled && (
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    sessionStorage.setItem('oed_vip_demo_active', 'true');
-                    sessionStorage.setItem('oed_vip_role', 'admin');
-                    window.location.search = '?demo=vip';
-                  }}
-                  className="w-full py-2.5 px-3 rounded-2xl border-2 border-dashed border-[#FFC000] bg-gradient-to-r from-amber-50 via-yellow-50/60 to-amber-50 dark:from-amber-950/40 dark:via-yellow-950/30 dark:to-amber-950/40 text-[#001D42] dark:text-[#FFC000] text-xs font-black flex items-center justify-center gap-2 transition-all hover:scale-[1.02] shadow-xs cursor-pointer"
-                  title={language === 'ar' ? 'الدخول كضيف إدارة عليا للمعاينة التفاعلية' : 'Enter VIP Executive Interactive Demo'}
-                >
-                  <Sparkles size={15} className="text-[#FFC000]" />
-                  <span>
-                    {language === 'ar' 
-                      ? '👑 دخول تجريبي لضيوف الإدارة العليا (VIP Sandbox)' 
-                      : '👑 VIP Executive Interactive Preview'}
-                  </span>
-                </button>
-              </div>
-            )}
-
             {/* System Info & Copyright directly under Register button */}
             <div className="mt-6 pt-3 border-t border-gray-100 dark:border-gray-800 text-center space-y-0.5">
               <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
