@@ -17,7 +17,7 @@ export const SiteSupervisorDashboard: React.FC = () => {
   const [selectedUserId, setSelectedUserId] = useState("");
 
   // Get department of the supervisor
-  const department = user?.department || "Heavy Machinery";
+  const department = user?.department || "ORC - Katamia - Workshop";
 
   // Get all trainees in this department
   const teamMembers = users.filter(
