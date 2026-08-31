@@ -51,7 +51,7 @@ const AppContent: React.FC = () => {
   // Notifications Permission
   // ============================================
   React.useEffect(() => {
-    if (user && messaging) {
+    if (user && !user.isDemoUser && messaging) {
       const requestPermission = async () => {
         try {
           const permission = await Notification.requestPermission();
