@@ -306,22 +306,40 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   } else if (isRegistrationClosed) {
     cardClasses += "bg-white dark:bg-[#152642] border-amber-300 dark:border-amber-700 shadow-sm";
   } else {
-    cardClasses += "bg-white dark:bg-[#152642] border-slate-200 dark:border-slate-700 hover:border-[#002D62] dark:hover:border-blue-400 hover:shadow-md";
-  }
-
-  return (
-    <>
-    <div className={cardClasses}>
-      {/* Header & Badges (Clean Accordion Trigger Bar) */}
+    cardClasses += "bg-white dark:bg-[#1      {/* Header & Badges (Clean Accordion Trigger Bar) */}
       <div 
         onClick={() => setIsExpanded(prev => !prev)}
-          className={`flex justify-between items-center gap-2 flex-wrap cursor-pointer select-none transition-all hover:opacity-95 ${
-            isExpanded ? 'mb-4 pb-3 border-b border-gray-100 dark:border-slate-800' : ''
-          }`}
-          title={isExpanded ? (language === 'ar' ? 'Ø§Ù†Ù‚Ø± Ù„Ø¥ØºÙ„Ø§Ù‚ ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø¯ÙˆØ±Ø©' : 'Click to collapse session') : (language === 'ar' ? 'Ø§Ù†Ù‚Ø± Ù„ÙØªØ­ ØªÙØ§ØµÙŠÙ„ ÙˆØ£Ø²Ø±Ø§Ø± Ø§Ù„Ø¯ÙˆØ±Ø©' : 'Click to expand session details & actions')}
-        >
-          {/* Left: Expand Icon + Course Title + Micro Status Pill */}
-          <div className="flex items-center gap-2 flex-wrap min-w-0">
+        className={`flex flex-col gap-1.5 cursor-pointer select-none transition-all hover:opacity-95 ${
+          isExpanded ? 'mb-4 pb-3 border-b border-gray-100 dark:border-slate-800' : ''
+        }`}
+        title={isExpanded ? (language === 'ar' ? 'انقر لإغلاق تفاصيل الدورة' : 'Click to collapse session') : (language === 'ar' ? 'انقر لفتح تفاصيل وأزرار الدورة' : 'Click to expand session details & actions')}
+      >
+        {/* Top-Left Micro Status Tag (Above Title) */}
+        {(isCancelled || isCompleted || isRegistrationClosed) && (
+          <div className="flex items-center self-start mb-0.5">
+            {isCancelled ? (
+              <span className="text-[9.5px] font-black uppercase tracking-wider bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full border border-red-200 dark:border-red-800/70 shadow-2xs flex items-center gap-1">
+                <Ban size={10} />
+                <span>{language === 'ar' ? 'ملغاة' : 'Cancelled'}</span>
+              </span>
+            ) : isCompleted ? (
+              <span className="text-[9.5px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/70 shadow-2xs flex items-center gap-1">
+                <CheckCircle size={10} />
+                <span>{language === 'ar' ? 'منفذة ✓' : 'Completed ✓'}</span>
+              </span>
+            ) : isRegistrationClosed ? (
+              <span className="text-[9.5px] font-black uppercase tracking-wider bg-amber-50 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-700/70 shadow-2xs flex items-center gap-1">
+                <Ban size={10} />
+                <span>{language === 'ar' ? 'مغلق' : 'Reg Closed'}</span>
+              </span>
+            ) : null}
+          </div>
+        )}
+
+        {/* Main Row: Title (Left) and Badges (Right) */}
+        <div className="flex justify-between items-center gap-2 flex-wrap">
+          {/* Left: Expand Icon + Course Title */}
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <span className="p-1.5 rounded-xl bg-blue-50 dark:bg-slate-800 text-[#002D62] dark:text-[#FFC000] border border-blue-200 dark:border-slate-700 shadow-2xs shrink-0">
               {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
             </span>
@@ -330,28 +348,10 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             }`}>
               <DataField>{session.courseTitle}</DataField>
             </h3>
-
-            {/* Micro Status Chip (Top-Left) */}
-            {isCancelled ? (
-              <span className="text-[10px] font-black uppercase tracking-wider bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full border border-red-200 dark:border-red-800 shadow-2xs flex items-center gap-1 shrink-0">
-                <Ban size={11} />
-                <span>{language === 'ar' ? 'ملغاة' : 'Cancelled'}</span>
-              </span>
-            ) : isCompleted ? (
-              <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-2xs flex items-center gap-1 shrink-0">
-                <CheckCircle size={11} />
-                <span>{language === 'ar' ? 'منفذة ✓' : 'Completed ✓'}</span>
-              </span>
-            ) : isRegistrationClosed ? (
-              <span className="text-[10px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-700 shadow-2xs flex items-center gap-1 shrink-0">
-                <Ban size={11} />
-                <span>{language === 'ar' ? 'مغلق' : 'Reg Closed'}</span>
-              </span>
-            ) : null}
           </div>
           
           {/* Right: Symmetrical Record & Session Badges */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap shrink-0">
             {/* 1. Master Record Serial Badge */}
             {(session.sessionNumber || (session as any).serialNumber) && (
               <span 
@@ -374,6 +374,14 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             >
               <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 opacity-90">
                 {language === 'ar' ? '🔄 الجلسة:' : '🔄 Session:'}
+              </span>
+              <span className="font-black text-xs text-indigo-900 dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2.5 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                {formatCourseIteration(session.sessionIteration)}
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>��� Session:'}
               </span>
               <span className="font-black text-xs text-indigo-900 dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2.5 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
                 {formatCourseIteration(session.sessionIteration)}
