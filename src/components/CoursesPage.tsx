@@ -263,17 +263,17 @@ export const CoursesPage: React.FC = () => {
                     {/* Actions (Admin) */}
                     {isAdmin && (
                       <td className="p-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
+                        <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => openEditModal(c)}
-                            className="p-1.5 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2.5 min-w-[38px] min-h-[38px] flex items-center justify-center text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl transition-all shadow-2xs active:scale-95 cursor-pointer"
                             title={language === 'ar' ? 'تعديل الكورس' : 'Edit Course'}
                           >
                             <Edit2 size={16} />
                           </button>
                           <button
                             onClick={() => handleDeleteCourse(c.id, c.title)}
-                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2.5 min-w-[38px] min-h-[38px] flex items-center justify-center text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl transition-all shadow-2xs active:scale-95 cursor-pointer"
                             title={language === 'ar' ? 'حذف الكورس' : 'Delete Course'}
                           >
                             <Trash2 size={16} />
