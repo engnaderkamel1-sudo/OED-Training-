@@ -438,7 +438,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Server-side role verification guard against localStorage tampering
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !user.isDemoUser) {
       getDoc(doc(db, "users", user.id)).then(snap => {
         if (snap.exists()) {
           const actualData = snap.data() as User;
@@ -821,7 +821,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   useEffect(() => {
-    if (user && localUsers.length > 0) {
+    if (user && !user.isDemoUser && localUsers.length > 0) {
       const updatedUser = localUsers.find(u => u.id === user.id);
       if (updatedUser) {
         if (updatedUser.hrCode?.toLowerCase() === 'admin' || updatedUser.id === 'admin') {
