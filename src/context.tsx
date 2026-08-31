@@ -204,11 +204,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [user]);
   
-  const [localUsers, setLocalUsers] = useState<User[]>([]);
+  const [localUsers, setLocalUsers] = useState<User[]>(() => (typeof window !== 'undefined' && (sessionStorage.getItem('oed_vip_demo_active') === 'true' || window.location.search.includes('demo='))) ? DEMO_FALLBACK_USERS : []);
   const [localRecords, setLocalRecords] = useState<TrainingRecord[]>([]);
-  const [cleanedData, setCleanedDataState] = useState<CleanedRecord[]>([]);
+  const [cleanedData, setCleanedDataState] = useState<CleanedRecord[]>(() => (typeof window !== 'undefined' && (sessionStorage.getItem('oed_vip_demo_active') === 'true' || window.location.search.includes('demo='))) ? DEMO_FALLBACK_CLEANED_RECORDS : []);
   const [cleanedFileName, setCleanedFileNameState] = useState<string>('');
-  const [upcomingSessions, setUpcomingSessionsState] = useState<UpcomingSession[]>([]);
+  const [upcomingSessions, setUpcomingSessionsState] = useState<UpcomingSession[]>(() => (typeof window !== 'undefined' && (sessionStorage.getItem('oed_vip_demo_active') === 'true' || window.location.search.includes('demo='))) ? DEMO_FALLBACK_SESSIONS : []);
   const [announcements, setAnnouncementsState] = useState<SystemAnnouncement[]>([]);
   const [loginLogs, setLoginLogsState] = useState<LoginLog[]>([]);
   const [suggestions, setSuggestionsState] = useState<Suggestion[]>([]);
