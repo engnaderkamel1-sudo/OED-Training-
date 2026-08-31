@@ -3,7 +3,7 @@ import { Download, X, Share, PlusSquare, Smartphone } from 'lucide-react';
 import { useAppContext } from '../context';
 
 export const PWAInstallBanner: React.FC = () => {
-  const { language } = useAppContext();
+  const { language, user } = useAppContext();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -38,7 +38,7 @@ export const PWAInstallBanner: React.FC = () => {
     };
   }, []);
 
-  if (isStandalone || isDismissed) {
+  if (isStandalone || isDismissed || user?.isDemoUser) {
     return null;
   }
 
