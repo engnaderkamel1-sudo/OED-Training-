@@ -1,3 +1,4 @@
+import { UpcomingSession, User, TrainingRecord } from '../types';
 import { escapeHtml } from './securityUtils';
 import html2pdf from 'html2pdf.js';
 import { formatScore, formatDateToStandard } from './formatters';
@@ -503,7 +504,7 @@ export const downloadReportPDF = async (options: ReportOptions) => {
 
 
 
-export const downloadTrainingRegisterPDF = async (session: import("./types").UpcomingSession, allUsers: import("./types").User[], allRecords: import("./types").TrainingRecord[]) => {
+export const downloadTrainingRegisterPDF = async (session: UpcomingSession, allUsers: User[], allRecords: TrainingRecord[]) => {
   const isAr = false; // The form image is in English
   
   // Find registered users
