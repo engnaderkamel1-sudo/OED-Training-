@@ -313,20 +313,24 @@ export const SessionCard: React.FC<SessionCardProps> = ({
     <>
     <div className={cardClasses}>
       <div>
-        {/* Header & Badges */}
-        <div className="flex justify-between items-start mb-3 gap-2 flex-wrap">
-          <div 
-            onClick={() => setIsExpanded(prev => !prev)}
-            className="flex items-center gap-2 cursor-pointer group select-none"
-            title={isExpanded ? (language === 'ar' ? 'Ø§Ù†Ù‚Ø± Ù„Ø¥Ø®ÙØ§Ø¡ Ø£Ø²Ø±Ø§Ø± Ø§Ù„ØªØ­ÙƒÙ…' : 'Click to collapse controls') : (language === 'ar' ? 'Ø§Ù†Ù‚Ø± Ù„ÙØªØ­ Ø£Ø²Ø±Ø§Ø± Ø§Ù„ØªØ­ÙƒÙ…' : 'Click to expand controls')}
-          >
-            <h3 className={`font-black text-lg leading-tight transition-colors group-hover:text-blue-600 dark:group-hover:text-[#FFC000] flex items-center gap-2 ${isCancelled ? 'text-gray-800 dark:text-gray-100 line-through' : 'text-[#002D62] dark:text-white'}`}>
+        {/* Header & Badges (Clean Accordion Trigger Bar) */}
+        <div 
+          onClick={() => setIsExpanded(prev => !prev)}
+          className={`flex justify-between items-center gap-2 flex-wrap cursor-pointer select-none transition-all hover:opacity-95 ${
+            isExpanded ? 'mb-4 pb-3 border-b border-gray-100 dark:border-slate-800' : ''
+          }`}
+          title={isExpanded ? (language === 'ar' ? 'Ø§Ù†Ù‚Ø± Ù„Ø¥ØºÙ„Ø§Ù‚ ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø¯ÙˆØ±Ø©' : 'Click to collapse session') : (language === 'ar' ? 'Ø§Ù†Ù‚Ø± Ù„ÙØªØ­ ØªÙØ§ØµÙŠÙ„ ÙˆØ£Ø²Ø±Ø§Ø± Ø§Ù„Ø¯ÙˆØ±Ø©' : 'Click to expand session details & actions')}
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="p-1.5 rounded-xl bg-blue-50 dark:bg-slate-800 text-[#002D62] dark:text-[#FFC000] border border-blue-200 dark:border-slate-700 shadow-2xs">
+              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </span>
+            <h3 className={`font-black text-lg leading-tight transition-colors ${
+              isCancelled ? 'text-gray-800 dark:text-gray-100 line-through' : 'text-[#002D62] dark:text-white hover:text-blue-600 dark:hover:text-[#FFC000]'
+            }`}>
               <DataField>{session.courseTitle}</DataField>
               {isCancelled && <span className="text-red-600 dark:text-red-400 font-black ml-2 no-underline inline-block"> ({t('cancelled')})</span>}
             </h3>
-            <span className="p-1 rounded-lg bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-slate-700 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all">
-              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </span>
           </div>
           
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -379,6 +383,11 @@ export const SessionCard: React.FC<SessionCardProps> = ({
           </div>
         </div>
 
+        {/* ========================================================= */}
+        {/* EXPANDABLE BODY: ALL DETAILS & ACTIONS (ACCORDION)       */}
+        {/* ========================================================= */}
+        {isExpanded && (
+        <div className="animate-fade-in space-y-4">
         {/* Session Details with High Contrast */}
         <div className="space-y-2.5 text-xs sm:text-sm text-slate-900 dark:text-slate-100 font-bold">
           <div className="flex items-center gap-2">
@@ -1137,6 +1146,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             </div>
           </div>
         )}
+        </div>
       </div>
       )}
     </div>
