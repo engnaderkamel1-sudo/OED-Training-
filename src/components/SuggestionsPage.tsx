@@ -457,14 +457,14 @@ export const SuggestionsPage: React.FC = () => {
                     className="w-full pl-9 rtl:pr-9 rtl:pl-3 pr-3 py-2 text-xs sm:text-sm border border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-[#162744] text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                   />
                 </div>
-                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="border border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-[#162744] text-gray-900 dark:text-white rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none font-bold">
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="border border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-[#162744] text-gray-900 dark:text-white rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 font-bold transition-all cursor-pointer">
                   <option value="all">{language === 'ar' ? 'كل الحالات' : 'All Statuses'}</option>
                   <option value="pending">{t('statusPending')}</option>
                   <option value="reviewing">{t('statusReviewing')}</option>
                   <option value="done">{t('statusDone')}</option>
                   <option value="rejected">{t('statusRejected')}</option>
                 </select>
-                <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className="border border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-[#162744] text-gray-900 dark:text-white rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none font-bold">
+                <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className="border border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-[#162744] text-gray-900 dark:text-white rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 font-bold transition-all cursor-pointer">
                   <option value="all">{language === 'ar' ? 'كل التصنيفات' : 'All Categories'}</option>
                   <option value="ui">{t('catUi')}</option>
                   <option value="course">{t('catCourse')}</option>
@@ -555,7 +555,7 @@ export const SuggestionsPage: React.FC = () => {
                             value={editingNote.note}
                             onChange={e => setEditingNote({ id: s.id, note: e.target.value })}
                             placeholder={language === 'ar' ? 'ملاحظة داخلية...' : 'Internal note...'}
-                            className="flex-1 border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-[#162744] text-gray-900 dark:text-white rounded-xl px-3.5 py-1.5 text-xs sm:text-sm focus:outline-none"
+                            className="flex-1 border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-[#162744] text-gray-900 dark:text-white rounded-xl px-3.5 py-1.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 transition-all"
                           />
                           <button
                             onClick={async () => { await updateSuggestion(s.id, { adminNote: editingNote.note }); setEditingNote(null); }}
