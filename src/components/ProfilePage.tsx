@@ -322,7 +322,7 @@ export const ProfilePage: React.FC = () => {
                 <h3 className="font-bold text-gray-800 dark:text-white border-b dark:border-slate-700 pb-2">{language === 'ar' ? 'معلومات العمل والوظيفة' : 'Work Information'}</h3>
                 
                 <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                  <Building className="text-[#FFC000]" size={18} />
+                  <Building className="text-amber-600 dark:text-[#FFC000]" size={18} />
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold tracking-wider">{t('department')}</p>
                     <p className="font-medium text-gray-900 dark:text-white"><DataField>{user.department}</DataField></p>
@@ -330,7 +330,7 @@ export const ProfilePage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                  <Briefcase className="text-[#FFC000]" size={18} />
+                  <Briefcase className="text-amber-600 dark:text-[#FFC000]" size={18} />
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold tracking-wider">{language === 'ar' ? 'الدور في النظام' : 'System Role'}</p>
                     <p className="font-medium capitalize text-gray-900 dark:text-white">{user.role}</p>
