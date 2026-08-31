@@ -354,7 +354,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 {language === 'ar' ? '🔄 تكرار الدورة:' : '🔄 Round:'}
               </span>
               <span className="font-black text-xs text-indigo-900 dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                {formatCourseIteration(session.sessionIteration, undefined, language)}
+                {formatCourseIteration(session.sessionIteration, language)}
               </span>
             </span>
 
