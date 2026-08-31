@@ -348,15 +348,15 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               </span>
             )}
 
-            {/* 2. Course Round / Iteration Badge */}
+            {/* 2. Course Session Iteration Badge */}
             <span 
               className="text-xs bg-indigo-50 dark:bg-indigo-950/80 text-indigo-950 dark:text-indigo-200 px-3 py-1.5 rounded-xl font-black border border-indigo-200 dark:border-indigo-700/80 shadow-2xs flex items-center gap-1.5"
-              title={language === 'ar' ? 'تكرار / جولة هذه الدورة تحديداً' : 'Course Round / Iteration'}
+              title={language === 'ar' ? 'جلسة الدورة' : 'Session'}
             >
               <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 opacity-90">
-                {language === 'ar' ? '🔄 تكرار الدورة:' : '🔄 Round:'}
+                {language === 'ar' ? '🔄 الجلسة:' : '🔄 Session:'}
               </span>
-              <span className="font-black text-xs text-indigo-900 dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
+              <span className="font-black text-xs text-indigo-900 dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2.5 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
                 {formatCourseIteration(session.sessionIteration)}
               </span>
             </span>
