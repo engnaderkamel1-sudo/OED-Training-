@@ -168,9 +168,20 @@ export const formatCourseIteration = (iter?: string | number): string => {
     n = isNaN(parsed) || parsed <= 0 ? 1 : parsed;
   }
 
-  const enOrdinals = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
-  const ordinal = enOrdinals[n - 1] || `${n}th`;
-  return `Session ${n} (${ordinal} Round)`;
+  const wordMap: Record<number, string> = {
+    1: 'First',
+    2: 'Second',
+    3: 'Third',
+    4: 'Fourth',
+    5: 'Fifth',
+    6: 'Sixth',
+    7: 'Seventh',
+    8: 'Eighth',
+    9: 'Ninth',
+    10: 'Tenth'
+  };
+
+  return wordMap[n] || `Round ${n}`;
 };
 
 
