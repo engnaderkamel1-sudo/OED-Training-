@@ -2696,7 +2696,7 @@ Content-Type: text/html; charset="utf-8"
                   </div>
                 </div>
 
-                {/* Trainees by Department */}
+                                                {/* Trainees by Department */}
                 <div className="border rounded-2xl shadow-sm p-6 h-96 flex flex-col transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                   <div className="z-10 pb-3 border-b flex-none flex items-center justify-between" style={{ borderColor: borderColor }}>
                     <h3 className="font-bold text-base text-[#D97706] dark:text-[#FFC000]">
@@ -2710,9 +2710,7 @@ Content-Type: text/html; charset="utf-8"
                     {departmentStats.map((stat, idx) => {
                       const maxTrainees = Math.max(...departmentStats.map((s) => s.trainees)) || 1;
                       const percent = Math.max(4, Math.round((stat.trainees / maxTrainees) * 100));
-                    
-
-  return (
+                      return (
                         <div key={idx} className="space-y-1">
                           <div className="flex justify-between text-xs sm:text-sm font-medium">
                             <span className="truncate mr-4 text-gray-800 dark:text-gray-200" title={stat.department}><DataField>{stat.department}</DataField></span>
@@ -2796,47 +2794,8 @@ Content-Type: text/html; charset="utf-8"
 
               {["tools", "tools_manage", "tools_reports"].includes(currentView) && (
                 <>
-                  {/* VIP Executive Demo Master Switch Card (Admin Only - Hidden from Demo Guests) */}
-                  {!user?.isDemoUser && (
-                    <div className="border-2 border-[#FFC000]/60 rounded-2xl p-5 shadow-md mb-6 transition-colors bg-gradient-to-r from-blue-950/40 via-blue-900/20 to-blue-950/40">
-                      <div className="flex items-center justify-between flex-wrap gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="p-3 rounded-xl bg-[#FFC000] text-[#001D42] shadow-md font-bold">
-                            <Sparkles size={22} />
-                          </div>
-                          <div>
-                            <h2 className="text-lg sm:text-xl font-black text-[#002D62] dark:text-[#FFC000]">
-                              {language === "ar" ? "صلاحية العرض التقديمي للمديرين (VIP Executive Demo Pass)" : "VIP Executive Presentation Demo Access"}
-                            </h2>
-                            <p className="text-xs text-slate-500 dark:text-slate-300 font-semibold">
-                              {language === "ar" 
-                                ? "مفتاح التحكم الرئيسي لفتح أو إغلاق ميزة الدخول الفوري عبر الـ QR Code في العرض التقديمي" 
-                                : "Master Switch to open or lock 1-click sandbox access via Presentation QR Code"}
-                            </p>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={toggleExecutiveDemo}
-                          className={`px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm flex items-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-105 active:scale-95 ${
-                            isExecutiveDemoEnabled
-                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-2 border-emerald-400'
-                              : 'bg-red-600 hover:bg-red-700 text-white border-2 border-red-400'
-                          }`}
-                        >
-                          {isExecutiveDemoEnabled ? <CheckCircle size={18} /> : <Ban size={18} />}
-                          <span>
-                            {isExecutiveDemoEnabled 
-                              ? (language === 'ar' ? '🟢 متاح ومفتوح للتجربة (ACTIVE - OPEN)' : '🟢 VIP Demo: ACTIVE (OPEN)') 
-                              : (language === 'ar' ? '🔴 مغلق ومحمي (LOCKED)' : '🔴 VIP Demo: LOCKED (CLOSED)')}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
                     <div className="border rounded-lg p-6 shadow-sm flex flex-col items-center justify-center transition-colors" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                       <span className="text-sm font-semibold uppercase tracking-wider mb-2" style={{ color: textMuted }}>{language === "ar" ? "إجمالي الجلسات المتاحة" : "Total Sessions"}</span>
                       <span className="text-3xl font-bold text-blue-500">{upcomingSessions.filter(s => !s.isDeleted).length}</span>
