@@ -478,7 +478,27 @@ export const SuggestionsPage: React.FC = () => {
 
               {/* Admin suggestions list */}
               {adminSuggestions.length === 0 ? (
-                <div className="text-center py-12 text-gray-400 dark:text-gray-500 font-bold bg-white dark:bg-[#0F1E36] rounded-2xl border border-gray-200 dark:border-slate-700/80">{t('noSuggestions')}</div>
+                <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-white dark:bg-[#0F1E36] flex flex-col items-center justify-center my-2 shadow-xs animate-fade-in">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-[#FFC000] flex items-center justify-center mb-3 shadow-xs border border-amber-200 dark:border-amber-900/40">
+                    <MessageSquare size={26} className="stroke-[2.2]" />
+                  </div>
+                  <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+                    {language === 'ar' ? 'لا توجد مقترحات تطابق الفلتر الحالي' : 'No Suggestions Match Current Filter'}
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+                    {language === 'ar' ? 'جرب تغيير فلتر الحالة أو التصنيف لعرض مقترحات وملاحظات أخرى.' : 'Try changing status or category filter to view other submissions.'}
+                  </p>
+                  {(statusFilter !== 'all' || categoryFilter !== 'all') && (
+                    <button
+                      type="button"
+                      onClick={() => { setStatusFilter('all'); setCategoryFilter('all'); }}
+                      className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+                    >
+                      <RotateCcw size={14} className="text-[#FFC000]" />
+                      <span>{language === 'ar' ? 'إعادة ضبط الفلاتر' : 'Reset All Filters'}</span>
+                    </button>
+                  )}
+                </div>
               ) : (
                 adminSuggestions.map((s: Suggestion) => (
                   <div key={s.id} className="bg-white dark:bg-[#0F1E36] rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-sm p-5 space-y-3.5">
