@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAppContext } from '../context';
-import { mockCourses } from '../data';
-import { ExternalLink, Check, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag, Megaphone, Radio, Volume2, Sparkles, QrCode, UserCircle, X, BookOpen, Star } from 'lucide-react';
-import { QRScannerModal } from './QRScannerModal';
-import { HandoutRevisionModal } from './HandoutRevisionModal';
-import { isSessionActiveNow, sendNativePushNotification } from '../utils/sessionTimeUtils';
-import { sanitizeUrl } from '../utils/securityUtils';
+import { Smartphone, HardHat, motion, AnimatePresence } from 'framer-motion';
+import { Smartphone, HardHat, useAppContext } from '../context';
+import { Smartphone, HardHat, mockCourses } from '../data';
+import { Smartphone, HardHat, ExternalLink, Check, CheckCircle, Calendar, Bell, BellOff, AlertTriangle, Clock, MapPin, Tag, Megaphone, Radio, Volume2, Sparkles, QrCode, UserCircle, X, BookOpen, Star } from 'lucide-react';
+import { Smartphone, HardHat, QRScannerModal } from './QRScannerModal';
+import { Smartphone, HardHat, HandoutRevisionModal } from './HandoutRevisionModal';
+import { Smartphone, HardHat, isSessionActiveNow, sendNativePushNotification } from '../utils/sessionTimeUtils';
+import { Smartphone, HardHat, sanitizeUrl } from '../utils/securityUtils';
 
 export const playNotificationSound = () => {
   try {
@@ -79,9 +79,9 @@ const isCodeInList = (list?: string[], code?: string): boolean => {
   return list.some(c => (c || '').trim().toLowerCase() === clean);
 };
 
-import { DataField } from './DataField';
-import { SessionCard } from './SessionCard';
-import { UpcomingSession } from '../types';
+import { Smartphone, HardHat, DataField } from './DataField';
+import { Smartphone, HardHat, SessionCard } from './SessionCard';
+import { Smartphone, HardHat, UpcomingSession } from '../types';
 
 // Helper functions
 const parseScore = (score: any): number => {
