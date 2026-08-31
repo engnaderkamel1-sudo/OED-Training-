@@ -70,6 +70,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   const [showAttendeesModal, setShowAttendeesModal] = useState<boolean>(false);
   const [attendeesModalTab, setAttendeesModalTab] = useState<'registered' | 'waitlist'>('registered');
   const [actionConfirm, setActionConfirm] = useState<ActionConfirmModalState | null>(null);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const { 
     cancelSession, 
