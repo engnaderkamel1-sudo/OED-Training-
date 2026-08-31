@@ -306,7 +306,13 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   } else if (isRegistrationClosed) {
     cardClasses += "bg-white dark:bg-[#152642] border-amber-300 dark:border-amber-700 shadow-sm";
   } else {
-    cardClasses += "bg-white dark:bg-[#1      {/* Header & Badges (Clean Accordion Trigger Bar) */}
+    cardClasses += "bg-white dark:bg-[#111C30] border-gray-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500/80";
+  }
+
+  return (
+    <>
+    <div className={cardClasses}>
+      {/* Header & Badges (Clean Accordion Trigger Bar) */}
       <div 
         onClick={() => setIsExpanded(prev => !prev)}
         className={`flex flex-col gap-1.5 cursor-pointer select-none transition-all hover:opacity-95 ${
@@ -381,7 +387,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             </span>
           </div>
         </div>
-      </div>Ÿ”„ Session:'}
+      </div>ï¿½ï¿½ï¿½ Session:'}
               </span>
               <span className="font-black text-xs text-indigo-900 dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2.5 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
                 {formatCourseIteration(session.sessionIteration)}
