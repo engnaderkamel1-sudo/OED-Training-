@@ -13,6 +13,7 @@ import { isDateInSessionRange, sendNativePushNotification } from '../utils/sessi
 import { playNotificationSound } from './TraineeDashboard';
 import { sanitizeUrl } from '../utils/securityUtils';
 import { formatSessionRecordNumber, formatCourseIteration } from '../utils/formatters';
+import { calculateReindexedSessions, parseSessionNumber } from '../utils/sessionSerialUtils';
 
 const EVALUATION_FORM_URL = "https://forms.cloud.microsoft/r/cj3ByTQCRS";
 
