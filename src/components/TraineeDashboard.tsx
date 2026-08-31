@@ -586,7 +586,7 @@ export const TraineeDashboard: React.FC = () => {
               >
                 <div 
                   className="p-3 rounded-xl shrink-0"
-                  style={{ backgroundColor: isDark ? 'rgba(245, 158, 11, 0.25)' : '#fffbeb', color: '#FFC000' }}
+                  style={{ backgroundColor: isDark ? 'rgba(245, 158, 11, 0.25)' : '#fffbeb', color: isDark ? '#FFC000' : '#B45309' }}
                 >
                   <CheckCircle size={24} />
                 </div>
