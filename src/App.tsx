@@ -243,7 +243,7 @@ const AppContent: React.FC = () => {
       <ExecutiveDemoBanner />
       <PWAInstallBanner />
       <TopNav />
-      <div className="pt-16 flex flex-col">
+      <div className={`${user?.isDemoUser ? 'pt-[100px] sm:pt-[104px]' : 'pt-16'} flex flex-col transition-all`}>
         <GlobalAttendanceAlertBanner />
         <QuotaExhaustedBanner />
         <UpdateNotificationBanner />
