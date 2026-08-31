@@ -27,6 +27,7 @@ import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AboutModal } from './AboutModal';
+import { ExecutiveQRModal } from './ExecutiveQRModal';
 import { isSessionActiveNow } from '../utils/sessionTimeUtils';
 
 export const TopNav: React.FC = () => {
@@ -37,6 +38,7 @@ export const TopNav: React.FC = () => {
   const [isLogoExpanded, setIsLogoExpanded] = useState(false);
   const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [showExecutiveQR, setShowExecutiveQR] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
@@ -681,23 +683,35 @@ export const TopNav: React.FC = () => {
                           </button>
                         </div>
                       </div>
-                      {/* VIP Executive Sandbox Quick Launcher (Admin Only) */}
+                      {/* VIP Executive Sandbox Quick Actions (Admin Only) */}
                       {user.role === 'admin' && !user.isDemoUser && (
-                        <button
-                          onClick={() => {
-                            setDropdownOpen(false);
-                            sessionStorage.setItem('oed_vip_demo_active', 'true');
-                            sessionStorage.setItem('oed_vip_role', 'admin');
-                            window.location.search = '?demo=vip';
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer border border-[#FFC000]/60 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 text-[#002D62] dark:text-[#FFC000] hover:scale-[1.02] shadow-2xs my-1"
-                          title={language === 'ar' ? 'بدء تجربة وضع المعاينة التنفيذية التفاعلية' : 'Launch VIP Executive Sandbox'}
-                        >
-                          <Sparkles size={16} className="text-[#FFC000] shrink-0" />
-                          <span className="flex-1 text-left rtl:text-right font-black">
-                            {language === 'ar' ? '👑 تجربة وضع المعاينة (VIP Sandbox)' : '👑 Test VIP Demo Mode'}
-                          </span>
-                        </button>
+                        <div className="grid grid-cols-2 gap-1.5 my-1">
+                          <button
+                            onClick={() => {
+                              setDropdownOpen(false);
+                              setShowExecutiveQR(true);
+                            }}
+                            className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer border border-[#FFC000]/60 bg-blue-900/30 text-[#002D62] dark:text-[#FFC000] hover:scale-[1.02] shadow-2xs"
+                            title={language === 'ar' ? 'عرض رمز الـ QR لمسحه من كاميرا موبايل المديرين' : 'Show VIP Demo QR Pass'}
+                          >
+                            <QrCode size={14} className="text-[#FFC000] shrink-0" />
+                            <span>{language === 'ar' ? '📱 عرض QR' : '📱 Show QR'}</span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setDropdownOpen(false);
+                              sessionStorage.setItem('oed_vip_demo_active', 'true');
+                              sessionStorage.setItem('oed_vip_role', 'admin');
+                              window.location.search = '?demo=vip';
+                            }}
+                            className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer bg-gradient-to-r from-[#FFC000] to-yellow-400 text-[#001D42] hover:scale-[1.02] shadow-xs"
+                            title={language === 'ar' ? 'بدء تجربة وضع المعاينة التنفيذية التفاعلية' : 'Launch VIP Executive Sandbox'}
+                          >
+                            <Sparkles size={14} className="text-[#001D42] shrink-0" />
+                            <span>{language === 'ar' ? '👑 تجربة الوضع' : '👑 Test Demo'}</span>
+                          </button>
+                        </div>
                       )}
 
                       <button
@@ -963,6 +977,11 @@ export const TopNav: React.FC = () => {
       {/* About System Modal */}
       {aboutOpen && (
         <AboutModal onClose={() => setAboutOpen(false)} />
+      )}
+
+      {/* VIP Executive QR Presentation Modal */}
+      {showExecutiveQR && (
+        <ExecutiveQRModal onClose={() => setShowExecutiveQR(false)} />
       )}
     </>
   );
