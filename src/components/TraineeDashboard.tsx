@@ -536,7 +536,7 @@ export const TraineeDashboard: React.FC = () => {
         <div className="w-full flex items-center justify-end border-b-2 border-[#FFC000] pb-2 mb-2 print:hidden">
           <p className="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200 md:hidden ml-auto rtl:ml-0 rtl:mr-auto text-right">
             {language === 'ar' ? '👋 أهلاً بك، ' : '👋 Welcome, '}
-            <span className="text-[#002D62] dark:text-[#FFC000] font-black">{user?.name?.split(' ')[0]}</span>
+            <span className="text-[#002D62] dark:text-[#FFC000] font-black">{user?.isDemoUser ? 'Guest' : (user?.name?.split(' ')[0] || 'User')}</span>
           </p>
         </div>
 
@@ -574,6 +574,25 @@ export const TraineeDashboard: React.FC = () => {
             )}
 
 
+                        {/* Executive Field Simulation Micro-Banner */}
+            {user?.isDemoUser && (
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-900/60 to-indigo-950/60 border border-[#FFC000]/50 text-white shadow-md flex items-center gap-3 text-xs sm:text-sm">
+                <div className="w-8 h-8 rounded-xl bg-[#FFC000] text-[#001D42] flex items-center justify-center font-black shrink-0">
+                  <Sparkles size={16} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-[#FFC000]">
+                    {language === 'ar' ? 'ðŸ“± Ù…Ø­Ø§ÙƒØ§Ø© ØªØ¬Ø±Ø¨Ø© ÙÙ†ÙŠÙŠ ÙˆÙ…Ù‡Ù†Ø¯Ø³ÙŠ Ø§Ù„Ù…ÙˆØ§Ù‚Ø¹ (Field Trainee View)' : 'ðŸ“± Live Field Trainee Experience Simulation'}
+                  </p>
+                  <p className="text-[11px] sm:text-xs text-slate-200 opacity-90 mt-0.5">
+                    {language === 'ar'
+                      ? 'Ù‡ÙƒØ°Ø§ ØªØ¸Ù‡Ø± Ø§Ù„Ø´Ø§Ø´Ø© Ù„Ù„Ù…Ù‡Ù†Ø¯Ø³ÙŠÙ† ÙˆØ§Ù„ÙÙ†ÙŠÙŠÙ† Ø¨Ù…ÙˆØ§Ù‚Ø¹ Ø§Ù„Ù…Ø´Ø±ÙˆØ¹Ø§Øª (Ø§Ù„Ø¹Ù„Ù…ÙŠÙ† / Ø§Ù„Ø³Ø®Ù†Ø© / ØªÙˆØ´ÙƒÙ‰) Ù„Ù…ØªØ§Ø¨Ø¹Ø© Ø³Ø§Ø¹Ø§ØªÙ‡Ù… ÙˆØ³Ø¬Ù„Ø§ØªÙ‡Ù… ÙÙˆØ±ÙŠØ§Ù‹.'
+                      : 'Demonstrates how site technicians across project sites (Alamein, Sokhna, Toshka) track accredited hours & test scores.'}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Digital Training Passport / Profile Card */}
             <div 
               className="rounded-2xl p-6 text-white shadow-md relative overflow-hidden border"
@@ -604,8 +623,10 @@ export const TraineeDashboard: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <h2 className="text-xl font-bold tracking-tight">{user?.name || 'Trainee'}</h2>
-                      <span className="text-xs bg-[#FFC000] text-[#002D62] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
-                        {user?.jobRole || user?.role || 'Technical Staff'}
+                      <span className="text-xs bg-[#FFC000] text-[#001D42] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
+                        {user?.isDemoUser 
+                          ? (language === 'ar' ? 'ðŸ‘· Ù†Ù…ÙˆØ°Ø¬ ØªØ¬Ø±Ø¨Ø© Ù…Ù‡Ù†Ø¯Ø³ Ø§Ù„Ù…ÙˆÙ‚Ø¹' : 'ðŸ‘· Sample Field Trainee') 
+                          : (user?.jobRole || user?.role || 'Technical Staff')}
                       </span>
                     </div>
                     <div className="text-xs text-blue-200 mt-1 flex items-center gap-3 flex-wrap">
