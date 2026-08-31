@@ -7,7 +7,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useAppContext } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment, collection, getDocs, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2, SearchX, UserCheck } from "lucide-react";
+import { Clock, CalendarX, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2, SearchX, UserCheck } from "lucide-react";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
 import { formatScore, formatDateToStandard } from "../utils/formatters";
@@ -771,33 +771,79 @@ Please log in to register for this session through the OED-TTMS Application.
       // 1. Check if disabled permanently
       if (localStorage.getItem('disable_auto_backup_prompt') === 'true') return;
 
-      // 2. Check if snoozed for 24h
-      const snoozeUntil = localStorage.getItem('backup_snooze_until');
-      if (snoozeUntil && Date.now() < parseInt(snoozeUntil, 10)) return;
-
-      const lastBackup = localStorage.getItem('last_auto_backup');
+      const now = Date.now();
+      const lastBackupStr = localStorage.getItem('last_auto_backup');
+      const lastBackupTime = lastBackupStr ? parseInt(lastBackupStr, 10) : 0;
       const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-      if (!lastBackup || Date.now() - parseInt(lastBackup, 10) > SEVEN_DAYS_MS) {
-        setTimeout(() => {
-          setShowBackupPromptModal(true);
-        }, 1500);
+      const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+
+      // If 7 days haven't passed since last backup / dismissal, do nothing
+      if (lastBackupTime && (now - lastBackupTime < SEVEN_DAYS_MS)) {
+        return;
       }
+
+      // 7 days have passed: Check current weekly cycle progress
+      let cycleStartStr = localStorage.getItem('backup_cycle_start');
+      if (!cycleStartStr) {
+        cycleStartStr = now.toString();
+        localStorage.setItem('backup_cycle_start', cycleStartStr);
+        localStorage.setItem('backup_snooze_count', '0');
+      }
+      const cycleStart = parseInt(cycleStartStr, 10);
+      const snoozeCount = parseInt(localStorage.getItem('backup_snooze_count') || '0', 10);
+
+      // If 3 days passed since reminder cycle started OR user snoozed 3 times:
+      // Don't show again this week, postpone to next week!
+      if (snoozeCount >= 3 || (now - cycleStart >= THREE_DAYS_MS)) {
+        localStorage.setItem('last_auto_backup', now.toString());
+        localStorage.removeItem('backup_cycle_start');
+        localStorage.removeItem('backup_snooze_count');
+        localStorage.removeItem('backup_snooze_until');
+        return;
+      }
+
+      // Check if snoozed for 24h
+      const snoozeUntilStr = localStorage.getItem('backup_snooze_until');
+      if (snoozeUntilStr && now < parseInt(snoozeUntilStr, 10)) {
+        return;
+      }
+
+      setTimeout(() => {
+        setShowBackupPromptModal(true);
+      }, 1500);
     };
+
     if (users.length > 0) checkAndRunAutoBackup();
   }, [users.length]);
 
   const handleSnoozeBackupOneDay = () => {
+    const now = Date.now();
     const oneDayMs = 24 * 60 * 60 * 1000;
-    localStorage.setItem('backup_snooze_until', (Date.now() + oneDayMs).toString());
+    const currentSnoozeCount = parseInt(localStorage.getItem('backup_snooze_count') || '0', 10) + 1;
+    localStorage.setItem('backup_snooze_count', currentSnoozeCount.toString());
+    localStorage.setItem('backup_snooze_until', (now + oneDayMs).toString());
     setShowBackupPromptModal(false);
-    setReminderToast(language === 'ar' ? 'تم تأجيل التذكير بالنسخ الاحتياطي لمدة 24 ساعة ⏱️' : 'Backup reminder snoozed for 24 hours ⏱️');
-    setTimeout(() => setReminderToast(null), 3500);
+
+    if (currentSnoozeCount >= 3) {
+      localStorage.setItem('last_auto_backup', now.toString());
+      localStorage.removeItem('backup_cycle_start');
+      localStorage.removeItem('backup_snooze_count');
+      localStorage.removeItem('backup_snooze_until');
+      setReminderToast(language === 'ar' ? 'تم تأجيل التذكير للأسبوع القادم بعد 3 أيام تأجيل 🗓️' : 'Backup reminder postponed to next week after 3 snoozes 🗓️');
+    } else {
+      setReminderToast(language === 'ar' ? `تم تأجيل التذكير لمدة 24 ساعة (اليوم ${currentSnoozeCount} من 3) ⏱️` : `Backup reminder snoozed for 24 hours (Day ${currentSnoozeCount} of 3) ⏱️`);
+    }
+    setTimeout(() => setReminderToast(null), 4000);
   };
 
-  const handleDisableBackupPrompt = () => {
-    localStorage.setItem('disable_auto_backup_prompt', 'true');
+  const handleSkipBackupThisWeek = () => {
+    const now = Date.now();
+    localStorage.setItem('last_auto_backup', now.toString());
+    localStorage.removeItem('backup_cycle_start');
+    localStorage.removeItem('backup_snooze_count');
+    localStorage.removeItem('backup_snooze_until');
     setShowBackupPromptModal(false);
-    setReminderToast(language === 'ar' ? 'تم إلغاء التذكير الدوري نهائياً. يمكنك دائماً حفظ نسخة يدوياً من قسم التقارير 🛡️' : 'Automatic backup reminder disabled. You can always export manual backups anytime from Reports 🛡️');
+    setReminderToast(language === 'ar' ? 'تم إلغاء تنبيه هذا الأسبوع، وسيعاود الظهور في موعده الأسبوع القادم 🗓️' : 'Dismissed for this week. Will remind again next week on schedule 🗓️');
     setTimeout(() => setReminderToast(null), 4000);
   };
 
@@ -810,6 +856,8 @@ Please log in to register for this session through the OED-TTMS Application.
     const success = exportCloudBackup(users, records, upcomingSessions, allRecords || [], courses || []);
     if (success) {
       localStorage.setItem('last_auto_backup', Date.now().toString());
+      localStorage.removeItem('backup_cycle_start');
+      localStorage.removeItem('backup_snooze_count');
       localStorage.removeItem('backup_snooze_until');
       setReminderToast(language === 'ar' ? 'تم تنزيل وحفظ النسخة الاحتياطية بنجاح! 💾' : 'Backup saved successfully! 💾');
       setTimeout(() => setReminderToast(null), 4000);
@@ -4247,8 +4295,9 @@ Content-Type: text/html; charset="utf-8"
               </div>
               <button
                 type="button"
-                onClick={() => setShowBackupPromptModal(false)}
+                onClick={handleSnoozeBackupOneDay}
                 className="text-white/80 hover:text-white p-1.5 rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
+                title={language === 'ar' ? 'تأجيل لغد' : 'Close and Snooze'}
               >
                 <X size={20} />
               </button>
@@ -4258,7 +4307,7 @@ Content-Type: text/html; charset="utf-8"
               <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs sm:text-sm text-blue-950 dark:text-blue-100 font-bold leading-relaxed space-y-2">
                 <p>
                   {language === 'ar'
-                    ? 'مر أكثر من 7 أيام منذ آخر نسخة احتياطية. هل ترغب في تنزيل وحفظ ملف Excel رسمي شامل ومحدث على جهازك الآن؟'
+                    ? 'مر أكثر من 7 أيام منذ آخر عملية نسخ احتياطي. هل ترغب في تنزيل وحفظ ملف Excel رسمي شامل ومحدث على جهازك الآن؟'
                     : 'More than 7 days have passed since your last backup. Would you like to generate and download an official updated Excel backup file now?'}
                 </p>
                 <div className="pt-2 border-t border-blue-200/80 dark:border-blue-800/80 text-xs text-blue-800 dark:text-blue-200 grid grid-cols-2 gap-1.5 font-medium">
@@ -4273,12 +4322,12 @@ Content-Type: text/html; charset="utf-8"
                 <button
                   type="button"
                   disabled={isExportingBackup}
-                  onClick={handleDisableBackupPrompt}
-                  className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 hover:underline flex items-center gap-1 font-bold cursor-pointer transition-colors order-last sm:order-first"
-                  title={language === 'ar' ? 'إيقاف هذا التذكير التلقائي نهائياً' : 'Disable automatic backup reminders'}
+                  onClick={handleSkipBackupThisWeek}
+                  className="text-xs text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 hover:underline flex items-center gap-1.5 font-bold cursor-pointer transition-colors order-last sm:order-first"
+                  title={language === 'ar' ? 'إلغاء التنبيه هذا الأسبوع وتذكيري في الموعد الأسبوعي القادم' : 'Skip reminder this week and remind next week'}
                 >
-                  <BellOff size={14} />
-                  <span>{language === 'ar' ? 'إلغاء التذكير نهائياً' : "Don't remind again"}</span>
+                  <CalendarX size={14} />
+                  <span>{language === 'ar' ? 'إلغاء تنبيه هذا الأسبوع' : 'Skip this week'}</span>
                 </button>
 
                 <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -4286,10 +4335,11 @@ Content-Type: text/html; charset="utf-8"
                     type="button"
                     disabled={isExportingBackup}
                     onClick={handleSnoozeBackupOneDay}
-                    className="flex-1 sm:flex-initial px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                    className="flex-1 sm:flex-initial px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 border border-slate-200 dark:border-slate-700"
+                    title={language === 'ar' ? 'تأجيل التذكير لمدة يوم واحد (بحد أقصى 3 أيام في الأسبوع)' : 'Postpone for 1 day (max 3 days in the current weekly cycle)'}
                   >
                     <Clock size={14} className="text-amber-500" />
-                    <span>{language === 'ar' ? 'تأجيل لمدة يوم (24h)' : 'Snooze 1 Day'}</span>
+                    <span>{language === 'ar' ? 'تذكيري لاحقاً (يوم)' : 'Remind Me Later (1d)'}</span>
                   </button>
 
                   <button
@@ -4299,7 +4349,7 @@ Content-Type: text/html; charset="utf-8"
                     className="flex-1 sm:flex-initial px-4 py-2.5 bg-[#002D62] hover:bg-blue-900 text-white font-black text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
                   >
                     {isExportingBackup ? <Loader2 size={16} className="animate-spin text-amber-400" /> : <FileSpreadsheet size={16} className="text-amber-400" />}
-                    <span>{isExportingBackup ? (language === 'ar' ? 'جاري التنزيل...' : 'Generating...') : (language === 'ar' ? 'تنزيل النسخة' : 'Download Backup')}</span>
+                    <span>{isExportingBackup ? (language === 'ar' ? 'جاري التنزيل...' : 'Generating...') : (language === 'ar' ? 'نعم، تنزيل النسخة' : 'Yes, Download Backup')}</span>
                   </button>
                 </div>
               </div>
