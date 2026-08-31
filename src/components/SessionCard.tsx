@@ -774,20 +774,15 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                     {/* Manual Check-in */}
                     <button 
                       type="button"
-                      disabled={!isDateActiveForAttendance}
                       onClick={(e) => { 
                         e.preventDefault(); 
                         e.stopPropagation(); 
-                        if (isDateActiveForAttendance && onManualAttendanceRequest) onManualAttendanceRequest(session); 
+                        if (onManualAttendanceRequest) onManualAttendanceRequest(session); 
                       }}
-                      className={`w-full text-xs px-3 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 font-bold shadow-2xs ${
-                        isDateActiveForAttendance
-                          ? 'cursor-pointer bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700/80 hover:scale-[1.02] active:scale-95'
-                          : 'opacity-40 cursor-not-allowed bg-gray-100 dark:bg-slate-800 text-gray-500 border border-gray-200 dark:border-slate-700'
-                      }`}
-                      title={isDateActiveForAttendance ? (language === 'ar' ? 'تسجيل حضور استثنائي يدوي' : 'Manual Attendance') : (language === 'ar' ? 'متاح فقط أثناء أيام انعقاد الدورة الفعلية' : 'Available only during active session dates')}
+                      className="w-full cursor-pointer bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700/80 text-xs px-3 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 font-bold shadow-2xs hover:scale-[1.02] active:scale-95"
+                      title={language === 'ar' ? 'تسجيل حضور استثنائي يدوي' : 'Manual Attendance Check-in'}
                     >
-                      <UserCheck size={14} className={isDateActiveForAttendance ? 'text-emerald-700 dark:text-emerald-400 shrink-0' : 'text-gray-400 shrink-0'} />
+                      <UserCheck size={14} className="text-emerald-700 dark:text-emerald-400 shrink-0" />
                       <span className="truncate">{language === 'ar' ? 'تحضير يدوي ✍️' : 'Manual Check-in ✍️'}</span>
                     </button>
 
@@ -805,18 +800,20 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                     {/* Finalize & Grade */}
                     <button 
                       type="button"
-                      disabled={!isDateActiveForAttendance}
                       onClick={(e) => { 
                         e.preventDefault(); 
                         e.stopPropagation(); 
-                        if (isDateActiveForAttendance && onFinalizeRequest) onFinalizeRequest(session); 
+                        requestConfirmation({
+                          title: language === 'ar' ? 'إنهاء الجلسة ورصد الدرجات' : 'Finalize Session & Record Grades',
+                          message: language === 'ar' ? `هل ترغب في فتح شاشة إنهاء الجلسة ورصد درجات الحضور والتقييم لمتدربي دورة [${session.courseTitle}]؟` : `Open session finalization to record grades and attendance for [${session.courseTitle}]?`,
+                          confirmLabel: language === 'ar' ? 'نعم، متابعة ورصد الدرجات ✓' : 'Yes, Proceed',
+                          color: 'blue',
+                          icon: <CheckCircle size={20} className="text-blue-500" />,
+                          onConfirm: () => { if (onFinalizeRequest) onFinalizeRequest(session); }
+                        });
                       }}
-                      className={`w-full text-xs px-3 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 font-bold shadow-2xs ${
-                        isDateActiveForAttendance
-                          ? 'cursor-pointer text-white bg-blue-600 hover:bg-blue-700 border border-blue-400/40 hover:scale-[1.02] active:scale-95'
-                          : 'opacity-40 cursor-not-allowed bg-gray-200 dark:bg-slate-800 text-gray-500 border border-gray-300 dark:border-slate-700'
-                      }`}
-                      title={isDateActiveForAttendance ? (language === 'ar' ? 'إنهاء الجلسة وتسجيل الدرجات' : 'Finalize & Grade') : (language === 'ar' ? 'متاح فقط أثناء أيام انعقاد الدورة الفعلية' : 'Available only during active session dates')}
+                      className="w-full cursor-pointer text-white bg-blue-600 hover:bg-blue-700 border border-blue-400/40 text-xs px-3 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 font-bold shadow-2xs hover:scale-[1.02] active:scale-95"
+                      title={language === 'ar' ? 'إنهاء الجلسة وتسجيل الدرجات' : 'Finalize & Grade'}
                     >
                       <CheckCircle size={14} className="shrink-0" />
                       <span className="truncate">{language === 'ar' ? 'إنهاء واعتماد الدرجات ✓' : 'Finalize & Grade ✓'}</span>
