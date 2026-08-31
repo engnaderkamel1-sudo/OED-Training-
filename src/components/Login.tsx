@@ -3,7 +3,7 @@ import { useAppContext, generateUUID } from "../context";
 import { User, Role } from "../types";
 import { 
   CheckCircle, Eye, EyeOff, Loader2, 
-  Briefcase, Clock, ArrowRight, UserPlus
+  Briefcase, Clock, ArrowRight, UserPlus, Sparkles
 } from "lucide-react";
 import { auth, db } from "../firebase";
 import { doc, getDoc, setDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
@@ -14,7 +14,7 @@ import { hashPassword, verifyPassword, sanitizeUserForStorage } from "../utils/c
 import { validateHrCode, validatePhone, validateEmail, sanitizePlainText } from "../utils/securityUtils";
 
 export const Login: React.FC = () => {
-  const { t, language, setUser, users, setUsers, uniqueDepartments, addLoginLog, systemVersion } = useAppContext();
+  const { t, language, setUser, users, setUsers, uniqueDepartments, addLoginLog, systemVersion, isExecutiveDemoEnabled } = useAppContext();
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   
@@ -643,6 +643,29 @@ export const Login: React.FC = () => {
                 {language === "ar" ? "نسيت كلمة المرور؟" : "Forgot Password?"}
               </button>
             </div>
+
+            {/* VIP Executive Guest Access Button */}
+            {isExecutiveDemoEnabled && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    sessionStorage.setItem('oed_vip_demo_active', 'true');
+                    sessionStorage.setItem('oed_vip_role', 'admin');
+                    window.location.search = '?demo=vip';
+                  }}
+                  className="w-full py-2.5 px-3 rounded-2xl border-2 border-dashed border-[#FFC000] bg-gradient-to-r from-amber-50 via-yellow-50/60 to-amber-50 dark:from-amber-950/40 dark:via-yellow-950/30 dark:to-amber-950/40 text-[#001D42] dark:text-[#FFC000] text-xs font-black flex items-center justify-center gap-2 transition-all hover:scale-[1.02] shadow-xs cursor-pointer"
+                  title={language === 'ar' ? 'الدخول كضيف إدارة عليا للمعاينة التفاعلية' : 'Enter VIP Executive Interactive Demo'}
+                >
+                  <Sparkles size={15} className="text-[#FFC000]" />
+                  <span>
+                    {language === 'ar' 
+                      ? '👑 دخول تجريبي لضيوف الإدارة العليا (VIP Sandbox)' 
+                      : '👑 VIP Executive Interactive Preview'}
+                  </span>
+                </button>
+              </div>
+            )}
 
             {/* System Info & Copyright directly under Register button */}
             <div className="mt-6 pt-3 border-t border-gray-100 dark:border-gray-800 text-center space-y-0.5">
