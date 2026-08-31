@@ -681,6 +681,25 @@ export const TopNav: React.FC = () => {
                           </button>
                         </div>
                       </div>
+                      {/* VIP Executive Sandbox Quick Launcher (Admin Only) */}
+                      {user.role === 'admin' && !user.isDemoUser && (
+                        <button
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            sessionStorage.setItem('oed_vip_demo_active', 'true');
+                            sessionStorage.setItem('oed_vip_role', 'admin');
+                            window.location.search = '?demo=vip';
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer border border-[#FFC000]/60 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 text-[#002D62] dark:text-[#FFC000] hover:scale-[1.02] shadow-2xs my-1"
+                          title={language === 'ar' ? 'بدء تجربة وضع المعاينة التنفيذية التفاعلية' : 'Launch VIP Executive Sandbox'}
+                        >
+                          <Sparkles size={16} className="text-[#FFC000] shrink-0" />
+                          <span className="flex-1 text-left rtl:text-right font-black">
+                            {language === 'ar' ? '👑 تجربة وضع المعاينة (VIP Sandbox)' : '👑 Test VIP Demo Mode'}
+                          </span>
+                        </button>
+                      )}
+
                       <button
                         onClick={openProfile}
                         className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer"
