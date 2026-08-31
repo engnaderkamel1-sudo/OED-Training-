@@ -768,6 +768,13 @@ Please log in to register for this session through the OED-TTMS Application.
 
   useEffect(() => {
     const checkAndRunAutoBackup = () => {
+      // 1. Check if disabled permanently
+      if (localStorage.getItem('disable_auto_backup_prompt') === 'true') return;
+
+      // 2. Check if snoozed for 24h
+      const snoozeUntil = localStorage.getItem('backup_snooze_until');
+      if (snoozeUntil && Date.now() < parseInt(snoozeUntil, 10)) return;
+
       const lastBackup = localStorage.getItem('last_auto_backup');
       const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
       if (!lastBackup || Date.now() - parseInt(lastBackup, 10) > SEVEN_DAYS_MS) {
@@ -779,6 +786,21 @@ Please log in to register for this session through the OED-TTMS Application.
     if (users.length > 0) checkAndRunAutoBackup();
   }, [users.length]);
 
+  const handleSnoozeBackupOneDay = () => {
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    localStorage.setItem('backup_snooze_until', (Date.now() + oneDayMs).toString());
+    setShowBackupPromptModal(false);
+    setReminderToast(language === 'ar' ? 'تم تأجيل التذكير بالنسخ الاحتياطي لمدة 24 ساعة ⏱️' : 'Backup reminder snoozed for 24 hours ⏱️');
+    setTimeout(() => setReminderToast(null), 3500);
+  };
+
+  const handleDisableBackupPrompt = () => {
+    localStorage.setItem('disable_auto_backup_prompt', 'true');
+    setShowBackupPromptModal(false);
+    setReminderToast(language === 'ar' ? 'تم إلغاء التذكير الدوري نهائياً. يمكنك دائماً حفظ نسخة يدوياً من قسم التقارير 🛡️' : 'Automatic backup reminder disabled. You can always export manual backups anytime from Reports 🛡️');
+    setTimeout(() => setReminderToast(null), 4000);
+  };
+
   const handleConfirmBackup = async () => {
     setIsExportingBackup(true);
     let allRecords = cleanedData;
@@ -788,12 +810,14 @@ Please log in to register for this session through the OED-TTMS Application.
     const success = exportCloudBackup(users, records, upcomingSessions, allRecords || [], courses || []);
     if (success) {
       localStorage.setItem('last_auto_backup', Date.now().toString());
+      localStorage.removeItem('backup_snooze_until');
       setReminderToast(language === 'ar' ? 'تم تنزيل وحفظ النسخة الاحتياطية بنجاح! 💾' : 'Backup saved successfully! 💾');
       setTimeout(() => setReminderToast(null), 4000);
     }
     setIsExportingBackup(false);
     setShowBackupPromptModal(false);
   };
+
 
   const DEFAULT_COURSE_STATS = [
     { courseName: "Heavy Equipment Hydraulics", attendees: 142, sessions: 18 },
@@ -4025,7 +4049,7 @@ Content-Type: text/html; charset="utf-8"
               {!isResetting && (
                 <button 
                   type="button"
-                  onClick={() => setShowFactoryResetModal(false)}
+                  onClick={() => setShowFactoryResetModal(false)} 
                   className="text-red-200 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
                 >
                   <X size={20} />
@@ -4245,29 +4269,45 @@ Content-Type: text/html; charset="utf-8"
                 </div>
               </div>
 
-              <div className="flex gap-2.5 justify-end pt-2">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
                 <button
                   type="button"
                   disabled={isExportingBackup}
-                  onClick={() => setShowBackupPromptModal(false)}
-                  className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs sm:text-sm rounded-xl transition-colors cursor-pointer"
+                  onClick={handleDisableBackupPrompt}
+                  className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 hover:underline flex items-center gap-1 font-bold cursor-pointer transition-colors order-last sm:order-first"
+                  title={language === 'ar' ? 'إيقاف هذا التذكير التلقائي نهائياً' : 'Disable automatic backup reminders'}
                 >
-                  {language === 'ar' ? 'تذكيري لاحقاً' : 'Remind Me Later'}
+                  <BellOff size={14} />
+                  <span>{language === 'ar' ? 'إلغاء التذكير نهائياً' : "Don't remind again"}</span>
                 </button>
-                <button
-                  type="button"
-                  disabled={isExportingBackup}
-                  onClick={handleConfirmBackup}
-                  className="px-5 py-2.5 bg-[#002D62] hover:bg-blue-900 text-white font-black text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
-                >
-                  {isExportingBackup ? <Loader2 size={16} className="animate-spin text-amber-400" /> : <FileSpreadsheet size={16} className="text-amber-400" />}
-                  <span>{isExportingBackup ? (language === 'ar' ? 'جاري تجهيز وتنزيل الملف...' : 'Generating Backup...') : (language === 'ar' ? 'نعم، تنزيل النسخة الاحتياطية' : 'Yes, Download Backup')}</span>
-                </button>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    disabled={isExportingBackup}
+                    onClick={handleSnoozeBackupOneDay}
+                    className="flex-1 sm:flex-initial px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                  >
+                    <Clock size={14} className="text-amber-500" />
+                    <span>{language === 'ar' ? 'تأجيل لمدة يوم (24h)' : 'Snooze 1 Day'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isExportingBackup}
+                    onClick={handleConfirmBackup}
+                    className="flex-1 sm:flex-initial px-4 py-2.5 bg-[#002D62] hover:bg-blue-900 text-white font-black text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
+                  >
+                    {isExportingBackup ? <Loader2 size={16} className="animate-spin text-amber-400" /> : <FileSpreadsheet size={16} className="text-amber-400" />}
+                    <span>{isExportingBackup ? (language === 'ar' ? 'جاري التنزيل...' : 'Generating...') : (language === 'ar' ? 'تنزيل النسخة' : 'Download Backup')}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
+
 
       {/* --- ADD NEW COURSE MODAL --- */}
       {showNewCourseModal && (
