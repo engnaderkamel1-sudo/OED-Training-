@@ -141,12 +141,73 @@ export const TraineeDashboard: React.FC = () => {
     }
   });
 
-  const userRecords = records.filter(r => 
+  const DEMO_FALLBACK_RECORDS: TrainingRecord[] = useMemo(() => [
+    {
+      id: 'demo_rec_1',
+      userId: '830557',
+      hrCode: '830557',
+      courseId: 'Diesel Engine Mechanical Fundamentals',
+      score: 92,
+      totalDays: '3 Days',
+      daysAttended: '3 Days',
+      raw: {
+        'Course Name': 'Diesel Engine Mechanical Fundamentals',
+        'Course Date': '2024-05-15',
+        'Course Duration': '3 Days',
+        'Attended Days': '3 Days',
+        'Score': '92%',
+        'Score Status': 'Pass',
+        'Department': 'Heavy Machinery',
+      }
+    },
+    {
+      id: 'demo_rec_2',
+      userId: '830557',
+      hrCode: '830557',
+      courseId: 'Hydraulic Systems & Troubleshooting',
+      score: 88,
+      totalDays: '4 Days',
+      daysAttended: '4 Days',
+      raw: {
+        'Course Name': 'Hydraulic Systems & Troubleshooting',
+        'Course Date': '2024-08-20',
+        'Course Duration': '4 Days',
+        'Attended Days': '4 Days',
+        'Score': '88%',
+        'Score Status': 'Pass',
+        'Department': 'Heavy Machinery',
+      }
+    },
+    {
+      id: 'demo_rec_3',
+      userId: '830557',
+      hrCode: '830557',
+      courseId: 'Electrical Diagnostics & Schematics',
+      score: 95,
+      totalDays: '2 Days',
+      daysAttended: '2 Days',
+      raw: {
+        'Course Name': 'Electrical Diagnostics & Schematics',
+        'Course Date': '2024-11-10',
+        'Course Duration': '2 Days',
+        'Attended Days': '2 Days',
+        'Score': '95%',
+        'Score Status': 'Pass',
+        'Department': 'Heavy Machinery',
+      }
+    }
+  ], []);
+
+  const realUserRecords = records.filter(r => 
     r.userId === user?.id || 
     r.userId === user?.hrCode || 
     r.hrCode === user?.hrCode || 
     r.userId === 'u1'
   );
+
+  const userRecords = (realUserRecords.length > 0 || !user?.isDemoUser) 
+    ? realUserRecords 
+    : DEMO_FALLBACK_RECORDS;
   
   const totalCourses = userRecords.length;
   const averageScore = userRecords.length > 0 
