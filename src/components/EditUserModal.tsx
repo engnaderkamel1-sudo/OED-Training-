@@ -4,6 +4,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { X, Save, UserCheck, Shield, User, Briefcase, Mail, Phone, CheckCircle2 } from 'lucide-react';
 import { User as UserType, Role } from '../types';
+import { validateHrCode, validatePhone, validateEmail, sanitizePlainText } from '../utils/securityUtils';
 
 interface EditUserModalProps {
   user: UserType;
@@ -33,6 +34,21 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose }) =
     }
 
     const cleanHr = hrCode.trim().toUpperCase();
+    if (!cleanHr || !validateHrCode(cleanHr)) {
+      alert(language === 'ar' ? 'الرقم الوظيفي غير صالح (يجب أن يحتوي على أرقام وحروف فقط وبدون رموز خاصة)' : 'Invalid HR Code format');
+      return;
+    }
+
+    if (phone && !validatePhone(phone)) {
+      alert(language === 'ar' ? 'رقم الهاتف غير صالح، يجب أن يبدأ بـ 01 ويتكون من 11 رقماً' : 'Invalid Egyptian phone format');
+      return;
+    }
+
+    if (email && !validateEmail(email)) {
+      alert(language === 'ar' ? 'صيغة البريد الإلكتروني غير صحيحة' : 'Invalid email format');
+      return;
+    }
+
     // SECURITY: Prevent HR Code hijacking / duplicates
     if (cleanHr && users.some(u => u.id !== user.id && (u.hrCode || '').trim().toUpperCase() === cleanHr)) {
       alert(language === 'ar' ? 'الرقم الوظيفي مسجل بالفعل لمستخدم آخر' : 'This HR Code is already assigned to another user');
@@ -43,10 +59,10 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose }) =
     try {
       const sanitizedUser = {
         ...user,
-        hrCode: hrCode.trim(),
-        name: name.trim(),
-        department: department.trim(),
-        email: email.trim(),
+        hrCode: cleanHr,
+        name: sanitizePlainText(name, 100),
+        department: sanitizePlainText(department, 100),
+        email: email.trim().toLowerCase(),
         phone: phone.trim(),
         role: role,
         status: status,
