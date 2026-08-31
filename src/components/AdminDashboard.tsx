@@ -253,8 +253,8 @@ Please log in to register for this session through the OED-TTMS Application.
   const [customEmailBody, setCustomEmailBody] = useState<string>("");
 
   const vacantGaps = useMemo(() => {
-    return getVacantSessionNumbers(upcomingSessions, allTrainingRecords, 4);
-  }, [upcomingSessions, allTrainingRecords]);
+    return getVacantSessionNumbers(upcomingSessions, records, 4);
+  }, [upcomingSessions, records]);
 
   const conflictingSession = useMemo(() => {
     if (!sessionNumber) return undefined;
