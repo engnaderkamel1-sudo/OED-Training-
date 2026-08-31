@@ -545,18 +545,18 @@ export const TopNav: React.FC = () => {
                       <div 
                         className="w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-[13px] shadow-sm shrink-0"
                         style={{ 
-                          backgroundColor: '#ffffff', 
-                          color: '#002D62', 
+                          backgroundColor: user.isDemoUser ? '#FFC000' : '#ffffff', 
+                          color: user.isDemoUser ? '#001D42' : '#002D62', 
                           border: '2px solid #FFC000' 
                         }}
                       >
-                        {getInitials(user.name)}
+                        {user.isDemoUser ? 'G' : getInitials(user.name)}
                       </div>
                     )}
 
                     {/* First Name on Mobile & Desktop */}
                     <span className="text-xs font-bold text-white max-w-[65px] sm:max-w-[110px] truncate leading-tight">
-                      {getFirstName(user.name)}
+                      {user.isDemoUser ? 'Guest' : getFirstName(user.name)}
                     </span>
 
                     <ChevronDown size={14} className={`text-white transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
