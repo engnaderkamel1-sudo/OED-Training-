@@ -642,10 +642,10 @@ export const TopNav: React.FC = () => {
                       >
                         <div className="flex items-center justify-between text-xs font-bold" style={{ color: isDark ? '#FFFFFF' : '#1E293B' }}>
                           <span className="flex items-center gap-1.5">
-                            <span className="text-[#FFC000] font-black text-xs px-1.5 py-0.5 bg-[#FFC000]/15 rounded">Aa</span>
+                            <span className="text-amber-700 dark:text-[#FFC000] font-black text-xs px-1.5 py-0.5 bg-amber-500/15 dark:bg-[#FFC000]/15 rounded">Aa</span>
                             <span>{language === 'ar' ? 'حجم الخط (Text Size)' : 'Font Size'}</span>
                           </span>
-                          <span className="font-mono font-black text-[#FFC000] bg-[#FFC000]/10 px-2 py-0.5 rounded-md text-[11px]">
+                          <span className="font-mono font-black text-amber-700 dark:text-[#FFC000] bg-amber-500/10 dark:bg-[#FFC000]/10 px-2 py-0.5 rounded-md text-[11px]">
                             {fontScale}%
                           </span>
                         </div>
