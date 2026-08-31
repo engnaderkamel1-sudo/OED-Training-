@@ -2112,7 +2112,6 @@ Content-Type: text/html; charset="utf-8"
               updateEditFormData={updateEditFormData}
               setUpdateEditFormData={setUpdateEditFormData}
               setSelectedUserToEdit={setSelectedUserToEdit}
-              handleOpenEditUser={handleOpenEditUser}
               handleApprove={handleApprove}
               handleReject={handleReject}
               handleSaveUserEdit={handleSaveUserEdit}
