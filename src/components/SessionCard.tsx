@@ -65,6 +65,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   const [debugMsg, setDebugMsg] = useState<string>("");
   const [confirmAction, setConfirmAction] = useState<'cancel' | 'unregister' | null>(null);
   const [showAttendeesModal, setShowAttendeesModal] = useState<boolean>(false);
+  const [attendeesModalTab, setAttendeesModalTab] = useState<'registered' | 'waitlist'>('registered');
   const [actionConfirm, setActionConfirm] = useState<ActionConfirmModalState | null>(null);
 
   const { 
@@ -73,6 +74,10 @@ export const SessionCard: React.FC<SessionCardProps> = ({
     unregisterTrainee, 
     registerTrainee, 
     updateUpcomingSession,
+    joinSessionWaitlist,
+    leaveSessionWaitlist,
+    approveWaitlistRequest,
+    rejectWaitlistRequest,
     user, 
     users,
     language, 
@@ -357,15 +362,29 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             <div className="flex flex-col">
               <span className="leading-snug text-slate-900 dark:text-white"><DataField>{session.targetParticipants}</DataField></span>
               {isAdminView && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAttendeesModal(true); }}
-                  className="text-xs font-black text-emerald-900 dark:text-emerald-300 mt-2 bg-emerald-100 dark:bg-emerald-950/80 px-3 py-1.5 rounded-xl self-start border border-emerald-300 dark:border-emerald-500/80 hover:bg-emerald-200 dark:hover:bg-emerald-900 transition-all cursor-pointer flex items-center gap-1.5 shadow-xs hover:scale-105"
-                  title={language === 'ar' ? 'عرض قائمة المسجلين' : 'View Registered Attendees'}
-                >
-                  <Users size={14} className="text-emerald-700 dark:text-emerald-300" />
-                  <span>{attendeesCount} {language === 'ar' ? 'مسجلين (استعراض 👁️)' : 'registered (View 👁️)'}</span>
-                </button>
+                <div className="flex items-center gap-2 flex-wrap mt-2">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAttendeesModalTab('registered'); setShowAttendeesModal(true); }}
+                    className="text-xs font-black text-emerald-900 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 px-3 py-1.5 rounded-xl self-start border border-emerald-300 dark:border-emerald-500/80 hover:bg-emerald-200 dark:hover:bg-emerald-900 transition-all cursor-pointer flex items-center gap-1.5 shadow-xs hover:scale-105"
+                    title={language === 'ar' ? 'عرض قائمة المسجلين' : 'View Registered Attendees'}
+                  >
+                    <Users size={14} className="text-emerald-700 dark:text-emerald-300" />
+                    <span>{attendeesCount} {language === 'ar' ? 'مسجلين (استعراض 👁️)' : 'registered (View 👁️)'}</span>
+                  </button>
+
+                  {waitlistCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAttendeesModalTab('waitlist'); setShowAttendeesModal(true); }}
+                      className="text-xs font-black text-purple-900 dark:text-purple-200 bg-purple-100 dark:bg-purple-950/80 px-3 py-1.5 rounded-xl self-start border border-purple-300 dark:border-purple-600 hover:bg-purple-200 dark:hover:bg-purple-900 transition-all cursor-pointer flex items-center gap-1.5 shadow-xs hover:scale-105 animate-pulse"
+                      title={language === 'ar' ? 'يوجد طلبات في قائمة الانتظار للمراجعة' : 'Waitlist requests pending review'}
+                    >
+                      <Clock size={13} className="text-purple-600 dark:text-purple-400" />
+                      <span>{language === 'ar' ? `قائمة الانتظار (${waitlistCount})` : `Waitlist (${waitlistCount})`}</span>
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -1098,8 +1117,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       )}
 
       {/* ========================================================= */}
-      {/* ATTENDEES LIST MODAL                                      */}
-      {/* ========================================================= */}
+      {/* ATTENDEES LIST & WAITLIST MODAL */}
       {showAttendeesModal && (
         <div 
           className="fixed inset-0 bg-black/70 backdrop-blur-xs z-[99999] flex items-center justify-center p-4 cursor-pointer animate-fade-in"
@@ -1117,7 +1135,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 </div>
                 <div>
                   <h3 className="font-bold text-base sm:text-lg leading-tight">
-                    {language === 'ar' ? 'المتدربون المسجلون في الدورة' : 'Registered Attendees'}
+                    {language === 'ar' ? 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…ØªØ¯Ø±Ø¨ÙŠÙ† ÙˆÙ‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±' : 'Attendees & Waitlist Management'}
                   </h3>
                   <p className="text-xs text-blue-200 mt-0.5 font-medium truncate max-w-[320px]">
                     {session.courseTitle} ({session.sessionNumber || 'Session 1'})
@@ -1133,88 +1151,227 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               </button>
             </div>
 
-            {/* Attendees List */}
-            <div className="p-5 overflow-y-auto space-y-3 flex-1">
-              <div className="flex items-center justify-between pb-2 border-b dark:border-slate-800">
-                <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
-                  {language === 'ar' ? 'إجمالي الحضور المؤكدين:' : 'Total Confirmed Attendees:'}
+            {/* TAB SELECTOR */}
+            <div className="flex border-b border-gray-200 dark:border-slate-800 bg-gray-100/70 dark:bg-slate-900/70 p-1.5 gap-2">
+              <button
+                type="button"
+                onClick={() => setAttendeesModalTab('registered')}
+                className={lex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer }
+              >
+                <Users size={14} className={attendeesModalTab === 'registered' ? 'text-[#002D62] dark:text-[#FFC000]' : ''} />
+                <span>{language === 'ar' ? 'Ø§Ù„Ù…Ø³Ø¬Ù„ÙˆÙ† Ø±Ø³Ù…ÙŠØ§Ù‹' : 'Confirmed Attendees'}</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                  {registeredTrainees.length}
                 </span>
-                <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
-                  {registeredTrainees.length} {language === 'ar' ? 'متدرب' : 'Trainees'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAttendeesModalTab('waitlist')}
+                className={lex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer }
+              >
+                <Clock size={14} className={attendeesModalTab === 'waitlist' ? 'text-purple-600 dark:text-amber-300' : ''} />
+                <span>{language === 'ar' ? 'Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±' : 'Waitlist Requests'}</span>
+                <span className={px-2 py-0.5 rounded-full text-[10px] font-black border }>
+                  {waitlistedTrainees.length}
                 </span>
-              </div>
-
-              {registeredTrainees.length === 0 ? (
-                <div className="text-center py-10 text-gray-400 text-xs sm:text-sm">
-                  {language === 'ar' ? 'لم يسجل أي متدرب في هذه الجلسة حتى الآن' : 'No trainees have registered for this session yet'}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {registeredTrainees.map((trainee, idx) => {
-                    const traineeCode = trainee.hrCode || trainee.id || '';
-                    const regTimestamp = session.registrationTimestamps?.[traineeCode];
-                    const regTimeFormatted = regTimestamp ? new Date(regTimestamp).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true
-                    }) : null;
-
-                    return (
-                      <div
-                        key={idx}
-                        className="p-3.5 rounded-xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-800/60 flex items-center justify-between gap-3 shadow-2xs hover:bg-blue-50/50 dark:hover:bg-slate-800 transition-colors"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-full bg-[#002D62] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-xs border border-white/20">
-                            {trainee.profileImageUrl ? (
-                              <img src={trainee.profileImageUrl} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <span>{trainee.name?.slice(0, 2).toUpperCase() || 'TR'}</span>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <h4 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white truncate">
-                              {trainee.name}
-                            </h4>
-                            <p className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-0.5">
-                              <span className="font-mono font-bold text-[#002D62] dark:text-[#FFC000]">{trainee.hrCode}</span>
-                              <span>•</span>
-                              <span className="truncate">{trainee.department || 'General'}</span>
-                            </p>
-                            {regTimeFormatted && (
-                              <p className="text-[10.5px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 mt-1 font-mono">
-                                <Clock size={11} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                <span>{language === 'ar' ? `تاريخ ووقت التسجيل: ${regTimeFormatted}` : `Registered at: ${regTimeFormatted}`}</span>
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="text-right rtl:text-left shrink-0">
-                          {trainee.phone && (
-                            <a
-                              href={`tel:${trainee.phone}`}
-                              className="text-xs font-semibold text-blue-600 dark:text-blue-400 block hover:underline"
-                              dir="ltr"
-                            >
-                              {trainee.phone}
-                            </a>
-                          )}
-                          {trainee.email && (
-                            <span className="text-[10px] text-gray-400 block truncate max-w-[150px]">
-                              {trainee.email}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              </button>
             </div>
+
+            {/* TAB CONTENT: REGISTERED ATTENDEES */}
+            {attendeesModalTab === 'registered' && (
+              <div className="p-5 overflow-y-auto space-y-3 flex-1">
+                <div className="flex items-center justify-between pb-2 border-b dark:border-slate-800">
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+                    {language === 'ar' ? 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø­Ø¶ÙˆØ± Ø§Ù„Ù…Ø¤ÙƒØ¯ÙŠÙ†:' : 'Total Confirmed Attendees:'}
+                  </span>
+                  <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                    {registeredTrainees.length} {language === 'ar' ? 'Ù…ØªØ¯Ø±Ø¨' : 'Trainees'}
+                  </span>
+                </div>
+
+                {registeredTrainees.length === 0 ? (
+                  <div className="text-center py-10 text-gray-400 text-xs sm:text-sm">
+                    {language === 'ar' ? 'Ù„Ù… ÙŠØ³Ø¬Ù„ Ø£ÙŠ Ù…ØªØ¯Ø±Ø¨ ÙÙŠ Ù‡Ø°Ù‡ Ø§Ù„Ø¬Ù„Ø³Ø© Ø­ØªÙ‰ Ø§Ù„Ø¢Ù†' : 'No trainees have registered for this session yet'}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {registeredTrainees.map((trainee, idx) => {
+                      const traineeCode = trainee.hrCode || trainee.id || '';
+                      const regTimestamp = session.registrationTimestamps?.[traineeCode];
+                      const regTimeFormatted = regTimestamp ? new Date(regTimestamp).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      }) : null;
+
+                      return (
+                        <div
+                          key={idx}
+                          className="p-3.5 rounded-xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-800/60 flex items-center justify-between gap-3 shadow-2xs hover:bg-blue-50/50 dark:hover:bg-slate-800 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-full bg-[#002D62] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-xs border border-white/20">
+                              {trainee.profileImageUrl ? (
+                                <img src={trainee.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span>{trainee.name?.slice(0, 2).toUpperCase() || 'TR'}</span>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white truncate">
+                                {trainee.name}
+                              </h4>
+                              <p className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-0.5">
+                                <span className="font-mono font-bold text-[#002D62] dark:text-[#FFC000]">{trainee.hrCode}</span>
+                                <span>â€¢</span>
+                                <span className="truncate">{trainee.department || 'General'}</span>
+                              </p>
+                              {regTimeFormatted && (
+                                <p className="text-[10.5px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 mt-1 font-mono">
+                                  <Clock size={11} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                  <span>{language === 'ar' ? ØªØ§Ø±ÙŠØ® ÙˆÙˆÙ‚Øª Ø§Ù„ØªØ³Ø¬ÙŠÙ„:  : Registered at: }</span>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="text-right rtl:text-left shrink-0">
+                            {trainee.phone && (
+                              <a
+                                href={	el:}
+                                className="text-xs font-semibold text-blue-600 dark:text-blue-400 block hover:underline"
+                                dir="ltr"
+                              >
+                                {trainee.phone}
+                              </a>
+                            )}
+                            {trainee.email && (
+                              <span className="text-[10px] text-gray-400 block truncate max-w-[150px]">
+                                {trainee.email}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB CONTENT: WAITLIST REQUESTS */}
+            {attendeesModalTab === 'waitlist' && (
+              <div className="p-5 overflow-y-auto space-y-3 flex-1">
+                <div className="flex items-center justify-between pb-2 border-b dark:border-slate-800">
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+                    {language === 'ar' ? 'Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ø§Ù†Ø¶Ù…Ø§Ù… ÙÙŠ Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±:' : 'Pending Waitlist Requests:'}
+                  </span>
+                  <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200 border border-purple-300 dark:border-purple-700">
+                    {waitlistedTrainees.length} {language === 'ar' ? 'Ø·Ù„Ø¨' : 'Requests'}
+                  </span>
+                </div>
+
+                {waitlistedTrainees.length === 0 ? (
+                  <div className="text-center py-10 text-gray-400 text-xs sm:text-sm">
+                    {language === 'ar' ? 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª Ø§Ù†Ø¶Ù…Ø§Ù… ÙÙŠ Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø± Ù„Ù‡Ø°Ù‡ Ø§Ù„Ø¬Ù„Ø³Ø©' : 'No waitlist requests for this session'}
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {waitlistedTrainees.map((trainee, idx) => {
+                      const traineeCode = trainee.hrCode || trainee.id || '';
+                      const waitTimestamp = session.waitlistTimestamps?.[traineeCode];
+                      const waitTimeFormatted = waitTimestamp ? new Date(waitTimestamp).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      }) : null;
+
+                      return (
+                        <div
+                          key={idx}
+                          className="p-3.5 rounded-xl border border-purple-200 dark:border-purple-800/60 bg-purple-50/50 dark:bg-purple-950/30 flex items-center justify-between gap-3 shadow-2xs hover:bg-purple-100/50 dark:hover:bg-purple-900/40 transition-colors flex-wrap sm:flex-nowrap"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-full bg-purple-700 text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-xs border border-white/20">
+                              {trainee.profileImageUrl ? (
+                                <img src={trainee.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span>{trainee.name?.slice(0, 2).toUpperCase() || 'TR'}</span>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white truncate">
+                                {trainee.name}
+                              </h4>
+                              <p className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-0.5">
+                                <span className="font-mono font-bold text-purple-700 dark:text-purple-300">{trainee.hrCode}</span>
+                                <span>â€¢</span>
+                                <span className="truncate">{trainee.department || 'General'}</span>
+                              </p>
+                              {waitTimeFormatted && (
+                                <p className="text-[10.5px] font-bold text-purple-800 dark:text-purple-300 flex items-center gap-1.5 mt-1 font-mono">
+                                  <Clock size={11} className="text-purple-600 dark:text-purple-400 shrink-0" />
+                                  <span>{language === 'ar' ? ØªØ§Ø±ÙŠØ® Ø§Ù„Ø·Ù„Ø¨:  : Requested at: }</span>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* ACTION BUTTONS: APPROVE & REJECT */}
+                          <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-purple-200 dark:border-purple-800/40">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                requestConfirmation({
+                                  title: language === 'ar' ? 'Ù‚Ø¨ÙˆÙ„ Ø·Ù„Ø¨ Ø§Ù„Ø§Ù†Ø¶Ù…Ø§Ù… Ù„Ù„Ø¯ÙˆØ±Ø©' : 'Approve Waitlist Request',
+                                  message: language === 'ar'
+                                    ? Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø±ØºØ¨ØªÙƒ ÙÙŠ Ù‚Ø¨ÙˆÙ„ Ø§Ù„Ù…ØªØ¯Ø±Ø¨ [] () ÙˆØ¥Ø¶Ø§ÙØªÙ‡ Ø±Ø³Ù…ÙŠØ§Ù‹ Ø¥Ù„Ù‰ ÙƒØ´Ù Ø§Ù„Ø­Ø¶ÙˆØ± Ù„Ø¯ÙˆØ±Ø© []ØŸ Ø³ÙŠØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø¥Ø´Ø¹Ø§Ø± ÙÙˆØ±ÙŠ Ù„Ù‡ ÙÙ‚Ø· Ø¨Ù†ØªÙŠØ¬Ø© Ø§Ù„Ù‚Ø¨ÙˆÙ„.
+                                    : Are you sure you want to approve [] () and add them to []? A notification will be sent to the trainee.,
+                                  confirmLabel: language === 'ar' ? 'Ù†Ø¹Ù…ØŒ Ù‚Ø¨ÙˆÙ„ ÙˆØ¥Ø¶Ø§ÙØ© âœ“' : 'Approve & Enroll',
+                                  color: 'emerald',
+                                  icon: <CheckCircle size={20} className="text-emerald-500" />,
+                                  onConfirm: () => approveWaitlistRequest(session.id, traineeCode)
+                                });
+                              }}
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-1 shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                            >
+                              <CheckCircle size={13} />
+                              <span>{language === 'ar' ? 'Ù‚Ø¨ÙˆÙ„ ÙˆØ¥Ø¶Ø§ÙØ© âœ“' : 'Approve'}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                requestConfirmation({
+                                  title: language === 'ar' ? 'Ø§Ø¹ØªØ°Ø§Ø± Ø¹Ù† Ø·Ù„Ø¨ Ø§Ù„Ø§Ù†Ø¶Ù…Ø§Ù…' : 'Decline Waitlist Request',
+                                  message: language === 'ar'
+                                    ? Ù‡Ù„ ØªØ±ØºØ¨ ÙÙŠ Ø¥Ø±Ø³Ø§Ù„ Ø±Ø³Ø§Ù„Ø© Ø§Ø¹ØªØ°Ø§Ø± Ù„Ù„Ù…ØªØ¯Ø±Ø¨ [] () Ù„Ø¹Ø¯Ù… ØªÙˆÙØ± Ù…Ù‚Ø§Ø¹Ø¯ ÙˆØ­Ø°Ù Ø·Ù„Ø¨Ù‡ Ù…Ù† Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±ØŸ Ø³ÙŠØªÙ… Ø¥Ø´Ø¹Ø§Ø± Ø§Ù„Ù…ØªØ¯Ø±Ø¨ ÙÙ‚Ø·.
+                                    : Decline waitlist request for [] ()? A polite notification will be sent to the trainee only.,
+                                  confirmLabel: language === 'ar' ? 'Ù†Ø¹Ù…ØŒ Ø§Ø¹ØªØ°Ø§Ø± ÙˆØ±ÙØ¶ âœ•' : 'Decline Request',
+                                  color: 'red',
+                                  icon: <Ban size={20} className="text-red-500" />,
+                                  onConfirm: () => rejectWaitlistRequest(session.id, traineeCode)
+                                });
+                              }}
+                              className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 rounded-xl text-xs font-bold flex items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                            >
+                              <X size={13} />
+                              <span>{language === 'ar' ? 'Ø§Ø¹ØªØ°Ø§Ø±' : 'Decline'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Footer */}
             <div className="p-4 border-t border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/80 flex items-center justify-between">
@@ -1227,7 +1384,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 className="px-4 py-2 bg-[#FFC000] hover:bg-yellow-500 text-[#002D62] font-black rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
               >
                 <FileText size={14} />
-                <span>{language === 'ar' ? 'طباعة كشف الحضور (PDF)' : 'Print Register (PDF)'}</span>
+                <span>{language === 'ar' ? 'Ø·Ø¨Ø§Ø¹Ø© ÙƒØ´Ù Ø§Ù„Ø­Ø¶ÙˆØ± (PDF)' : 'Print Register (PDF)'}</span>
               </button>
 
               <button
@@ -1235,7 +1392,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 onClick={() => setShowAttendeesModal(false)}
                 className="px-5 py-2 bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 text-gray-800 dark:text-gray-200 font-bold rounded-xl text-xs transition-colors cursor-pointer"
               >
-                {language === 'ar' ? 'إغلاق' : 'Close'}
+                {language === 'ar' ? 'Ø¥ØºÙ„Ø§Ù‚' : 'Close'}
               </button>
             </div>
           </div>
