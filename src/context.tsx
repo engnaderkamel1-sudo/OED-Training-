@@ -1345,30 +1345,40 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await setDoc(doc(db, "cleanedData", recordId), newRecord);
   };
 
-  const courses = useMemo(() => {
-    const courseMap = new Map<string, Course>();
+  const FAKE_COURSES_BLACKLIST = useMemo(() => new Set([
+    '5050',
+    'hydraulic systems & troubleshooting',
+    'electrical diagnostics & schematics',
+    'heavy equipment electrical schematics & can bus',
+    'komatsu hydraulic excavator load sensing systems',
+    'liebherr mobile crane safety & load moment indicators',
+    'preventive maintenance & oil analysis diagnostics',
+    'workplace safety & osha compliance in site workshops',
+    'vars',
+    'test'
+  ]), []);
 
-    // 1. Load cached courses catalog from localStorage (0 reads)
+  const courses = useMemo(() => {
+    // Purge old poisoned localStorage cache once
     try {
-      const storedCatalog = localStorage.getItem('oed_cached_courses_catalog');
-      if (storedCatalog) {
-        const parsed: Course[] = JSON.parse(storedCatalog);
-        parsed.forEach(c => {
-          if (c.title) courseMap.set(c.title.trim().toLowerCase(), c);
-        });
-      }
+      localStorage.removeItem('oed_cached_courses_catalog');
     } catch (e) {}
 
-    // 2. Merge with Firebase explicit courses
+    const courseMap = new Map<string, Course>();
+
+    // 1. Merge with Firebase explicit courses (Live from Firestore)
     firebaseCourses.forEach(c => {
-      courseMap.set(c.title.trim().toLowerCase(), c);
+      const titleKey = (c.title || '').trim().toLowerCase();
+      if (titleKey && !FAKE_COURSES_BLACKLIST.has(titleKey)) {
+        courseMap.set(titleKey, c);
+      }
     });
 
-    // 3. Merge with Cleaned Data records
+    // 2. Merge with Cleaned Data records (from official Excel)
     cleanedData.forEach(r => {
       if (r.courseName && r.courseName.trim()) {
         const titleKey = r.courseName.trim().toLowerCase();
-        if (!courseMap.has(titleKey)) {
+        if (!courseMap.has(titleKey) && !FAKE_COURSES_BLACKLIST.has(titleKey)) {
           const durationVal = r.raw?.['Course Duration'] || r.duration || '1';
           courseMap.set(titleKey, {
             id: `derived_${generateUUID().substring(0, 8)}`,
@@ -1383,11 +1393,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     });
 
-    // 4. Merge with Upcoming Sessions
+    // 3. Merge with Upcoming Sessions
     upcomingSessions.forEach(s => {
       if (s.courseTitle && s.courseTitle.trim()) {
         const titleKey = s.courseTitle.trim().toLowerCase();
-        if (!courseMap.has(titleKey)) {
+        if (!courseMap.has(titleKey) && !FAKE_COURSES_BLACKLIST.has(titleKey)) {
           courseMap.set(titleKey, {
             id: s.courseId || `course_${s.id}`,
             title: s.courseTitle.trim(),
@@ -1401,30 +1411,32 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     });
 
-    const result = Array.from(courseMap.values()).sort((a, b) => a.title.localeCompare(b.title));
-    
-    // Cache for future instant 0-read loads
-    try {
-      if (result.length > 0) {
-        localStorage.setItem('oed_cached_courses_catalog', JSON.stringify(result));
-      }
-    } catch (e) {}
-
-    return result;
-  }, [firebaseCourses, cleanedData, upcomingSessions]);
+    return Array.from(courseMap.values()).sort((a, b) => a.title.localeCompare(b.title));
+  }, [firebaseCourses, cleanedData, upcomingSessions, FAKE_COURSES_BLACKLIST]);
 
   const addCourse = async (course: Course) => {
     const cleanCourse = Object.fromEntries(Object.entries(course).filter(([_, v]) => v !== undefined));
     await setDoc(doc(db, "courses", course.id), cleanCourse);
+    setFirebaseCoursesState(prev => [...prev.filter(c => c.id !== course.id), cleanCourse as Course]);
   };
 
   const updateCourse = async (course: Course) => {
     const cleanCourse = Object.fromEntries(Object.entries(course).filter(([_, v]) => v !== undefined));
     await setDoc(doc(db, "courses", course.id), cleanCourse, { merge: true });
+    setFirebaseCoursesState(prev => prev.map(c => c.id === course.id ? { ...c, ...cleanCourse } as Course : c));
   };
 
   const deleteCourse = async (id: string) => {
-    await deleteDoc(doc(db, "courses", id));
+    try {
+      await deleteDoc(doc(db, "courses", id));
+    } catch (e) {
+      console.warn("Firestore course delete error:", e);
+    }
+    // Instantly remove from local in-memory list
+    setFirebaseCoursesState(prev => prev.filter(c => c.id !== id && c.title !== id));
+    try {
+      localStorage.removeItem('oed_cached_courses_catalog');
+    } catch (e) {}
   };
 
   return (
