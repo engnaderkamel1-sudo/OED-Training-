@@ -320,18 +320,37 @@ export const SessionCard: React.FC<SessionCardProps> = ({
           }`}
           title={isExpanded ? (language === 'ar' ? 'Ø§Ù†Ù‚Ø± Ù„Ø¥ØºÙ„Ø§Ù‚ ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø¯ÙˆØ±Ø©' : 'Click to collapse session') : (language === 'ar' ? 'Ø§Ù†Ù‚Ø± Ù„ÙØªØ­ ØªÙØ§ØµÙŠÙ„ ÙˆØ£Ø²Ø±Ø§Ø± Ø§Ù„Ø¯ÙˆØ±Ø©' : 'Click to expand session details & actions')}
         >
-          <div className="flex items-center gap-2.5">
-            <span className="p-1.5 rounded-xl bg-blue-50 dark:bg-slate-800 text-[#002D62] dark:text-[#FFC000] border border-blue-200 dark:border-slate-700 shadow-2xs">
-              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {/* Left: Expand Icon + Course Title + Micro Status Pill */}
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            <span className="p-1.5 rounded-xl bg-blue-50 dark:bg-slate-800 text-[#002D62] dark:text-[#FFC000] border border-blue-200 dark:border-slate-700 shadow-2xs shrink-0">
+              {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
             </span>
-            <h3 className={`font-black text-lg leading-tight transition-colors ${
+            <h3 className={`font-black text-base sm:text-lg leading-tight transition-colors ${
               isCancelled ? 'text-gray-800 dark:text-gray-100 line-through' : 'text-[#002D62] dark:text-white hover:text-blue-600 dark:hover:text-[#FFC000]'
             }`}>
               <DataField>{session.courseTitle}</DataField>
-              {isCancelled && <span className="text-red-600 dark:text-red-400 font-black ml-2 no-underline inline-block"> ({t('cancelled')})</span>}
             </h3>
+
+            {/* Micro Status Chip (Top-Left) */}
+            {isCancelled ? (
+              <span className="text-[10px] font-black uppercase tracking-wider bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full border border-red-200 dark:border-red-800 shadow-2xs flex items-center gap-1 shrink-0">
+                <Ban size={11} />
+                <span>{language === 'ar' ? 'ملغاة' : 'Cancelled'}</span>
+              </span>
+            ) : isCompleted ? (
+              <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-2xs flex items-center gap-1 shrink-0">
+                <CheckCircle size={11} />
+                <span>{language === 'ar' ? 'منفذة ✓' : 'Completed ✓'}</span>
+              </span>
+            ) : isRegistrationClosed ? (
+              <span className="text-[10px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-700 shadow-2xs flex items-center gap-1 shrink-0">
+                <Ban size={11} />
+                <span>{language === 'ar' ? 'مغلق' : 'Reg Closed'}</span>
+              </span>
+            ) : null}
           </div>
           
+          {/* Right: Symmetrical Record & Session Badges */}
           <div className="flex items-center gap-1.5 flex-wrap">
             {/* 1. Master Record Serial Badge */}
             {(session.sessionNumber || (session as any).serialNumber) && (
@@ -360,25 +379,6 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 {formatCourseIteration(session.sessionIteration)}
               </span>
             </span>
-
-            {isCancelled && (
-              <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-200 px-2.5 py-1 rounded-lg font-black border border-red-300 dark:border-red-700 shadow-2xs flex items-center gap-1">
-                <Ban size={13} />
-                {t('cancelled')}
-              </span>
-            )}
-            {isCompleted && (
-              <span className="text-xs bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 px-2.5 py-1 rounded-lg font-black border border-emerald-300 dark:border-emerald-700 shadow-2xs flex items-center gap-1">
-                <CheckCircle size={13} />
-                {language === 'ar' ? 'دورة منفذة ✓' : 'Completed ✓'}
-              </span>
-            )}
-            {!isCancelled && !isCompleted && isRegistrationClosed && (
-              <span className="text-xs bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 px-2.5 py-1 rounded-lg font-black border border-amber-300 dark:border-amber-700 shadow-2xs flex items-center gap-1">
-                <Ban size={13} />
-                {language === 'ar' ? 'التسجيل مغلق' : 'Reg Closed'}
-              </span>
-            )}
           </div>
         </div>
 
