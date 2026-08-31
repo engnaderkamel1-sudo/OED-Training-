@@ -319,9 +319,9 @@ export const Sidebar: React.FC = () => {
             );
           })}
 
-          {/* VIP Executive Demo Quick Toggle (Admin Only) */}
+          {/* VIP Executive Demo Quick Card (Admin Only) */}
           {role === 'admin' && !user?.isDemoUser && (
-            <div className="mt-2 p-3 rounded-2xl bg-gradient-to-r from-blue-950/40 via-blue-900/30 to-blue-950/40 border-2 border-[#FFC000]/60 shadow-xs">
+            <div className="mt-2 p-3 rounded-2xl bg-gradient-to-r from-blue-950/40 via-blue-900/30 to-blue-950/40 border-2 border-[#FFC000]/60 shadow-xs space-y-2.5">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="p-1.5 rounded-lg bg-[#FFC000] text-[#001D42] shrink-0 font-bold">
@@ -329,7 +329,7 @@ export const Sidebar: React.FC = () => {
                   </div>
                   <div className="min-w-0">
                     <span className="text-xs font-black text-[#002D62] dark:text-[#FFC000] block truncate">
-                      {language === 'ar' ? '⭐ وضع العرض التقديمي (VIP Demo)' : '⭐ VIP Demo Mode'}
+                      {language === 'ar' ? '⭐ وضع المعاينة (VIP Demo)' : '⭐ VIP Demo Mode'}
                     </span>
                     <span className="text-[10px] text-slate-500 dark:text-slate-300 font-semibold block">
                       {isExecutiveDemoEnabled 
@@ -351,6 +351,23 @@ export const Sidebar: React.FC = () => {
                   {isExecutiveDemoEnabled ? '🟢 ON' : '🔴 OFF'}
                 </button>
               </div>
+
+              {/* Instant Launch & Test Button for Admin */}
+              <button
+                type="button"
+                onClick={() => {
+                  sessionStorage.setItem('oed_vip_demo_active', 'true');
+                  sessionStorage.setItem('oed_vip_role', 'admin');
+                  window.location.search = '?demo=vip';
+                }}
+                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-[#FFC000] via-yellow-400 to-[#FFC000] hover:from-yellow-400 hover:to-[#FFC000] text-[#001D42] text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer"
+                title={language === 'ar' ? 'بدء تجربة واختبار وضع المعاينة التنفيذية التفاعلية الآن' : 'Launch VIP Executive Interactive Sandbox'}
+              >
+                <Sparkles size={14} className="text-[#001D42]" />
+                <span>
+                  {language === 'ar' ? '👑 تجربة وضع المعاينة الآن' : '👑 Test VIP Demo Now'}
+                </span>
+              </button>
             </div>
           )}
         </div>
