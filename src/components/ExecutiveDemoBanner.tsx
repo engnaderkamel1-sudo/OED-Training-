@@ -22,8 +22,9 @@ export const VIP_TRAINEE_USER: User = {
   name: 'Amir Samir',
   email: 'amir.samir@orascom.com',
   phone: '01000000001',
-  department: 'Heavy Machinery',
-  jobTitle: 'Heavy Equipment Maintenance Specialist',
+  department: 'ORC - Katamia - Workshop',
+  jobTitle: 'Heavy Equipment Maintenance Engineer',
+  jobRole: 'engineer',
   role: 'trainee',
   status: 'approved',
   isDemoUser: true,
@@ -53,7 +54,9 @@ export const ExecutiveDemoBanner: React.FC = () => {
     if (targetRole === 'trainee') {
       const usersList = Array.isArray(localUsers) ? localUsers : [];
       const foundUser = usersList.find(u => u.hrCode === '830557' || u.id === '830557');
-      const activeTrainee = foundUser ? { ...foundUser, name: 'Amir Samir', role: 'trainee' as const, isDemoUser: true } : VIP_TRAINEE_USER;
+      const activeTrainee = foundUser 
+        ? { ...foundUser, name: 'Amir Samir', role: 'trainee' as const, isDemoUser: true, department: 'ORC - Katamia - Workshop', jobRole: 'engineer' } 
+        : VIP_TRAINEE_USER;
       setUser(activeTrainee);
     } else {
       setUser(VIP_ADMIN_USER);
@@ -87,8 +90,8 @@ export const ExecutiveDemoBanner: React.FC = () => {
             <span className="font-black text-[#FFC000] tracking-wide text-xs sm:text-sm truncate">
               {language === 'ar' ? 'Ø¨ÙŠØ¦Ø© Ø§Ù„Ù…Ø¹Ø§ÙŠÙ†Ø© Ø§Ù„ØªÙ†ÙÙŠØ°ÙŠØ© Ø§Ù„Ø§ÙØªØ±Ø§Ø¶ÙŠØ©' : 'VIP Executive Interactive Virtual Demo'}
             </span>
-            <span className="hidden lg:flex items-center gap-1.5 text-slate-300 text-xs font-semibold">
-              <span>â€¢</span>
+            <span className="hidden lg:flex items-center gap-2 text-slate-300 text-xs font-semibold">
+              <span className="opacity-40">|</span>
               <ShieldCheck size={13} className="text-emerald-400 inline" />
               <span>
                 {isAdmin 
