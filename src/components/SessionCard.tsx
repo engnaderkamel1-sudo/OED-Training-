@@ -12,6 +12,7 @@ import { DataField } from './DataField';
 import { isDateInSessionRange, sendNativePushNotification } from '../utils/sessionTimeUtils';
 import { playNotificationSound } from './TraineeDashboard';
 import { sanitizeUrl } from '../utils/securityUtils';
+import { formatSessionRecordNumber, formatCourseIteration } from '../utils/formatters';
 
 const EVALUATION_FORM_URL = "https://forms.cloud.microsoft/r/cj3ByTQCRS";
 
@@ -300,20 +301,33 @@ export const SessionCard: React.FC<SessionCardProps> = ({
           </h3>
           
           <div className="flex items-center gap-1.5 flex-wrap">
-            {/* Session Number in Official Records Badge */}
-            {session.sessionNumber && (
+            {/* 1. Master Record Serial Badge */}
+            {(session.sessionNumber || (session as any).serialNumber) && (
               <span 
                 className="text-xs bg-blue-50 dark:bg-blue-950/80 text-[#002D62] dark:text-blue-200 px-3 py-1.5 rounded-xl font-black border border-blue-200 dark:border-blue-700/80 shadow-2xs flex items-center gap-1.5"
-                title={language === 'ar' ? 'رقم الدورة / الجلسة بالسجل التدريبي الرسمي' : 'Session No. in Official Training Records'}
+                title={language === 'ar' ? 'الرقم المسلسل بالسجل التدريبي العام' : 'Master Log Record Number'}
               >
                 <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300 opacity-90">
-                  {language === 'ar' ? 'رقم الدورة بالسجل:' : 'Session No. in Records:'}
+                  {language === 'ar' ? '📋 رقم السجل:' : '📋 Record No:'}
                 </span>
-                <span className="font-black text-xs text-[#002D62] dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2 py-0.5 rounded-lg border border-blue-200 dark:border-blue-800">
-                  {session.sessionNumber === 'sessionOne' ? t('sessionOne') : session.sessionNumber === 'sessionTwo' ? t('sessionTwo') : session.sessionNumber === 'sessionThree' ? t('sessionThree') : session.sessionNumber}
+                <span className="font-mono font-black text-xs text-[#002D62] dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2 py-0.5 rounded-lg border border-blue-200 dark:border-blue-800">
+                  #{formatSessionRecordNumber(session.sessionNumber)}
                 </span>
               </span>
             )}
+
+            {/* 2. Course Round / Iteration Badge */}
+            <span 
+              className="text-xs bg-indigo-50 dark:bg-indigo-950/80 text-indigo-950 dark:text-indigo-200 px-3 py-1.5 rounded-xl font-black border border-indigo-200 dark:border-indigo-700/80 shadow-2xs flex items-center gap-1.5"
+              title={language === 'ar' ? 'تكرار / جولة هذه الدورة تحديداً' : 'Course Round / Iteration'}
+            >
+              <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 opacity-90">
+                {language === 'ar' ? '🔄 تكرار الدورة:' : '🔄 Round:'}
+              </span>
+              <span className="font-black text-xs text-indigo-900 dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                {formatCourseIteration(session.sessionIteration || session.sessionNumber, language)}
+              </span>
+            </span>
 
             {isCancelled && (
               <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-200 px-2.5 py-1 rounded-lg font-black border border-red-300 dark:border-red-700 shadow-2xs flex items-center gap-1">
