@@ -582,11 +582,11 @@ export const TraineeDashboard: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-[#FFC000]">
-                    {language === 'ar' ? 'ðŸ“± Ù…Ø­Ø§ÙƒØ§Ø© ØªØ¬Ø±Ø¨Ø© ÙÙ†ÙŠÙŠ ÙˆÙ…Ù‡Ù†Ø¯Ø³ÙŠ Ø§Ù„Ù…ÙˆØ§Ù‚Ø¹ (Field Trainee View)' : 'ðŸ“± Live Field Trainee Experience Simulation'}
+                    {language === 'ar' ? '📱 محاكاة تجربة فنيي ومهندسي المواقع (Field Trainee View)' : '📱 Live Field Trainee Experience Simulation'}
                   </p>
                   <p className="text-[11px] sm:text-xs text-slate-200 opacity-90 mt-0.5">
                     {language === 'ar'
-                      ? 'Ù‡ÙƒØ°Ø§ ØªØ¸Ù‡Ø± Ø§Ù„Ø´Ø§Ø´Ø© Ù„Ù„Ù…Ù‡Ù†Ø¯Ø³ÙŠÙ† ÙˆØ§Ù„ÙÙ†ÙŠÙŠÙ† Ø¨Ù…ÙˆØ§Ù‚Ø¹ Ø§Ù„Ù…Ø´Ø±ÙˆØ¹Ø§Øª (Ø§Ù„Ø¹Ù„Ù…ÙŠÙ† / Ø§Ù„Ø³Ø®Ù†Ø© / ØªÙˆØ´ÙƒÙ‰) Ù„Ù…ØªØ§Ø¨Ø¹Ø© Ø³Ø§Ø¹Ø§ØªÙ‡Ù… ÙˆØ³Ø¬Ù„Ø§ØªÙ‡Ù… ÙÙˆØ±ÙŠØ§Ù‹.'
+                      ? 'هكذا تظهر الشاشة للمهندسين والفنيين بمواقع المشروعات (العلمين / السخنة / توشكى) لمتابعة ساعاتهم وسجلاتهم فورياً.'
                       : 'Demonstrates how site technicians across project sites (Alamein, Sokhna, Toshka) track accredited hours & test scores.'}
                   </p>
                 </div>
@@ -623,11 +623,11 @@ export const TraineeDashboard: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <h2 className="text-xl font-bold tracking-tight">{user?.name || 'Trainee'}</h2>
-                      <span className="text-xs bg-[#FFC000] text-[#001D42] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
-                        {user?.isDemoUser 
-                          ? (language === 'ar' ? 'ðŸ‘· Ù†Ù…ÙˆØ°Ø¬ ØªØ¬Ø±Ø¨Ø© Ù…Ù‡Ù†Ø¯Ø³ Ø§Ù„Ù…ÙˆÙ‚Ø¹' : 'ðŸ‘· Sample Field Trainee') 
-                          : (user?.jobRole || user?.role || 'Technical Staff')}
-                      </span>
+                        <span className="text-xs bg-[#FFC000] text-[#001D42] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
+                          {user?.isDemoUser 
+                            ? (language === 'ar' ? 'نموذج تجربة مهندس الموقع' : 'Sample Field Trainee') 
+                            : (user?.jobRole || user?.role || 'Technical Staff')}
+                        </span>
                     </div>
                     <div className="text-xs text-blue-200 mt-1 flex items-center gap-3 flex-wrap">
                       <span>{language === 'ar' ? 'الكود الوظيفي:' : 'HR Code:'} <strong className="text-white font-mono">{user?.hrCode}</strong></span>
