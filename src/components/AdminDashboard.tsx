@@ -6,7 +6,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useAppContext } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment, collection, getDocs, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2 } from "lucide-react";
+import { Clock, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2, SearchX, UserCheck } from "lucide-react";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
 import { formatScore, formatDateToStandard } from "../utils/formatters";
@@ -141,7 +141,34 @@ export const AdminDashboard: React.FC = () => {
 
   const TraineeAvatarWithName = ({ name, imageUrl, hrCode }: { name: string; imageUrl?: string; hrCode?: string; }) => {
     const initial = (name || "?").trim().charAt(0).toUpperCase();
-    return (
+    // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (
       <div className="flex items-center gap-2.5">
         {imageUrl ? (
           <img
@@ -278,7 +305,34 @@ Please log in to register for this session through the OED-TTMS Application.
     }, (err) => {
       console.warn('Error listening to error reports:', err);
     });
-    return () => unsubscribe();
+    // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return () => unsubscribe();
   }, []);
 
   const [editingRecord, setEditingRecord] = useState<any | null>(null);
@@ -942,7 +996,34 @@ Please log in to register for this session through the OED-TTMS Application.
     }
 
     // Read pre-aggregated unique trainees from globalKPIs (1 read from Firebase)
-    return (globalKPIs as any).uniqueTrainees || 354;
+    // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (globalKPIs as any).uniqueTrainees || 354;
   }, [cleanedData, records, globalKPIs]);
 
   const totalDistinctCourses = useMemo(() => {
@@ -1947,7 +2028,34 @@ Content-Type: text/html; charset="utf-8"
   };
 
   const adminActiveTodaySessions = useMemo(() => {
-    return (upcomingSessions || []).filter(s => isSessionActiveNow(s));
+    // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (upcomingSessions || []).filter(s => isSessionActiveNow(s));
   }, [upcomingSessions]);
 
   // Trigger Native Push Notification on Admin Device
@@ -1969,6 +2077,33 @@ Content-Type: text/html; charset="utf-8"
       }
     }
   }, [adminActiveTodaySessions, language]);
+
+  // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen pb-12 transition-colors duration-300" style={{ backgroundColor: bgColor }}>
@@ -2143,7 +2278,34 @@ Content-Type: text/html; charset="utf-8"
                         .filter(u => {
                           if (!userSearchTerm.trim()) return true;
                           const term = userSearchTerm.trim().toLowerCase();
-                          return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term) || (u.phone || '').includes(term);
+                          // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term) || (u.phone || '').includes(term);
                         })
                         .sort((a, b) => {
                           const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -2168,7 +2330,34 @@ Content-Type: text/html; charset="utf-8"
                               .filter(u => {
                                 if (!userSearchTerm.trim()) return true;
                                 const term = userSearchTerm.trim().toLowerCase();
-                                return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term) || (u.phone || '').includes(term);
+                                // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term) || (u.phone || '').includes(term);
                               })
                               .sort((a, b) => {
                                 const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -2220,7 +2409,7 @@ Content-Type: text/html; charset="utf-8"
                         </table>
                         </div>
                       ) : (
-                        <p style={{ color: textMuted }}>{language === "ar" ? "لا توجد طلبات معلقة." : "No pending users."}</p>
+                        {userSearchTerm.trim() ? renderEmptyState(language === "ar" ? "لم يتم العثور على طلبات مطابقة" : "No Matching Requests", language === "ar" ? `لا توجد طلبات تسجيل تطابق "${userSearchTerm}".` : `No pending requests match "${userSearchTerm}".`, () => setUserSearchTerm("")) : <div className="p-8 text-center rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50/40 dark:bg-slate-900/30 flex flex-col items-center justify-center my-4"><div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2 shadow-xs"><CheckCircle size={22} /></div><h4 className="font-bold text-sm text-gray-700 dark:text-gray-300">{language === "ar" ? "رائع! لا توجد طلبات تسجيل معلقة حالياً" : "All caught up! No pending registration requests."}</h4></div>}
                       )}
                     </div>
                   )}
@@ -2232,7 +2421,34 @@ Content-Type: text/html; charset="utf-8"
                       {usersWithPendingUpdates.filter(u => {
                         if (!userSearchTerm.trim()) return true;
                         const term = userSearchTerm.trim().toLowerCase();
-                        return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term);
+                        // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term);
                       }).length > 0 ? (
                         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
                         <table className="w-full text-left border-collapse">
@@ -2248,7 +2464,34 @@ Content-Type: text/html; charset="utf-8"
                             {usersWithPendingUpdates.filter(u => {
                               if (!userSearchTerm.trim()) return true;
                               const term = userSearchTerm.trim().toLowerCase();
-                              return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term);
+                              // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term);
                             }).map((u) => (
                               <tr key={u.id} className="border-b transition-colors" style={{ borderColor: borderColor, color: textColor }}>
                                 <td className="p-3"><UserAvatarWithName user={u} /></td>
@@ -2390,7 +2633,7 @@ Content-Type: text/html; charset="utf-8"
                         </table>
                         </div>
                       ) : (
-                        <p style={{ color: textMuted }}>{language === "ar" ? "لا توجد طلبات تعديل." : "No pending updates."}</p>
+                        {userSearchTerm.trim() ? renderEmptyState(language === "ar" ? "لم يتم العثور على طلبات تعديل مطابقة" : "No Matching Update Requests", language === "ar" ? `لا توجد طلبات تعديل بيانات تطابق "${userSearchTerm}".` : `No update requests match "${userSearchTerm}".`, () => setUserSearchTerm("")) : <div className="p-8 text-center rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50/40 dark:bg-slate-900/30 flex flex-col items-center justify-center my-4"><div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2 shadow-xs"><CheckCircle size={22} /></div><h4 className="font-bold text-sm text-gray-700 dark:text-gray-300">{language === "ar" ? "لا توجد طلبات تعديل بيانات معلقة" : "No pending data update requests."}</h4></div>}
                       )}
                     </div>
                   )}
@@ -2402,7 +2645,34 @@ Content-Type: text/html; charset="utf-8"
                       {processedUpdatesList.filter(item => {
                         if (!userSearchTerm.trim()) return true;
                         const term = userSearchTerm.trim().toLowerCase();
-                        return (item.user.name || '').toLowerCase().includes(term) || (item.user.hrCode || '').toLowerCase().includes(term) || (item.user.email || '').toLowerCase().includes(term);
+                        // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (item.user.name || '').toLowerCase().includes(term) || (item.user.hrCode || '').toLowerCase().includes(term) || (item.user.email || '').toLowerCase().includes(term);
                       }).length > 0 ? (
                         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
                         <table className="w-full text-left border-collapse">
@@ -2418,7 +2688,34 @@ Content-Type: text/html; charset="utf-8"
                             {processedUpdatesList.filter(item => {
                               if (!userSearchTerm.trim()) return true;
                               const term = userSearchTerm.trim().toLowerCase();
-                              return (item.user.name || '').toLowerCase().includes(term) || (item.user.hrCode || '').toLowerCase().includes(term) || (item.user.email || '').toLowerCase().includes(term);
+                              // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (item.user.name || '').toLowerCase().includes(term) || (item.user.hrCode || '').toLowerCase().includes(term) || (item.user.email || '').toLowerCase().includes(term);
                             }).map((item, index) => (
                               <tr key={`${item.user.id}_${index}`} className="border-b transition-colors" style={{ borderColor: borderColor, color: textColor }}>
                                 <td className="p-3"><UserAvatarWithName user={item.user} /></td>
@@ -2487,7 +2784,7 @@ Content-Type: text/html; charset="utf-8"
                         </table>
                         </div>
                       ) : (
-                        <p style={{ color: textMuted }}>{language === "ar" ? "لا يوجد سجل للتعديلات السابقة." : "No history of processed updates."}</p>
+                        {userSearchTerm.trim() ? renderEmptyState(language === "ar" ? "لم يتم العثور على سجلات مطابقة" : "No Matching History", language === "ar" ? `لا توجد سجلات تعديل سابقة تطابق "${userSearchTerm}".` : `No update history matched "${userSearchTerm}".`, () => setUserSearchTerm("")) : renderEmptyState(language === "ar" ? "لا يوجد سجل للتعديلات السابقة" : "No Processed Updates History")}
                       )}
                     </div>
                   )}
@@ -2498,7 +2795,34 @@ Content-Type: text/html; charset="utf-8"
                       {users.filter(u => (u.status === "approved" || u.status === "rejected") && u.createdAt).filter(u => {
                         if (!userSearchTerm.trim()) return true;
                         const term = userSearchTerm.trim().toLowerCase();
-                        return (
+                        // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (
                           (u.name || '').toLowerCase().includes(term) ||
                           (u.hrCode || '').toLowerCase().includes(term) ||
                           (u.email || '').toLowerCase().includes(term) ||
@@ -2523,7 +2847,34 @@ Content-Type: text/html; charset="utf-8"
                             {users.filter(u => (u.status === "approved" || u.status === "rejected") && u.createdAt).filter(u => {
                               if (!userSearchTerm.trim()) return true;
                               const term = userSearchTerm.trim().toLowerCase();
-                              return (
+                              // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (
                                 (u.name || '').toLowerCase().includes(term) ||
                                 (u.hrCode || '').toLowerCase().includes(term) ||
                                 (u.email || '').toLowerCase().includes(term) ||
@@ -2571,7 +2922,7 @@ Content-Type: text/html; charset="utf-8"
                         </table>
                         </div>
                       ) : (
-                        <p style={{ color: textMuted }}>{language === "ar" ? "لا توجد طلبات مطابقة." : "No matching requests found."}</p>
+                        {userSearchTerm.trim() ? renderEmptyState(language === "ar" ? "لم يتم العثور على مستخدمين مطابقين" : "No Matching Users Found", language === "ar" ? `لا يوجد مستخدم أو متدرب يطابق بحثك الحالي ("${userSearchTerm}").` : `No user records matched "${userSearchTerm}".`, () => setUserSearchTerm("")) : renderEmptyState(language === "ar" ? "لا توجد بيانات مستخدمين معتمدة حالياً" : "No active users found.")}
                       )}
                     </div>
                   )}
@@ -2581,7 +2932,34 @@ Content-Type: text/html; charset="utf-8"
                       {users.filter(u => u.status === "deleted").filter(u => {
                         if (!userSearchTerm.trim()) return true;
                         const term = userSearchTerm.trim().toLowerCase();
-                        return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
+                        // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
                       }).length > 0 ? (
                         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
                         <table className="w-full text-left border-collapse">
@@ -2597,7 +2975,34 @@ Content-Type: text/html; charset="utf-8"
                             {users.filter(u => u.status === "deleted").filter(u => {
                               if (!userSearchTerm.trim()) return true;
                               const term = userSearchTerm.trim().toLowerCase();
-                              return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
+                              // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
                             }).map(u => (
                               <tr key={u.id} className="border-b opacity-80" style={{ backgroundColor: isDark ? 'rgba(153, 27, 27, 0.1)' : '#fef2f2', borderColor: borderColor, color: textColor }}>
                                 <td className="p-3">{u.hrCode}</td>
@@ -2614,7 +3019,7 @@ Content-Type: text/html; charset="utf-8"
                         </table>
                         </div>
                       ) : (
-                        <p style={{ color: textMuted }}>{language === "ar" ? "لا يوجد متدربين محذوفين." : "No deleted trainees."}</p>
+                        {userSearchTerm.trim() ? renderEmptyState(language === "ar" ? "لم يتم العثور على متدربين محذوفين مطابقين" : "No Matching Deleted Users", language === "ar" ? `لا توجد حسابات محذوفة تطابق "${userSearchTerm}".` : `No deleted accounts match "${userSearchTerm}".`, () => setUserSearchTerm("")) : <div className="p-8 text-center rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50/40 dark:bg-slate-900/30 flex flex-col items-center justify-center my-4"><div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center mb-2 shadow-xs"><Users size={22} /></div><h4 className="font-bold text-sm text-gray-700 dark:text-gray-300">{language === "ar" ? "سلة المحذوفات فارغة (لا يوجد مستخدمين محذوفين)" : "Recycle bin is clean. No deleted users."}</h4></div>}
                       )}
                     </div>
                   )}
@@ -2860,7 +3265,34 @@ Content-Type: text/html; charset="utf-8"
                       {courseSessions.map((date) => {
                         const attendeesOnDate = filteredRecords.filter((r) => (r.attendanceDate || r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'] || 'N/A') === date);
                         const isExpanded = expandedDates[date];
-                        return (
+                        // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (
                           <div 
                             key={date} 
                             className="border rounded-2xl overflow-hidden shadow-2xs transition-all" 
@@ -2896,7 +3328,34 @@ Content-Type: text/html; charset="utf-8"
                                     {attendeesOnDate.map((r) => {
                                       const u = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}`);
                                       const recHrCode = u?.hrCode || r.hrCode || r.userId || r.raw?.['HR Code'] || r.raw?.['ID'] || '';
-                                      return (
+                                      // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (
                                         <tr key={r.id} className="border-b last:border-0 transition-colors hover:opacity-80" style={{ borderColor: borderColor, color: textColor }}>
                                           <td className="py-2.5 font-bold font-mono text-xs">{recHrCode}</td>
                                           <td className="py-2.5 font-medium"><DataField>{u?.name || r.traineeName || r.name}</DataField></td>
@@ -3015,7 +3474,34 @@ Content-Type: text/html; charset="utf-8"
                           const traineeImage = user?.profileImageUrl || r.raw?.["Profile Image"] || r.raw?.["Photo"];
                           const traineeDisplayName = r.traineeName || user?.name || r.userId;
                           const traineeHrCode = user?.hrCode || r.hrCode || r.userId;
-                          return (
+                          // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (
                             <tr key={r.id} className="border-b last:border-0 hover:opacity-80 transition-colors" style={{ borderColor: borderColor }}>
                               <td className="p-3 font-medium" style={{ color: textColor }}><DataField>{traineeHrCode}</DataField></td>
                               <td className="p-3 font-medium"><TraineeAvatarWithName name={traineeDisplayName} imageUrl={traineeImage} hrCode={traineeHrCode} /></td>
@@ -3092,7 +3578,34 @@ Content-Type: text/html; charset="utf-8"
                     {courseStats.map((stat, idx) => {
                       const maxAttendees = Math.max(...courseStats.map((s) => s.attendees)) || 1;
                       const percent = Math.max(4, Math.round((stat.attendees / maxAttendees) * 100));
-                      return (
+                      // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (
                         <div key={idx} className="space-y-1">
                           <div className="flex justify-between text-xs sm:text-sm font-medium">
                             <span className="truncate mr-4 text-gray-800 dark:text-gray-200" title={stat.courseName}><DataField>{stat.courseName}</DataField></span>
@@ -3121,7 +3634,34 @@ Content-Type: text/html; charset="utf-8"
                     {departmentStats.map((stat, idx) => {
                       const maxTrainees = Math.max(...departmentStats.map((s) => s.trainees)) || 1;
                       const percent = Math.max(4, Math.round((stat.trainees / maxTrainees) * 100));
-                      return (
+                      // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (
                         <div key={idx} className="space-y-1">
                           <div className="flex justify-between text-xs sm:text-sm font-medium">
                             <span className="truncate mr-4 text-gray-800 dark:text-gray-200" title={stat.department}><DataField>{stat.department}</DataField></span>
@@ -4020,7 +4560,34 @@ Content-Type: text/html; charset="utf-8"
                       .filter(u => {
                         if (!activeUsersSearchTerm.trim()) return true;
                         const term = activeUsersSearchTerm.trim().toLowerCase();
-                        return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
+                        // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
+  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
+    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
+        <SearchX size={26} className="stroke-[2.2]" />
+      </div>
+      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
+          {subtitle}
+        </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
+        >
+          <RotateCcw size={14} className="text-[#FFC000]" />
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
                       })
                       .sort((a, b) => new Date(b.lastLogin || b.createdAt || 0).getTime() - new Date(a.lastLogin || a.createdAt || 0).getTime());
 
