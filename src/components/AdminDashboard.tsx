@@ -883,28 +883,8 @@ Please log in to register for this session through the OED-TTMS Application.
     setShowBackupPromptModal(false);
   };
 
-
-  const DEFAULT_COURSE_STATS = [
-    { courseName: "Heavy Equipment Hydraulics", attendees: 142, sessions: 18 },
-    { courseName: "Defensive Driving & Heavy Vehicle Safety", attendees: 135, sessions: 16 },
-    { courseName: "CAT Engine Diagnostics & Electrical Systems", attendees: 115, sessions: 14 },
-    { courseName: "Asphalt Paver & Milling Plant Operations", attendees: 98, sessions: 12 },
-    { courseName: "Crushing Plant Mechanical Maintenance", attendees: 88, sessions: 11 },
-    { courseName: "Concrete Batching Plant Calibration", attendees: 74, sessions: 9 },
-    { courseName: "Fleet Telematics & Preventive Maintenance", attendees: 65, sessions: 8 },
-    { courseName: "Civil Works Heavy Machinery Operation", attendees: 50, sessions: 6 },
-    { courseName: "Quality Assurance & Material Testing", attendees: 41, sessions: 5 },
-    { courseName: "Workshop Health, Safety & Environment", attendees: 38, sessions: 5 }
-  ];
-
-  const DEFAULT_DEPARTMENT_STATS = [
-    { department: "Heavy Machinery", trainees: 340 },
-    { department: "Workshop", trainees: 215 },
-    { department: "Asphalt Plant", trainees: 160 },
-    { department: "Fleet Management", trainees: 110 },
-    { department: "Crushing Operations", trainees: 85 },
-    { department: "Maintenance", trainees: 74 }
-  ];
+  const DEFAULT_COURSE_STATS: { courseName: string; attendees: number; sessions?: number }[] = [];
+  const DEFAULT_DEPARTMENT_STATS: { department: string; trainees: number }[] = [];
 
   const dynamicCourses = useMemo(() => {
     const courseTitles = new Set<string>();
@@ -942,30 +922,7 @@ Please log in to register for this session through the OED-TTMS Application.
   }, [courses, upcomingSessions, cleanedData, records]);
 
   const dynamicDepartments = useMemo(() => {
-    const depts = new Set<string>([
-      "Heavy Machinery",
-      "Workshop",
-      "Asphalt Plant",
-      "Fleet Management",
-      "Crushing Operations",
-      "Maintenance",
-      "Technical Office",
-      "Procurement",
-      "Civil Works",
-      "ORC - Katamia - Workshop",
-      "OC - Katamia - Workshop",
-      "ORC - Workshop",
-      "OC - Workshop",
-      "ORC - Projects",
-      "OC - Projects",
-      "OCF - Projects",
-      "TBM - Civil Team",
-      "OCF - Abu Rawash - Workshop",
-      "EL Sokhna - Workshop",
-      "El Alamein - Workshop",
-      "Concrete Plant",
-      "ORC - Construction Manager"
-    ]);
+    const depts = new Set<string>();
 
     (users || []).forEach(u => {
       if (u.department && u.department.trim()) depts.add(u.department.trim());
@@ -976,46 +933,83 @@ Please log in to register for this session through the OED-TTMS Application.
       if (r.department && r.department.trim()) depts.add(r.department.trim());
     });
 
+    (upcomingSessions || []).forEach(s => {
+      if (s.department && s.department.trim()) depts.add(s.department.trim());
+    });
+
     return Array.from(depts).filter(Boolean).sort();
-  }, [users, cleanedData, records]);
+  }, [users, cleanedData, records, upcomingSessions]);
 
   const courseStats = useMemo(() => {
-    const source = (cleanedData && cleanedData.length > 0) ? cleanedData : records;
-    if (source.length > 50) {
-      const counts: Record<string, number> = {};
-      source.forEach(r => {
-        const cName = (r.courseName || r.courseTitle || '').toString().trim();
-        if (cName) {
-          counts[cName] = (counts[cName] || 0) + 1;
-        }
-      });
-      const res = Object.entries(counts)
-        .map(([courseName, attendees]) => ({ courseName, attendees }))
-        .sort((a, b) => b.attendees - a.attendees);
-      if (res.length > 0) return res.slice(0, 15);
-    }
-    return DEFAULT_COURSE_STATS;
-  }, [cleanedData, records]);
+    const counts: Record<string, number> = {};
+    const source = [...(cleanedData || []), ...(records || [])];
+    
+    // 1. Count from real historical records
+    source.forEach(r => {
+      const cName = (r.courseName || (r as any).courseTitle || '').toString().trim();
+      if (cName) {
+        counts[cName] = (counts[cName] || 0) + 1;
+      }
+    });
+
+    // 2. Count from upcoming and active sessions
+    (upcomingSessions || []).forEach(s => {
+      const cName = (s.courseTitle || '').toString().trim();
+      if (cName) {
+        counts[cName] = (counts[cName] || 0) + (s.enrolledTrainees?.length || s.attendanceList?.length || 1);
+      }
+    });
+
+    // 3. From catalog courses
+    (courses || []).forEach(c => {
+      const cName = (c.title || c.id || '').toString().trim();
+      if (cName && !counts[cName]) {
+        counts[cName] = 1;
+      }
+    });
+
+    return Object.entries(counts)
+      .map(([courseName, attendees]) => ({ courseName, attendees }))
+      .sort((a, b) => b.attendees - a.attendees)
+      .slice(0, 15);
+  }, [cleanedData, records, upcomingSessions, courses]);
 
   const departmentStats = useMemo(() => {
-    const source = (cleanedData && cleanedData.length > 0) ? cleanedData : records;
-    if (source.length > 50) {
-      const deptCounts: Record<string, Set<string>> = {};
-      source.forEach(r => {
-        const dept = (r.department || '').toString().trim();
-        const traineeId = (r.hrCode || r.userId || r.name || r.id || '').toString().trim();
-        if (dept) {
-          if (!deptCounts[dept]) deptCounts[dept] = new Set();
-          if (traineeId) deptCounts[dept].add(traineeId);
-        }
-      });
-      const res = Object.entries(deptCounts)
-        .map(([department, set]) => ({ department, trainees: set.size || 1 }))
-        .sort((a, b) => b.trainees - a.trainees);
-      if (res.length > 0) return res;
-    }
-    return DEFAULT_DEPARTMENT_STATS;
-  }, [cleanedData, records]);
+    const deptCounts: Record<string, Set<string>> = {};
+    
+    // 1. From real users
+    (users || []).forEach(u => {
+      const dept = (u.department || '').toString().trim();
+      const identifier = (u.hrCode || u.id || u.name || '').toString().trim();
+      if (dept) {
+        if (!deptCounts[dept]) deptCounts[dept] = new Set();
+        if (identifier) deptCounts[dept].add(identifier);
+      }
+    });
+
+    // 2. From training records
+    const allRecords = [...(cleanedData || []), ...(records || [])];
+    allRecords.forEach(r => {
+      const dept = (r.department || '').toString().trim();
+      const identifier = (r.hrCode || r.userId || (r as any).name || r.id || '').toString().trim();
+      if (dept) {
+        if (!deptCounts[dept]) deptCounts[dept] = new Set();
+        if (identifier) deptCounts[dept].add(identifier);
+      }
+    });
+
+    // 3. From upcoming sessions
+    (upcomingSessions || []).forEach(s => {
+      const dept = (s.department || '').toString().trim();
+      if (dept && !deptCounts[dept]) {
+        deptCounts[dept] = new Set(['active_session']);
+      }
+    });
+
+    return Object.entries(deptCounts)
+      .map(([department, set]) => ({ department, trainees: set.size || 1 }))
+      .sort((a, b) => b.trainees - a.trainees);
+  }, [users, cleanedData, records, upcomingSessions]);
 
 
   const totalUniqueTrainees = useMemo(() => {
