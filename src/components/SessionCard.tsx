@@ -4,7 +4,7 @@ import {
   Calendar, Clock, MapPin, Users, Ban, 
   RotateCcw, Edit2, Bell, BellRing, AlertTriangle, 
   CheckCircle, FileText, QrCode, ScanLine, 
-  XCircle, Megaphone, X, UserCheck, BookOpen, AlertCircle, Star
+  XCircle, Megaphone, X, UserCheck, UserPlus, BookOpen, AlertCircle, Star
 } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, doc, setDoc } from 'firebase/firestore';
@@ -127,7 +127,9 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   const userCode = user?.hrCode || 'trainee';
   const isRegistered = session.registeredUsers?.includes(userCode) || registeredCourseIds.includes(session.id);
   const isUnregistered = session.unregisteredUsers?.includes(userCode);
+  const isWaitlisted = (session.waitlistUsers || []).includes(userCode) || (session.waitlistUsers || []).includes(user?.id || '');
   const attendeesCount = session.registeredUsers?.length || 0;
+  const waitlistCount = session.waitlistUsers?.length || 0;
 
   const formatDeadline = (dStr?: string) => {
     if (!dStr) return '';
@@ -268,6 +270,22 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       }
     } catch (error: any) {
       setDebugMsg("Trainee Register Error: " + (error.message || error));
+    }
+  };
+
+  const doJoinWaitlist = async () => {
+    try {
+      await joinSessionWaitlist(session.id, userCode);
+    } catch (error: any) {
+      setDebugMsg("Join Waitlist Error: " + (error.message || error));
+    }
+  };
+
+  const doLeaveWaitlist = async () => {
+    try {
+      await leaveSessionWaitlist(session.id, userCode);
+    } catch (error: any) {
+      setDebugMsg("Leave Waitlist Error: " + (error.message || error));
     }
   };
 
@@ -1024,11 +1042,61 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   </button>
                 </>
               ) : isRegistrationLocked ? (
-                /* Registration is Closed / Deadline Passed for Trainee */
-                <span className="text-xs font-black bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 px-3.5 py-2 rounded-xl border-2 border-amber-300 dark:border-amber-700 shadow-xs flex items-center gap-1.5">
-                  <Ban size={14} className="text-amber-600 dark:text-amber-400 shrink-0" />
-                  <span>{language === 'ar' ? 'تم إيقاف استقبال طلبات التسجيل' : 'Registration Closed'}</span>
-                </span>
+                /* Registration is Closed / Deadline Passed -> Smart Waitlist Experience */
+                isWaitlisted ? (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-black bg-purple-100 dark:bg-purple-950/80 text-purple-900 dark:text-purple-200 px-3.5 py-2 rounded-xl border-2 border-purple-300 dark:border-purple-700 shadow-xs flex items-center gap-1.5">
+                      <Clock size={14} className="text-purple-600 dark:text-purple-400 shrink-0 animate-pulse" />
+                      <span>{language === 'ar' ? '⏳ طلبك بقائمة الانتظار قيد المراجعة' : '⏳ Waitlist Request Under Review'}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        requestConfirmation({
+                          title: language === 'ar' ? 'إلغاء طلب الانضمام لقائمة الانتظار' : 'Cancel Waitlist Request',
+                          message: language === 'ar'
+                            ? `هل أنت متأكد من رغبتك في إلغاء طلب الانضمام لقائمة الانتظار لدورة [${session.courseTitle}]؟`
+                            : `Are you sure you want to cancel your waitlist request for [${session.courseTitle}]?`,
+                          confirmLabel: language === 'ar' ? 'نعم، إلغاء الطلب ✕' : 'Yes, Cancel Request',
+                          color: 'red',
+                          icon: <Ban size={20} className="text-red-500" />,
+                          onConfirm: doLeaveWaitlist
+                        });
+                      }}
+                      className="cursor-pointer bg-red-50 hover:bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800 px-3 py-2 rounded-xl text-xs font-bold transition-all shadow-xs hover:scale-105"
+                      title={language === 'ar' ? 'إلغاء طلب الانضمام لقائمة الانتظار' : 'Cancel Waitlist Request'}
+                    >
+                      {language === 'ar' ? '✕ إلغاء الطلب' : '✕ Cancel Request'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-black bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 px-3.5 py-2 rounded-xl border-2 border-amber-300 dark:border-amber-700 shadow-xs flex items-center gap-1.5">
+                      <Ban size={14} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span>{language === 'ar' ? 'التسجيل مغلق' : 'Reg Closed'}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        requestConfirmation({
+                          title: language === 'ar' ? 'طلب انضمام لقائمة الانتظار' : 'Request to Join Waitlist',
+                          message: language === 'ar'
+                            ? `التسجيل المباشر مغلق حالياً. هل ترغب في إرسال طلب انضمام لقائمة الانتظار لدورة [${session.courseTitle}] إلى مسؤول التدريب؟ سيتم إشعارك فور مراجعة طلبك.`
+                            : `Direct registration is currently closed. Would you like to request joining the waitlist for [${session.courseTitle}]? You will be notified once reviewed.`,
+                          confirmLabel: language === 'ar' ? 'نعم، أرسل الطلب 📋' : 'Yes, Request to Join',
+                          color: 'amber',
+                          icon: <UserPlus size={20} className="text-purple-500" />,
+                          onConfirm: doJoinWaitlist
+                        });
+                      }}
+                      className="cursor-pointer bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 hover:from-purple-800 hover:to-indigo-700 text-white font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md hover:scale-105 border border-purple-400/40"
+                      title={language === 'ar' ? 'إرسال طلب لمسؤول التدريب لحجز مكان في قائمة الانتظار' : 'Request to join waitlist'}
+                    >
+                      <UserPlus size={14} className="text-[#FFC000]" />
+                      <span>{language === 'ar' ? '📋 طلب انضمام لقائمة الانتظار' : '📋 Join Waitlist'}</span>
+                    </button>
+                  </div>
+                )
               ) : isUnregistered ? (
                 <>
                   <span className="text-xs font-black self-center bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3.5 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 shadow-xs flex items-center gap-1.5">
