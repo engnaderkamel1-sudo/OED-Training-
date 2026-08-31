@@ -25,7 +25,9 @@ import {
   ShieldAlert,
   Terminal,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  Copy,
+  Check
 } from 'lucide-react';
 
 export interface SystemErrorReport {
@@ -54,7 +56,36 @@ export const SystemErrorsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'resolved'>('all');
   const [expandedErrorId, setExpandedErrorId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [copiedErrorId, setCopiedErrorId] = useState<string | null>(null);
   const [simulateCrash, setSimulateCrash] = useState(false);
+
+  const handleCopyError = (report: SystemErrorReport) => {
+    const dateStr = report.timestamp?.toDate 
+      ? report.timestamp.toDate().toLocaleString(isAr ? 'ar-EG' : 'en-US') 
+      : (report.timestamp ? String(report.timestamp) : 'N/A');
+      
+    const textToCopy = `🚨 [OED-TTMS Crash Report]
+----------------------------------------
+📌 Error: ${report.message}
+🕒 Timestamp: ${dateStr}
+👤 User: ${report.userName || 'Anonymous'} ${report.userHrCode ? `(#${report.userHrCode})` : ''}
+💼 Role: ${report.userRole || 'N/A'}
+🌐 URL: ${report.url || window.location.href}
+----------------------------------------
+📋 Stack Trace:
+${report.stack || 'No stack trace available'}
+
+🧩 Component Stack:
+${report.componentStack || 'N/A'}
+----------------------------------------`;
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      setCopiedErrorId(report.id);
+      setTimeout(() => setCopiedErrorId(null), 2500);
+    }).catch((err) => {
+      console.error('Failed to copy error:', err);
+    });
+  };
 
   if (simulateCrash) {
     throw new Error("Simulated client error for testing error screen and automated reporting (OED-TTMS)");
@@ -324,6 +355,20 @@ export const SystemErrorsPage: React.FC = () => {
 
                     <button
                       type="button"
+                      onClick={() => handleCopyError(report)}
+                      className={`px-3 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                        copiedErrorId === report.id
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-[#002D62] dark:text-[#93C5FD] border border-blue-200 dark:border-blue-800'
+                      }`}
+                      title={isAr ? 'نسخ تقرير الخطأ بالكامل' : 'Copy Full Error Report'}
+                    >
+                      {copiedErrorId === report.id ? <Check size={15} /> : <Copy size={15} />}
+                      <span>{copiedErrorId === report.id ? (isAr ? 'تم النسخ!' : 'Copied!') : (isAr ? 'نسخ الخطأ' : 'Copy Error')}</span>
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => setExpandedErrorId(isExpanded ? null : report.id)}
                       className="p-2 rounded-xl border bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
                       style={{ borderColor }}
@@ -348,9 +393,19 @@ export const SystemErrorsPage: React.FC = () => {
                 {isExpanded && (
                   <div className="p-4 sm:p-5 border-t bg-slate-900 text-slate-100 rounded-b-2xl font-mono text-xs overflow-x-auto space-y-3">
                     <div>
-                      <div className="text-amber-400 font-bold mb-1.5 flex items-center gap-1.5">
-                        <Terminal size={14} />
-                        <span>Stack Trace:</span>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="text-amber-400 font-bold flex items-center gap-1.5">
+                          <Terminal size={14} />
+                          <span>Stack Trace:</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyError(report)}
+                          className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          {copiedErrorId === report.id ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                          <span>{copiedErrorId === report.id ? (isAr ? 'تم النسخ!' : 'Copied') : (isAr ? 'نسخ السجل' : 'Copy')}</span>
+                        </button>
                       </div>
                       <pre className="p-3.5 rounded-xl bg-black/60 text-slate-300 whitespace-pre-wrap break-all text-[11px] leading-relaxed max-h-64 overflow-y-auto border border-slate-800">
                         {report.stack || report.message || 'No stack trace available'}
