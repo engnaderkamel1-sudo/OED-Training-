@@ -107,6 +107,47 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const [user, setUserState] = useState<User | null>(() => {
     try {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasDemoParam = urlParams.get('demo') === 'vip' || 
+                             urlParams.get('demo') === 'true' ||
+                             urlParams.get('access') === 'executive_demo' ||
+                             urlParams.get('mode') === 'executive' ||
+                             window.location.pathname === '/demo';
+        const isStoredDemo = sessionStorage.getItem('oed_vip_demo_active') === 'true';
+
+        if (hasDemoParam || isStoredDemo) {
+          sessionStorage.setItem('oed_vip_demo_active', 'true');
+          const savedRole = sessionStorage.getItem('oed_vip_role') || 'admin';
+          if (savedRole === 'trainee') {
+            return {
+              id: '830557',
+              hrCode: '830557',
+              name: 'Amir Samir',
+              email: 'amir.samir@orascom.com',
+              phone: '01000000001',
+              department: 'Heavy Machinery',
+              jobTitle: 'Heavy Equipment Maintenance Specialist',
+              role: 'trainee' as const,
+              status: 'approved' as const,
+              isDemoUser: true,
+            };
+          }
+          return {
+            id: 'executive_vip_admin',
+            hrCode: 'VIP-EXEC',
+            name: 'Guest',
+            email: 'executive.demo@orascom.com',
+            phone: '01000000000',
+            department: 'Executive Leadership',
+            jobTitle: 'Senior Executive',
+            role: 'admin' as const,
+            status: 'approved' as const,
+            isDemoUser: true,
+          };
+        }
+      }
+
       const stored = localStorage.getItem('oed_training_user');
       if (!stored) return null;
       const parsed = JSON.parse(stored);
@@ -120,6 +161,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!newUser) {
       try {
         localStorage.removeItem('oed_current_view');
+        localStorage.removeItem('oed_training_user');
+        sessionStorage.removeItem('oed_vip_demo_active');
+        sessionStorage.removeItem('oed_vip_role');
+      } catch (e) {}
+    } else {
+      try {
+        localStorage.setItem('oed_training_user', JSON.stringify(newUser));
       } catch (e) {}
     }
     setUserState(newUser);
