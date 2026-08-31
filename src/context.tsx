@@ -85,6 +85,195 @@ interface AppContextType {
   toggleExecutiveDemo: () => Promise<void>;
 }
 
+export const DEMO_FALLBACK_USERS: User[] = [
+  {
+    id: '830557',
+    hrCode: '830557',
+    name: 'Amir Samir',
+    email: 'amir.samir@orascom.com',
+    phone: '01000000001',
+    department: 'Heavy Machinery',
+    jobTitle: 'Heavy Equipment Maintenance Specialist',
+    role: 'trainee',
+    status: 'approved',
+    isDemoUser: true,
+  },
+  {
+    id: '840112',
+    hrCode: '840112',
+    name: 'Mohamed Ahmed Hassan',
+    email: 'm.hassan@orascom.com',
+    phone: '01011223344',
+    department: 'Heavy Machinery',
+    jobTitle: 'Senior Hydraulic Systems Technician',
+    role: 'trainee',
+    status: 'approved',
+  },
+  {
+    id: '850334',
+    hrCode: '850334',
+    name: 'Mahmoud Ali Ibrahim',
+    email: 'm.ali@orascom.com',
+    phone: '01022334455',
+    department: 'Electrical Diagnostics',
+    jobTitle: 'Heavy Equipment Electrical Engineer',
+    role: 'trainee',
+    status: 'approved',
+  },
+  {
+    id: '860778',
+    hrCode: '860778',
+    name: 'Tarek Mostafa Kamel',
+    email: 'tarek.kamel@orascom.com',
+    phone: '01033445566',
+    department: 'Fleet Maintenance',
+    jobTitle: 'Equipment Workshop Supervisor',
+    role: 'supervisor',
+    status: 'approved',
+  }
+];
+
+export const DEMO_FALLBACK_SESSIONS: UpcomingSession[] = [
+  {
+    id: 'demo_session_1',
+    courseTitle: 'Caterpillar C15/C18 Diesel Engine Electronic Controls',
+    instructor: 'Eng. Nader Kamel',
+    venue: 'OED Central Workshop - Hall A',
+    sessionDate: new Date().toISOString().split('T')[0],
+    startTime: '09:00',
+    endTime: '16:00',
+    status: 'active',
+    isAttendanceOpen: true,
+    department: 'Heavy Machinery',
+    enrolledTrainees: ['830557', '840112', '850334'],
+    attendanceList: ['830557', '840112'],
+    handoutUrl: 'https://orascom.com/training/cat-c15-handout.pdf'
+  },
+  {
+    id: 'demo_session_2',
+    courseTitle: 'Komatsu Hydraulic Excavator Load Sensing Systems',
+    instructor: 'Eng. Ahmed Zaki',
+    venue: 'Alamein Project Site Workshop',
+    sessionDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+    startTime: '10:00',
+    endTime: '15:00',
+    status: 'scheduled',
+    isAttendanceOpen: false,
+    department: 'Heavy Machinery',
+    enrolledTrainees: ['830557', '840112'],
+    attendanceList: []
+  },
+  {
+    id: 'demo_session_3',
+    courseTitle: 'Liebherr Mobile Crane Safety & Load Moment Indicators',
+    instructor: 'Eng. Tarek Mostafa',
+    venue: 'Ain Sokhna Workshop',
+    sessionDate: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
+    startTime: '09:00',
+    endTime: '14:00',
+    status: 'scheduled',
+    isAttendanceOpen: false,
+    department: 'Fleet Maintenance',
+    enrolledTrainees: ['860778'],
+    attendanceList: []
+  },
+  {
+    id: 'demo_session_4',
+    courseTitle: 'Preventive Maintenance & Oil Analysis Diagnostics',
+    instructor: 'Eng. Nader Kamel',
+    venue: 'OED Central Workshop',
+    sessionDate: new Date(Date.now() - 86400000 * 10).toISOString().split('T')[0],
+    startTime: '09:00',
+    endTime: '15:00',
+    status: 'completed',
+    isAttendanceOpen: false,
+    department: 'Heavy Machinery',
+    enrolledTrainees: ['830557', '840112', '850334'],
+    attendanceList: ['830557', '840112', '850334']
+  },
+  {
+    id: 'demo_session_5',
+    courseTitle: 'Heavy Equipment Electrical Schematics & CAN Bus',
+    instructor: 'Eng. Mahmoud Ali',
+    venue: 'Toshka Site Workshop',
+    sessionDate: new Date(Date.now() - 86400000 * 20).toISOString().split('T')[0],
+    startTime: '09:00',
+    endTime: '16:00',
+    status: 'completed',
+    isAttendanceOpen: false,
+    department: 'Electrical Diagnostics',
+    enrolledTrainees: ['830557', '850334'],
+    attendanceList: ['830557', '850334']
+  },
+  {
+    id: 'demo_session_6',
+    courseTitle: 'Workplace Safety & OSHA Compliance in Site Workshops',
+    instructor: 'Eng. Tarek Mostafa',
+    venue: 'OED Safety Hall',
+    sessionDate: new Date(Date.now() - 86400000 * 30).toISOString().split('T')[0],
+    startTime: '08:30',
+    endTime: '14:30',
+    status: 'completed',
+    isAttendanceOpen: false,
+    department: 'Heavy Machinery',
+    enrolledTrainees: ['830557', '840112', '850334', '860778'],
+    attendanceList: ['830557', '840112', '850334', '860778']
+  }
+];
+
+export const DEMO_FALLBACK_CLEANED_RECORDS: CleanedRecord[] = [
+  {
+    id: 'demo_rec_1',
+    hrCode: '830557',
+    name: 'Amir Samir',
+    courseName: 'Diesel Engine Mechanical Fundamentals',
+    department: 'Heavy Machinery',
+    score: '92%',
+    attendanceDate: '2026-06-15',
+    raw: { 'Score': '92%', 'Attended Days': '3', 'Trainee Name': 'Amir Samir', 'Department': 'Heavy Machinery' }
+  },
+  {
+    id: 'demo_rec_2',
+    hrCode: '830557',
+    name: 'Amir Samir',
+    courseName: 'Hydraulic Systems & Troubleshooting',
+    department: 'Heavy Machinery',
+    score: '88%',
+    attendanceDate: '2026-07-20',
+    raw: { 'Score': '88%', 'Attended Days': '4', 'Trainee Name': 'Amir Samir', 'Department': 'Heavy Machinery' }
+  },
+  {
+    id: 'demo_rec_3',
+    hrCode: '830557',
+    name: 'Amir Samir',
+    courseName: 'Electrical Diagnostics & Schematics',
+    department: 'Heavy Machinery',
+    score: '95%',
+    attendanceDate: '2026-08-10',
+    raw: { 'Score': '95%', 'Attended Days': '2', 'Trainee Name': 'Amir Samir', 'Department': 'Heavy Machinery' }
+  },
+  {
+    id: 'demo_rec_4',
+    hrCode: '840112',
+    name: 'Mohamed Ahmed Hassan',
+    courseName: 'Hydraulic Systems & Troubleshooting',
+    department: 'Heavy Machinery',
+    score: '90%',
+    attendanceDate: '2026-07-20',
+    raw: { 'Score': '90%', 'Attended Days': '4', 'Trainee Name': 'Mohamed Ahmed Hassan', 'Department': 'Heavy Machinery' }
+  },
+  {
+    id: 'demo_rec_5',
+    hrCode: '850334',
+    name: 'Mahmoud Ali Ibrahim',
+    courseName: 'Electrical Diagnostics & Schematics',
+    department: 'Electrical Diagnostics',
+    score: '96%',
+    attendanceDate: '2026-08-10',
+    raw: { 'Score': '96%', 'Attended Days': '2', 'Trainee Name': 'Mahmoud Ali Ibrahim', 'Department': 'Electrical Diagnostics' }
+  }
+];
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -216,7 +405,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [firebaseCourses, setFirebaseCoursesState] = useState<Course[]>([]);
 
   const [debugRole, setDebugRole] = useState<Role>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => !(typeof window !== 'undefined' && (sessionStorage.getItem('oed_vip_demo_active') === 'true' || window.location.search.includes('demo='))));
 
   const [isQuotaExhausted, setIsQuotaExhausted] = useState<boolean>(() => {
     try {
