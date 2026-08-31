@@ -349,7 +349,7 @@ export const SuggestionsPage: React.FC = () => {
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-black text-[#002D62] dark:text-white flex items-center gap-2">
-          <MessageSquare size={26} className="text-[#FFC000]" />
+          <MessageSquare size={26} className="text-amber-600 dark:text-[#FFC000]" />
           {t('suggestions')}
         </h1>
         <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-1">
@@ -372,7 +372,7 @@ export const SuggestionsPage: React.FC = () => {
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-[#0F1E36] rounded-2xl border border-gray-200 dark:border-slate-700/80 shadow-sm p-5 space-y-4">
             <h2 className="text-base font-black text-[#002D62] dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-slate-800 pb-3">
-              <Lightbulb size={20} className="text-[#FFC000]" />
+              <Lightbulb size={20} className="text-amber-600 dark:text-[#FFC000]" />
               {t('newSuggestion')}
             </h2>
             {successMsg && (
