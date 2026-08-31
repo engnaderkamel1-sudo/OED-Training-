@@ -173,13 +173,13 @@ export const DEMO_FALLBACK_SESSIONS: UpcomingSession[] = [
     endTime: '14:00',
     status: 'scheduled',
     isAttendanceOpen: false,
-    department: 'Fleet Maintenance',
+    department: 'EL Sokhna - Workshop',
     enrolledTrainees: ['860778'],
     attendanceList: []
   },
   {
     id: 'demo_session_4',
-    courseTitle: 'Preventive Maintenance & Oil Analysis Diagnostics',
+    courseTitle: 'Scheduled Oil Sample S.O.S',
     instructor: 'Eng. Nader Kamel',
     venue: 'ORC - Katamia - Workshop',
     sessionDate: new Date(Date.now() - 86400000 * 10).toISOString().split('T')[0],
@@ -201,7 +201,7 @@ export const DEMO_FALLBACK_SESSIONS: UpcomingSession[] = [
     endTime: '16:00',
     status: 'completed',
     isAttendanceOpen: false,
-    department: 'Electrical Diagnostics',
+    department: 'ORC - Projects',
     enrolledTrainees: ['830557', '850334'],
     attendanceList: ['830557', '850334']
   },
@@ -221,6 +221,7 @@ export const DEMO_FALLBACK_SESSIONS: UpcomingSession[] = [
   }
 ];
 
+
 export const DEMO_FALLBACK_CLEANED_RECORDS: CleanedRecord[] = [
   {
     id: 'demo_rec_1',
@@ -230,49 +231,50 @@ export const DEMO_FALLBACK_CLEANED_RECORDS: CleanedRecord[] = [
     department: 'ORC - Katamia - Workshop',
     score: '92%',
     attendanceDate: '2026-06-15',
-    raw: { 'Score': '92%', 'Attended Days': '3', 'Trainee Name': 'Amir Samir', 'Department': 'ORC - Katamia - Workshop' }
+    raw: { 'Score': '92%', 'Attended Days': '5', 'Trainee Name': 'Amir Samir', 'Department': 'ORC - Katamia - Workshop' }
   },
   {
     id: 'demo_rec_2',
     hrCode: '830557',
     name: 'Amir Samir',
-    courseName: 'Hydraulic Systems & Troubleshooting',
+    courseName: 'Hydraulic Fundamentals',
     department: 'ORC - Katamia - Workshop',
     score: '88%',
     attendanceDate: '2026-07-20',
-    raw: { 'Score': '88%', 'Attended Days': '4', 'Trainee Name': 'Amir Samir', 'Department': 'ORC - Katamia - Workshop' }
+    raw: { 'Score': '88%', 'Attended Days': '5', 'Trainee Name': 'Amir Samir', 'Department': 'ORC - Katamia - Workshop' }
   },
   {
     id: 'demo_rec_3',
     hrCode: '830557',
     name: 'Amir Samir',
-    courseName: 'Electrical Diagnostics & Schematics',
+    courseName: 'Electricity Fundamentals',
     department: 'ORC - Katamia - Workshop',
     score: '95%',
     attendanceDate: '2026-08-10',
-    raw: { 'Score': '95%', 'Attended Days': '2', 'Trainee Name': 'Amir Samir', 'Department': 'ORC - Katamia - Workshop' }
+    raw: { 'Score': '95%', 'Attended Days': '5', 'Trainee Name': 'Amir Samir', 'Department': 'ORC - Katamia - Workshop' }
   },
   {
     id: 'demo_rec_4',
     hrCode: '840112',
     name: 'Mohamed Ahmed Hassan',
-    courseName: 'Hydraulic Systems & Troubleshooting',
+    courseName: 'Hydraulic Fundamentals',
     department: 'ORC - Katamia - Workshop',
     score: '90%',
     attendanceDate: '2026-07-20',
-    raw: { 'Score': '90%', 'Attended Days': '4', 'Trainee Name': 'Mohamed Ahmed Hassan', 'Department': 'ORC - Katamia - Workshop' }
+    raw: { 'Score': '90%', 'Attended Days': '5', 'Trainee Name': 'Mohamed Ahmed Hassan', 'Department': 'ORC - Katamia - Workshop' }
   },
   {
     id: 'demo_rec_5',
     hrCode: '850334',
     name: 'Mahmoud Ali Ibrahim',
-    courseName: 'Electrical Diagnostics & Schematics',
-    department: 'Electrical Diagnostics',
+    courseName: 'Electricity Fundamentals',
+    department: 'ORC - Katamia - Workshop',
     score: '96%',
     attendanceDate: '2026-08-10',
-    raw: { 'Score': '96%', 'Attended Days': '2', 'Trainee Name': 'Mahmoud Ali Ibrahim', 'Department': 'Electrical Diagnostics' }
+    raw: { 'Score': '96%', 'Attended Days': '5', 'Trainee Name': 'Mahmoud Ali Ibrahim', 'Department': 'ORC - Katamia - Workshop' }
   }
 ];
+
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
