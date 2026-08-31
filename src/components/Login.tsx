@@ -11,6 +11,7 @@ import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { getLoginMeta, getLocationFromIP } from "../utils/loginUtils";
 import { APP_VERSION } from "../version";
 import { hashPassword, verifyPassword, sanitizeUserForStorage } from "../utils/cryptoUtils";
+import { validateHrCode, validatePhone, validateEmail, sanitizePlainText } from "../utils/securityUtils";
 
 export const Login: React.FC = () => {
   const { t, language, setUser, users, setUsers, uniqueDepartments, addLoginLog, systemVersion } = useAppContext();
@@ -367,20 +368,27 @@ export const Login: React.FC = () => {
       }
 
       // 3. Mandatory Phone Number
-      if (!phone || phone.length !== 11 || !/^01(0|1|2|5)/.test(phone)) {
+      if (!phone || !validatePhone(phone)) {
         setError(language === "ar" ? "رقم الهاتف غير صحيح، يجب أن يتكون من 11 رقماً ويبدأ بـ 01" : "Phone must be 11 digits and start with 01 (e.g. 010xxxxxxxx)");
         return;
       }
 
       // 4. Mandatory HR Code (Official Account)
-      if (registerMode === 'official' && (!hrCode || !hrCode.trim())) {
-        setError(language === "ar" ? "يرجى إدخال الرقم الوظيفي (HR Code)" : "Please enter your HR Code");
-        return;
+      if (registerMode === 'official') {
+        if (!cleanHrCode || !validateHrCode(cleanHrCode)) {
+          setError(language === "ar" ? "يرجى إدخال رقم وظيفي صحيح (أرقام وحروف فقط)" : "Please enter a valid HR Code (alphanumeric)");
+          return;
+        }
       }
 
       // 5. Mandatory Email
       if (!email || !email.trim()) {
         setError(language === "ar" ? "يرجى إدخال البريد الإلكتروني" : "Please enter your email address");
+        return;
+      }
+
+      if (!validateEmail(fullEmail)) {
+        setError(language === "ar" ? "صيغة البريد الإلكتروني غير صحيحة" : "Invalid email format");
         return;
       }
 
