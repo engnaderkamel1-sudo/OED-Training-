@@ -34,6 +34,16 @@ interface SessionCardProps {
   onUnregister?: (session: UpcomingSession) => void;
 }
 
+interface ActionConfirmModalState {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  icon?: React.ReactNode;
+  color?: 'blue' | 'amber' | 'emerald' | 'red';
+  onConfirm: () => void;
+}
+
 export const SessionCard: React.FC<SessionCardProps> = ({ 
   session, 
   isAdminView = false,
@@ -56,6 +66,8 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   const [debugMsg, setDebugMsg] = React.useState<string>("");
   const [confirmAction, setConfirmAction] = React.useState<'cancel' | 'unregister' | null>(null);
   const [showAttendeesModal, setShowAttendeesModal] = React.useState<boolean>(false);
+  const [actionConfirm, setActionConfirm] = React.useState<ActionConfirmModalState | null>(null);
+
   const { 
     cancelSession, 
     reactivateSession, 
@@ -67,6 +79,10 @@ export const SessionCard: React.FC<SessionCardProps> = ({
     language, 
     t 
   } = useAppContext();
+
+  const requestConfirmation = (config: ActionConfirmModalState) => {
+    setActionConfirm(config);
+  };
   
   // -- State Derived from Context --
   const isCancelled = session.status === 'Cancelled' || !!session.isDeleted;
@@ -134,7 +150,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   );
 
   // ==========================================
-  // SIMPLE CLICK-ONLY HANDLERS (No onPointerDown)
+  // HANDLERS WITH ACCIDENTAL CLICK PROTECTION
   // ==========================================
 
   const [cancellationReasonInput, setCancellationReasonInput] = React.useState("");
@@ -181,7 +197,6 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   };
 
   const doSendEvaluationAlert = async () => {
-    // SECURITY: Only admin can broadcast evaluation alerts and announcements
     if (user?.role !== 'admin') {
       alert(language === 'ar' ? 'غير مصرح لك بإرسال تنبيهات التقييم' : 'Unauthorized: Only admin can send evaluation alerts');
       return;
@@ -280,11 +295,21 @@ export const SessionCard: React.FC<SessionCardProps> = ({
           </h3>
           
           <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Session Number in Official Records Badge */}
             {session.sessionNumber && (
-              <span className="text-xs bg-blue-100 dark:bg-blue-900/50 text-[#002D62] dark:text-blue-200 px-2.5 py-1 rounded-lg font-black border border-blue-200 dark:border-blue-700 shadow-2xs">
-                {session.sessionNumber === 'sessionOne' ? t('sessionOne') : session.sessionNumber === 'sessionTwo' ? t('sessionTwo') : session.sessionNumber === 'sessionThree' ? t('sessionThree') : session.sessionNumber}
+              <span 
+                className="text-xs bg-blue-50 dark:bg-blue-950/80 text-[#002D62] dark:text-blue-200 px-3 py-1.5 rounded-xl font-black border border-blue-200 dark:border-blue-700/80 shadow-2xs flex items-center gap-1.5"
+                title={language === 'ar' ? 'رقم الدورة / الجلسة بالسجل التدريبي الرسمي' : 'Session No. in Official Training Records'}
+              >
+                <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300 opacity-90">
+                  {language === 'ar' ? 'رقم الدورة بالسجل:' : 'Session No. in Training Record:'}
+                </span>
+                <span className="font-black text-xs text-[#002D62] dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2 py-0.5 rounded-lg border border-blue-200 dark:border-blue-800">
+                  {session.sessionNumber === 'sessionOne' ? t('sessionOne') : session.sessionNumber === 'sessionTwo' ? t('sessionTwo') : session.sessionNumber === 'sessionThree' ? t('sessionThree') : session.sessionNumber}
+                </span>
               </span>
             )}
+
             {isCancelled && (
               <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-200 px-2.5 py-1 rounded-lg font-black border border-red-300 dark:border-red-700 shadow-2xs flex items-center gap-1">
                 <Ban size={13} />
@@ -441,229 +466,348 @@ export const SessionCard: React.FC<SessionCardProps> = ({
         {/*           ADMIN CONTROLS             */}
         {/* ==================================== */}
         {isAdminView ? (
-          <div className="flex items-center justify-end gap-2 flex-wrap">
+          <div className="flex flex-col gap-2.5">
             {isCancelled ? (
-              <button 
-                type="button"
-                onClick={doAdminReactivate}
-                className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-md hover:scale-105"
-              >
-                <RotateCcw size={15} />
-                <span>{t('reactivateSession')}</span>
-              </button>
+              <div className="flex items-center justify-end">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    requestConfirmation({
+                      title: language === 'ar' ? 'إعادة تفعيل الجلسة التدريبية' : 'Reactivate Training Session',
+                      message: language === 'ar' ? `هل ترغب في إعادة تفعيل واستئناف دورة [${session.courseTitle}]؟` : `Are you sure you want to reactivate [${session.courseTitle}]?`,
+                      confirmLabel: language === 'ar' ? 'نعم، إعادة التفعيل 🔄' : 'Yes, Reactivate 🔄',
+                      color: 'emerald',
+                      icon: <RotateCcw size={20} className="text-emerald-500" />,
+                      onConfirm: () => doAdminReactivate()
+                    });
+                  }}
+                  className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-md hover:scale-105 active:scale-95"
+                >
+                  <RotateCcw size={15} />
+                  <span>{t('reactivateSession')}</span>
+                </button>
+              </div>
             ) : isCompleted ? (
               /* ==================================================== */
               /* COMPLETED SESSIONS CONTROLS */
               /* ==================================================== */
-              <>
-                <button
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAttendeesModal(true); }}
-                  className="cursor-pointer bg-white dark:bg-slate-800 text-blue-900 dark:text-blue-200 hover:bg-blue-50 dark:hover:bg-slate-700 border border-blue-200 dark:border-slate-600 text-xs px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-xs"
-                >
-                  <Users size={14} className="text-blue-600 dark:text-blue-400" />
-                  <span>{language === 'ar' ? `كشف المتدربين (${attendeesCount})` : `Attendees (${attendeesCount})`}</span>
-                </button>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAttendeesModal(true); }}
+                    className="cursor-pointer bg-white dark:bg-slate-800 text-blue-900 dark:text-blue-200 hover:bg-blue-50 dark:hover:bg-slate-700 border border-blue-200 dark:border-slate-600 text-xs px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 font-bold shadow-xs"
+                  >
+                    <Users size={14} className="text-blue-600 dark:text-blue-400" />
+                    <span>{language === 'ar' ? `كشف المتدربين (${attendeesCount})` : `Attendees (${attendeesCount})`}</span>
+                  </button>
 
-                <button 
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onFinalizeRequest) onFinalizeRequest(session); }}
-                  className="cursor-pointer bg-blue-50 dark:bg-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-900/70 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105"
-                  title={language === 'ar' ? 'تعديل درجات وتقييم المتدربين' : 'Edit Trainee Grades & Attendance'}
-                >
-                  <CheckCircle size={14} className="text-blue-600 dark:text-blue-400" />
-                  <span>{language === 'ar' ? '📝 تعديل الدرجات والتقييم' : 'Edit Grades & Attendance'}</span>
-                </button>
+                  <button 
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onFinalizeRequest) onFinalizeRequest(session); }}
+                    className="cursor-pointer bg-blue-50 dark:bg-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-900/70 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105 active:scale-95"
+                    title={language === 'ar' ? 'تعديل درجات وتقييم المتدربين' : 'Edit Trainee Grades & Attendance'}
+                  >
+                    <CheckCircle size={14} className="text-blue-600 dark:text-blue-400" />
+                    <span>{language === 'ar' ? 'تعديل الدرجات 📝' : 'Edit Grades 📝'}</span>
+                  </button>
 
-                <button 
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onPrintRegisterRequest) onPrintRegisterRequest(session); }}
-                  className="cursor-pointer bg-[#FFC000] hover:bg-yellow-500 text-[#001D42] text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-sm hover:scale-105"
-                  title={language === 'ar' ? 'طباعة الكشف الرسمي' : 'Print Official Register'}
-                >
-                  <FileText size={14} className="text-[#001D42]" />
-                  <span>{language === 'ar' ? 'طباعة الكشف (PDF)' : 'Print Register (PDF)'}</span>
-                </button>
+                  <button 
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onPrintRegisterRequest) onPrintRegisterRequest(session); }}
+                    className="cursor-pointer bg-[#FFC000] hover:bg-yellow-500 text-[#001D42] text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-sm hover:scale-105 active:scale-95"
+                    title={language === 'ar' ? 'طباعة الكشف الرسمي' : 'Print Official Register'}
+                  >
+                    <FileText size={14} className="text-[#001D42]" />
+                    <span>{language === 'ar' ? 'طباعة الكشف (PDF) 📄' : 'Print Register (PDF) 📄'}</span>
+                  </button>
 
-                <button 
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); doSendEvaluationAlert(); }}
-                  className="cursor-pointer bg-amber-50 dark:bg-amber-950/70 hover:bg-amber-100 dark:hover:bg-amber-900/80 text-amber-950 dark:text-amber-200 border border-amber-400 dark:border-amber-600 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105"
-                  title={language === 'ar' ? 'إرسال رابط تقييم الدورة لجميع المتدربين' : 'Send Evaluation Link'}
-                >
-                  <Star size={14} className="text-amber-500 fill-amber-400" />
-                  <span>{language === 'ar' ? 'إرسال رابط التقييم ⭐' : 'Send Evaluation ⭐'}</span>
-                </button>
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      requestConfirmation({
+                        title: language === 'ar' ? 'إرسال رابط تقييم الدورة' : 'Send Course Evaluation Alert',
+                        message: language === 'ar' ? `هل ترغب في إرسال رابط نموذج التقييم لجميع المتدربين المسجلين في دورة [${session.courseTitle}] (${attendeesCount} متدرب)؟` : `Send evaluation link to registered trainees for [${session.courseTitle}]?`,
+                        confirmLabel: language === 'ar' ? 'نعم، إرسال التقييم ⭐' : 'Yes, Send Link',
+                        color: 'amber',
+                        icon: <Star size={20} className="text-amber-500 fill-amber-400" />,
+                        onConfirm: () => doSendEvaluationAlert()
+                      });
+                    }}
+                    className="cursor-pointer bg-amber-50 dark:bg-amber-950/70 hover:bg-amber-100 dark:hover:bg-amber-900/80 text-amber-950 dark:text-amber-200 border border-amber-400 dark:border-amber-600 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105 active:scale-95"
+                    title={language === 'ar' ? 'إرسال رابط تقييم الدورة لجميع المتدربين' : 'Send Evaluation Link'}
+                  >
+                    <Star size={14} className="text-amber-500 fill-amber-400" />
+                    <span>{language === 'ar' ? 'استبيان التقييم ⭐' : 'Send Evaluation ⭐'}</span>
+                  </button>
+                </div>
 
                 <span className="bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200 text-xs font-black px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs">
                   <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400" />
                   <span>{language === 'ar' ? 'دورة منفذة ومكتملة ✓' : 'Completed ✓'}</span>
                 </span>
-              </>
+              </div>
             ) : (
               /* ==================================================== */
               /* ACTIVE / UPCOMING SESSIONS CONTROLS                  */
               /* ==================================================== */
-              <>
-                {/* Toggle Pause / Open Registration */}
-                <button
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); doToggleRegistration(); }}
-                  className={`cursor-pointer text-xs px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105 ${
-                    isRegistrationClosed
-                      ? 'bg-amber-100 text-amber-900 hover:bg-amber-200 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600'
-                  }`}
-                  title={isRegistrationClosed ? (language === 'ar' ? 'فتح باب التسجيل' : 'Reopen Registration') : (language === 'ar' ? 'إيقاف استقبال طلبات التسجيل' : 'Pause Registration')}
-                >
-                  <Ban size={14} className={isRegistrationClosed ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500'} />
-                  <span>{isRegistrationClosed ? (language === 'ar' ? 'فتح التسجيل 🔓' : 'Open Reg 🔓') : (language === 'ar' ? 'إيقاف التسجيل 🔒' : 'Pause Reg 🔒')}</span>
-                </button>
+              <div className="flex flex-col gap-2.5">
+                {/* Cluster 1: Session Status & Core Actions */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Toggle Pause / Open Registration */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      requestConfirmation({
+                        title: isRegistrationClosed ? (language === 'ar' ? 'فتح باب التسجيل' : 'Reopen Registration') : (language === 'ar' ? 'إيقاف استقبال طلبات التسجيل' : 'Pause Registration'),
+                        message: isRegistrationClosed
+                          ? (language === 'ar' ? `هل ترغب في إعادة فتح باب التسجيل للمتدربين لدورة [${session.courseTitle}]؟` : `Reopen registration for [${session.courseTitle}]?`)
+                          : (language === 'ar' ? `هل ترغب في إيقاف استقبال أي طلبات تسجيل جديدة لدورة [${session.courseTitle}]؟` : `Pause new registrations for [${session.courseTitle}]?`),
+                        confirmLabel: isRegistrationClosed ? (language === 'ar' ? 'نعم، فتح التسجيل 🔓' : 'Yes, Reopen') : (language === 'ar' ? 'نعم، إيقاف التسجيل 🔒' : 'Yes, Pause'),
+                        color: 'amber',
+                        icon: <Ban size={20} className="text-amber-600" />,
+                        onConfirm: () => doToggleRegistration()
+                      });
+                    }}
+                    className={`cursor-pointer text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-2xs hover:scale-105 active:scale-95 ${
+                      isRegistrationClosed
+                        ? 'bg-amber-100 text-amber-900 hover:bg-amber-200 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600'
+                    }`}
+                    title={isRegistrationClosed ? (language === 'ar' ? 'فتح باب التسجيل' : 'Reopen Registration') : (language === 'ar' ? 'إيقاف استقبال طلبات التسجيل' : 'Pause Registration')}
+                  >
+                    <Ban size={14} className={isRegistrationClosed ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500'} />
+                    <span>{isRegistrationClosed ? (language === 'ar' ? 'فتح التسجيل 🔓' : 'Open Reg 🔓') : (language === 'ar' ? 'إيقاف التسجيل 🔒' : 'Pause Reg 🔒')}</span>
+                  </button>
 
-                {/* Mark as Completed */}
-                <button 
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); doMarkSessionCompleted(); }}
-                  className="cursor-pointer bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700/80 text-xs px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105"
-                  title={language === 'ar' ? 'تعليم الدورة كمنفذة ومكتملة' : 'Mark Session as Completed'}
-                >
-                  <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400" />
-                  <span>{language === 'ar' ? 'تم التنفيذ ✓' : 'Completed ✓'}</span>
-                </button>
+                  {/* Mark as Completed */}
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      requestConfirmation({
+                        title: language === 'ar' ? 'تعليم الدورة كمنفذة ومكتملة' : 'Mark Session as Completed',
+                        message: language === 'ar' ? `هل ترغب في تحديد دورة [${session.courseTitle}] كدورة منفذة ومكتملة ونقلها إلى سجل الدورات المنفذة؟` : `Mark [${session.courseTitle}] as completed?`,
+                        confirmLabel: language === 'ar' ? 'نعم، تم التنفيذ ✓' : 'Yes, Mark Completed',
+                        color: 'emerald',
+                        icon: <CheckCircle size={20} className="text-emerald-600" />,
+                        onConfirm: () => doMarkSessionCompleted()
+                      });
+                    }}
+                    className="cursor-pointer bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700/80 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-2xs hover:scale-105 active:scale-95"
+                    title={language === 'ar' ? 'تعليم الدورة كمنفذة ومكتملة' : 'Mark Session as Completed'}
+                  >
+                    <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400" />
+                    <span>{language === 'ar' ? 'تم التنفيذ ✓' : 'Completed ✓'}</span>
+                  </button>
 
-                <button 
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); doSendEvaluationAlert(); }}
-                  className="cursor-pointer bg-amber-50 dark:bg-amber-950/70 hover:bg-amber-100 dark:hover:bg-amber-900/80 text-amber-950 dark:text-amber-200 border border-amber-400 dark:border-amber-600 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105"
-                  title={language === 'ar' ? 'إرسال رابط تقييم الدورة لجميع المتدربين' : 'Send Evaluation Link'}
-                >
-                  <Star size={14} className="text-amber-500 fill-amber-400" />
-                  <span>{language === 'ar' ? 'إرسال رابط التقييم ⭐' : 'Send Evaluation ⭐'}</span>
-                </button>
+                  {/* Edit Session */}
+                  <button 
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onEdit) onEdit(session); }}
+                    className="cursor-pointer bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-slate-700 border border-gray-300 dark:border-slate-600 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-2xs hover:scale-105 active:scale-95"
+                  >
+                    <Edit2 size={14} className="text-gray-600 dark:text-gray-300" />
+                    <span>{t('edit')}</span>
+                  </button>
+                </div>
 
-                <button 
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(onSendReminder) onSendReminder(session.id, 'Standard'); }}
-                  className="cursor-pointer bg-blue-100 dark:bg-blue-950 text-[#002D62] dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900 border border-blue-300 dark:border-blue-700 text-xs p-2.5 rounded-xl transition-all flex items-center justify-center shadow-xs hover:scale-105"
-                  title={t('standardReminder')}
-                >
-                  <Bell size={15} />
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(onSendReminder) onSendReminder(session.id, 'Final'); }}
-                  className="cursor-pointer bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900 border border-amber-300 dark:border-amber-700 text-xs p-2.5 rounded-xl transition-all flex items-center justify-center shadow-xs hover:scale-105"
-                  title={t('finalReminder')}
-                >
-                  <AlertTriangle size={15} />
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => { 
-                    e.preventDefault(); 
-                    e.stopPropagation(); 
-                    if (onAttendanceReminderRequest) onAttendanceReminderRequest(session);
-                    else if (onSendReminder) onSendReminder(session.id, 'Attendance'); 
-                  }}
-                  className="cursor-pointer bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-[#001D42] text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs hover:scale-105"
-                  title={language === 'ar' ? 'إرسال تنبيه مخصص لتسجيل الحضور' : 'Send Attendance Reminder'}
-                >
-                  <BellRing size={14} className="text-[#001D42] animate-bounce" />
-                  <span>{language === 'ar' ? 'تنبيه الحضور 🔔' : 'Attendance Alert 🔔'}</span>
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onAnnounceRequest) onAnnounceRequest(session); }}
-                  className="cursor-pointer bg-sky-100 dark:bg-sky-950 text-sky-900 dark:text-sky-300 hover:bg-sky-200 dark:hover:bg-sky-900 border border-sky-300 dark:border-sky-700 text-xs p-2.5 rounded-xl transition-all flex items-center justify-center shadow-xs hover:scale-105"
-                  title={language === 'ar' ? 'إرسال تنبيه للمجموعة' : 'Announce to Group'}
-                >
-                  <Megaphone size={15} />
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onManageAnnouncementsRequest) onManageAnnouncementsRequest(session.id); }}
-                  className="cursor-pointer bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 text-xs p-2.5 rounded-xl transition-all flex items-center justify-center shadow-xs hover:scale-105"
-                  title={language === 'ar' ? 'سجل التنبيهات' : 'Announcements Log'}
-                >
-                  <Clock size={15} />
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onEdit) onEdit(session); }}
-                  className="cursor-pointer bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-slate-700 border border-gray-300 dark:border-slate-600 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-xs hover:scale-105"
-                >
-                  <Edit2 size={14} className="text-gray-600 dark:text-gray-300" />
-                  <span>{t('edit')}</span>
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onShowQR) onShowQR(session); }}
-                  className="cursor-pointer bg-white dark:bg-slate-800 text-[#002D62] dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-slate-700 border border-gray-300 dark:border-slate-600 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-xs hover:scale-105"
-                  title={language === "ar" ? "عرض رمز QR" : "Show QR Code"}
-                >
-                  <QrCode size={14} className="text-[#002D62] dark:text-blue-400" />
-                  <span>QR Code</span>
-                </button>
-                
-                {/* Manual Check-in with Smart Date-Range Safeguard */}
-                <button 
-                  type="button"
-                  disabled={!isDateActiveForAttendance}
-                  onClick={(e) => { 
-                    e.preventDefault(); 
-                    e.stopPropagation(); 
-                    if (isDateActiveForAttendance && onManualAttendanceRequest) onManualAttendanceRequest(session); 
-                  }}
-                  className={`text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-xs ${
-                    isDateActiveForAttendance
-                      ? 'cursor-pointer bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700/80 hover:scale-105'
-                      : 'opacity-40 cursor-not-allowed bg-gray-100 dark:bg-slate-800 text-gray-500 border border-gray-200 dark:border-slate-700'
-                  }`}
-                  title={isDateActiveForAttendance ? (language === 'ar' ? 'تسجيل حضور استثنائي يدوي' : 'Manual Attendance') : (language === 'ar' ? 'متاح فقط أثناء أيام انعقاد الدورة الفعلية' : 'Available only during active session dates')}
-                >
-                  <UserCheck size={14} className={isDateActiveForAttendance ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-400'} />
-                  <span>{language === 'ar' ? 'تحضير يدوي ✍️' : 'Manual Check-in ✍️'}</span>
-                </button>
+                {/* Cluster 2: Reminders & Communications */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Send Evaluation Form */}
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      requestConfirmation({
+                        title: language === 'ar' ? 'إرسال رابط تقييم الدورة' : 'Send Course Evaluation Alert',
+                        message: language === 'ar' ? `سيتم إرسال رابط نموذج التقييم فوراً للمتدربين المسجلين في دورة [${session.courseTitle}] (${attendeesCount} متدرب). هل ترغب في المتابعة؟` : `Send course evaluation link to registered trainees for [${session.courseTitle}]?`,
+                        confirmLabel: language === 'ar' ? 'نعم، إرسال التقييم ⭐' : 'Yes, Send Link',
+                        color: 'amber',
+                        icon: <Star size={20} className="text-amber-500 fill-amber-400" />,
+                        onConfirm: () => doSendEvaluationAlert()
+                      });
+                    }}
+                    className="cursor-pointer bg-amber-50 dark:bg-amber-950/70 hover:bg-amber-100 dark:hover:bg-amber-900/80 text-amber-950 dark:text-amber-200 border border-amber-400 dark:border-amber-600 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-2xs hover:scale-105 active:scale-95"
+                    title={language === 'ar' ? 'إرسال رابط تقييم الدورة لجميع المتدربين' : 'Send Evaluation Link'}
+                  >
+                    <Star size={14} className="text-amber-500 fill-amber-400" />
+                    <span>{language === 'ar' ? 'استبيان التقييم ⭐' : 'Send Evaluation ⭐'}</span>
+                  </button>
 
-                <button 
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onPrintRegisterRequest) onPrintRegisterRequest(session); }}
-                  className="cursor-pointer bg-[#FFC000] hover:bg-yellow-500 text-[#001D42] text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-sm hover:scale-105"
-                  title={language === 'ar' ? 'طباعة الكشف' : 'Print Register'}
-                >
-                  <FileText size={15} className="text-[#001D42]" />
-                  <span className="text-[#001D42] font-black">{language === 'ar' ? 'طباعة الكشف' : 'Print Register'}</span>
-                </button>
+                  {/* Standard Reminder */}
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      requestConfirmation({
+                        title: language === 'ar' ? 'إرسال تذكير قياسي بموعد الدورة' : 'Send Standard Reminder',
+                        message: language === 'ar' ? `هل ترغب في إرسال تذكير عام بموعد دورة [${session.courseTitle}] لجميع المسجلين (${attendeesCount} متدرب)؟` : `Send standard reminder to registered trainees for [${session.courseTitle}]?`,
+                        confirmLabel: language === 'ar' ? 'نعم، إرسال التذكير' : 'Yes, Send Reminder',
+                        color: 'blue',
+                        icon: <Bell size={20} className="text-blue-500" />,
+                        onConfirm: () => { if (onSendReminder) onSendReminder(session.id, 'Standard'); }
+                      });
+                    }}
+                    className="cursor-pointer bg-blue-50 dark:bg-blue-950/70 text-[#002D62] dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-700 text-xs px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-2xs hover:scale-105 active:scale-95"
+                    title={t('standardReminder')}
+                  >
+                    <Bell size={14} className="text-blue-600 dark:text-blue-400" />
+                    <span>{language === 'ar' ? 'تذكير عادي' : 'Standard'}</span>
+                  </button>
 
-                {/* Finalize & Grade with Smart Date-Range Safeguard */}
-                <button 
-                  type="button"
-                  disabled={!isDateActiveForAttendance}
-                  onClick={(e) => { 
-                    e.preventDefault(); 
-                    e.stopPropagation(); 
-                    if (isDateActiveForAttendance && onFinalizeRequest) onFinalizeRequest(session); 
-                  }}
-                  className={`text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-sm ${
-                    isDateActiveForAttendance
-                      ? 'cursor-pointer text-white bg-blue-600 hover:bg-blue-700 border border-blue-400/40 hover:scale-105'
-                      : 'opacity-40 cursor-not-allowed bg-gray-200 dark:bg-slate-800 text-gray-500 border border-gray-300 dark:border-slate-700'
-                  }`}
-                  title={isDateActiveForAttendance ? (language === 'ar' ? 'إنهاء الجلسة وتسجيل الدرجات' : 'Finalize & Grade') : (language === 'ar' ? 'متاح فقط أثناء أيام انعقاد الدورة الفعلية' : 'Available only during active session dates')}
-                >
-                  <CheckCircle size={15} />
-                  <span>{language === 'ar' ? 'إنهاء وحضور' : 'Finalize & Grade'}</span>
-                </button>
+                  {/* Final Reminder */}
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      requestConfirmation({
+                        title: language === 'ar' ? 'إرسال إنذار نهائي بموعد الدورة' : 'Send Final Reminder',
+                        message: language === 'ar' ? `هل ترغب في إرسال الإنذار والتنبيه النهائي للمتدربين المسجلين في دورة [${session.courseTitle}]؟` : `Send final reminder alert to registered trainees for [${session.courseTitle}]?`,
+                        confirmLabel: language === 'ar' ? 'نعم، إرسال الإنذار ⚠️' : 'Yes, Send Alert',
+                        color: 'amber',
+                        icon: <AlertTriangle size={20} className="text-amber-500" />,
+                        onConfirm: () => { if (onSendReminder) onSendReminder(session.id, 'Final'); }
+                      });
+                    }}
+                    className="cursor-pointer bg-amber-50 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900 border border-amber-300 dark:border-amber-700 text-xs px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-2xs hover:scale-105 active:scale-95"
+                    title={t('finalReminder')}
+                  >
+                    <AlertTriangle size={14} className="text-amber-600 dark:text-amber-400" />
+                    <span>{language === 'ar' ? 'إنذار أخير ⚠️' : 'Final Alert ⚠️'}</span>
+                  </button>
 
-                <button 
-                  type="button"
-                  onClick={() => setConfirmAction('cancel')}
-                  className="cursor-pointer bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900 border border-red-300 dark:border-red-700/80 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-xs hover:scale-105"
-                >
-                  <Ban size={14} />
-                  <span>{t('cancelSession')}</span>
-                </button>
-              </>
+                  {/* Attendance Reminder */}
+                  <button 
+                    type="button"
+                    onClick={(e) => { 
+                      e.preventDefault(); 
+                      e.stopPropagation(); 
+                      requestConfirmation({
+                        title: language === 'ar' ? 'إرسال تنبيه الحضور العاجل' : 'Send Attendance Alert',
+                        message: language === 'ar' ? `هل ترغب في إرسال تنبيه مخصص لتسجيل الحضور لجميع المتدربين المسجلين في دورة [${session.courseTitle}]؟` : `Send attendance alert to registered trainees for [${session.courseTitle}]?`,
+                        confirmLabel: language === 'ar' ? 'نعم، إرسال التنبيه 🔔' : 'Yes, Send Alert',
+                        color: 'amber',
+                        icon: <BellRing size={20} className="text-amber-600" />,
+                        onConfirm: () => {
+                          if (onAttendanceReminderRequest) onAttendanceReminderRequest(session);
+                          else if (onSendReminder) onSendReminder(session.id, 'Attendance'); 
+                        }
+                      });
+                    }}
+                    className="cursor-pointer bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-[#001D42] text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-2xs hover:scale-105 active:scale-95"
+                    title={language === 'ar' ? 'إرسال تنبيه مخصص لتسجيل الحضور' : 'Send Attendance Reminder'}
+                  >
+                    <BellRing size={14} className="text-[#001D42] animate-bounce" />
+                    <span>{language === 'ar' ? 'تنبيه الحضور 🔔' : 'Attendance Alert 🔔'}</span>
+                  </button>
+
+                  {/* Announce to Group */}
+                  <button 
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onAnnounceRequest) onAnnounceRequest(session); }}
+                    className="cursor-pointer bg-sky-50 dark:bg-sky-950/70 text-sky-900 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900 border border-sky-300 dark:border-sky-700 text-xs px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-2xs hover:scale-105 active:scale-95"
+                    title={language === 'ar' ? 'إرسال إعلان مخصص للمجموعة' : 'Announce to Group'}
+                  >
+                    <Megaphone size={14} className="text-sky-600 dark:text-sky-400" />
+                    <span>{language === 'ar' ? 'إعلان 📢' : 'Announce 📢'}</span>
+                  </button>
+
+                  {/* Announcements Log */}
+                  <button 
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onManageAnnouncementsRequest) onManageAnnouncementsRequest(session.id); }}
+                    className="cursor-pointer bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 text-xs px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-2xs hover:scale-105 active:scale-95"
+                    title={language === 'ar' ? 'سجل الإعلانات والتنبيهات السابقة' : 'Announcements Log'}
+                  >
+                    <Clock size={14} className="text-slate-600 dark:text-slate-400" />
+                    <span>{language === 'ar' ? 'سجل التنبيهات ⏱️' : 'Alerts History ⏱️'}</span>
+                  </button>
+                </div>
+
+                {/* Cluster 3: Attendance, Grading & Documents */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Show QR Code */}
+                  <button 
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onShowQR) onShowQR(session); }}
+                    className="cursor-pointer bg-white dark:bg-slate-800 text-[#002D62] dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-slate-700 border border-gray-300 dark:border-slate-600 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-2xs hover:scale-105 active:scale-95"
+                    title={language === "ar" ? "عرض رمز QR للحضور" : "Show QR Code"}
+                  >
+                    <QrCode size={14} className="text-[#002D62] dark:text-blue-400" />
+                    <span>{language === 'ar' ? 'رمز QR 📱' : 'QR Code 📱'}</span>
+                  </button>
+                  
+                  {/* Manual Check-in */}
+                  <button 
+                    type="button"
+                    disabled={!isDateActiveForAttendance}
+                    onClick={(e) => { 
+                      e.preventDefault(); 
+                      e.stopPropagation(); 
+                      if (isDateActiveForAttendance && onManualAttendanceRequest) onManualAttendanceRequest(session); 
+                    }}
+                    className={`text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-2xs ${
+                      isDateActiveForAttendance
+                        ? 'cursor-pointer bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700/80 hover:scale-105 active:scale-95'
+                        : 'opacity-40 cursor-not-allowed bg-gray-100 dark:bg-slate-800 text-gray-500 border border-gray-200 dark:border-slate-700'
+                    }`}
+                    title={isDateActiveForAttendance ? (language === 'ar' ? 'تسجيل حضور استثنائي يدوي' : 'Manual Attendance') : (language === 'ar' ? 'متاح فقط أثناء أيام انعقاد الدورة الفعلية' : 'Available only during active session dates')}
+                  >
+                    <UserCheck size={14} className={isDateActiveForAttendance ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-400'} />
+                    <span>{language === 'ar' ? 'تحضير يدوي ✍️' : 'Manual Check-in ✍️'}</span>
+                  </button>
+
+                  {/* Print Official Register */}
+                  <button 
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onPrintRegisterRequest) onPrintRegisterRequest(session); }}
+                    className="cursor-pointer bg-[#FFC000] hover:bg-yellow-500 text-[#001D42] text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-black shadow-2xs hover:scale-105 active:scale-95"
+                    title={language === 'ar' ? 'طباعة الكشف الرسمي' : 'Print Official Register'}
+                  >
+                    <FileText size={14} className="text-[#001D42]" />
+                    <span>{language === 'ar' ? 'طباعة الكشف 📄' : 'Print Register 📄'}</span>
+                  </button>
+
+                  {/* Finalize & Grade */}
+                  <button 
+                    type="button"
+                    disabled={!isDateActiveForAttendance}
+                    onClick={(e) => { 
+                      e.preventDefault(); 
+                      e.stopPropagation(); 
+                      if (isDateActiveForAttendance && onFinalizeRequest) onFinalizeRequest(session); 
+                    }}
+                    className={`text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-2xs ${
+                      isDateActiveForAttendance
+                        ? 'cursor-pointer text-white bg-blue-600 hover:bg-blue-700 border border-blue-400/40 hover:scale-105 active:scale-95'
+                        : 'opacity-40 cursor-not-allowed bg-gray-200 dark:bg-slate-800 text-gray-500 border border-gray-300 dark:border-slate-700'
+                    }`}
+                    title={isDateActiveForAttendance ? (language === 'ar' ? 'إنهاء الجلسة وتسجيل الدرجات' : 'Finalize & Grade') : (language === 'ar' ? 'متاح فقط أثناء أيام انعقاد الدورة الفعلية' : 'Available only during active session dates')}
+                  >
+                    <CheckCircle size={14} />
+                    <span>{language === 'ar' ? 'إنهاء ورصد الدرجات ✓' : 'Finalize & Grade ✓'}</span>
+                  </button>
+
+                  {/* Cancel Session */}
+                  <button 
+                    type="button"
+                    onClick={() => setConfirmAction('cancel')}
+                    className="cursor-pointer bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900 border border-red-300 dark:border-red-700/80 text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold shadow-2xs hover:scale-105 active:scale-95 ml-auto rtl:mr-auto rtl:ml-0"
+                  >
+                    <Ban size={14} className="text-red-600 dark:text-red-400" />
+                    <span>{t('cancelSession')}</span>
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         ) : (
@@ -855,6 +999,81 @@ export const SessionCard: React.FC<SessionCardProps> = ({
         )}
       </div>
     </div>
+
+      {/* ========================================================= */}
+      {/* ACCIDENTAL CLICK ACTION CONFIRMATION MODAL               */}
+      {/* ========================================================= */}
+      {actionConfirm && (
+        <div 
+          className="fixed inset-0 bg-black/75 backdrop-blur-xs z-[999999] flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setActionConfirm(null)}
+        >
+          <div 
+            className="w-full max-w-md bg-white dark:bg-[#0D1E38] rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 animate-scale-in flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-[#002D62] text-white px-5 py-4 flex justify-between items-center border-b border-blue-900/60">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-[#FFC000] text-[#002D62] font-black shadow-xs">
+                  {actionConfirm.icon || <AlertCircle size={20} />}
+                </div>
+                <h3 className="font-bold text-sm sm:text-base">
+                  {actionConfirm.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActionConfirm(null)}
+                className="text-white/80 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 space-y-4">
+              <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-semibold leading-relaxed">
+                {actionConfirm.message}
+              </p>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setActionConfirm(null)}
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                >
+                  {actionConfirm.cancelLabel || (language === 'ar' ? 'تراجع / إلغاء' : 'Cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const fn = actionConfirm.onConfirm;
+                    setActionConfirm(null);
+                    fn();
+                  }}
+                  className={`px-5 py-2 text-xs font-black rounded-xl shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 text-white ${
+                    actionConfirm.color === 'emerald'
+                      ? 'bg-emerald-600 hover:bg-emerald-700'
+                      : actionConfirm.color === 'red'
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : actionConfirm.color === 'amber'
+                      ? 'bg-amber-600 hover:bg-amber-700'
+                      : 'bg-[#002D62] hover:bg-blue-900'
+                  }`}
+                >
+                  {actionConfirm.confirmLabel || (language === 'ar' ? 'نعم، تأكيد التنفيذ' : 'Confirm')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* ATTENDEES LIST MODAL                                      */}
+      {/* ========================================================= */}
       {showAttendeesModal && (
         <div 
           className="fixed inset-0 bg-black/70 backdrop-blur-xs z-[99999] flex items-center justify-center p-4 cursor-pointer animate-fade-in"
@@ -1006,10 +1225,3 @@ export const SessionCard: React.FC<SessionCardProps> = ({
     </>
   );
 };
-
-
-
-
-
-
-
