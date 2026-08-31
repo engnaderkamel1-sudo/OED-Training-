@@ -898,7 +898,10 @@ Please log in to register for this session through the OED-TTMS Application.
     { courseName: "Maintenance & Repair Lessons Learned 1 Technician", attendees: 32, sessions: 4 },
     { courseName: "Caterpillar Electronic Technician", attendees: 27, sessions: 3 },
     { courseName: "Contamination Control Engineers", attendees: 19, sessions: 2 },
-    { courseName: "Motor Grader Operation Engineers", attendees: 18, sessions: 2 }
+    { courseName: "Motor Grader Operation Engineers", attendees: 18, sessions: 2 },
+    { courseName: "14M Motor Grader Engineers", attendees: 15, sessions: 2 },
+    { courseName: "04. MSV DCY30E Multi-Service Vehicle Engineers", attendees: 12, sessions: 1 },
+    { courseName: "03. TBM Hydraulic & Fluid Systems Engineers", attendees: 10, sessions: 1 }
   ];
 
   const EXECUTIVE_OED_DEPARTMENTS = [
