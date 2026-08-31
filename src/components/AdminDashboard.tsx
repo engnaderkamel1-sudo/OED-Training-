@@ -11,6 +11,14 @@ import { Clock, CalendarX, Bell, Share2, Users, Database, UploadCloud, RefreshCw
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
 import { formatScore, formatDateToStandard } from "../utils/formatters";
+import { 
+  getOccupiedSessionNumbers, 
+  getNextGlobalSessionNumber, 
+  getVacantSessionNumbers, 
+  findConflictingSession, 
+  parseSessionNumber, 
+  calculateReindexedSessions 
+} from '../utils/sessionSerialUtils';
 import { safePrintReport, downloadReportPDF, downloadTrainingRegisterPDF, ReportOptions } from "../utils/printUtils";
 import { DataField } from "./DataField";
 import { SessionCard } from "./SessionCard";
@@ -243,6 +251,15 @@ Please log in to register for this session through the OED-TTMS Application.
   };
 
   const [customEmailBody, setCustomEmailBody] = useState<string>("");
+
+  const vacantGaps = useMemo(() => {
+    return getVacantSessionNumbers(upcomingSessions, allTrainingRecords, 4);
+  }, [upcomingSessions, allTrainingRecords]);
+
+  const conflictingSession = useMemo(() => {
+    if (!sessionNumber) return undefined;
+    return findConflictingSession(sessionNumber, editingSessionId || undefined, upcomingSessions);
+  }, [sessionNumber, editingSessionId, upcomingSessions]);
   const [isEmailBodyManual, setIsEmailBodyManual] = useState(false);
 
   const [reviewModalSession, setReviewModalSession] = useState<{
@@ -1578,7 +1595,7 @@ Content-Type: text/html; charset="utf-8"
     setSelectedCourseId(""); 
     setStartDate(""); 
     setEndDate(""); 
-    setSessionNumber(parseInt(nextSessionNum, 10) > 1 ? nextSessionNum : getNextGlobalSessionNumber()); 
+    setSessionNumber(parseInt(nextSessionNum, 10) > 1 ? nextSessionNum : getNextGlobalSessionNumberLocal()); 
     setSessionIteration("1");
     setLocation(DEFAULT_LOCATION); 
     setStartTime(DEFAULT_START_TIME); 
@@ -2842,7 +2859,7 @@ Content-Type: text/html; charset="utf-8"
                               if (!editingSessionId) {
                                 setSessionIteration(getNextCourseIteration(selected));
                                 if (!sessionNumber || sessionNumber === "") {
-                                  setSessionNumber(getNextGlobalSessionNumber());
+                                  setSessionNumber(getNextGlobalSessionNumberLocal());
                                 }
                               }
                             }} 
