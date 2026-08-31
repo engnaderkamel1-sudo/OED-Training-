@@ -6,6 +6,7 @@ import { ExternalLink, Check, CheckCircle, Calendar, Bell, BellOff, AlertTriangl
 import { QRScannerModal } from './QRScannerModal';
 import { HandoutRevisionModal } from './HandoutRevisionModal';
 import { isSessionActiveNow, sendNativePushNotification } from '../utils/sessionTimeUtils';
+import { sanitizeUrl } from '../utils/securityUtils';
 
 export const playNotificationSound = () => {
   try {
@@ -1073,7 +1074,7 @@ export const TraineeDashboard: React.FC = () => {
                           {(notif.link || (notif.message && notif.message.includes('forms')) || (notif.title && (notif.title.includes('تقييم') || notif.title.includes('Evaluation')))) && (
                             <div className="pt-2">
                               <a 
-                                href={notif.link || (notif.message?.match(/https?:\/\/[^\s]+/)?.[0]) || "https://forms.cloud.microsoft/r/cj3ByTQCRS"}
+                                href={sanitizeUrl(notif.link || (notif.message?.match(/https?:\/\/[^\s]+/)?.[0]) || "https://forms.cloud.microsoft/r/cj3ByTQCRS")}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
