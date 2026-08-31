@@ -29,7 +29,7 @@ export const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState("");
-  const [department, setDepartment] = useState("Heavy Machinery");
+  const [department, setDepartment] = useState("ORC - Katamia - Workshop");
   const [customDepartment, setCustomDepartment] = useState("");
   const [jobRole, setJobRole] = useState("Engineer");
   const [accessRole, setAccessRole] = useState<Role>("trainee");
@@ -800,7 +800,7 @@ export const Login: React.FC = () => {
               >
                 {uniqueDepartments && uniqueDepartments.length > 0 ? uniqueDepartments.map((dep) => (
                   <option key={dep} value={dep}>{dep}</option>
-                )) : <option value="Heavy Machinery">Heavy Machinery</option>}
+                )) : <option value="ORC - Katamia - Workshop">ORC - Katamia - Workshop</option>}
                 <option value="__custom__">➕ {language === 'ar' ? 'قسم آخر (كتابة يدوية)...' : 'Other Department (Type manually)...'}</option>
               </select>
 
