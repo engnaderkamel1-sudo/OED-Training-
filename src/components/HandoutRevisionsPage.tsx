@@ -407,7 +407,7 @@ export const HandoutRevisionsPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleUpdateStatus(rev.id, 'reviewing')}
-                        className={`text-xs px-2.5 py-1.5 rounded-lg font-bold border transition-all cursor-pointer ${
+                        className={`text-xs px-3.5 py-2 min-h-[38px] sm:min-h-[32px] rounded-xl font-bold border transition-all cursor-pointer shadow-2xs active:scale-95 ${
                           rev.status === 'reviewing'
                             ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                             : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-200 border-gray-300 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/30'
@@ -418,7 +418,7 @@ export const HandoutRevisionsPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleUpdateStatus(rev.id, 'applied')}
-                        className={`text-xs px-2.5 py-1.5 rounded-lg font-bold border transition-all cursor-pointer ${
+                        className={`text-xs px-3.5 py-2 min-h-[38px] sm:min-h-[32px] rounded-xl font-bold border transition-all cursor-pointer shadow-2xs active:scale-95 ${
                           rev.status === 'applied'
                             ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                             : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-200 border-gray-300 dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'
@@ -429,7 +429,7 @@ export const HandoutRevisionsPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleUpdateStatus(rev.id, 'rejected')}
-                        className={`text-xs px-2.5 py-1.5 rounded-lg font-bold border transition-all cursor-pointer ${
+                        className={`text-xs px-3.5 py-2 min-h-[38px] sm:min-h-[32px] rounded-xl font-bold border transition-all cursor-pointer shadow-2xs active:scale-95 ${
                           rev.status === 'rejected'
                             ? 'bg-red-600 text-white border-red-600 shadow-xs'
                             : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-200 border-gray-300 dark:border-slate-700 hover:bg-red-50 dark:hover:bg-red-900/30'
@@ -445,21 +445,21 @@ export const HandoutRevisionsPage: React.FC = () => {
                         value={editingNotes[rev.id] !== undefined ? editingNotes[rev.id] : (rev.adminFeedback || '')}
                         onChange={(e) => setEditingNotes({ ...editingNotes, [rev.id]: e.target.value })}
                         placeholder={language === 'ar' ? 'اكتب رد أو ملاحظة للمتدرب...' : 'Write admin reply...'}
-                        className="flex-1 md:w-64 text-xs px-3 py-1.5 bg-gray-50 dark:bg-[#0A1628] border border-gray-300 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 text-gray-900 dark:text-white"
+                        className="flex-1 md:w-64 text-xs px-3 py-2 min-h-[38px] sm:min-h-[32px] bg-gray-50 dark:bg-[#0A1628] border border-gray-300 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 text-gray-900 dark:text-white"
                       />
                       <button
                         type="button"
                         onClick={() => handleSaveFeedback(rev.id)}
-                        className="cursor-pointer bg-[#002D62] text-white hover:bg-blue-900 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 shadow-xs shrink-0"
+                        className="cursor-pointer bg-[#002D62] text-white hover:bg-blue-900 px-3.5 py-2 min-h-[38px] sm:min-h-[32px] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs shrink-0 active:scale-95"
                         title={language === 'ar' ? 'حفظ الرد' : 'Save Reply'}
                       >
-                        <Save size={13} />
+                        <Save size={14} />
                         <span>{language === 'ar' ? 'حفظ الرد' : 'Save'}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => handleDelete(rev.id)}
-                        className="cursor-pointer text-red-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                        className="cursor-pointer text-red-500 hover:text-red-400 p-2 min-w-[38px] min-h-[38px] flex items-center justify-center rounded-xl hover:bg-red-50 dark:hover:bg-red-950/40 transition-all border border-transparent hover:border-red-200 dark:hover:border-red-800 active:scale-95"
                         title={language === 'ar' ? 'حذف المقترح' : 'Delete'}
                       >
                         <Trash2 size={16} />
