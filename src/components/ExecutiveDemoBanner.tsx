@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Settings, GraduationCap, Lock, Sparkles, LogOut } from 'lucide-react';
+import { Settings, GraduationCap, Sparkles, LogOut } from 'lucide-react';
 import { useAppContext } from '../context';
 import { User } from '../types';
 
@@ -30,7 +30,7 @@ export const VIP_TRAINEE_USER: User = {
 };
 
 export const ExecutiveDemoBanner: React.FC = () => {
-  const { user, setUser, isExecutiveDemoEnabled, language, localUsers } = useAppContext();
+  const { user, setUser, language, localUsers } = useAppContext();
 
   // Clean URL query once on mount without reloading
   useEffect(() => {
@@ -84,7 +84,7 @@ export const ExecutiveDemoBanner: React.FC = () => {
           </div>
           <div className="flex items-center gap-2 truncate">
             <span className="font-black text-[#FFC000] tracking-wide text-xs sm:text-sm truncate">
-              {language === 'ar' ? 'ðŸ‘‘ ÙˆØ¶Ø¹ Ø§Ù„Ù…Ø¹Ø§ÙŠÙ†Ø© Ø§Ù„ØªÙ†ÙÙŠØ°ÙŠØ© Ø§Ù„ØªÙØ§Ø¹Ù„ÙŠØ©' : 'ðŸ‘‘ VIP Executive Interactive Sandbox'}
+              {language === 'ar' ? 'ÙˆØ¶Ø¹ Ø§Ù„Ù…Ø¹Ø§ÙŠÙ†Ø© Ø§Ù„ØªÙ†ÙÙŠØ°ÙŠØ© Ø§Ù„ØªÙØ§Ø¹Ù„ÙŠØ©' : 'VIP Executive Interactive Sandbox'}
             </span>
             <span className="hidden lg:inline-block text-slate-300 text-xs font-semibold">
               â€¢ {isAdmin 
@@ -120,7 +120,7 @@ export const ExecutiveDemoBanner: React.FC = () => {
               ? 'bg-[#FFC000] text-[#001D42] shadow-md scale-105' 
               : 'text-slate-300 hover:text-white hover:bg-white/10'
           }`}
-          title={language === 'ar' ? 'Ù…Ø¹Ø§ÙŠÙ†Ø© ØªØ¬Ø±Ø¨Ø© Ø§Ù„Ù…ØªØ¯Ø±Ø¨ Ø¨Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø­ÙŠØ© (Ø£Ù…ÙŠØ± Ø³Ù…ÙŠØ± #830557)' : 'Switch to Trainee View (Amir Samir #830557)'}
+          title={language === 'ar' ? 'Ù…Ø¹Ø§ÙŠÙ†Ø© ØªØ¬Ø±Ø¨Ø© Ø§Ù„Ù…ØªØ¯Ø±Ø¨ (Ø£Ù…ÙŠØ± Ø³Ù…ÙŠØ± #830557)' : 'Switch to Trainee View (Amir Samir #830557)'}
         >
           <GraduationCap size={15} />
           <span className="flex flex-col text-left rtl:text-right leading-tight">
