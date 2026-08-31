@@ -196,7 +196,7 @@ export const CoursesPage: React.FC = () => {
                     {/* Course Title */}
                     <td className="p-4 font-bold text-[#002D62] dark:text-[#70B2FF]">
                       <div className="flex items-center gap-2">
-                        <BookOpen size={16} className="text-[#FFC000] shrink-0" />
+                        <BookOpen size={16} className="text-amber-600 dark:text-[#FFC000] shrink-0" />
                         <span>{c.title}</span>
                       </div>
                     </td>
