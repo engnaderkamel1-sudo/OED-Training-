@@ -883,23 +883,37 @@ Please log in to register for this session through the OED-TTMS Application.
     setShowBackupPromptModal(false);
   };
 
-    const EXECUTIVE_OED_COURSES = [
-    { courseName: "Caterpillar C15/C18 Diesel Engine Electronic Controls", attendees: 148, sessions: 16 },
-    { courseName: "Komatsu Hydraulic Excavators & Load Sensing Systems", attendees: 132, sessions: 14 },
-    { courseName: "Heavy Machinery Electrical Schematics & CAN-Bus", attendees: 118, sessions: 12 },
-    { courseName: "Liebherr Mobile Cranes & Load Moment Safety", attendees: 96, sessions: 10 },
-    { courseName: "Preventive Maintenance & Oil Analysis Diagnostics", attendees: 84, sessions: 9 },
-    { courseName: "Heavy Equipment Powertrain & Transmission Overhaul", attendees: 72, sessions: 8 },
-    { courseName: "Workshop Health, Safety & OSHA Compliance", attendees: 65, sessions: 7 }
+      const EXECUTIVE_OED_COURSES = [
+    { courseName: "Motor Grader Operation Operators", attendees: 99, sessions: 12 },
+    { courseName: "Electricity Fundamentals", attendees: 97, sessions: 11 },
+    { courseName: "Scheduled Oil Sample S.O.S", attendees: 93, sessions: 11 },
+    { courseName: "Hydraulic Fundamentals", attendees: 92, sessions: 11 },
+    { courseName: "Diesel Engine Mechanical Fundamentals", attendees: 90, sessions: 10 },
+    { courseName: "Power Train", attendees: 75, sessions: 9 },
+    { courseName: "Electrical Power Generation", attendees: 73, sessions: 9 },
+    { courseName: "Advanced Hydraulic Control Systems", attendees: 70, sessions: 8 },
+    { courseName: "Electronic Diesel Engine", attendees: 53, sessions: 6 },
+    { courseName: "Undercarriage Engineers", attendees: 44, sessions: 5 },
+    { courseName: "Maintenance & Repair Lessons Learned 1 Engineers", attendees: 42, sessions: 5 },
+    { courseName: "Maintenance & Repair Lessons Learned 1 Technician", attendees: 32, sessions: 4 },
+    { courseName: "Caterpillar Electronic Technician", attendees: 27, sessions: 3 },
+    { courseName: "Contamination Control Engineers", attendees: 19, sessions: 2 },
+    { courseName: "Motor Grader Operation Engineers", attendees: 18, sessions: 2 }
   ];
 
   const EXECUTIVE_OED_DEPARTMENTS = [
-    { department: "ORC - Katamia Central Workshop", trainees: 285 },
-    { department: "OC - Ain Sokhna Site Workshop", trainees: 194 },
-    { department: "OC - New Alamein Site Workshop", trainees: 172 },
-    { department: "ORC - Abu Rawash Workshop", trainees: 145 },
-    { department: "OC - Toshka Project Workshop", trainees: 112 },
-    { department: "OED - Technical Office & Engineering", trainees: 92 }
+    { department: "ORC - Projects", trainees: 208 },
+    { department: "OC - Katamia - Workshop", trainees: 198 },
+    { department: "ORC - Katamia - Workshop", trainees: 81 },
+    { department: "OC - Projects", trainees: 34 },
+    { department: "TBM - Civil Team", trainees: 32 },
+    { department: "EL Sokhna - Workshop", trainees: 14 },
+    { department: "Technical Office", trainees: 10 },
+    { department: "Procurement", trainees: 10 },
+    { department: "OCF - Projects", trainees: 8 },
+    { department: "OCF - Abu Rawash - Workshop", trainees: 5 },
+    { department: "El Alamein - Workshop", trainees: 2 },
+    { department: "ORC - Workshop", trainees: 2 }
   ];
 
   const dynamicCourses = useMemo(() => {
