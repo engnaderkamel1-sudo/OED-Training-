@@ -157,43 +157,43 @@ export const TraineeDashboard: React.FC = () => {
         'Attended Days': '3 Days',
         'Score': '92%',
         'Score Status': 'Pass',
-        'Department': 'Heavy Machinery',
+        'Department': 'ORC - Katamia - Workshop',
       }
     },
     {
       id: 'demo_rec_2',
       userId: '830557',
       hrCode: '830557',
-      courseId: 'Hydraulic Systems & Troubleshooting',
+      courseId: 'Hydraulic Fundamentals',
       score: 88,
       totalDays: '4 Days',
       daysAttended: '4 Days',
       raw: {
-        'Course Name': 'Hydraulic Systems & Troubleshooting',
+        'Course Name': 'Hydraulic Fundamentals',
         'Course Date': '2024-08-20',
         'Course Duration': '4 Days',
         'Attended Days': '4 Days',
         'Score': '88%',
         'Score Status': 'Pass',
-        'Department': 'Heavy Machinery',
+        'Department': 'ORC - Katamia - Workshop',
       }
     },
     {
       id: 'demo_rec_3',
       userId: '830557',
       hrCode: '830557',
-      courseId: 'Electrical Diagnostics & Schematics',
+      courseId: 'Electricity Fundamentals',
       score: 95,
       totalDays: '2 Days',
       daysAttended: '2 Days',
       raw: {
-        'Course Name': 'Electrical Diagnostics & Schematics',
+        'Course Name': 'Electricity Fundamentals',
         'Course Date': '2024-11-10',
         'Course Duration': '2 Days',
         'Attended Days': '2 Days',
         'Score': '95%',
         'Score Status': 'Pass',
-        'Department': 'Heavy Machinery',
+        'Department': 'ORC - Katamia - Workshop',
       }
     }
   ], []);
