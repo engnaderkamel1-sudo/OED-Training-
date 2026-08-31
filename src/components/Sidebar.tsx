@@ -24,11 +24,12 @@ import {
   Activity, 
   MessageSquare,
   ShieldAlert,
-  Tag
+  Tag,
+  Sparkles
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
-  const { user, language, t, currentView, setCurrentView } = useAppContext();
+  const { user, language, t, currentView, setCurrentView, isExecutiveDemoEnabled, toggleExecutiveDemo } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
   const [openErrorsCount, setOpenErrorsCount] = useState(0);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
@@ -317,6 +318,41 @@ export const Sidebar: React.FC = () => {
               </motion.button>
             );
           })}
+
+          {/* VIP Executive Demo Quick Toggle (Admin Only) */}
+          {role === 'admin' && !user?.isDemoUser && (
+            <div className="mt-2 p-3 rounded-2xl bg-gradient-to-r from-blue-950/40 via-blue-900/30 to-blue-950/40 border-2 border-[#FFC000]/60 shadow-xs">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="p-1.5 rounded-lg bg-[#FFC000] text-[#001D42] shrink-0 font-bold">
+                    <Sparkles size={15} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-xs font-black text-[#002D62] dark:text-[#FFC000] block truncate">
+                      {language === 'ar' ? 'صلاحية العرض VIP' : 'VIP Demo Mode'}
+                    </span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-300 font-semibold block">
+                      {isExecutiveDemoEnabled 
+                        ? (language === 'ar' ? '🟢 متاح ومفتوح' : '🟢 Active & Open') 
+                        : (language === 'ar' ? '🔴 مغلق ومحمي' : '🔴 Locked (Closed)')}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleExecutiveDemo}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95 shrink-0 ${
+                    isExecutiveDemoEnabled
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      : 'bg-red-600 hover:bg-red-700 text-white'
+                  }`}
+                  title={language === 'ar' ? 'تبديل صلاحية الدخول الفوري للعرض التقديمي' : 'Toggle VIP Demo QR Access'}
+                >
+                  {isExecutiveDemoEnabled ? 'ON' : 'OFF'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer: Official Orascom Construction Logo */}
