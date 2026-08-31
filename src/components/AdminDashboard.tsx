@@ -141,32 +141,7 @@ export const AdminDashboard: React.FC = () => {
 
   const TraineeAvatarWithName = ({ name, imageUrl, hrCode }: { name: string; imageUrl?: string; hrCode?: string; }) => {
     const initial = (name || "?").trim().charAt(0).toUpperCase();
-    // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+  
 
   return (
       <div className="flex items-center gap-2.5">
@@ -305,32 +280,7 @@ Please log in to register for this session through the OED-TTMS Application.
     }, (err) => {
       console.warn('Error listening to error reports:', err);
     });
-    // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+  
 
   return () => unsubscribe();
   }, []);
@@ -996,32 +946,7 @@ Please log in to register for this session through the OED-TTMS Application.
     }
 
     // Read pre-aggregated unique trainees from globalKPIs (1 read from Firebase)
-    // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+  
 
   return (globalKPIs as any).uniqueTrainees || 354;
   }, [cleanedData, records, globalKPIs]);
@@ -2028,32 +1953,7 @@ Content-Type: text/html; charset="utf-8"
   };
 
   const adminActiveTodaySessions = useMemo(() => {
-    // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+  
 
   return (upcomingSessions || []).filter(s => isSessionActiveNow(s));
   }, [upcomingSessions]);
@@ -2077,6 +1977,8 @@ Content-Type: text/html; charset="utf-8"
       }
     }
   }, [adminActiveTodaySessions, language]);
+
+
 
   // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
   const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
@@ -2104,7 +2006,6 @@ Content-Type: text/html; charset="utf-8"
       )}
     </div>
   );
-
   return (
     <div className="min-h-screen pb-12 transition-colors duration-300" style={{ backgroundColor: bgColor }}>
       <div className="max-w-7xl mx-auto px-4 py-8 print:p-0">
@@ -2278,32 +2179,7 @@ Content-Type: text/html; charset="utf-8"
                         .filter(u => {
                           if (!userSearchTerm.trim()) return true;
                           const term = userSearchTerm.trim().toLowerCase();
-                          // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                        
 
   return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term) || (u.phone || '').includes(term);
                         })
@@ -2330,32 +2206,7 @@ Content-Type: text/html; charset="utf-8"
                               .filter(u => {
                                 if (!userSearchTerm.trim()) return true;
                                 const term = userSearchTerm.trim().toLowerCase();
-                                // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                              
 
   return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term) || (u.phone || '').includes(term);
                               })
@@ -2421,32 +2272,7 @@ Content-Type: text/html; charset="utf-8"
                       {usersWithPendingUpdates.filter(u => {
                         if (!userSearchTerm.trim()) return true;
                         const term = userSearchTerm.trim().toLowerCase();
-                        // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                      
 
   return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term);
                       }).length > 0 ? (
@@ -2464,32 +2290,7 @@ Content-Type: text/html; charset="utf-8"
                             {usersWithPendingUpdates.filter(u => {
                               if (!userSearchTerm.trim()) return true;
                               const term = userSearchTerm.trim().toLowerCase();
-                              // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                            
 
   return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term);
                             }).map((u) => (
@@ -2517,7 +2318,7 @@ Content-Type: text/html; charset="utf-8"
                                             type="text" 
                                             value={updateEditFormData.department !== undefined ? updateEditFormData.department : (u.pendingUpdates.department || "")} 
                                             onChange={(e) => setUpdateEditFormData({ ...updateEditFormData, department: e.target.value })} 
-                                            className="border rounded px-2 py-1 w-full mt-1 text-sm focus:ring-[#002D62] outline-none" 
+                                            className="border rounded-lg px-2.5 py-1.5 w-full mt-1 text-sm outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 transition-all" 
                                             style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
                                           />
                                         </div>
@@ -2529,7 +2330,7 @@ Content-Type: text/html; charset="utf-8"
                                             type="text" 
                                             value={updateEditFormData.phone !== undefined ? updateEditFormData.phone : (u.pendingUpdates.phone || "")} 
                                             onChange={(e) => setUpdateEditFormData({ ...updateEditFormData, phone: e.target.value })} 
-                                            className="border rounded px-2 py-1 w-full mt-1 text-sm focus:ring-[#002D62] outline-none" 
+                                            className="border rounded-lg px-2.5 py-1.5 w-full mt-1 text-sm outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 transition-all" 
                                             style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
                                           />
                                         </div>
@@ -2541,7 +2342,7 @@ Content-Type: text/html; charset="utf-8"
                                             type="text" 
                                             value={updateEditFormData.hrCode !== undefined ? updateEditFormData.hrCode : (u.pendingUpdates.hrCode || "")} 
                                             onChange={(e) => setUpdateEditFormData({ ...updateEditFormData, hrCode: e.target.value })} 
-                                            className="border rounded px-2 py-1 w-full mt-1 text-sm focus:ring-[#002D62] outline-none font-mono" 
+                                            className="border rounded-lg px-2.5 py-1.5 w-full mt-1 text-sm outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 transition-all font-mono" 
                                             style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
                                           />
                                         </div>
@@ -2553,7 +2354,7 @@ Content-Type: text/html; charset="utf-8"
                                             type="email" 
                                             value={updateEditFormData.email !== undefined ? updateEditFormData.email : (u.pendingUpdates.email || "")} 
                                             onChange={(e) => setUpdateEditFormData({ ...updateEditFormData, email: e.target.value })} 
-                                            className="border rounded px-2 py-1 w-full mt-1 text-sm focus:ring-[#002D62] outline-none font-mono" 
+                                            className="border rounded-lg px-2.5 py-1.5 w-full mt-1 text-sm outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 transition-all font-mono" 
                                             style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }} 
                                             dir="ltr"
                                           />
@@ -2645,32 +2446,7 @@ Content-Type: text/html; charset="utf-8"
                       {processedUpdatesList.filter(item => {
                         if (!userSearchTerm.trim()) return true;
                         const term = userSearchTerm.trim().toLowerCase();
-                        // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                      
 
   return (item.user.name || '').toLowerCase().includes(term) || (item.user.hrCode || '').toLowerCase().includes(term) || (item.user.email || '').toLowerCase().includes(term);
                       }).length > 0 ? (
@@ -2688,32 +2464,7 @@ Content-Type: text/html; charset="utf-8"
                             {processedUpdatesList.filter(item => {
                               if (!userSearchTerm.trim()) return true;
                               const term = userSearchTerm.trim().toLowerCase();
-                              // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                            
 
   return (item.user.name || '').toLowerCase().includes(term) || (item.user.hrCode || '').toLowerCase().includes(term) || (item.user.email || '').toLowerCase().includes(term);
                             }).map((item, index) => (
@@ -2795,32 +2546,7 @@ Content-Type: text/html; charset="utf-8"
                       {users.filter(u => (u.status === "approved" || u.status === "rejected") && u.createdAt).filter(u => {
                         if (!userSearchTerm.trim()) return true;
                         const term = userSearchTerm.trim().toLowerCase();
-                        // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                      
 
   return (
                           (u.name || '').toLowerCase().includes(term) ||
@@ -2847,32 +2573,7 @@ Content-Type: text/html; charset="utf-8"
                             {users.filter(u => (u.status === "approved" || u.status === "rejected") && u.createdAt).filter(u => {
                               if (!userSearchTerm.trim()) return true;
                               const term = userSearchTerm.trim().toLowerCase();
-                              // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                            
 
   return (
                                 (u.name || '').toLowerCase().includes(term) ||
@@ -2932,32 +2633,7 @@ Content-Type: text/html; charset="utf-8"
                       {users.filter(u => u.status === "deleted").filter(u => {
                         if (!userSearchTerm.trim()) return true;
                         const term = userSearchTerm.trim().toLowerCase();
-                        // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                      
 
   return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
                       }).length > 0 ? (
@@ -2975,32 +2651,7 @@ Content-Type: text/html; charset="utf-8"
                             {users.filter(u => u.status === "deleted").filter(u => {
                               if (!userSearchTerm.trim()) return true;
                               const term = userSearchTerm.trim().toLowerCase();
-                              // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                            
 
   return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
                             }).map(u => (
@@ -3265,32 +2916,7 @@ Content-Type: text/html; charset="utf-8"
                       {courseSessions.map((date) => {
                         const attendeesOnDate = filteredRecords.filter((r) => (r.attendanceDate || r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'] || 'N/A') === date);
                         const isExpanded = expandedDates[date];
-                        // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                      
 
   return (
                           <div 
@@ -3328,32 +2954,7 @@ Content-Type: text/html; charset="utf-8"
                                     {attendeesOnDate.map((r) => {
                                       const u = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}`);
                                       const recHrCode = u?.hrCode || r.hrCode || r.userId || r.raw?.['HR Code'] || r.raw?.['ID'] || '';
-                                      // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                                    
 
   return (
                                         <tr key={r.id} className="border-b last:border-0 transition-colors hover:opacity-80" style={{ borderColor: borderColor, color: textColor }}>
@@ -3474,32 +3075,7 @@ Content-Type: text/html; charset="utf-8"
                           const traineeImage = user?.profileImageUrl || r.raw?.["Profile Image"] || r.raw?.["Photo"];
                           const traineeDisplayName = r.traineeName || user?.name || r.userId;
                           const traineeHrCode = user?.hrCode || r.hrCode || r.userId;
-                          // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                        
 
   return (
                             <tr key={r.id} className="border-b last:border-0 hover:opacity-80 transition-colors" style={{ borderColor: borderColor }}>
@@ -3578,32 +3154,7 @@ Content-Type: text/html; charset="utf-8"
                     {courseStats.map((stat, idx) => {
                       const maxAttendees = Math.max(...courseStats.map((s) => s.attendees)) || 1;
                       const percent = Math.max(4, Math.round((stat.attendees / maxAttendees) * 100));
-                      // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                    
 
   return (
                         <div key={idx} className="space-y-1">
@@ -3634,32 +3185,7 @@ Content-Type: text/html; charset="utf-8"
                     {departmentStats.map((stat, idx) => {
                       const maxTrainees = Math.max(...departmentStats.map((s) => s.trainees)) || 1;
                       const percent = Math.max(4, Math.round((stat.trainees / maxTrainees) * 100));
-                      // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                    
 
   return (
                         <div key={idx} className="space-y-1">
@@ -4560,32 +4086,7 @@ Content-Type: text/html; charset="utf-8"
                       .filter(u => {
                         if (!activeUsersSearchTerm.trim()) return true;
                         const term = activeUsersSearchTerm.trim().toLowerCase();
-                        // Reusable Smart Empty State (ui-ux-pro-max Rule #32 & Rule #10)
-  const renderEmptyState = (title: string, subtitle?: string, onReset?: () => void) => (
-    <div className="p-8 sm:p-12 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/40 flex flex-col items-center justify-center my-4 animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#002D62] dark:text-[#93C5FD] flex items-center justify-center mb-3 shadow-xs border border-blue-100 dark:border-blue-900/40">
-        <SearchX size={26} className="stroke-[2.2]" />
-      </div>
-      <h3 className="font-bold text-base text-gray-800 dark:text-gray-200 mb-1">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
-          {subtitle}
-        </p>
-      )}
-      {onReset && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
-        >
-          <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
-        </button>
-      )}
-    </div>
-  );
+                      
 
   return (u.name || '').toLowerCase().includes(term) || (u.hrCode || '').toLowerCase().includes(term) || (u.department || '').toLowerCase().includes(term);
                       })
