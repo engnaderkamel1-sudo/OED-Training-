@@ -25,12 +25,15 @@ import {
   MessageSquare,
   ShieldAlert,
   Tag,
-  Sparkles
+  Sparkles,
+  QrCode
 } from 'lucide-react';
+import { ExecutiveQRModal } from './ExecutiveQRModal';
 
 export const Sidebar: React.FC = () => {
   const { user, language, t, currentView, setCurrentView, isExecutiveDemoEnabled, toggleExecutiveDemo } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
+  const [showExecutiveQR, setShowExecutiveQR] = useState(false);
   const [openErrorsCount, setOpenErrorsCount] = useState(0);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     tools_parent: true,
@@ -352,22 +355,32 @@ export const Sidebar: React.FC = () => {
                 </button>
               </div>
 
-              {/* Instant Launch & Test Button for Admin */}
-              <button
-                type="button"
-                onClick={() => {
-                  sessionStorage.setItem('oed_vip_demo_active', 'true');
-                  sessionStorage.setItem('oed_vip_role', 'admin');
-                  window.location.search = '?demo=vip';
-                }}
-                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-[#FFC000] via-yellow-400 to-[#FFC000] hover:from-yellow-400 hover:to-[#FFC000] text-[#001D42] text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer"
-                title={language === 'ar' ? 'بدء تجربة واختبار وضع المعاينة التنفيذية التفاعلية الآن' : 'Launch VIP Executive Interactive Sandbox'}
-              >
-                <Sparkles size={14} className="text-[#001D42]" />
-                <span>
-                  {language === 'ar' ? '👑 تجربة وضع المعاينة الآن' : '👑 Test VIP Demo Now'}
-                </span>
-              </button>
+              {/* Action Buttons: Show QR Pass & Launch Demo */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowExecutiveQR(true)}
+                  className="py-2 px-2 rounded-xl bg-blue-900/40 hover:bg-blue-900/60 text-[#002D62] dark:text-[#FFC000] border border-[#FFC000]/40 text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-xs hover:scale-[1.02] active:scale-95 cursor-pointer"
+                  title={language === 'ar' ? 'عرض رمز الـ QR لمسحه من كاميرا موبايل المديرين' : 'Display VIP Executive QR Code for Mobile Scanning'}
+                >
+                  <QrCode size={14} className="text-[#FFC000]" />
+                  <span>{language === 'ar' ? '📱 عرض QR' : '📱 Show QR'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    sessionStorage.setItem('oed_vip_demo_active', 'true');
+                    sessionStorage.setItem('oed_vip_role', 'admin');
+                    window.location.search = '?demo=vip';
+                  }}
+                  className="py-2 px-2 rounded-xl bg-gradient-to-r from-[#FFC000] via-yellow-400 to-[#FFC000] hover:from-yellow-400 hover:to-[#FFC000] text-[#001D42] text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer"
+                  title={language === 'ar' ? 'بدء تجربة واختبار وضع المعاينة التنفيذية التفاعلية الآن' : 'Launch VIP Executive Interactive Sandbox'}
+                >
+                  <Sparkles size={14} className="text-[#001D42]" />
+                  <span>{language === 'ar' ? '👑 تجربة الوضع' : '👑 Test Demo'}</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -388,6 +401,11 @@ export const Sidebar: React.FC = () => {
           </p>
         </div>
       </aside>
+
+      {/* VIP Executive QR Presentation Modal */}
+      {showExecutiveQR && (
+        <ExecutiveQRModal onClose={() => setShowExecutiveQR(false)} />
+      )}
     </>
   );
 };
