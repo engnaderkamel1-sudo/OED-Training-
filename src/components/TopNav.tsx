@@ -265,7 +265,7 @@ export const TopNav: React.FC = () => {
 
   return (
     <>
-      <nav className="fixed top-0 inset-x-0 z-50 bg-[#002D62] dark:bg-[#0D1B33] border-b border-transparent dark:border-b-[#FFC000]/30 text-white shadow-md print:hidden">
+      <nav className={`fixed ${user?.isDemoUser ? 'top-[36px] sm:top-[38px]' : 'top-0'} inset-x-0 z-50 bg-[#002D62] dark:bg-[#0D1B33] border-b border-transparent dark:border-b-[#FFC000]/30 text-white shadow-md print:hidden">
         <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             
