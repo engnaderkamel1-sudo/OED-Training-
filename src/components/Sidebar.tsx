@@ -329,12 +329,12 @@ export const Sidebar: React.FC = () => {
                   </div>
                   <div className="min-w-0">
                     <span className="text-xs font-black text-[#002D62] dark:text-[#FFC000] block truncate">
-                      {language === 'ar' ? 'صلاحية العرض VIP' : 'VIP Demo Mode'}
+                      {language === 'ar' ? '⭐ وضع العرض التقديمي (VIP Demo)' : '⭐ VIP Demo Mode'}
                     </span>
                     <span className="text-[10px] text-slate-500 dark:text-slate-300 font-semibold block">
                       {isExecutiveDemoEnabled 
-                        ? (language === 'ar' ? '🟢 متاح ومفتوح' : '🟢 Active & Open') 
-                        : (language === 'ar' ? '🔴 مغلق ومحمي' : '🔴 Locked (Closed)')}
+                        ? (language === 'ar' ? 'متاح ومفتوح للتجربة' : 'Active & Open') 
+                        : (language === 'ar' ? 'مغلق ومحمي' : 'Locked')}
                     </span>
                   </div>
                 </div>
@@ -348,7 +348,7 @@ export const Sidebar: React.FC = () => {
                   }`}
                   title={language === 'ar' ? 'تبديل صلاحية الدخول الفوري للعرض التقديمي' : 'Toggle VIP Demo QR Access'}
                 >
-                  {isExecutiveDemoEnabled ? 'ON' : 'OFF'}
+                  {isExecutiveDemoEnabled ? '🟢 ON' : '🔴 OFF'}
                 </button>
               </div>
             </div>
