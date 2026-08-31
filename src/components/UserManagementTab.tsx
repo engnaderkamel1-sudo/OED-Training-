@@ -34,7 +34,6 @@ interface UserManagementTabProps {
   updateEditFormData: Partial<User>;
   setUpdateEditFormData: React.Dispatch<React.SetStateAction<Partial<User>>>;
   setSelectedUserToEdit: (user: User) => void;
-  handleOpenEditUser: (user: User) => void;
   handleApprove: (id: string) => void;
   handleReject: (id: string) => void;
   handleSaveUserEdit: (id: string) => void;
@@ -74,7 +73,6 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
   updateEditFormData,
   setUpdateEditFormData,
   setSelectedUserToEdit,
-  handleOpenEditUser,
   handleApprove,
   handleReject,
   handleSaveUserEdit,
@@ -917,7 +915,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                             <td className="p-3">
                               <div className="flex items-center gap-2">
                                 <button
-                                  onClick={() => handleOpenEditUser(u)}
+                                  onClick={() => setSelectedUserToEdit(u)}
                                   className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 px-3.5 py-2 sm:py-1.5 min-h-[38px] sm:min-h-[32px] rounded-xl text-xs font-bold cursor-pointer transition-all border border-blue-200 dark:border-blue-800 shadow-2xs active:scale-95"
                                 >
                                   <Edit2 size={14} /> {language === 'ar' ? 'تعديل' : 'Edit'}
