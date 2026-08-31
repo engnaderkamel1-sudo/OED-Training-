@@ -6,7 +6,7 @@ import { DataField } from './DataField';
 export const ManagerDashboard: React.FC = () => {
   const { t, user, users, records } = useAppContext();
   
-  const department = user?.department || 'Heavy Machinery';
+  const department = user?.department || 'ORC - Katamia - Workshop';
   const deptUsers = users.filter(u => u.department === department && u.role === 'trainee');
   const deptUserIds = deptUsers.map(u => u.id);
   const deptRecords = records.filter(r => deptUserIds.includes(r.userId));
