@@ -387,14 +387,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             </span>
           </div>
         </div>
-      </div>��� Session:'}
-              </span>
-              <span className="font-black text-xs text-indigo-900 dark:text-amber-300 bg-white dark:bg-[#0E1A30] px-2.5 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                {formatCourseIteration(session.sessionIteration)}
-              </span>
-            </span>
-          </div>
-        </div>
+      </div>
 
         {/* ========================================================= */}
         {/* EXPANDABLE BODY: ALL DETAILS & ACTIONS (ACCORDION)       */}
