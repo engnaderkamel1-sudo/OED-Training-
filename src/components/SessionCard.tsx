@@ -452,88 +452,86 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             </div>
           )}
         </div>
-      </div>
 
-      {/* ============================================ */}
-      {/* CANCELLED SESSION DETAILS BANNER */}
-      {/* ============================================ */}
-      {isCancelled && (
-        <div className="mt-3 p-4 bg-red-100 dark:bg-red-950/70 border-2 border-red-300 dark:border-red-700/60 rounded-2xl text-xs flex flex-col gap-2.5 shadow-xs">
-          <div className="flex items-center gap-2 font-black text-sm text-red-900 dark:text-red-200">
-            <Ban size={17} className="text-red-600 dark:text-red-400 shrink-0" />
-            <span>{language === 'ar' ? '🚫 تم إلغاء هذه الجلسة التدريبية' : '🚫 This Training Session Was Cancelled'}</span>
-          </div>
-          {session.cancellationReason && (
-            <div className="text-xs font-bold text-gray-900 dark:text-white bg-white dark:bg-[#0B172B] p-3 rounded-xl border border-red-200 dark:border-red-700 leading-relaxed shadow-2xs">
-              <span className="text-red-700 dark:text-red-400 font-black">{language === 'ar' ? '📌 سبب الإلغاء: ' : '📌 Cancellation Reason: '}</span>
-              <span className="font-bold text-gray-900 dark:text-gray-100">{session.cancellationReason}</span>
+        {/* ============================================ */}
+        {/* CANCELLED SESSION DETAILS BANNER */}
+        {/* ============================================ */}
+        {isCancelled && (
+          <div className="p-4 bg-red-100 dark:bg-red-950/70 border-2 border-red-300 dark:border-red-700/60 rounded-2xl text-xs flex flex-col gap-2.5 shadow-xs">
+            <div className="flex items-center gap-2 font-black text-sm text-red-900 dark:text-red-200">
+              <Ban size={17} className="text-red-600 dark:text-red-400 shrink-0" />
+              <span>{language === 'ar' ? '🚫 تم إلغاء هذه الجلسة التدريبية' : '🚫 This Training Session Was Cancelled'}</span>
             </div>
-          )}
-          {session.cancelledAt && (
-            <span className="text-[11px] font-bold text-red-800 dark:text-red-300">
-              {language === 'ar' ? 'تاريخ الإلغاء:' : 'Cancelled at:'} {new Date(session.cancelledAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* ============================================ */}
-      {/* INLINE CONFIRMATION BAR (CANCELLATION) */}
-      {/* ============================================ */}
-      {confirmAction && (
-        <div className="mt-3 p-4 bg-red-50 dark:bg-red-950/60 border-2 border-red-300 dark:border-red-700 rounded-2xl flex flex-col gap-3 shadow-md">
-          <p className="text-sm font-black text-red-900 dark:text-red-200 flex items-center gap-1.5">
-            <Ban size={16} />
-            <span>
-              {confirmAction === 'cancel' 
-                ? (language === 'ar' ? 'هل أنت متأكد من إلغاء هذه الجلسة التدريبية؟' : 'Are you sure you want to cancel this training session?')
-                : (language === 'ar' ? 'هل أنت متأكد من إلغاء تسجيلك؟' : 'Are you sure you want to cancel your registration?')
-              }
-            </span>
-          </p>
-
-          {confirmAction === 'cancel' && (
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-red-900 dark:text-red-300 block">
-                {language === 'ar' ? 'سبب الإلغاء (اختياري):' : 'Cancellation Reason (Optional):'}
-              </label>
-              <textarea
-                rows={2}
-                value={cancellationReasonInput}
-                onChange={(e) => setCancellationReasonInput(e.target.value)}
-                placeholder={language === 'ar' ? 'اكتب سبب الإلغاء هنا (مثلاً: تأجيل بناءً على طلب الإدارة)...' : 'Type cancellation reason here...'}
-                className="w-full border border-red-300 dark:border-red-700 rounded-xl p-2.5 text-xs bg-white dark:bg-[#132543] text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-red-500 font-medium"
-              />
-            </div>
-          )}
-
-          <div className="flex gap-2 justify-end">
-            <button
-              type="button"
-              onClick={() => { setConfirmAction(null); setCancellationReasonInput(""); }}
-              className="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-200 px-4 py-1.5 rounded-xl text-xs font-bold hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors cursor-pointer"
-            >
-              {language === 'ar' ? 'تراجع' : 'Cancel'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (confirmAction === 'cancel') doAdminCancel();
-                else if (confirmAction === 'unregister') doTraineeUnregister();
-              }}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-xl text-xs font-black transition-colors cursor-pointer shadow-md"
-            >
-              {language === 'ar' ? 'تأكيد الإلغاء' : 'Confirm Cancellation'}
-            </button>
+            {session.cancellationReason && (
+              <div className="text-xs font-bold text-gray-900 dark:text-white bg-white dark:bg-[#0B172B] p-3 rounded-xl border border-red-200 dark:border-red-700 leading-relaxed shadow-2xs">
+                <span className="text-red-700 dark:text-red-400 font-black">{language === 'ar' ? '📌 سبب الإلغاء: ' : '📌 Cancellation Reason: '}</span>
+                <span className="font-bold text-gray-900 dark:text-gray-100">{session.cancellationReason}</span>
+              </div>
+            )}
+            {session.cancelledAt && (
+              <span className="text-[11px] font-bold text-red-800 dark:text-red-300">
+                {language === 'ar' ? 'تاريخ الإلغاء:' : 'Cancelled at:'} {new Date(session.cancelledAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}
+              </span>
+            )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ========================================================= */}
-      {/* ACTION CONTROLS (COLLAPSIBLE ACCORDION UI/UX PRO MAX)    */}
-      {/* ========================================================= */}
-      {isExpanded && (
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700/80 animate-fade-in space-y-4">
+        {/* ============================================ */}
+        {/* INLINE CONFIRMATION BAR (CANCELLATION) */}
+        {/* ============================================ */}
+        {confirmAction && (
+          <div className="p-4 bg-red-50 dark:bg-red-950/60 border-2 border-red-300 dark:border-red-700 rounded-2xl flex flex-col gap-3 shadow-md">
+            <p className="text-sm font-black text-red-900 dark:text-red-200 flex items-center gap-1.5">
+              <Ban size={16} />
+              <span>
+                {confirmAction === 'cancel' 
+                  ? (language === 'ar' ? 'هل أنت متأكد من إلغاء هذه الجلسة التدريبية؟' : 'Are you sure you want to cancel this training session?')
+                  : (language === 'ar' ? 'هل أنت متأكد من إلغاء تسجيلك؟' : 'Are you sure you want to cancel your registration?')
+                }
+              </span>
+            </p>
+
+            {confirmAction === 'cancel' && (
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-red-900 dark:text-red-300 block">
+                  {language === 'ar' ? 'سبب الإلغاء (اختياري):' : 'Cancellation Reason (Optional):'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={cancellationReasonInput}
+                  onChange={(e) => setCancellationReasonInput(e.target.value)}
+                  placeholder={language === 'ar' ? 'اكتب سبب الإلغاء هنا (مثلاً: تأجيل بناءً على طلب الإدارة)...' : 'Type cancellation reason here...'}
+                  className="w-full border border-red-300 dark:border-red-700 rounded-xl p-2.5 text-xs bg-white dark:bg-[#132543] text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-red-500 font-medium"
+                />
+              </div>
+            )}
+
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => { setConfirmAction(null); setCancellationReasonInput(""); }}
+                className="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-200 px-4 py-1.5 rounded-xl text-xs font-bold hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors cursor-pointer"
+              >
+                {language === 'ar' ? 'تراجع' : 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirmAction === 'cancel') doAdminCancel();
+                  else if (confirmAction === 'unregister') doTraineeUnregister();
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-xl text-xs font-black transition-colors cursor-pointer shadow-md"
+              >
+                {language === 'ar' ? 'تأكيد الإلغاء' : 'Confirm Cancellation'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* ACTION CONTROLS                                           */}
+        {/* ========================================================= */}
+        <div className="pt-4 border-t border-gray-200 dark:border-slate-700/80">
         
         {/* ==================================== */}
         {/*           ADMIN CONTROLS             */}
