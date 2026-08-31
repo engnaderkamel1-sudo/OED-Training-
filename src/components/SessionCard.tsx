@@ -1222,7 +1222,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                     {language === 'ar' ? 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…ØªØ¯Ø±Ø¨ÙŠÙ† ÙˆÙ‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±' : 'Attendees & Waitlist Management'}
                   </h3>
                   <p className="text-xs text-blue-200 mt-0.5 font-medium truncate max-w-[320px]">
-                    {session.courseTitle} ({session.sessionNumber || 'Session 1'})
+                    {session.courseTitle} ({session.sessionNumber ? `#${session.sessionNumber}` : 'Session 1'})
                   </p>
                 </div>
               </div>
@@ -1240,7 +1240,11 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               <button
                 type="button"
                 onClick={() => setAttendeesModalTab('registered')}
-                className={lex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer }
+                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  attendeesModalTab === 'registered'
+                    ? 'bg-white dark:bg-slate-800 text-[#002D62] dark:text-[#FFC000] shadow-xs'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                }`}
               >
                 <Users size={14} className={attendeesModalTab === 'registered' ? 'text-[#002D62] dark:text-[#FFC000]' : ''} />
                 <span>{language === 'ar' ? 'Ø§Ù„Ù…Ø³Ø¬Ù„ÙˆÙ† Ø±Ø³Ù…ÙŠØ§Ù‹' : 'Confirmed Attendees'}</span>
@@ -1252,11 +1256,19 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               <button
                 type="button"
                 onClick={() => setAttendeesModalTab('waitlist')}
-                className={lex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer }
+                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  attendeesModalTab === 'waitlist'
+                    ? 'bg-white dark:bg-slate-800 text-purple-700 dark:text-amber-300 shadow-xs'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                }`}
               >
                 <Clock size={14} className={attendeesModalTab === 'waitlist' ? 'text-purple-600 dark:text-amber-300' : ''} />
                 <span>{language === 'ar' ? 'Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±' : 'Waitlist Requests'}</span>
-                <span className={px-2 py-0.5 rounded-full text-[10px] font-black border }>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border ${
+                  waitlistedTrainees.length > 0
+                    ? 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border-purple-300 dark:border-purple-700 animate-pulse'
+                    : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-slate-700'
+                }`}>
                   {waitlistedTrainees.length}
                 </span>
               </button>
@@ -1317,28 +1329,15 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                               {regTimeFormatted && (
                                 <p className="text-[10.5px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 mt-1 font-mono">
                                   <Clock size={11} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                  <span>{language === 'ar' ? ØªØ§Ø±ÙŠØ® ÙˆÙˆÙ‚Øª Ø§Ù„ØªØ³Ø¬ÙŠÙ„:  : Registered at: }</span>
+                                  <span>{language === 'ar' ? `ØªØ§Ø±ÙŠØ® ÙˆÙˆÙ‚Øª Ø§Ù„ØªØ³Ø¬ÙŠÙ„: ${regTimeFormatted}` : `Registered at: ${regTimeFormatted}`}</span>
                                 </p>
                               )}
                             </div>
                           </div>
 
-                          <div className="text-right rtl:text-left shrink-0">
-                            {trainee.phone && (
-                              <a
-                                href={	el:}
-                                className="text-xs font-semibold text-blue-600 dark:text-blue-400 block hover:underline"
-                                dir="ltr"
-                              >
-                                {trainee.phone}
-                              </a>
-                            )}
-                            {trainee.email && (
-                              <span className="text-[10px] text-gray-400 block truncate max-w-[150px]">
-                                {trainee.email}
-                              </span>
-                            )}
-                          </div>
+                          <span className="text-xs font-mono font-bold text-gray-400 shrink-0">
+                            #{idx + 1}
+                          </span>
                         </div>
                       );
                     })}
@@ -1351,20 +1350,20 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             {attendeesModalTab === 'waitlist' && (
               <div className="p-5 overflow-y-auto space-y-3 flex-1">
                 <div className="flex items-center justify-between pb-2 border-b dark:border-slate-800">
-                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
-                    {language === 'ar' ? 'Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ø§Ù†Ø¶Ù…Ø§Ù… ÙÙŠ Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±:' : 'Pending Waitlist Requests:'}
+                  <span className="text-xs font-bold text-purple-700 dark:text-purple-300">
+                    {language === 'ar' ? 'Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ø§Ù†Ø¶Ù…Ø§Ù… Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±:' : 'Pending Waitlist Requests:'}
                   </span>
-                  <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200 border border-purple-300 dark:border-purple-700">
+                  <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-700">
                     {waitlistedTrainees.length} {language === 'ar' ? 'Ø·Ù„Ø¨' : 'Requests'}
                   </span>
                 </div>
 
                 {waitlistedTrainees.length === 0 ? (
                   <div className="text-center py-10 text-gray-400 text-xs sm:text-sm">
-                    {language === 'ar' ? 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª Ø§Ù†Ø¶Ù…Ø§Ù… ÙÙŠ Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø± Ù„Ù‡Ø°Ù‡ Ø§Ù„Ø¬Ù„Ø³Ø©' : 'No waitlist requests for this session'}
+                    {language === 'ar' ? 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª ÙÙŠ Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø± Ù„Ù‡Ø°Ù‡ Ø§Ù„Ø¯ÙˆØ±Ø© Ø­Ø§Ù„ÙŠØ§Ù‹' : 'No waitlist requests for this session'}
                   </div>
                 ) : (
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
                     {waitlistedTrainees.map((trainee, idx) => {
                       const traineeCode = trainee.hrCode || trainee.id || '';
                       const waitTimestamp = session.waitlistTimestamps?.[traineeCode];
@@ -1401,7 +1400,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                               {waitTimeFormatted && (
                                 <p className="text-[10.5px] font-bold text-purple-800 dark:text-purple-300 flex items-center gap-1.5 mt-1 font-mono">
                                   <Clock size={11} className="text-purple-600 dark:text-purple-400 shrink-0" />
-                                  <span>{language === 'ar' ? ØªØ§Ø±ÙŠØ® Ø§Ù„Ø·Ù„Ø¨:  : Requested at: }</span>
+                                  <span>{language === 'ar' ? `ØªØ§Ø±ÙŠØ® Ø§Ù„Ø·Ù„Ø¨: ${waitTimeFormatted}` : `Requested at: ${waitTimeFormatted}`}</span>
                                 </p>
                               )}
                             </div>
@@ -1415,8 +1414,8 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                                 requestConfirmation({
                                   title: language === 'ar' ? 'Ù‚Ø¨ÙˆÙ„ Ø·Ù„Ø¨ Ø§Ù„Ø§Ù†Ø¶Ù…Ø§Ù… Ù„Ù„Ø¯ÙˆØ±Ø©' : 'Approve Waitlist Request',
                                   message: language === 'ar'
-                                    ? Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø±ØºØ¨ØªÙƒ ÙÙŠ Ù‚Ø¨ÙˆÙ„ Ø§Ù„Ù…ØªØ¯Ø±Ø¨ [] () ÙˆØ¥Ø¶Ø§ÙØªÙ‡ Ø±Ø³Ù…ÙŠØ§Ù‹ Ø¥Ù„Ù‰ ÙƒØ´Ù Ø§Ù„Ø­Ø¶ÙˆØ± Ù„Ø¯ÙˆØ±Ø© []ØŸ Ø³ÙŠØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø¥Ø´Ø¹Ø§Ø± ÙÙˆØ±ÙŠ Ù„Ù‡ ÙÙ‚Ø· Ø¨Ù†ØªÙŠØ¬Ø© Ø§Ù„Ù‚Ø¨ÙˆÙ„.
-                                    : Are you sure you want to approve [] () and add them to []? A notification will be sent to the trainee.,
+                                    ? `Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø±ØºØ¨ØªÙƒ ÙÙŠ Ù‚Ø¨ÙˆÙ„ Ø§Ù„Ù…ØªØ¯Ø±Ø¨ [${trainee.name}] (${traineeCode}) ÙˆØ¥Ø¶Ø§ÙØªÙ‡ Ø±Ø³Ù…ÙŠØ§Ù‹ Ø¥Ù„Ù‰ ÙƒØ´Ù Ø§Ù„Ø­Ø¶ÙˆØ± Ù„Ø¯ÙˆØ±Ø© [${session.courseTitle}]ØŸ Ø³ÙŠØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø¥Ø´Ø¹Ø§Ø± ÙÙˆØ±ÙŠ Ù„Ù‡ ÙÙ‚Ø· Ø¨Ù†ØªÙŠØ¬Ø© Ø§Ù„Ù‚Ø¨ÙˆÙ„.`
+                                    : `Are you sure you want to approve [${trainee.name}] (${traineeCode}) and add them to [${session.courseTitle}]? A notification will be sent to the trainee.`,
                                   confirmLabel: language === 'ar' ? 'Ù†Ø¹Ù…ØŒ Ù‚Ø¨ÙˆÙ„ ÙˆØ¥Ø¶Ø§ÙØ© âœ“' : 'Approve & Enroll',
                                   color: 'emerald',
                                   icon: <CheckCircle size={20} className="text-emerald-500" />,
@@ -1435,8 +1434,8 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                                 requestConfirmation({
                                   title: language === 'ar' ? 'Ø§Ø¹ØªØ°Ø§Ø± Ø¹Ù† Ø·Ù„Ø¨ Ø§Ù„Ø§Ù†Ø¶Ù…Ø§Ù…' : 'Decline Waitlist Request',
                                   message: language === 'ar'
-                                    ? Ù‡Ù„ ØªØ±ØºØ¨ ÙÙŠ Ø¥Ø±Ø³Ø§Ù„ Ø±Ø³Ø§Ù„Ø© Ø§Ø¹ØªØ°Ø§Ø± Ù„Ù„Ù…ØªØ¯Ø±Ø¨ [] () Ù„Ø¹Ø¯Ù… ØªÙˆÙØ± Ù…Ù‚Ø§Ø¹Ø¯ ÙˆØ­Ø°Ù Ø·Ù„Ø¨Ù‡ Ù…Ù† Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±ØŸ Ø³ÙŠØªÙ… Ø¥Ø´Ø¹Ø§Ø± Ø§Ù„Ù…ØªØ¯Ø±Ø¨ ÙÙ‚Ø·.
-                                    : Decline waitlist request for [] ()? A polite notification will be sent to the trainee only.,
+                                    ? `Ù‡Ù„ ØªØ±ØºØ¨ ÙÙŠ Ø¥Ø±Ø³Ø§Ù„ Ø±Ø³Ø§Ù„Ø© Ø§Ø¹ØªØ°Ø§Ø± Ù„Ù„Ù…ØªØ¯Ø±Ø¨ [${trainee.name}] (${traineeCode}) Ù„Ø¹Ø¯Ù… ØªÙˆÙØ± Ù…Ù‚Ø§Ø¹Ø¯ ÙˆØ­Ø°Ù Ø·Ù„Ø¨Ù‡ Ù…Ù† Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±ØŸ Ø³ÙŠØªÙ… Ø¥Ø´Ø¹Ø§Ø± Ø§Ù„Ù…ØªØ¯Ø±Ø¨ ÙÙ‚Ø·.`
+                                    : `Decline waitlist request for [${trainee.name}] (${traineeCode})? A polite notification will be sent to the trainee only.`,
                                   confirmLabel: language === 'ar' ? 'Ù†Ø¹Ù…ØŒ Ø§Ø¹ØªØ°Ø§Ø± ÙˆØ±ÙØ¶ âœ•' : 'Decline Request',
                                   color: 'red',
                                   icon: <Ban size={20} className="text-red-500" />,
