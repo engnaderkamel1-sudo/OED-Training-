@@ -140,7 +140,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
           className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
         >
           <RotateCcw size={14} className="text-[#FFC000]" />
-          <span>{language === 'ar' ? 'Ø¥Ù„ØºØ§Ø¡ ÙˆØªÙØ±ÙŠØº Ø´Ø±ÙŠØ· Ø§Ù„Ø¨Ø­Ø«' : 'Clear Search Filter'}</span>
+          <span>{language === 'ar' ? 'إلغاء وتفريغ شريط البحث' : 'Clear Search Filter'}</span>
         </button>
       )}
     </div>
@@ -163,7 +163,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
             }`}
             style={{ color: userManagementTab === 'pending' ? '#fff' : textMuted }}
           >
-            <span>{language === 'ar' ? 'Ø·Ù„Ø¨Ø§Øª Ù…Ø¹Ù„Ù‚Ø©' : 'Pending Users'}</span>
+            <span>{language === 'ar' ? 'طلبات معلقة' : 'Pending Users'}</span>
             {pendingUsers.length > 0 && (
               <span className="bg-red-500 text-white text-xs font-black px-2 py-0.5 rounded-full shadow-xs">
                 {pendingUsers.length}
@@ -179,7 +179,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
             }`}
             style={{ color: userManagementTab === 'processed' ? '#fff' : textMuted }}
           >
-            {language === 'ar' ? 'Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† Ø§Ù„Ù…Ø¹ØªÙ…Ø¯ÙŠÙ†' : 'Approved Users'}
+            {language === 'ar' ? 'المستخدمين المعتمدين' : 'Approved Users'}
           </button>
           <button
             onClick={() => setUserManagementTab('deleted')}
@@ -190,7 +190,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
             }`}
             style={{ color: userManagementTab === 'deleted' ? '#fff' : textMuted }}
           >
-            {language === 'ar' ? 'Ù…ØªØ¯Ø±Ø¨ÙŠÙ† Ù…Ø­Ø°ÙˆÙÙŠÙ†' : 'Deleted Trainees'}
+            {language === 'ar' ? 'متدربين محذوفين' : 'Deleted Trainees'}
           </button>
 
           <div className="my-2 border-t" style={{ borderColor }} />
@@ -204,7 +204,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
             }`}
             style={{ color: userManagementTab === 'updates' ? '#fff' : textMuted }}
           >
-            <span>{language === 'ar' ? 'ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª' : 'Data Updates'}</span>
+            <span>{language === 'ar' ? 'تعديل البيانات' : 'Data Updates'}</span>
             {usersWithPendingUpdates.length > 0 && (
               <span className="bg-orange-500 text-white text-xs font-black px-2 py-0.5 rounded-full shadow-xs">
                 {usersWithPendingUpdates.length}
@@ -220,7 +220,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
             }`}
             style={{ color: userManagementTab === 'processed_updates' ? '#fff' : textMuted }}
           >
-            <span>{language === 'ar' ? 'Ø³Ø¬Ù„ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„Ø§Øª' : 'Processed Updates'}</span>
+            <span>{language === 'ar' ? 'سجل التعديلات' : 'Processed Updates'}</span>
           </button>
         </div>
 
@@ -239,7 +239,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                 onChange={(e) => setUserSearchTerm(e.target.value)}
                 placeholder={
                   language === 'ar'
-                    ? 'Ø§Ù„Ø¨Ø­Ø« Ø¨Ø§Ù„Ø§Ø³Ù… Ø£Ùˆ Ø§Ù„ÙƒÙˆØ¯ Ø§Ù„ÙˆØ¸ÙŠÙÙŠ Ø£Ùˆ Ø§Ù„Ø¥ÙŠÙ…ÙŠÙ„...'
+                    ? 'البحث بالاسم أو الكود الوظيفي أو الإيميل...'
                     : 'Search by name, HR Code, or email...'
                 }
                 className="w-full pl-9 rtl:pl-3 rtl:pr-9 pr-8 py-2 rounded-xl border text-sm font-medium focus:ring-2 focus:ring-[#002D62] dark:focus:ring-blue-500 outline-none shadow-2xs transition-all"
@@ -256,7 +256,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
             </div>
             {userSearchTerm && (
               <div className="text-xs font-semibold px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                {language === 'ar' ? `Ù†ØªØ§Ø¦Ø¬ Ø§Ù„Ø¨Ø­Ø«: "${userSearchTerm}"` : `Filtered by: "${userSearchTerm}"`}
+                {language === 'ar' ? `نتائج البحث: "${userSearchTerm}"` : `Filtered by: "${userSearchTerm}"`}
               </div>
             )}
           </div>
@@ -267,7 +267,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
               <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
                 <div className="flex items-center gap-2.5">
                   <h2 className="text-xl font-bold" style={{ color: textColor }}>
-                    {language === 'ar' ? 'Ø·Ù„Ø¨Ø§Øª Ù…Ø¹Ù„Ù‚Ø©' : 'Pending Users'}
+                    {language === 'ar' ? 'طلبات معلقة' : 'Pending Users'}
                   </h2>
                   <span className="bg-red-500 text-white text-xs font-black px-2.5 py-0.5 rounded-full shadow-xs">
                     {pendingUsers.length}
@@ -282,11 +282,11 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                   <span>
                     {pendingSortOrder === 'desc'
                       ? language === 'ar'
-                        ? 'Ø§Ù„ØªØ±ØªÙŠØ¨: Ù…Ù† Ø§Ù„Ø£Ø­Ø¯Ø« Ù„Ù„Ø£Ù‚Ø¯Ù… â¬‡'
-                        : 'Sort: Newest First â¬‡'
+                        ? 'الترتيب: من الأحدث للأقدم ⬇'
+                        : 'Sort: Newest First ⬇'
                       : language === 'ar'
-                      ? 'Ø§Ù„ØªØ±ØªÙŠØ¨: Ù…Ù† Ø§Ù„Ø£Ù‚Ø¯Ù… Ù„Ù„Ø£Ø­Ø¯Ø« â¬†'
-                      : 'Sort: Oldest First â¬†'}
+                      ? 'الترتيب: من الأقدم للأحدث ⬆'
+                      : 'Sort: Oldest First ⬆'}
                   </span>
                 </button>
               </div>
@@ -315,12 +315,12 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                         className="border-b font-bold"
                         style={{ backgroundColor: tableHeaderBg, borderColor, color: '#FFFFFF' }}
                       >
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„ÙƒÙˆØ¯ Ø§Ù„ÙˆØ¸ÙŠÙÙŠ' : 'HR Code'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„Ø§Ø³Ù…' : 'Name'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„Ù‚Ø³Ù…' : 'Department'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ©' : 'Role'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„ØªØ§Ø±ÙŠØ®' : 'Date'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª' : 'Actions'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'الكود الوظيفي' : 'HR Code'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'الاسم' : 'Name'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'القسم' : 'Department'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'الصلاحية' : 'Role'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'إجراءات' : 'Actions'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -379,10 +379,10 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                     className="border rounded-lg px-2.5 py-1.5 font-bold outline-none focus:ring-2 focus:ring-[#002D62]"
                                     style={{ backgroundColor: inputBg, borderColor, color: textColor }}
                                   >
-                                    <option value="trainee">{language === 'ar' ? 'Ù…ØªØ¯Ø±Ø¨ (Trainee)' : 'Trainee'}</option>
-                                    <option value="supervisor">{language === 'ar' ? 'Ù…Ø´Ø±Ù (Supervisor)' : 'Supervisor'}</option>
-                                    <option value="manager">{language === 'ar' ? 'Ù…Ø¯ÙŠØ± (Manager)' : 'Manager'}</option>
-                                    <option value="admin">{language === 'ar' ? 'Ù…Ø³Ø¤ÙˆÙ„ (Admin)' : 'Admin'}</option>
+                                    <option value="trainee">{language === 'ar' ? 'متدرب (Trainee)' : 'Trainee'}</option>
+                                    <option value="supervisor">{language === 'ar' ? 'مشرف (Supervisor)' : 'Supervisor'}</option>
+                                    <option value="manager">{language === 'ar' ? 'مدير (Manager)' : 'Manager'}</option>
+                                    <option value="admin">{language === 'ar' ? 'مسؤول (Admin)' : 'Admin'}</option>
                                   </select>
                                 </td>
                                 <td className="p-3">
@@ -428,12 +428,12 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                   >
                                     <span>
                                       {u.role === 'admin'
-                                        ? 'ðŸ›¡ï¸ Admin'
+                                        ? '🛡️ Admin'
                                         : u.role === 'manager'
-                                        ? 'ðŸ‘” Manager'
+                                        ? '👔 Manager'
                                         : u.role === 'supervisor'
-                                        ? 'ðŸ‘· Supervisor'
-                                        : 'ðŸŽ“ Trainee'}
+                                        ? '👷 Supervisor'
+                                        : '🎓 Trainee'}
                                     </span>
                                   </span>
                                 </td>
@@ -446,19 +446,19 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                       onClick={() => handleApprove(u.id)}
                                       className="flex items-center gap-1.5 text-green-700 dark:text-green-300 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:hover:bg-green-900/60 border border-green-200 dark:border-green-800 px-3.5 py-2 sm:py-1.5 min-h-[38px] sm:min-h-[32px] rounded-xl cursor-pointer transition-all shadow-2xs font-bold text-xs active:scale-95"
                                     >
-                                      {language === 'ar' ? 'Ù…ÙˆØ§ÙÙ‚' : 'Approve'}
+                                      {language === 'ar' ? 'موافق' : 'Approve'}
                                     </button>
                                     <button
                                       onClick={() => setSelectedUserToEdit(u)}
                                       className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 px-3.5 py-2 sm:py-1.5 min-h-[38px] sm:min-h-[32px] rounded-xl cursor-pointer transition-all shadow-2xs font-bold text-xs active:scale-95"
                                     >
-                                      {language === 'ar' ? 'ØªØ¹Ø¯ÙŠÙ„' : 'Edit'}
+                                      {language === 'ar' ? 'تعديل' : 'Edit'}
                                     </button>
                                     <button
                                       onClick={() => handleReject(u.id)}
                                       className="flex items-center gap-1.5 text-red-700 dark:text-red-300 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-800 px-3.5 py-2 sm:py-1.5 min-h-[38px] sm:min-h-[32px] rounded-xl cursor-pointer transition-all shadow-2xs font-bold text-xs active:scale-95"
                                     >
-                                      {language === 'ar' ? 'Ø±ÙØ¶' : 'Reject'}
+                                      {language === 'ar' ? 'رفض' : 'Reject'}
                                     </button>
                                   </div>
                                 </td>
@@ -471,9 +471,9 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                 </div>
               ) : userSearchTerm.trim() ? (
                 renderEmptyState(
-                  language === 'ar' ? 'Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø·Ù„Ø¨Ø§Øª Ù…Ø·Ø§Ø¨Ù‚Ø©' : 'No Matching Requests',
+                  language === 'ar' ? 'لم يتم العثور على طلبات مطابقة' : 'No Matching Requests',
                   language === 'ar'
-                    ? `Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª ØªØ³Ø¬ÙŠÙ„ ØªØ·Ø§Ø¨Ù‚ "${userSearchTerm}".`
+                    ? `لا توجد طلبات تسجيل تطابق "${userSearchTerm}".`
                     : `No pending requests match "${userSearchTerm}".`,
                   () => setUserSearchTerm('')
                 )
@@ -484,7 +484,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                   </div>
                   <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300">
                     {language === 'ar'
-                      ? 'Ø±Ø§Ø¦Ø¹! Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª ØªØ³Ø¬ÙŠÙ„ Ù…Ø¹Ù„Ù‚Ø© Ø­Ø§Ù„ÙŠØ§Ù‹'
+                      ? 'رائع! لا توجد طلبات تسجيل معلقة حالياً'
                       : 'All caught up! No pending registration requests.'}
                   </h4>
                 </div>
@@ -496,7 +496,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
           {userManagementTab === 'updates' && (
             <div>
               <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>
-                {language === 'ar' ? 'Ø·Ù„Ø¨Ø§Øª ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª' : 'Pending Data Updates'}
+                {language === 'ar' ? 'طلبات تعديل البيانات' : 'Pending Data Updates'}
               </h2>
               {usersWithPendingUpdates.filter((u) => {
                 if (!userSearchTerm.trim()) return true;
@@ -514,9 +514,9 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                         className="border-b font-bold"
                         style={{ backgroundColor: tableHeaderBg, borderColor, color: '#FFFFFF' }}
                       >
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„Ø§Ø³Ù…' : 'Name'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ù…Ø·Ù„ÙˆØ¨' : 'Requested Change'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª' : 'Actions'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'الاسم' : 'Name'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'التعديل المطلوب' : 'Requested Change'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'إجراءات' : 'Actions'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -540,7 +540,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                 <div className="space-y-2 max-w-sm">
                                   {u.pendingUpdates?.name && (
                                     <div>
-                                      <span className="text-xs text-gray-500 block">{language === 'ar' ? 'Ø§Ù„Ø§Ø³Ù…:' : 'Name:'}</span>
+                                      <span className="text-xs text-gray-500 block">{language === 'ar' ? 'الاسم:' : 'Name:'}</span>
                                       <input
                                         type="text"
                                         value={
@@ -558,7 +558,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                   )}
                                   {u.pendingUpdates?.department && (
                                     <div>
-                                      <span className="text-xs text-gray-500 block">{language === 'ar' ? 'Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©:' : 'Department:'}</span>
+                                      <span className="text-xs text-gray-500 block">{language === 'ar' ? 'الإدارة:' : 'Department:'}</span>
                                       <input
                                         type="text"
                                         value={
@@ -576,7 +576,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                   )}
                                   {u.pendingUpdates?.phone && (
                                     <div>
-                                      <span className="text-xs text-gray-500 block">{language === 'ar' ? 'Ø§Ù„Ù‡Ø§ØªÙ:' : 'Phone:'}</span>
+                                      <span className="text-xs text-gray-500 block">{language === 'ar' ? 'الهاتف:' : 'Phone:'}</span>
                                       <input
                                         type="text"
                                         value={
@@ -597,23 +597,23 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                 <div className="space-y-1">
                                   {u.pendingUpdates?.name && (
                                     <div>
-                                      <span className="text-xs text-gray-500 block">{language === 'ar' ? 'Ø§Ù„Ø§Ø³Ù…:' : 'Name:'}</span>
+                                      <span className="text-xs text-gray-500 block">{language === 'ar' ? 'الاسم:' : 'Name:'}</span>
                                       <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.name}</span>
-                                      <span className="font-bold text-green-600">âž” {u.pendingUpdates.name}</span>
+                                      <span className="font-bold text-green-600">➔ {u.pendingUpdates.name}</span>
                                     </div>
                                   )}
                                   {u.pendingUpdates?.department && (
                                     <div>
-                                      <span className="text-xs text-gray-500 block">{language === 'ar' ? 'Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©:' : 'Department:'}</span>
+                                      <span className="text-xs text-gray-500 block">{language === 'ar' ? 'الإدارة:' : 'Department:'}</span>
                                       <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.department || 'N/A'}</span>
-                                      <span className="font-bold text-green-600">âž” {u.pendingUpdates.department}</span>
+                                      <span className="font-bold text-green-600">➔ {u.pendingUpdates.department}</span>
                                     </div>
                                   )}
                                   {u.pendingUpdates?.phone && (
                                     <div>
-                                      <span className="text-xs text-gray-500 block">{language === 'ar' ? 'Ø§Ù„Ù‡Ø§ØªÙ:' : 'Phone:'}</span>
+                                      <span className="text-xs text-gray-500 block">{language === 'ar' ? 'الهاتف:' : 'Phone:'}</span>
                                       <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{u.phone || 'N/A'}</span>
-                                      <span className="font-bold text-green-600">âž” {u.pendingUpdates.phone}</span>
+                                      <span className="font-bold text-green-600">➔ {u.pendingUpdates.phone}</span>
                                     </div>
                                   )}
                                 </div>
@@ -627,13 +627,13 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                       onClick={() => handleSaveUpdateEdit(u)}
                                       className="flex items-center gap-1 text-blue-700 bg-blue-50 px-3 py-1.5 rounded-xl font-bold text-xs"
                                     >
-                                      <Save size={14} /> {language === 'ar' ? 'Ø­ÙØ¸' : 'Save'}
+                                      <Save size={14} /> {language === 'ar' ? 'حفظ' : 'Save'}
                                     </button>
                                     <button
                                       onClick={() => setEditingUpdateUserId(null)}
                                       className="flex items-center gap-1 text-gray-600 bg-gray-50 px-3 py-1.5 rounded-xl text-xs"
                                     >
-                                      <X size={14} /> {language === 'ar' ? 'Ø¥Ù„ØºØ§Ø¡' : 'Cancel'}
+                                      <X size={14} /> {language === 'ar' ? 'إلغاء' : 'Cancel'}
                                     </button>
                                   </>
                                 ) : (
@@ -642,7 +642,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                       onClick={() => handleApproveUpdate(u)}
                                       className="flex items-center gap-1 text-green-700 dark:text-green-300 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 px-3 py-1.5 rounded-xl font-bold text-xs cursor-pointer active:scale-95"
                                     >
-                                      <CheckCircle size={14} /> {language === 'ar' ? 'Ù…ÙˆØ§ÙÙ‚' : 'Approve'}
+                                      <CheckCircle size={14} /> {language === 'ar' ? 'موافق' : 'Approve'}
                                     </button>
                                     <button
                                       onClick={() => {
@@ -657,13 +657,13 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                       }}
                                       className="flex items-center gap-1 text-blue-700 dark:text-blue-300 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 px-3 py-1.5 rounded-xl font-bold text-xs cursor-pointer active:scale-95"
                                     >
-                                      <Edit2 size={14} /> {language === 'ar' ? 'ØªØ¹Ø¯ÙŠÙ„' : 'Edit'}
+                                      <Edit2 size={14} /> {language === 'ar' ? 'تعديل' : 'Edit'}
                                     </button>
                                     <button
                                       onClick={() => handleRejectUpdate(u)}
                                       className="flex items-center gap-1 text-red-700 dark:text-red-300 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 px-3 py-1.5 rounded-xl font-bold text-xs cursor-pointer active:scale-95"
                                     >
-                                      <X size={14} /> {language === 'ar' ? 'Ø±ÙØ¶' : 'Reject'}
+                                      <X size={14} /> {language === 'ar' ? 'رفض' : 'Reject'}
                                     </button>
                                   </>
                                 )}
@@ -676,9 +676,9 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                 </div>
               ) : userSearchTerm.trim() ? (
                 renderEmptyState(
-                  language === 'ar' ? 'Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø·Ù„Ø¨Ø§Øª ØªØ¹Ø¯ÙŠÙ„ Ù…Ø·Ø§Ø¨Ù‚Ø©' : 'No Matching Update Requests',
+                  language === 'ar' ? 'لم يتم العثور على طلبات تعديل مطابقة' : 'No Matching Update Requests',
                   language === 'ar'
-                    ? `Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª ØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª ØªØ·Ø§Ø¨Ù‚ "${userSearchTerm}".`
+                    ? `لا توجد طلبات تعديل بيانات تطابق "${userSearchTerm}".`
                     : `No update requests match "${userSearchTerm}".`,
                   () => setUserSearchTerm('')
                 )
@@ -688,7 +688,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                     <CheckCircle size={22} />
                   </div>
                   <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300">
-                    {language === 'ar' ? 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª ØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ù…Ø¹Ù„Ù‚Ø©' : 'No pending data update requests.'}
+                    {language === 'ar' ? 'لا توجد طلبات تعديل بيانات معلقة' : 'No pending data update requests.'}
                   </h4>
                 </div>
               )}
@@ -699,7 +699,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
           {userManagementTab === 'processed_updates' && (
             <div>
               <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>
-                {language === 'ar' ? 'Ø³Ø¬Ù„ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„Ø§Øª Ø§Ù„Ù…ÙƒØªÙ…Ù„Ø©' : 'Processed Data Updates'}
+                {language === 'ar' ? 'سجل التعديلات المكتملة' : 'Processed Data Updates'}
               </h2>
               {processedUpdatesList.filter((item) => {
                 if (!userSearchTerm.trim()) return true;
@@ -717,10 +717,10 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                         className="border-b font-bold"
                         style={{ backgroundColor: tableHeaderBg, borderColor, color: '#FFFFFF' }}
                       >
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„Ø§Ø³Ù…' : 'Name'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø°ÙŠ Ø·ÙÙ„Ø¨' : 'Requested Change'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„Ø­Ø§Ù„Ø©' : 'Status'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'ÙˆÙ‚Øª Ø§Ù„ØªÙ†ÙÙŠØ°' : 'Processed At'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'الاسم' : 'Name'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'التعديل الذي طُلب' : 'Requested Change'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'الحالة' : 'Status'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'وقت التنفيذ' : 'Processed At'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -742,32 +742,32 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                             <td className="p-3">
                               {item.history.name && (
                                 <div className="mb-1 text-xs">
-                                  <span className="text-gray-500 block">{language === 'ar' ? 'Ø§Ù„Ø§Ø³Ù…:' : 'Name:'}</span>
+                                  <span className="text-gray-500 block">{language === 'ar' ? 'الاسم:' : 'Name:'}</span>
                                   {item.history.oldName && (
                                     <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{item.history.oldName}</span>
                                   )}
-                                  <span className="font-bold text-green-600">âž” {item.history.name}</span>
+                                  <span className="font-bold text-green-600">➔ {item.history.name}</span>
                                 </div>
                               )}
                               {item.history.department && (
                                 <div className="mb-1 text-xs">
-                                  <span className="text-gray-500 block">{language === 'ar' ? 'Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©:' : 'Department:'}</span>
+                                  <span className="text-gray-500 block">{language === 'ar' ? 'الإدارة:' : 'Department:'}</span>
                                   {item.history.oldDepartment && (
                                     <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0">{item.history.oldDepartment}</span>
                                   )}
-                                  <span className="font-bold text-green-600">âž” {item.history.department}</span>
+                                  <span className="font-bold text-green-600">➔ {item.history.department}</span>
                                 </div>
                               )}
                               {item.history.phone && (
                                 <div className="mb-1 text-xs">
-                                  <span className="text-gray-500 block">{language === 'ar' ? 'Ø§Ù„Ù‡Ø§ØªÙ:' : 'Phone:'}</span>
+                                  <span className="text-gray-500 block">{language === 'ar' ? 'الهاتف:' : 'Phone:'}</span>
                                   {item.history.oldPhone && (
                                     <span className="line-through text-red-500 mr-2 rtl:ml-2 rtl:mr-0 font-mono" dir="ltr">
                                       {item.history.oldPhone}
                                     </span>
                                   )}
                                   <span className="font-bold text-green-600 font-mono" dir="ltr">
-                                    âž” {item.history.phone}
+                                    ➔ {item.history.phone}
                                   </span>
                                 </div>
                               )}
@@ -782,10 +782,10 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                               >
                                 {item.history.status === 'approved'
                                   ? language === 'ar'
-                                    ? 'ØªÙ…Øª Ø§Ù„Ù…ÙˆØ§ÙÙ‚Ø©'
+                                    ? 'تمت الموافقة'
                                     : 'Approved'
                                   : language === 'ar'
-                                  ? 'Ù…Ø±ÙÙˆØ¶'
+                                  ? 'مرفوض'
                                   : 'Rejected'}
                               </span>
                             </td>
@@ -799,15 +799,15 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                 </div>
               ) : userSearchTerm.trim() ? (
                 renderEmptyState(
-                  language === 'ar' ? 'Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø³Ø¬Ù„Ø§Øª Ù…Ø·Ø§Ø¨Ù‚Ø©' : 'No Matching History',
+                  language === 'ar' ? 'لم يتم العثور على سجلات مطابقة' : 'No Matching History',
                   language === 'ar'
-                    ? `Ù„Ø§ ØªÙˆØ¬Ø¯ Ø³Ø¬Ù„Ø§Øª ØªØ¹Ø¯ÙŠÙ„ Ø³Ø§Ø¨Ù‚Ø© ØªØ·Ø§Ø¨Ù‚ "${userSearchTerm}".`
+                    ? `لا توجد سجلات تعديل سابقة تطابق "${userSearchTerm}".`
                     : `No update history matched "${userSearchTerm}".`,
                   () => setUserSearchTerm('')
                 )
               ) : (
                 renderEmptyState(
-                  language === 'ar' ? 'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø³Ø¬Ù„ Ù„Ù„ØªØ¹Ø¯ÙŠÙ„Ø§Øª Ø§Ù„Ø³Ø§Ø¨Ù‚Ø©' : 'No Processed Updates History'
+                  language === 'ar' ? 'لا يوجد سجل للتعديلات السابقة' : 'No Processed Updates History'
                 )
               )}
             </div>
@@ -817,7 +817,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
           {userManagementTab === 'processed' && (
             <div>
               <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>
-                {language === 'ar' ? 'Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† Ø§Ù„Ù…Ø¹ØªÙ…Ø¯ÙŠÙ†' : 'Approved Users'}
+                {language === 'ar' ? 'المستخدمين المعتمدين' : 'Approved Users'}
               </h2>
               {users
                 .filter((u) => (u.status === 'approved' || u.status === 'rejected') && u.createdAt)
@@ -840,12 +840,12 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                         className="border-b font-bold"
                         style={{ backgroundColor: tableHeaderBg, borderColor, color: '#FFFFFF' }}
                       >
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„ÙƒÙˆØ¯ Ø§Ù„ÙˆØ¸ÙŠÙÙŠ' : 'HR Code'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„Ø§Ø³Ù…' : 'Name'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„Ù‚Ø³Ù…' : 'Department'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ©' : 'Role'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„Ø­Ø§Ù„Ø©' : 'Status'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª' : 'Actions'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'الكود الوظيفي' : 'HR Code'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'الاسم' : 'Name'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'القسم' : 'Department'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'الصلاحية' : 'Role'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'الحالة' : 'Status'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'إجراءات' : 'Actions'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -888,12 +888,12 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                               >
                                 <span>
                                   {u.role === 'admin'
-                                    ? 'ðŸ›¡ï¸ Admin'
+                                    ? '🛡️ Admin'
                                     : u.role === 'manager'
-                                    ? 'ðŸ‘” Manager'
+                                    ? '👔 Manager'
                                     : u.role === 'supervisor'
-                                    ? 'ðŸ‘· Supervisor'
-                                    : 'ðŸŽ“ Trainee'}
+                                    ? '👷 Supervisor'
+                                    : '🎓 Trainee'}
                                 </span>
                               </span>
                             </td>
@@ -907,10 +907,10 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                               >
                                 {u.status === 'approved'
                                   ? language === 'ar'
-                                    ? 'Ù…Ø¹ØªÙ…Ø¯'
+                                    ? 'معتمد'
                                     : 'Approved'
                                   : language === 'ar'
-                                  ? 'Ù…Ø±ÙÙˆØ¶'
+                                  ? 'مرفوض'
                                   : 'Rejected'}
                               </span>
                             </td>
@@ -920,13 +920,13 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                   onClick={() => handleOpenEditUser(u)}
                                   className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 px-3.5 py-2 sm:py-1.5 min-h-[38px] sm:min-h-[32px] rounded-xl text-xs font-bold cursor-pointer transition-all border border-blue-200 dark:border-blue-800 shadow-2xs active:scale-95"
                                 >
-                                  <Edit2 size={14} /> {language === 'ar' ? 'ØªØ¹Ø¯ÙŠÙ„' : 'Edit'}
+                                  <Edit2 size={14} /> {language === 'ar' ? 'تعديل' : 'Edit'}
                                 </button>
                                 <button
                                   onClick={() => handleDeleteUser(u.id)}
                                   className="flex items-center gap-1.5 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/60 px-3.5 py-2 sm:py-1.5 min-h-[38px] sm:min-h-[32px] rounded-xl text-xs font-bold cursor-pointer transition-all border border-red-200 dark:border-red-800 shadow-2xs active:scale-95"
                                 >
-                                  <Trash2 size={14} /> {language === 'ar' ? 'Ø­Ø°Ù' : 'Delete'}
+                                  <Trash2 size={14} /> {language === 'ar' ? 'حذف' : 'Delete'}
                                 </button>
                               </div>
                             </td>
@@ -937,15 +937,15 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                 </div>
               ) : userSearchTerm.trim() ? (
                 renderEmptyState(
-                  language === 'ar' ? 'Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† Ù…Ø·Ø§Ø¨Ù‚ÙŠÙ†' : 'No Matching Users Found',
+                  language === 'ar' ? 'لم يتم العثور على مستخدمين مطابقين' : 'No Matching Users Found',
                   language === 'ar'
-                    ? `Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ù…Ø³ØªØ®Ø¯Ù… ÙŠØ·Ø§Ø¨Ù‚ Ø¨Ø­Ø«Ùƒ Ø§Ù„Ø­Ø§Ù„ÙŠ ("${userSearchTerm}").`
+                    ? `لا يوجد مستخدم يطابق بحثك الحالي ("${userSearchTerm}").`
                     : `No user records matched "${userSearchTerm}".`,
                   () => setUserSearchTerm('')
                 )
               ) : (
                 renderEmptyState(
-                  language === 'ar' ? 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¨ÙŠØ§Ù†Ø§Øª Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† Ù…Ø¹ØªÙ…Ø¯Ø© Ø­Ø§Ù„ÙŠØ§Ù‹' : 'No active users found.'
+                  language === 'ar' ? 'لا توجد بيانات مستخدمين معتمدة حالياً' : 'No active users found.'
                 )
               )}
             </div>
@@ -955,7 +955,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
           {userManagementTab === 'deleted' && (
             <div>
               <h2 className="text-xl font-semibold mb-4" style={{ color: textColor }}>
-                {language === 'ar' ? 'Ù…ØªØ¯Ø±Ø¨ÙŠÙ† Ù…Ø­Ø°ÙˆÙÙŠÙ†' : 'Deleted Trainees'}
+                {language === 'ar' ? 'متدربين محذوفين' : 'Deleted Trainees'}
               </h2>
               {users
                 .filter((u) => u.status === 'deleted')
@@ -975,10 +975,10 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                         className="border-b font-bold"
                         style={{ backgroundColor: tableHeaderBg, borderColor, color: '#FFFFFF' }}
                       >
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„ÙƒÙˆØ¯ Ø§Ù„ÙˆØ¸ÙŠÙÙŠ' : 'HR Code'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„Ø§Ø³Ù…' : 'Name'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø§Ù„Ù‚Ø³Ù…' : 'Department'}</th>
-                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª' : 'Actions'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'الكود الوظيفي' : 'HR Code'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'الاسم' : 'Name'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'القسم' : 'Department'}</th>
+                        <th className="p-3 text-white font-bold">{language === 'ar' ? 'إجراءات' : 'Actions'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1013,7 +1013,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                 onClick={() => handleRestoreUser(u.id)}
                                 className="flex items-center gap-1.5 text-green-700 dark:text-green-300 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:hover:bg-green-900/60 border border-green-200 dark:border-green-800 px-3.5 py-2 sm:py-1.5 min-h-[38px] sm:min-h-[32px] rounded-xl text-xs font-bold cursor-pointer transition-all shadow-2xs active:scale-95"
                               >
-                                <RotateCcw size={14} /> {language === 'ar' ? 'Ø§Ø³ØªØ±Ø¬Ø§Ø¹' : 'Restore'}
+                                <RotateCcw size={14} /> {language === 'ar' ? 'استرجاع' : 'Restore'}
                               </button>
                             </td>
                           </tr>
@@ -1023,9 +1023,9 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                 </div>
               ) : userSearchTerm.trim() ? (
                 renderEmptyState(
-                  language === 'ar' ? 'Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ù…ØªØ¯Ø±Ø¨ÙŠÙ† Ù…Ø­Ø°ÙˆÙÙŠÙ† Ù…Ø·Ø§Ø¨Ù‚ÙŠÙ†' : 'No Matching Deleted Users',
+                  language === 'ar' ? 'لم يتم العثور على متدربين محذوفين مطابقين' : 'No Matching Deleted Users',
                   language === 'ar'
-                    ? `Ù„Ø§ ØªÙˆØ¬Ø¯ Ø­Ø³Ø§Ø¨Ø§Øª Ù…Ø­Ø°ÙˆÙØ© ØªØ·Ø§Ø¨Ù‚ "${userSearchTerm}".`
+                    ? `لا توجد حسابات محذوفة تطابق "${userSearchTerm}".`
                     : `No deleted accounts match "${userSearchTerm}".`,
                   () => setUserSearchTerm('')
                 )
@@ -1036,7 +1036,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                   </div>
                   <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300">
                     {language === 'ar'
-                      ? 'Ø³Ù„Ø© Ø§Ù„Ù…Ø­Ø°ÙˆÙØ§Øª ÙØ§Ø±ØºØ© (Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† Ù…Ø­Ø°ÙˆÙÙŠÙ†)'
+                      ? 'سلة المحذوفات فارغة (لا يوجد مستخدمين محذوفين)'
                       : 'Recycle bin is clean. No deleted users.'}
                   </h4>
                 </div>
