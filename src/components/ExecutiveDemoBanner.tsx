@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Settings, GraduationCap, Lock, Sparkles, LogOut } from 'lucide-react';
 import { useAppContext } from '../context';
 import { User } from '../types';
@@ -31,13 +31,9 @@ export const VIP_TRAINEE_USER: User = {
 
 export const ExecutiveDemoBanner: React.FC = () => {
   const { user, setUser, isExecutiveDemoEnabled, language, localUsers } = useAppContext();
-  const [isLockedByAdmin, setIsLockedByAdmin] = useState(false);
-  const isInitializedRef = useRef(false);
 
-  // Initialize VIP Demo session ONLY ONCE on mount to prevent mobile screen flicker/re-render jitter
+  // Clean URL query once on mount without reloading
   useEffect(() => {
-    if (isInitializedRef.current) return;
-
     const urlParams = new URLSearchParams(window.location.search);
     const hasDemoParam = urlParams.get('demo') === 'vip' || 
                          urlParams.get('demo') === 'true' ||
@@ -45,33 +41,8 @@ export const ExecutiveDemoBanner: React.FC = () => {
                          urlParams.get('mode') === 'executive' ||
                          window.location.pathname === '/demo';
 
-    const isStoredDemo = sessionStorage.getItem('oed_vip_demo_active') === 'true';
-
-    if (hasDemoParam || isStoredDemo) {
-      isInitializedRef.current = true;
-
-      if (!isExecutiveDemoEnabled) {
-        setIsLockedByAdmin(true);
-        sessionStorage.removeItem('oed_vip_demo_active');
-        sessionStorage.removeItem('oed_vip_role');
-        return;
-      }
-
-      sessionStorage.setItem('oed_vip_demo_active', 'true');
-      const savedRole = sessionStorage.getItem('oed_vip_role') || 'admin';
-
-      if (savedRole === 'trainee') {
-        const foundUser = localUsers.find(u => u.hrCode === '830557' || u.id === '830557');
-        const activeTrainee = foundUser ? { ...foundUser, name: 'Amir Samir', role: 'trainee' as const, isDemoUser: true } : VIP_TRAINEE_USER;
-        setUser(activeTrainee);
-      } else {
-        setUser(VIP_ADMIN_USER);
-      }
-
-      // Clean up URL query parameter smoothly without triggering page reload
-      if (hasDemoParam && window.history.replaceState) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
+    if (hasDemoParam && window.history.replaceState) {
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
@@ -94,34 +65,6 @@ export const ExecutiveDemoBanner: React.FC = () => {
     setUser(null);
     window.location.href = '/';
   };
-
-  // If locked by Admin
-  if (isLockedByAdmin && !user) {
-    return (
-      <div className="fixed inset-0 z-[99999999] bg-[#001D42] text-white flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
-        <div className="w-16 h-16 rounded-2xl bg-red-600/20 text-red-400 border border-red-500/40 flex items-center justify-center mb-4 shadow-xl">
-          <Lock size={32} />
-        </div>
-        <h2 className="text-xl sm:text-2xl font-black text-white mb-2">
-          {language === 'ar' ? 'Ø¬Ù„Ø³Ø© Ø§Ù„Ù…Ø¹Ø§ÙŠÙ†Ø© Ø§Ù„ØªÙ†ÙÙŠØ°ÙŠØ© Ù…ØºÙ„Ù‚Ø© Ø­Ø§Ù„ÙŠØ§Ù‹' : 'Executive Demo Access is Locked'}
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-300 max-w-md mb-6 leading-relaxed">
-          {language === 'ar' 
-            ? 'ØªÙ… Ø¥ÙŠÙ‚Ø§Ù ØµÙ„Ø§Ø­ÙŠØ© Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø§Ù„ØªØ¬Ø±ÙŠØ¨ÙŠ Ø§Ù„Ù…Ø¤Ù‚Øª Ù„Ù„Ù…Ù†Ø¸ÙˆÙ…Ø© Ù…Ù† Ù‚ÙØ¨Ù„ Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ØªØ¯Ø±ÙŠØ¨ Ø§Ù„ÙÙ†ÙŠ.' 
-            : 'Interactive demonstration access is currently locked by the Technical Training Administrator.'}
-        </p>
-        <button
-          onClick={() => {
-            setIsLockedByAdmin(false);
-            window.location.href = '/';
-          }}
-          className="px-6 py-2.5 bg-[#FFC000] hover:bg-yellow-400 text-[#001D42] font-black rounded-xl text-sm shadow-lg cursor-pointer transition-all hover:scale-105"
-        >
-          {language === 'ar' ? 'Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„ØµÙØ­Ø© Ø§Ù„Ø¯Ø®ÙˆÙ„' : 'Return to Login'}
-        </button>
-      </div>
-    );
-  }
 
   // Only render if active in Demo session
   if (!user?.isDemoUser) {
