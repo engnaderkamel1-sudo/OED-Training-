@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { getVacantSessionNumbers, findConflictingSession } from '../utils/sessionSerialUtils';
 import { useAppContext } from '../context';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -28,6 +29,11 @@ export const EditSessionModal: React.FC<EditSessionModalProps> = ({ session, onC
   const [ccEmails, setCcEmails] = useState((session.additionalNotificationEmails || []).join('; '));
   const [sendTargetedNotification, setSendTargetedNotification] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  const conflictingSession = useMemo(() => {
+    if (!sessionNumber) return undefined;
+    return findConflictingSession(sessionNumber, session.id, upcomingSessions);
+  }, [sessionNumber, session.id, upcomingSessions]);
 
   // Helper to send push notification via FCM
   const sendPushNotification = async (title: string, body: string, targetTokens: string[]) => {
