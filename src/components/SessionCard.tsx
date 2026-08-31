@@ -312,10 +312,9 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   return (
     <>
     <div className={cardClasses}>
-      <div>
-        {/* Header & Badges (Clean Accordion Trigger Bar) */}
-        <div 
-          onClick={() => setIsExpanded(prev => !prev)}
+      {/* Header & Badges (Clean Accordion Trigger Bar) */}
+      <div 
+        onClick={() => setIsExpanded(prev => !prev)}
           className={`flex justify-between items-center gap-2 flex-wrap cursor-pointer select-none transition-all hover:opacity-95 ${
             isExpanded ? 'mb-4 pb-3 border-b border-gray-100 dark:border-slate-800' : ''
           }`}
