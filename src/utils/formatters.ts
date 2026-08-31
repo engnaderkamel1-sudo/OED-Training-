@@ -139,27 +139,24 @@ export const formatDateToStandard = (dateValue: any): string => {
 };
 
 /**
- * Formats the Global Master Record Serial Number (e.g. "134" -> "134", "sessionOne" -> "1")
+ * Formats the Global Master Record Serial Number (e.g. "134" -> "134").
+ * Returns null if it only contains legacy word tokens like "sessionOne" without real digits.
  */
-export const formatSessionRecordNumber = (num?: string): string => {
-  if (!num) return '1';
+export const formatSessionRecordNumber = (num?: string | number): string | null => {
+  if (num === null || num === undefined || num === '') return null;
   const str = String(num).trim();
   const digits = str.replace(/[^0-9]/g, '');
-  if (digits) return digits;
-  if (/one/i.test(str)) return '1';
-  if (/two/i.test(str)) return '2';
-  if (/three/i.test(str)) return '3';
-  if (/four/i.test(str)) return '4';
-  if (/five/i.test(str)) return '5';
-  return str || '1';
+  if (digits) {
+    return digits;
+  }
+  return null;
 };
 
 /**
- * Formats the Course Iteration / Round (e.g. 1 -> "الجلسة الأولى (Session 1)" or "Session 1 (1st Round)")
+ * Formats the Course Iteration / Round strictly in English (e.g. "Session 1 (1st Round)").
  */
-export const formatCourseIteration = (iter?: string, lang: 'ar' | 'en' = 'ar'): string => {
-  if (!iter) return lang === 'ar' ? 'الجلسة الأولى (Session 1)' : 'Session 1 (1st Round)';
-  const str = String(iter).toLowerCase().trim();
+export const formatCourseIteration = (iter?: string | number): string => {
+  const str = String(iter || '1').toLowerCase().trim();
   let n = 1;
   if (str === 'sessionone' || str === '1' || str === 'first' || str === 'one') n = 1;
   else if (str === 'sessiontwo' || str === '2' || str === 'second' || str === 'two') n = 2;
@@ -171,14 +168,9 @@ export const formatCourseIteration = (iter?: string, lang: 'ar' | 'en' = 'ar'): 
     n = isNaN(parsed) || parsed <= 0 ? 1 : parsed;
   }
 
-  if (lang === 'ar') {
-    const arOrdinals = ['الأولى', 'الثانية', 'الثالثة', 'الرابعة', 'الخامسة', 'السادسة', 'السابعة', 'الثامنة', 'التاسعة', 'العاشرة'];
-    const ordinal = arOrdinals[n - 1] || `رقم ${n}`;
-    return `الجلسة ${ordinal} (Session ${n})`;
-  } else {
-    const enOrdinals = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
-    const ordinal = enOrdinals[n - 1] || `${n}th`;
-    return `Session ${n} (${ordinal} Round)`;
-  }
+  const enOrdinals = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
+  const ordinal = enOrdinals[n - 1] || `${n}th`;
+  return `Session ${n} (${ordinal} Round)`;
 };
+
 
