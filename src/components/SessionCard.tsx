@@ -11,6 +11,7 @@ import { collection, doc, setDoc } from 'firebase/firestore';
 import { DataField } from './DataField';
 import { isDateInSessionRange, sendNativePushNotification } from '../utils/sessionTimeUtils';
 import { playNotificationSound } from './TraineeDashboard';
+import { sanitizeUrl } from '../utils/securityUtils';
 
 const EVALUATION_FORM_URL = "https://forms.cloud.microsoft/r/cj3ByTQCRS";
 
@@ -884,7 +885,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   {/* Course Evaluation Button - Active only when sent today by Admin, otherwise Dimmed */}
                   {isEvaluationOpenToday ? (
                     <a 
-                      href={session.feedbackLink || EVALUATION_FORM_URL}
+                      href={sanitizeUrl(session.feedbackLink || EVALUATION_FORM_URL)}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
@@ -943,7 +944,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   {/* Course Evaluation link for Registered Trainees */}
                   {isEvaluationOpenToday ? (
                     <a 
-                      href={session.feedbackLink || EVALUATION_FORM_URL}
+                      href={sanitizeUrl(session.feedbackLink || EVALUATION_FORM_URL)}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
