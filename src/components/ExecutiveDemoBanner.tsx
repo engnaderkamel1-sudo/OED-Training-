@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Settings, GraduationCap, Sparkles, LogOut } from 'lucide-react';
+import { Settings, GraduationCap, Sparkles, LogOut, ShieldCheck } from 'lucide-react';
 import { useAppContext } from '../context';
 import { User } from '../types';
 
@@ -85,13 +85,17 @@ export const ExecutiveDemoBanner: React.FC = () => {
           </div>
           <div className="flex items-center gap-2 truncate">
             <span className="font-black text-[#FFC000] tracking-wide text-xs sm:text-sm truncate">
-              {language === 'ar' ? 'ÙˆØ¶Ø¹ Ø§Ù„Ù…Ø¹Ø§ÙŠÙ†Ø© Ø§Ù„ØªÙ†ÙÙŠØ°ÙŠØ© Ø§Ù„ØªÙØ§Ø¹Ù„ÙŠØ©' : 'VIP Executive Interactive Sandbox'}
+              {language === 'ar' ? 'Ø¨ÙŠØ¦Ø© Ø§Ù„Ù…Ø¹Ø§ÙŠÙ†Ø© Ø§Ù„ØªÙ†ÙÙŠØ°ÙŠØ© Ø§Ù„Ø§ÙØªØ±Ø§Ø¶ÙŠØ©' : 'VIP Executive Interactive Virtual Demo'}
             </span>
-            <span className="hidden lg:inline-block text-slate-300 text-xs font-semibold">
-              â€¢ {isAdmin 
+            <span className="hidden lg:flex items-center gap-1.5 text-slate-300 text-xs font-semibold">
+              <span>â€¢</span>
+              <ShieldCheck size={13} className="text-emerald-400 inline" />
+              <span>
+                {isAdmin 
                   ? (language === 'ar' ? 'ØµÙ„Ø§Ø­ÙŠØ§Øª Ø§Ù„Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ÙƒØ§Ù…Ù„Ø© (Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¥Ù†ØªØ§Ø¬ Ù…Ø­Ù…ÙŠØ©)' : 'Full Admin Hub (Production Data Protected)')
                   : (language === 'ar' ? 'Ø­Ø³Ø§Ø¨ Ø§Ù„Ù…ØªØ¯Ø±Ø¨: Ø£Ù…ÙŠØ± Ø³Ù…ÙŠØ± (#830557)' : 'Trainee: Amir Samir (#830557)')
                 }
+              </span>
             </span>
           </div>
         </div>
@@ -116,7 +120,7 @@ export const ExecutiveDemoBanner: React.FC = () => {
         <button
           type="button"
           onClick={() => handleSwitchRole('trainee')}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
             isTrainee 
               ? 'bg-[#FFC000] text-[#001D42] shadow-md scale-105' 
               : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -135,7 +139,7 @@ export const ExecutiveDemoBanner: React.FC = () => {
         <button
           type="button"
           onClick={() => handleSwitchRole('admin')}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
             isAdmin 
               ? 'bg-[#FFC000] text-[#001D42] shadow-md scale-105' 
               : 'text-slate-300 hover:text-white hover:bg-white/10'
