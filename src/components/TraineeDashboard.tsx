@@ -106,7 +106,7 @@ const formatDateToStandard = (dateStr: any): string => {
 };
 
 export const TraineeDashboard: React.FC = () => {
-  const { t, user, records, language, upcomingSessions, registerTrainee, unregisterTrainee, currentView, users, setUsers, announcements, theme, fetchTrainingRecords, recordsLoaded } = useAppContext();
+  const { t, user, records, language, upcomingSessions, registerTrainee, unregisterTrainee, currentView, setCurrentView, users, setUsers, announcements, theme, fetchTrainingRecords, recordsLoaded } = useAppContext();
   const [requestedTopic, setRequestedTopic] = useState('');
   const [requestSent, setRequestSent] = useState(false);
   const [registeringSession, setRegisteringSession] = useState<UpcomingSession | null>(null);
@@ -117,6 +117,15 @@ export const TraineeDashboard: React.FC = () => {
   const [activeSessionForScanner, setActiveSessionForScanner] = useState<UpcomingSession | null>(null);
   const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
   const [handoutRevisionCourseTitle, setHandoutRevisionCourseTitle] = useState<string | null>(null);
+
+  // UI/UX PRO MAX: Ensure trainee view always defaults to dashboard if coming from an admin-only view
+  React.useEffect(() => {
+    if (currentView !== 'dashboard' && currentView !== 'notifications' && currentView !== 'newCourses') {
+      if (setCurrentView) {
+        setCurrentView('dashboard');
+      }
+    }
+  }, [currentView, setCurrentView]);
 
   // Automatically fetch trainee's own records on demand (costs only 1-3 reads!)
   React.useEffect(() => {
@@ -541,7 +550,7 @@ export const TraineeDashboard: React.FC = () => {
         </div>
 
         {/* Stats Section (dashboard) */}
-        {currentView === 'dashboard' && (
+        {(currentView === 'dashboard' || (currentView !== 'notifications' && currentView !== 'newCourses')) && (
           <section className="print:hidden animate-fadeIn space-y-6">
             
             {/* --- TEMPORARY ACCOUNT BANNER --- */}
