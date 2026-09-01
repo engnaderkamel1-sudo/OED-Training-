@@ -31,7 +31,7 @@ export const VIP_TRAINEE_USER: User = {
 };
 
 export const ExecutiveDemoBanner: React.FC = () => {
-  const { user, setUser, language, localUsers } = useAppContext();
+  const { user, setUser, language, localUsers, setCurrentView } = useAppContext();
 
   // Clean URL query once on mount without reloading
   useEffect(() => {
@@ -50,6 +50,12 @@ export const ExecutiveDemoBanner: React.FC = () => {
   const handleSwitchRole = (targetRole: 'admin' | 'trainee') => {
     sessionStorage.setItem('oed_vip_demo_active', 'true');
     sessionStorage.setItem('oed_vip_role', targetRole);
+
+    // ★ UI/UX PRO MAX: Always bring the user straight to the main Dashboard view
+    if (setCurrentView) {
+      setCurrentView('dashboard');
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
 
     if (targetRole === 'trainee') {
       const usersList = Array.isArray(localUsers) ? localUsers : [];
