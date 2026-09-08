@@ -20,7 +20,8 @@ const app = initializeApp(firebaseConfig);
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
     tabManager: persistentMultipleTabManager()
-  })
+  }),
+  experimentalAutoDetectLongPolling: true
 });
 
 // Modern direct local persistence without unnecessary external OAuth iframe calls
