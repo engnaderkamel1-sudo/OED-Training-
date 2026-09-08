@@ -21,8 +21,9 @@ export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
     tabManager: persistentMultipleTabManager()
   }),
-  experimentalForceLongPolling: true
-});
+  experimentalForceLongPolling: true,
+  useFetchStreams: false
+} as any);
 
 // Modern direct local persistence without unnecessary external OAuth iframe calls
 export const auth = initializeAuth(app, {
