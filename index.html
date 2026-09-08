@@ -11,7 +11,7 @@
     <meta http-equiv="Expires" content="0" />
     
     <!-- Official Master 2026 App Icons -->
-    <link rel="manifest" href="/manifest.json?v=13.0" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192-2026.png?v=13.0" />
     <link rel="apple-touch-icon" sizes="192x192" href="/icon-192-2026.png?v=13.0" />
     <link rel="shortcut icon" href="/favicon.ico?v=13.0" />
@@ -22,8 +22,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="OED-TTMS" />
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- Self-hosted vendor libraries to bypass corporate firewall CDN blocking -->
+    <script src="/xlsx.full.min.js"></script>
+    <script src="/html5-qrcode.min.js"></script>
     <script>
       window.addEventListener('vite:preloadError', function () {
         window.location.reload();
