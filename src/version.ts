@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.2.5",
-  releaseName: "Linear Pro-Rata YTD Metric Engine",
+  version: "1.3.0",
+  releaseName: "Executive Training Analysis Matrix & Audience Breakdown",
   buildDate: "2026",
   buildTimestamp: "2026",
   
