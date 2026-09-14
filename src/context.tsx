@@ -13,7 +13,7 @@ export const generateUUID = (): string => {
   return 'uuid_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
 };
 
-export type ViewState = 'dashboard' | 'profile' | 'coursesCatalog' | 'suggestions' | 'activityLogs' | 'handoutRevisions';
+export type ViewState = 'dashboard' | 'profile' | 'coursesCatalog' | 'suggestions' | 'activityLogs' | 'handoutRevisions' | 'annualPlan';
 
 interface AppContextType {
   language: Language;

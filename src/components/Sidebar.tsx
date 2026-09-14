@@ -26,7 +26,8 @@ import {
   ShieldAlert,
   Tag,
   Sparkles,
-  QrCode
+  QrCode,
+  CalendarRange
 } from 'lucide-react';
 import { ExecutiveQRModal } from './ExecutiveQRModal';
 
@@ -104,6 +105,7 @@ export const Sidebar: React.FC = () => {
 
   const getTraineeLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'annualPlan', label: language === 'ar' ? 'خطة التدريب السنوية' : 'Annual Training Plan', icon: CalendarRange },
     { id: 'newCourses', label: 'Available Courses', icon: CalendarDays },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'handoutRevisions', label: language === 'ar' ? 'تعديلات المحتوى (Handouts)' : 'Handout Revisions', icon: BookOpen },
@@ -112,6 +114,7 @@ export const Sidebar: React.FC = () => {
 
   const getManagerLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'annualPlan', label: language === 'ar' ? 'خطة التدريب السنوية' : 'Annual Training Plan', icon: CalendarRange },
     { id: 'userManagement', label: 'User Requests', icon: Users, badge: totalUserRequestsBadge },
     { id: 'handoutRevisions', label: language === 'ar' ? 'تعديلات المحتوى (Handouts)' : 'Handout Revisions', icon: BookOpen, badge: pendingRevisionsCount },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
@@ -130,6 +133,7 @@ export const Sidebar: React.FC = () => {
 
   const getAdminLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'annualPlan', label: language === 'ar' ? 'خطة التدريب السنوية' : 'Annual Training Plan', icon: CalendarRange },
     { id: 'coursesCatalog', label: 'Courses Catalog', icon: BookOpen },
     { id: 'userManagement', label: 'User Requests', icon: Users, badge: totalUserRequestsBadge },
     { id: 'analytics', label: 'Analytics', icon: BarChart },
@@ -161,6 +165,7 @@ export const Sidebar: React.FC = () => {
 
   let links: any[] = [];
   if (role === 'admin') links = getAdminLinks();
+  else if (role === 'manager') links = getManagerLinks();
   else links = getTraineeLinks();
 
   return (
@@ -322,51 +327,36 @@ export const Sidebar: React.FC = () => {
             );
           })}
 
-          {/* VIP Executive Demo Quick Card (Admin Only) */}
+          {/* VIP Executive Demo Sleek Compact Bar (Admin Only) */}
           {role === 'admin' && !user?.isDemoUser && (
-            <div className="mt-2 p-3 rounded-2xl bg-gradient-to-r from-blue-950/40 via-blue-900/30 to-blue-950/40 border-2 border-[#FFC000]/60 shadow-xs space-y-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="p-1.5 rounded-lg bg-[#FFC000] text-[#001D42] shrink-0 font-bold">
-                    <Sparkles size={15} />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-xs font-black text-[#002D62] dark:text-[#FFC000] block truncate">
-                      {language === 'ar' ? '⭐ وضع المعاينة (VIP Demo)' : '⭐ VIP Demo Mode'}
-                    </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-300 font-semibold block">
-                      {isExecutiveDemoEnabled 
-                        ? (language === 'ar' ? 'متاح ومفتوح للتجربة' : 'Active & Open') 
-                        : (language === 'ar' ? 'مغلق ومحمي' : 'Locked')}
-                    </span>
-                  </div>
-                </div>
+            <div className="mt-2 px-2.5 py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/80 border border-[#FFC000]/50 shadow-xs flex items-center justify-between gap-1.5">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="w-2 h-2 rounded-full shrink-0 animate-pulse bg-[#FFC000]" />
+                <span className="text-[11px] font-bold text-[#002D62] dark:text-[#FFC000] truncate">
+                  {language === 'ar' ? 'معاينة VIP' : 'VIP Demo'}
+                </span>
                 <button
                   type="button"
                   onClick={toggleExecutiveDemo}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95 shrink-0 ${
+                  className={`px-1.5 py-0.5 rounded text-[9px] font-black cursor-pointer shrink-0 transition-colors ${
                     isExecutiveDemoEnabled
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                      : 'bg-red-600 hover:bg-red-700 text-white'
+                      ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40'
+                      : 'bg-red-500/20 text-red-700 dark:text-red-400 border border-red-500/40'
                   }`}
-                  title={language === 'ar' ? 'تبديل صلاحية الدخول الفوري للعرض التقديمي' : 'Toggle VIP Demo QR Access'}
+                  title={language === 'ar' ? 'تبديل الصلاحية' : 'Toggle Access'}
                 >
-                  {isExecutiveDemoEnabled ? '🟢 ON' : '🔴 OFF'}
+                  {isExecutiveDemoEnabled ? 'ON' : 'OFF'}
                 </button>
               </div>
-
-              {/* Action Buttons: Show QR Pass & Launch Demo */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowExecutiveQR(true)}
-                  className="py-2 px-2 rounded-xl bg-blue-900/40 hover:bg-blue-900/60 text-[#002D62] dark:text-[#FFC000] border border-[#FFC000]/40 text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-xs hover:scale-[1.02] active:scale-95 cursor-pointer"
-                  title={language === 'ar' ? 'عرض رمز الـ QR لمسحه من كاميرا موبايل المديرين' : 'Display VIP Executive QR Code for Mobile Scanning'}
+                  className="p-1 rounded-lg bg-blue-900/10 dark:bg-blue-950/50 hover:bg-blue-900/20 text-[#002D62] dark:text-[#FFC000] border border-[#FFC000]/30 transition-all cursor-pointer"
+                  title={language === 'ar' ? 'عرض رمز QR' : 'Show QR'}
                 >
-                  <QrCode size={14} className="text-[#FFC000]" />
-                  <span>{language === 'ar' ? '📱 عرض QR' : '📱 Show QR'}</span>
+                  <QrCode size={13} />
                 </button>
-
                 <button
                   type="button"
                   onClick={() => {
@@ -374,11 +364,11 @@ export const Sidebar: React.FC = () => {
                     sessionStorage.setItem('oed_vip_role', 'admin');
                     window.location.search = '?demo=vip';
                   }}
-                  className="py-2 px-2 rounded-xl bg-gradient-to-r from-[#FFC000] via-yellow-400 to-[#FFC000] hover:from-yellow-400 hover:to-[#FFC000] text-[#001D42] text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer"
-                  title={language === 'ar' ? 'بدء تجربة واختبار وضع المعاينة التنفيذية التفاعلية الآن' : 'Launch VIP Executive Interactive Sandbox'}
+                  className="px-2 py-1 rounded-lg bg-[#FFC000] hover:bg-yellow-400 text-[#001D42] text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-xs active:scale-95"
+                  title={language === 'ar' ? 'بدء تجربة وضع المعاينة' : 'Launch Demo'}
                 >
-                  <Sparkles size={14} className="text-[#001D42]" />
-                  <span>{language === 'ar' ? '👑 تجربة الوضع' : '👑 Test Demo'}</span>
+                  <Sparkles size={11} />
+                  <span>{language === 'ar' ? 'تجربة' : 'Demo'}</span>
                 </button>
               </div>
             </div>

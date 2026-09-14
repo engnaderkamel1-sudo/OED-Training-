@@ -16,6 +16,7 @@ import { ProfilePage } from './components/ProfilePage';
 import { CoursesPage } from './components/CoursesPage';
 import { SuggestionsPage } from './components/SuggestionsPage';
 import { HandoutRevisionsPage } from './components/HandoutRevisionsPage';
+import { AnnualTrainingPlanPage } from './components/AnnualTrainingPlanPage';
 import { ActivityLogsView } from './components/ActivityLogsView'; 
 import { Loader2 } from 'lucide-react';
 import { auth, db, messaging } from './firebase';
@@ -330,6 +331,8 @@ const AppContent: React.FC = () => {
                 <SuggestionsPage />
               ) : currentView === 'handoutRevisions' ? (
                 <HandoutRevisionsPage />
+              ) : currentView === 'annualPlan' ? (
+                <AnnualTrainingPlanPage />
               ) : user.role === 'admin' ? (
                 currentView === 'coursesCatalog' ? (
                   <CoursesPage />
