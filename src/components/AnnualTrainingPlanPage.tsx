@@ -557,47 +557,86 @@ export const AnnualTrainingPlanPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Quick Year Selector & Print Header Action */}
-          <div className="flex flex-wrap items-center gap-3 shrink-0 print:hidden">
-            {/* Year Selector */}
-            <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-1 flex items-center gap-1 border border-slate-200 dark:border-slate-700">
-              {availableYears.map(yr => (
-                <button
-                  key={yr}
-                  type="button"
-                  onClick={() => setSelectedYear(yr)}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                    selectedYear === yr
-                      ? 'bg-[#002D62] text-white shadow-xs dark:bg-amber-400 dark:text-slate-950'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-[#002D62] dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {yr}
-                </button>
-              ))}
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => setIsAddYearModalOpen(true)}
-                  className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#002D62] dark:text-amber-300 hover:bg-white dark:hover:bg-slate-700 transition-all flex items-center gap-1 cursor-pointer"
-                  title="Add New Year Plan"
-                >
-                  <PlusCircle size={13} />
-                  <span>+ Year</span>
-                </button>
-              )}
-            </div>
-
+          {/* Print Header Action */}
+          <div className="flex items-center gap-3 shrink-0 print:hidden">
             <button
               type="button"
               onClick={handlePrint}
-              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-2 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-2 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-2xs"
               title="Print Plan Report"
             >
               <Printer size={15} />
               <span>Print</span>
             </button>
           </div>
+        </div>
+
+        {/* Prominent Executive Central Year Navigation Bar */}
+        <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+              <CalendarRange size={16} className="text-[#002D62] dark:text-amber-400" />
+              <span>Select Plan Year:</span>
+            </div>
+
+            <div className="p-1.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-2xl border border-slate-200/90 dark:border-slate-700/80 flex items-center gap-2 flex-wrap shadow-2xs">
+              {availableYears.map(yr => {
+                const isSelected = selectedYear === yr;
+                const isCurrentYear = yr === currentRealYear;
+                const yearTargetsCount = (annualPlans.find(p => p.year === yr)?.targets || []).length;
+
+                return (
+                  <button
+                    key={yr}
+                    type="button"
+                    onClick={() => setSelectedYear(yr)}
+                    className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2.5 transition-all duration-200 cursor-pointer active:scale-[0.98] ${
+                      isSelected
+                        ? 'bg-[#002D62] text-white shadow-md shadow-[#002D62]/25 dark:bg-blue-900 dark:text-white ring-1 ring-white/10'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-xs hover:text-slate-950 dark:hover:text-white'
+                    }`}
+                  >
+                    <span className="text-sm sm:text-base font-black tracking-tight">{yr}</span>
+                    {isCurrentYear ? (
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+                        isSelected
+                          ? 'bg-amber-400 text-slate-950'
+                          : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60'
+                      }`}>
+                        Current
+                      </span>
+                    ) : (
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                        isSelected
+                          ? 'bg-white/20 text-white'
+                          : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                      }`}>
+                        {yr > currentRealYear ? 'Upcoming' : 'Archived'}
+                      </span>
+                    )}
+                    <span className={`text-[11px] font-medium ${
+                      isSelected ? 'text-slate-200 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500'
+                    }`}>
+                      ({yearTargetsCount} {yearTargetsCount === 1 ? 'Program' : 'Programs'})
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Prominent Action: + Add New Year Plan (Admin Only) */}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setIsAddYearModalOpen(true)}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 dark:from-slate-800 dark:to-slate-700 border-2 border-dashed border-[#002D62]/40 dark:border-amber-400/40 text-[#002D62] dark:text-amber-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-2xs hover:shadow-xs shrink-0"
+              title="Add New Year Plan"
+            >
+              <PlusCircle size={17} className="text-[#002D62] dark:text-amber-400" />
+              <span>+ Add New Year Plan</span>
+            </button>
+          )}
         </div>
 
         {/* Executive KPI Summary Strip: Dual Metric (Paced vs Cumulative) */}
