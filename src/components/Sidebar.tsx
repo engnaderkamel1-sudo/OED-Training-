@@ -105,18 +105,18 @@ export const Sidebar: React.FC = () => {
 
   const getTraineeLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'annualPlan', label: language === 'ar' ? 'خطة التدريب السنوية' : 'Annual Training Plan', icon: CalendarRange },
+    { id: 'annualPlan', label: 'Annual Training Plan', icon: CalendarRange },
     { id: 'newCourses', label: 'Available Courses', icon: CalendarDays },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'handoutRevisions', label: language === 'ar' ? 'تعديلات المحتوى (Handouts)' : 'Handout Revisions', icon: BookOpen },
+    { id: 'handoutRevisions', label: 'Handout Revisions', icon: BookOpen },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
   ];
 
   const getManagerLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'annualPlan', label: language === 'ar' ? 'خطة التدريب السنوية' : 'Annual Training Plan', icon: CalendarRange },
+    { id: 'annualPlan', label: 'Annual Training Plan', icon: CalendarRange },
     { id: 'userManagement', label: 'User Requests', icon: Users, badge: totalUserRequestsBadge },
-    { id: 'handoutRevisions', label: language === 'ar' ? 'تعديلات المحتوى (Handouts)' : 'Handout Revisions', icon: BookOpen, badge: pendingRevisionsCount },
+    { id: 'handoutRevisions', label: 'Handout Revisions', icon: BookOpen, badge: pendingRevisionsCount },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
   ];
 
@@ -133,11 +133,11 @@ export const Sidebar: React.FC = () => {
 
   const getAdminLinks = () => [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'annualPlan', label: language === 'ar' ? 'خطة التدريب السنوية' : 'Annual Training Plan', icon: CalendarRange },
+    { id: 'annualPlan', label: 'Annual Training Plan', icon: CalendarRange },
     { id: 'coursesCatalog', label: 'Courses Catalog', icon: BookOpen },
     { id: 'userManagement', label: 'User Requests', icon: Users, badge: totalUserRequestsBadge },
     { id: 'analytics', label: 'Analytics', icon: BarChart },
-    { id: 'handoutRevisions', label: language === 'ar' ? 'تعديلات المحتوى (Handouts)' : 'Handout Revisions', icon: BookOpen, badge: pendingRevisionsCount },
+    { id: 'handoutRevisions', label: 'Handout Revisions', icon: BookOpen, badge: pendingRevisionsCount },
     { 
       id: 'tools_parent', 
       label: 'Training Management', 
@@ -154,10 +154,10 @@ export const Sidebar: React.FC = () => {
       icon: ShieldAlert,
       badge: openErrorsCount,
       subLinks: [
-        { id: 'systemErrors', label: language === 'ar' ? 'سجل أخطاء النظام' : 'System Error Reports', icon: ShieldAlert, badge: openErrorsCount },
+        { id: 'systemErrors', label: 'System Error Reports', icon: ShieldAlert, badge: openErrorsCount },
         { id: 'tools_usage', label: 'Firebase Quota', icon: Activity },
         { id: 'activityLogs', label: 'Activity Logs', icon: FileText },
-        { id: 'system_version', label: language === 'ar' ? 'إصدار المنظومة' : 'System Version', icon: Tag },
+        { id: 'system_version', label: 'System Version', icon: Tag },
       ]
     },
     { id: 'suggestions', label: 'Suggestions', icon: MessageSquare },
@@ -333,7 +333,7 @@ export const Sidebar: React.FC = () => {
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className="w-2 h-2 rounded-full shrink-0 animate-pulse bg-[#FFC000]" />
                 <span className="text-[11px] font-bold text-[#002D62] dark:text-[#FFC000] truncate">
-                  {language === 'ar' ? 'معاينة VIP' : 'VIP Demo'}
+                  VIP Demo
                 </span>
                 <button
                   type="button"
@@ -343,7 +343,7 @@ export const Sidebar: React.FC = () => {
                       ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40'
                       : 'bg-red-500/20 text-red-700 dark:text-red-400 border border-red-500/40'
                   }`}
-                  title={language === 'ar' ? 'تبديل الصلاحية' : 'Toggle Access'}
+                  title="Toggle Access"
                 >
                   {isExecutiveDemoEnabled ? 'ON' : 'OFF'}
                 </button>
@@ -353,7 +353,7 @@ export const Sidebar: React.FC = () => {
                   type="button"
                   onClick={() => setShowExecutiveQR(true)}
                   className="p-1 rounded-lg bg-blue-900/10 dark:bg-blue-950/50 hover:bg-blue-900/20 text-[#002D62] dark:text-[#FFC000] border border-[#FFC000]/30 transition-all cursor-pointer"
-                  title={language === 'ar' ? 'عرض رمز QR' : 'Show QR'}
+                  title="Show QR"
                 >
                   <QrCode size={13} />
                 </button>
@@ -365,10 +365,10 @@ export const Sidebar: React.FC = () => {
                     window.location.search = '?demo=vip';
                   }}
                   className="px-2 py-1 rounded-lg bg-[#FFC000] hover:bg-yellow-400 text-[#001D42] text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-xs active:scale-95"
-                  title={language === 'ar' ? 'بدء تجربة وضع المعاينة' : 'Launch Demo'}
+                  title="Launch Demo"
                 >
                   <Sparkles size={11} />
-                  <span>{language === 'ar' ? 'تجربة' : 'Demo'}</span>
+                  <span>Demo</span>
                 </button>
               </div>
             </div>

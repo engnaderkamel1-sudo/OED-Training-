@@ -281,28 +281,9 @@ export const DEMO_FALLBACK_CLEANED_RECORDS: CleanedRecord[] = [
 export const DEFAULT_CERTIFIED_2026_PLAN: AnnualYearPlan = {
   id: '2026',
   year: 2026,
-  title: 'خطة التدريب السنوية المعتمدة 2026',
+  title: 'Annual Training Plan 2026',
   status: 'active',
-  targets: [
-    { id: 't_01', courseTitle: 'Diesel Engine Mechanical Fundamentals', courseTitleEn: 'Diesel Engine Mechanical Fundamentals', targetRounds: 6, targetTrainees: 48, quarter: 'Q1', track: 'mechanical', durationDays: 5, notes: 'ورشة القطامية المركزية' },
-    { id: 't_02', courseTitle: 'Hydraulic Fundamentals', courseTitleEn: 'Hydraulic Fundamentals', targetRounds: 6, targetTrainees: 48, quarter: 'Q1', track: 'hydraulic', durationDays: 5, notes: 'معمل الهيدروليك' },
-    { id: 't_03', courseTitle: 'Scheduled Oil Sample S.O.S', courseTitleEn: 'Scheduled Oil Sample S.O.S', targetRounds: 8, targetTrainees: 96, quarter: 'Q1', track: 'quality_sos', durationDays: 2, notes: 'مركز فحص الزيوت' },
-    { id: 't_04', courseTitle: 'SIS 2', courseTitleEn: 'SIS 2 (Service Information System)', targetRounds: 4, targetTrainees: 40, quarter: 'Q1', track: 'heavy_machinery', durationDays: 2, notes: 'معمل الحاسب الآلي' },
-    { id: 't_05', courseTitle: 'Advanced Hydraulic Control Systems', courseTitleEn: 'Advanced Hydraulic Control Systems', targetRounds: 4, targetTrainees: 32, quarter: 'Q2', track: 'hydraulic', durationDays: 5, notes: 'منصة الاختبارات المتقدمة' },
-    { id: 't_06', courseTitle: 'Power Train', courseTitleEn: 'Power Train', targetRounds: 5, targetTrainees: 40, quarter: 'Q2', track: 'heavy_machinery', durationDays: 5, notes: 'عنبر المعدات الثقيلة' },
-    { id: 't_07', courseTitle: '14M Motor Grader Engineers', courseTitleEn: '14M Motor Grader Engineers', targetRounds: 4, targetTrainees: 32, quarter: 'Q2', track: 'heavy_machinery', durationDays: 4, notes: 'موقع العاصمة / القطامية' },
-    { id: 't_08', courseTitle: 'Undercarriage Engineers', courseTitleEn: 'Undercarriage Engineers', targetRounds: 4, targetTrainees: 36, quarter: 'Q2', track: 'heavy_machinery', durationDays: 3, notes: 'ورشة مجموعات السير' },
-    { id: 't_09', courseTitle: 'Electricity Fundamentals', courseTitleEn: 'Electricity Fundamentals', targetRounds: 6, targetTrainees: 48, quarter: 'Q3', track: 'electrical', durationDays: 5, notes: 'معمل الكهرباء' },
-    { id: 't_10', courseTitle: 'Caterpillar Electronic Technician', courseTitleEn: 'Caterpillar Electronic Technician (ET)', targetRounds: 4, targetTrainees: 32, quarter: 'Q3', track: 'electrical', durationDays: 3, notes: 'مركز تشخيص الأعطال' },
-    { id: 't_11', courseTitle: 'Electronic Diesel Engine', courseTitleEn: 'Electronic Diesel Engine', targetRounds: 4, targetTrainees: 32, quarter: 'Q3', track: 'mechanical', durationDays: 5, notes: 'مركز عمرات المحركات' },
-    { id: 't_12', courseTitle: 'Electrical Power Generation', courseTitleEn: 'Electrical Power Generation', targetRounds: 4, targetTrainees: 36, quarter: 'Q3', track: 'electrical', durationDays: 3, notes: 'عنبر المولدات ومحطات الديزل' },
-    { id: 't_13', courseTitle: '01. Basic Knowledge of TBM', courseTitleEn: '01. Basic Knowledge of TBM', targetRounds: 3, targetTrainees: 30, quarter: 'Q4', track: 'tbm', durationDays: 3, notes: 'موقع الخط الرابع للمترو' },
-    { id: 't_14', courseTitle: '02. TBM Cutterhead', courseTitleEn: '02. TBM Cutterhead', targetRounds: 3, targetTrainees: 24, quarter: 'Q4', track: 'tbm', durationDays: 3, notes: 'ساحة صيانة معدات الأنفاق' },
-    { id: 't_15', courseTitle: '03. TBM Hydraulic & Fluid Systems', courseTitleEn: '03. TBM Hydraulic & Fluid Systems', targetRounds: 3, targetTrainees: 24, quarter: 'Q4', track: 'tbm', durationDays: 4, notes: 'مركز صيانة معدات الأنفاق' },
-    { id: 't_16', courseTitle: '04. MSV DCY30E Multi-Service Vehicle', courseTitleEn: '04. MSV DCY30E Multi-Service Vehicle', targetRounds: 3, targetTrainees: 24, quarter: 'Q4', track: 'heavy_machinery', durationDays: 3, notes: 'عربات نقل قطاعات الأنفاق' },
-    { id: 't_17', courseTitle: 'Technical Inspection', courseTitleEn: 'Technical Inspection & Equipment Audit', targetRounds: 4, targetTrainees: 40, quarter: 'Q4', track: 'quality_sos', durationDays: 3, notes: 'عنبر الفحص الفني' },
-    { id: 't_18', courseTitle: 'Maintenance & Repair Lessons Learned 1 Engineers', courseTitleEn: 'Maintenance & Repair Lessons Learned', targetRounds: 4, targetTrainees: 60, quarter: 'Q4', track: 'quality_sos', durationDays: 2, notes: 'قاعة المؤتمرات المركزية' }
-  ]
+  targets: []
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);

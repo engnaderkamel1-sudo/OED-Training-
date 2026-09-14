@@ -24,7 +24,9 @@ This rule is **permanently active** and applies unconditionally to every turn an
 ### 3. Data Integrity & Reality
 - Render **100% Verified Real Data** originating from the official master Excel records and live Firestore collections.
 - Never inject fake course titles, assumed departments, or synthetic mock arrays.
+- All courses in plans, sessions, or catalogs must come strictly from user creation or live database/Excel data. Never assume, fabricate, or pre-populate hypothetical courses or venues.
 
-### 4. BiDi & Multilingual Typography
-- Ensure pristine Right-to-Left (RTL) Arabic and Left-to-Right (LTR) English support.
-- Isolate English technical terms, HR codes, and file symbols with backticks or dedicated lines to prevent BiDi text reversal.
+### 4. Language Standard: Strictly English Only (No Arabic)
+- **Mandatory English-Only Rule:** Arabic is strictly prohibited across all system interfaces, components, buttons, badges, tables, modal dialogs, notifications, and user-facing text.
+- All UI text, course titles, locations, notes, months, statuses, tooltips, and labels MUST be written strictly in English.
+- Do not render Arabic strings, translations, or RTL Arabic text anywhere. Keep typography Left-to-Right (LTR).
