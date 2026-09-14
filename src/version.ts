@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.2.2",
-  releaseName: "Annual Training Plan Clean Pro Max & English Standard",
+  version: "1.2.3",
+  releaseName: "Annual Plan YTD % Metric Standard",
   buildDate: "2026",
   buildTimestamp: "2026",
   

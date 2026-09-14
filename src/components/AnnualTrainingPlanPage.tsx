@@ -225,33 +225,39 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     if (!isCurrentYearPlan) {
       if (selectedYear < currentRealYear) {
         return {
+          shortLabel: 'Archived',
           label: 'Archived Plan',
           badge: 'bg-slate-700/60 text-slate-200 border border-slate-600'
         };
       }
       return {
+        shortLabel: 'Upcoming',
         label: 'Upcoming Plan',
         badge: 'bg-blue-900/60 text-blue-200 border border-blue-700/50'
       };
     }
     if (totalTargetRounds === 0) {
       return {
+        shortLabel: 'Setup',
         label: 'Plan In Setup',
         badge: 'bg-slate-700/40 text-slate-300 border border-slate-600'
       };
     }
     if (pacedCompletionRate >= 100) {
       return {
+        shortLabel: 'On Track',
         label: `100% On Schedule (Thru ${currentMonthName})`,
         badge: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
       };
     } else if (pacedCompletionRate >= 80) {
       return {
+        shortLabel: 'Near Target',
         label: `Near Target Pace (Thru ${currentMonthName})`,
         badge: 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
       };
     } else {
       return {
+        shortLabel: 'Behind',
         label: `Behind Schedule (Thru ${currentMonthName})`,
         badge: 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
       };
@@ -476,10 +482,10 @@ export const AnnualTrainingPlanPage: React.FC = () => {
               <div className="flex items-center justify-between gap-1">
                 <span className="text-[11px] text-slate-200 font-bold flex items-center gap-1">
                   <span>⏱️</span>
-                  <span>Paced Pace (Thru {currentMonthName})</span>
+                  <span>YTD % (Thru {currentMonthName})</span>
                 </span>
                 <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${paceStatus.badge}`}>
-                  {paceStatus.label.split(' ')[0]}
+                  {paceStatus.shortLabel}
                 </span>
               </div>
               <div className="mt-1.5 flex items-baseline gap-1.5">
@@ -823,7 +829,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
 
             <div className="flex items-center gap-3 shrink-0 bg-white/10 p-3 rounded-xl border border-white/15">
               <div className="text-center px-2">
-                <span className="text-[10px] text-slate-300 block font-medium">Paced Progress</span>
+                <span className="text-[10px] text-slate-300 block font-medium">YTD Progress %</span>
                 <span className="text-xl sm:text-2xl font-black text-amber-300">{pacedCompletionRate}%</span>
               </div>
               <div className="h-8 w-px bg-white/20" />
