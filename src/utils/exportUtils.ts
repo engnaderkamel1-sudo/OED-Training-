@@ -40,7 +40,9 @@ export const exportCloudBackup = (
       'Course Title': c.title,
       'Duration (Days)': c.durationDays || c.duration || 1,
       'Topics Covered': (c.topicsCovered || []).join(', '),
-      'Material Link': c.materialLink || ''
+      'Presentation Link': c.presentationUrl || '',
+      'Handout Link': c.handoutUrl || c.materialLink || '',
+      'Legacy Material Link': c.materialLink || ''
     }));
     if (coursesData.length > 0) {
       const wsCourses = XLSX.utils.json_to_sheet(coursesData);

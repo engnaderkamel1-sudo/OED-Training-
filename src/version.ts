@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.3.3",
-  releaseName: "Clean Minimalist Header Banner",
+  version: "1.4.0",
+  releaseName: "Dedicated Presentation & Handout Resource Links",
   buildDate: "2026",
   buildTimestamp: "2026",
   

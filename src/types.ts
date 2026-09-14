@@ -66,6 +66,8 @@ export interface Course {
   registeredUsers?: string[];
   sharedResourceLink?: string;
   materialLink?: string;
+  presentationUrl?: string; // رابط العرض التقديمي (PowerPoint / Google Slides / SharePoint)
+  handoutUrl?: string; // رابط المادة العلمية / الهاند أوت (PDF / Word / SharePoint)
   topicsCovered?: string[] | string;
   description?: string;
   category?: string;
