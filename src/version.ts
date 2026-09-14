@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.3.2",
-  releaseName: "Prominent Executive Year Selector Bar",
+  version: "1.3.3",
+  releaseName: "Clean Minimalist Header Banner",
   buildDate: "2026",
   buildTimestamp: "2026",
   

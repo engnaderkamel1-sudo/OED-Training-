@@ -552,9 +552,6 @@ export const AnnualTrainingPlanPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#002D62] dark:text-white flex items-center gap-3">
               <span>Annual Training Plan & Achievement Tracking</span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
-              Manage approved annual training courses, define round targets per program, and monitor real-time schedule compliance and remaining sessions.
-            </p>
           </div>
 
           {/* Print Header Action */}
