@@ -212,3 +212,27 @@ export interface HandoutRevision {
   reviewedAt?: string;
   reviewedBy?: string;
 }
+
+// --- منظومة خطة التدريب السنوية ومتابعة الإنجاز ---
+export interface AnnualPlanCourseTarget {
+  id: string;
+  courseId?: string;
+  courseTitle: string;
+  courseTitleEn?: string;
+  targetRounds: number; // عدد الدورات المستهدفة خلال العام
+  targetTrainees?: number; // المستهدف من المتدربين
+  quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+  track: 'mechanical' | 'hydraulic' | 'electrical' | 'heavy_machinery' | 'tbm' | 'quality_sos';
+  durationDays: number;
+  notes?: string;
+}
+
+export interface AnnualYearPlan {
+  id: string; // e.g. '2026'
+  year: number;
+  title: string;
+  status: 'active' | 'draft' | 'archived';
+  targets: AnnualPlanCourseTarget[];
+  createdAt?: string;
+  updatedAt?: string;
+}
