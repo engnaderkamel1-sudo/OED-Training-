@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.2.4",
-  releaseName: "Harmonious Light/Dark Palette for Annual Plan",
+  version: "1.2.5",
+  releaseName: "Linear Pro-Rata YTD Metric Engine",
   buildDate: "2026",
   buildTimestamp: "2026",
   

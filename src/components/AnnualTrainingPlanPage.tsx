@@ -207,15 +207,22 @@ export const AnnualTrainingPlanPage: React.FC = () => {
   const totalScheduledRounds = targetsWithExecution.reduce((acc, t) => acc + t.scheduledRounds, 0);
 
   // 1. Overall Cumulative Annual Completion Rate (%)
-  const overallCompletionRate = totalTargetRounds > 0 ? Math.min(100, Math.round((totalCompletedRounds / totalTargetRounds) * 100)) : 0;
-
-  // 2. Expected Paced Rounds to Date
-  const expectedRoundsYTD = timeFraction > 0 ? Math.max(1, Math.round(totalTargetRounds * timeFraction)) : 0;
-
-  // 3. Time-Paced Progress Rate
-  const pacedCompletionRate = expectedRoundsYTD > 0 
-    ? Math.round((totalCompletedRounds / expectedRoundsYTD) * 100)
+  const overallCompletionRate = totalTargetRounds > 0 
+    ? Math.min(100, Math.round((totalCompletedRounds / totalTargetRounds) * 100)) 
     : 0;
+
+  // 2. Expected Linear Paced Rounds to Date (Method A: Linear Pro-Rata)
+  const expectedRoundsYTD = (totalTargetRounds > 0 && timeFraction > 0)
+    ? Math.round(totalTargetRounds * timeFraction)
+    : 0;
+
+  const hasYTDTarget = isCurrentYearPlan && totalTargetRounds > 0 && expectedRoundsYTD > 0;
+
+  // 3. Time-Paced Progress Rate (YTD %)
+  // Uncapped so overachievements (e.g. 150%) display properly; null if no target defined
+  const pacedCompletionRate = hasYTDTarget
+    ? Math.round((totalCompletedRounds / expectedRoundsYTD) * 100)
+    : null;
 
   const countCompletedCourses = targetsWithExecution.filter(t => t.executionStatus === 'completed').length;
   const countInProgressCourses = targetsWithExecution.filter(t => t.executionStatus === 'in_progress').length;
@@ -236,20 +243,26 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         badge: 'bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700/50'
       };
     }
-    if (totalTargetRounds === 0) {
+    if (totalTargetRounds === 0 || !hasYTDTarget) {
       return {
         shortLabel: 'Setup',
-        label: 'Plan In Setup',
+        label: 'No Targets Defined',
         badge: 'bg-slate-100 dark:bg-slate-700/40 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600'
       };
     }
-    if (pacedCompletionRate >= 100) {
+    if (pacedCompletionRate !== null && pacedCompletionRate > 100) {
+      return {
+        shortLabel: 'Ahead',
+        label: `${pacedCompletionRate}% Ahead of Schedule (Thru ${currentMonthName})`,
+        badge: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30'
+      };
+    } else if (pacedCompletionRate === 100) {
       return {
         shortLabel: 'On Track',
         label: `100% On Schedule (Thru ${currentMonthName})`,
         badge: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30'
       };
-    } else if (pacedCompletionRate >= 80) {
+    } else if (pacedCompletionRate !== null && pacedCompletionRate >= 80) {
       return {
         shortLabel: 'Near Target',
         label: `Near Target Pace (Thru ${currentMonthName})`,
@@ -262,7 +275,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         badge: 'bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30'
       };
     }
-  }, [isCurrentYearPlan, selectedYear, currentRealYear, pacedCompletionRate, currentMonthName, totalTargetRounds]);
+  }, [isCurrentYearPlan, selectedYear, currentRealYear, pacedCompletionRate, currentMonthName, totalTargetRounds, hasYTDTarget]);
 
   // Track Meta
   const getTrackMeta = (track: AnnualPlanCourseTarget['track']) => {
@@ -490,7 +503,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
               </div>
               <div className="mt-1.5 flex items-baseline gap-1.5">
                 <span className="text-2xl sm:text-3xl font-black text-[#002D62] dark:text-amber-300">
-                  {pacedCompletionRate}%
+                  {pacedCompletionRate !== null ? `${pacedCompletionRate}%` : '---'}
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
                   ({totalCompletedRounds} / {expectedRoundsYTD} rounds)
@@ -501,9 +514,15 @@ export const AnnualTrainingPlanPage: React.FC = () => {
               <div className="w-full bg-blue-200/60 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
                 <div 
                   className={`h-full rounded-full transition-all duration-500 ${
-                    pacedCompletionRate >= 100 ? 'bg-emerald-500 dark:bg-emerald-400' : pacedCompletionRate >= 80 ? 'bg-amber-500 dark:bg-amber-400' : 'bg-rose-500 dark:bg-rose-400'
+                    pacedCompletionRate !== null && pacedCompletionRate >= 100 
+                      ? 'bg-emerald-500 dark:bg-emerald-400' 
+                      : pacedCompletionRate !== null && pacedCompletionRate >= 80 
+                        ? 'bg-amber-500 dark:bg-amber-400' 
+                        : pacedCompletionRate !== null 
+                          ? 'bg-rose-500 dark:bg-rose-400' 
+                          : 'bg-slate-300 dark:bg-slate-600'
                   }`}
-                  style={{ width: `${Math.min(100, pacedCompletionRate)}%` }} 
+                  style={{ width: `${Math.min(100, pacedCompletionRate ?? 0)}%` }} 
                 />
               </div>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
@@ -521,7 +540,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
               </span>
               <div className="mt-1.5 flex items-baseline gap-1.5">
                 <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-                  {overallCompletionRate}%
+                  {totalTargetRounds > 0 ? `${overallCompletionRate}%` : '---'}
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
                   ({totalCompletedRounds} / {totalTargetRounds})
@@ -823,19 +842,19 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">
-                Based on the elapsed timeline ({elapsedMonths} of 12 months), the target rounds required to date are {expectedRoundsYTD} rounds. Actual completed sessions ({totalCompletedRounds} rounds) represent a {pacedCompletionRate}% compliance with current schedule targets, while total annual completion stands at {overallCompletionRate}%.
+                Based on the elapsed timeline ({elapsedMonths} of 12 months), the target rounds required to date are {expectedRoundsYTD} rounds. Actual completed sessions ({totalCompletedRounds} rounds) represent a {pacedCompletionRate !== null ? `${pacedCompletionRate}%` : '---'} compliance with current schedule targets, while total annual completion stands at {totalTargetRounds > 0 ? `${overallCompletionRate}%` : '---'}.
               </p>
             </div>
 
             <div className="flex items-center gap-3 shrink-0 bg-white dark:bg-slate-800/90 p-3 rounded-xl border border-blue-200/80 dark:border-slate-700 shadow-2xs">
               <div className="text-center px-2">
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">YTD Progress %</span>
-                <span className="text-xl sm:text-2xl font-black text-[#002D62] dark:text-amber-300">{pacedCompletionRate}%</span>
+                <span className="text-xl sm:text-2xl font-black text-[#002D62] dark:text-amber-300">{pacedCompletionRate !== null ? `${pacedCompletionRate}%` : '---'}</span>
               </div>
               <div className="h-8 w-px bg-slate-200 dark:bg-slate-700" />
               <div className="text-center px-2">
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Annual Total</span>
-                <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{overallCompletionRate}%</span>
+                <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{totalTargetRounds > 0 ? `${overallCompletionRate}%` : '---'}</span>
               </div>
             </div>
           </div>
