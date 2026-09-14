@@ -608,7 +608,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
               <div className="flex items-center justify-between gap-1">
                 <span className="text-[11px] text-[#002D62] dark:text-slate-200 font-bold flex items-center gap-1">
                   <span>⏱️</span>
-                  <span>YTD % (Thru {currentMonthName})</span>
+                  <span>Time-Paced Progress</span>
                 </span>
                 <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${paceStatus.badge}`}>
                   {paceStatus.shortLabel}
@@ -639,7 +639,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                 />
               </div>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
-                YTD Expected Target: {expectedRoundsYTD} rounds
+                Paced Target: {expectedRoundsYTD} rounds (Thru {currentMonthName})
               </span>
             </div>
           </div>
@@ -709,20 +709,24 @@ export const AnnualTrainingPlanPage: React.FC = () => {
 
       {/* 2. Top-Level Tab Switcher: Plan vs Achievements vs Audience Matrix */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-2 print:hidden">
-        {/* Core 3 Tabs */}
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Core 3 Tabs - Executive Segmented Container with High Affordance */}
+        <div className="p-1.5 bg-slate-100/90 dark:bg-slate-800/80 rounded-2xl border border-slate-200/90 dark:border-slate-700/80 flex items-center gap-2 flex-wrap shadow-2xs">
           <button
             type="button"
             onClick={() => setActiveMainTab('plan')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all duration-200 cursor-pointer active:scale-[0.98] ${
               activeMainTab === 'plan'
-                ? 'bg-[#002D62] text-white shadow-sm dark:bg-blue-900 dark:text-white'
-                : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                ? 'bg-[#002D62] text-white shadow-md shadow-[#002D62]/25 dark:bg-blue-900 dark:text-white ring-1 ring-white/10'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-xs hover:text-slate-950 dark:hover:text-white'
             }`}
           >
-            <BookOpen size={16} />
+            <BookOpen size={16} className={activeMainTab === 'plan' ? 'text-amber-400' : 'text-slate-500 dark:text-slate-400'} />
             <span>{selectedYear} Plan & Target Rounds</span>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-white/20">
+            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+              activeMainTab === 'plan' 
+                ? 'bg-white/20 text-white' 
+                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-600'
+            }`}>
               {targetsWithExecution.length}
             </span>
           </button>
@@ -730,33 +734,32 @@ export const AnnualTrainingPlanPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveMainTab('achievements')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all duration-200 cursor-pointer active:scale-[0.98] ${
               activeMainTab === 'achievements'
-                ? 'bg-[#002D62] text-white shadow-sm dark:bg-blue-900 dark:text-white'
-                : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                ? 'bg-[#002D62] text-white shadow-md shadow-[#002D62]/25 dark:bg-blue-900 dark:text-white ring-1 ring-white/10'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-xs hover:text-slate-950 dark:hover:text-white'
             }`}
           >
-            <TrendingUp size={16} />
+            <TrendingUp size={16} className={activeMainTab === 'achievements' ? 'text-emerald-400' : 'text-slate-500 dark:text-slate-400'} />
             <span>Progress & Achievements</span>
-            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-              overallCompletionRate >= 70 ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-950'
-            }`}>
-              {overallCompletionRate}%
-            </span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveMainTab('audienceMatrix')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all duration-200 cursor-pointer active:scale-[0.98] ${
               activeMainTab === 'audienceMatrix'
-                ? 'bg-[#002D62] text-white shadow-sm dark:bg-blue-900 dark:text-white'
-                : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                ? 'bg-[#002D62] text-white shadow-md shadow-[#002D62]/25 dark:bg-blue-900 dark:text-white ring-1 ring-white/10'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-xs hover:text-slate-950 dark:hover:text-white'
             }`}
           >
-            <BarChart3 size={16} />
+            <BarChart3 size={16} className={activeMainTab === 'audienceMatrix' ? 'text-[#FFC000]' : 'text-slate-500 dark:text-slate-400'} />
             <span>Audience Analysis Matrix</span>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFC000] text-[#001D42]">
+            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+              activeMainTab === 'audienceMatrix'
+                ? 'bg-[#FFC000] text-[#001D42]'
+                : 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60'
+            }`}>
               {audienceMatrix.totals.participants.planned} Trainees
             </span>
           </button>
@@ -1003,7 +1006,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
 
             <div className="flex items-center gap-3 shrink-0 bg-white dark:bg-slate-800/90 p-3 rounded-xl border border-blue-200/80 dark:border-slate-700 shadow-2xs">
               <div className="text-center px-2">
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">YTD Progress %</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Time-Paced %</span>
                 <span className="text-xl sm:text-2xl font-black text-[#002D62] dark:text-amber-300">{pacedCompletionRate !== null ? `${pacedCompletionRate}%` : '---'}</span>
               </div>
               <div className="h-8 w-px bg-slate-200 dark:bg-slate-700" />

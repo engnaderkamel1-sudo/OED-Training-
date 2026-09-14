@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.3.0",
-  releaseName: "Executive Training Analysis Matrix & Audience Breakdown",
+  version: "1.3.1",
+  releaseName: "Refined Tab Affordance & Time-Paced Progress Metrics",
   buildDate: "2026",
   buildTimestamp: "2026",
   
