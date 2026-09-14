@@ -171,16 +171,96 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     });
   }, [targetsWithExecution, selectedQuarter, activeMainTab, achievementFilter, searchQuery]);
 
-  // Overall Plan Metrics
+  // -------------------------------------------------------------
+  // Dual Progress Metrics: Cumulative Annual vs Time-Paced YTD
+  // -------------------------------------------------------------
+  const now = new Date();
+  const currentRealYear = now.getFullYear();
+  const currentRealMonth = now.getMonth() + 1; // 1 to 12
+  const monthNamesAr = [
+    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 
+    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+  ];
+  const currentMonthName = isAr ? monthNamesAr[currentRealMonth - 1] : now.toLocaleString('en-US', { month: 'long' });
+  const currentRealQuarter: 'Q1' | 'Q2' | 'Q3' | 'Q4' = 
+    currentRealMonth <= 3 ? 'Q1' : currentRealMonth <= 6 ? 'Q2' : currentRealMonth <= 9 ? 'Q3' : 'Q4';
+
+  const quarterIndex: Record<string, number> = { 'Q1': 1, 'Q2': 2, 'Q3': 3, 'Q4': 4 };
+  const currentQuarterNum = quarterIndex[currentRealQuarter];
+
+  let elapsedMonths = 12;
+  let timeFraction = 1;
+  let isCurrentYearPlan = false;
+  if (selectedYear === currentRealYear) {
+    elapsedMonths = currentRealMonth;
+    timeFraction = elapsedMonths / 12;
+    isCurrentYearPlan = true;
+  } else if (selectedYear > currentRealYear) {
+    elapsedMonths = 0;
+    timeFraction = 0;
+    isCurrentYearPlan = false;
+  } else {
+    elapsedMonths = 12;
+    timeFraction = 1;
+    isCurrentYearPlan = false;
+  }
+
+  // Total Target Rounds & Actual Completed Rounds
   const totalTargetRounds = targetsWithExecution.reduce((acc, t) => acc + t.targetRounds, 0);
   const totalCompletedRounds = targetsWithExecution.reduce((acc, t) => acc + t.completedRounds, 0);
   const totalRemainingRounds = targetsWithExecution.reduce((acc, t) => acc + t.remainingRounds, 0);
   const totalScheduledRounds = targetsWithExecution.reduce((acc, t) => acc + t.scheduledRounds, 0);
+
+  // 1. Overall Cumulative Annual Completion Rate (%)
   const overallCompletionRate = totalTargetRounds > 0 ? Math.min(100, Math.round((totalCompletedRounds / totalTargetRounds) * 100)) : 0;
+
+  // 2. Expected Paced Rounds to Date (المستهدف الزمني المطلوب إنجازه حتى اليوم)
+  const expectedRoundsYTD = timeFraction > 0 ? Math.max(1, Math.round(totalTargetRounds * timeFraction)) : 0;
+
+  // 3. Time-Paced Progress Rate (نسبة الإنجاز الزمني مقارنة بالمستهدف حتى اليوم)
+  const pacedCompletionRate = expectedRoundsYTD > 0 
+    ? Math.round((totalCompletedRounds / expectedRoundsYTD) * 100)
+    : 0;
 
   const countCompletedCourses = targetsWithExecution.filter(t => t.executionStatus === 'completed').length;
   const countInProgressCourses = targetsWithExecution.filter(t => t.executionStatus === 'in_progress').length;
   const countRemainingCourses = targetsWithExecution.filter(t => t.executionStatus === 'remaining').length;
+
+  const paceStatus = useMemo(() => {
+    if (!isCurrentYearPlan) {
+      if (selectedYear < currentRealYear) {
+        return {
+          label: isAr ? 'خطة سابقة مكتملة' : 'Archived Plan',
+          color: 'text-slate-400',
+          badge: 'bg-slate-700 text-slate-200'
+        };
+      }
+      return {
+        label: isAr ? 'خطة قادمة لم تبدأ' : 'Upcoming Plan',
+        color: 'text-blue-300',
+        badge: 'bg-blue-900/60 text-blue-200'
+      };
+    }
+    if (pacedCompletionRate >= 100) {
+      return {
+        label: isAr ? `⭐ ملتزم بالخطة الزمنية (100% حتى ${currentMonthName})` : `100% On Schedule (Thru ${currentMonthName})`,
+        color: 'text-emerald-400',
+        badge: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+      };
+    } else if (pacedCompletionRate >= 80) {
+      return {
+        label: isAr ? `🟢 أداء جيد ومقارب للخطة (حتى ${currentMonthName})` : `Near Target Pace (Thru ${currentMonthName})`,
+        color: 'text-[#FFC000]',
+        badge: 'bg-[#FFC000]/20 text-[#FFC000] border border-[#FFC000]/30'
+      };
+    } else {
+      return {
+        label: isAr ? `🟡 متأخر عن الخطة الزمنية حتى ${currentMonthName}` : `Behind Schedule (Thru ${currentMonthName})`,
+        color: 'text-amber-400',
+        badge: 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+      };
+    }
+  }, [isCurrentYearPlan, selectedYear, currentRealYear, pacedCompletionRate, currentMonthName, isAr]);
 
   // Track Meta & Colors
   const getTrackMeta = (track: AnnualPlanCourseTarget['track']) => {
@@ -394,35 +474,103 @@ export const AnnualTrainingPlanPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Executive KPI Summary Strip */}
+        {/* Executive KPI Summary Strip: Dual Metric (Paced vs Cumulative) */}
         <div className="mt-6 pt-5 border-t border-white/15 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-            <span className="text-xs text-slate-300 font-semibold block">{isAr ? 'إجمالي الدورات المستهدفة' : 'Target Rounds'}</span>
-            <span className="text-xl sm:text-2xl font-black text-[#FFC000] mt-0.5 block">{totalTargetRounds} {isAr ? 'دورة' : 'Rounds'}</span>
-            <span className="text-[11px] text-slate-400">{targetsWithExecution.length} {isAr ? 'برامج معتمدة' : 'Programs'}</span>
-          </div>
-
-          <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-            <span className="text-xs text-slate-300 font-semibold block">{isAr ? 'الدورات المنفذة فعلياً' : 'Completed Rounds'}</span>
-            <span className="text-xl sm:text-2xl font-black text-white mt-0.5 block">{totalCompletedRounds} {isAr ? 'دورة' : 'Rounds'}</span>
-            <span className="text-[11px] text-slate-400">{countCompletedCourses} {isAr ? 'كورسات اكتملت بالكامل' : 'Fully Completed'}</span>
-          </div>
-
-          <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-            <span className="text-xs text-slate-300 font-semibold block">{isAr ? 'الدورات المتبقية للتنفيذ' : 'Remaining Rounds'}</span>
-            <span className="text-xl sm:text-2xl font-black text-amber-300 mt-0.5 block">{totalRemainingRounds} {isAr ? 'دورة' : 'Rounds'}</span>
-            <span className="text-[11px] text-slate-400">{totalScheduledRounds} {isAr ? 'دورات مجدولة حالياً' : 'Currently Scheduled'}</span>
-          </div>
-
-          <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-            <span className="text-xs text-slate-300 font-semibold block">{isAr ? 'نسبة الإنجاز العامة' : 'Completion Rate'}</span>
-            <span className="text-xl sm:text-2xl font-black text-white mt-0.5 block">{overallCompletionRate}%</span>
-            <div className="w-full bg-white/20 h-1.5 rounded-full mt-1.5 overflow-hidden">
-              <div 
-                className="bg-[#FFC000] h-full rounded-full transition-all duration-500" 
-                style={{ width: `${overallCompletionRate}%` }} 
-              />
+          {/* Card 1: Time-Paced Completion Rate (المعدل الزمني التراكمي حتى الشهر الحالي) */}
+          <div className="bg-white/10 rounded-xl p-3 border border-white/20 shadow-xs relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[11px] text-slate-200 font-bold flex items-center gap-1">
+                  <span>⏱️</span>
+                  <span>{isAr ? `الإنجاز الزمني (حتى ${currentMonthName})` : `Paced Pace (Thru ${currentMonthName})`}</span>
+                </span>
+                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${paceStatus.badge}`}>
+                  {paceStatus.label.split(' ')[0]}
+                </span>
+              </div>
+              <div className="mt-1 flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-black text-[#FFC000]">
+                  {pacedCompletionRate}%
+                </span>
+                <span className="text-[11px] text-slate-300 font-medium">
+                  ({totalCompletedRounds} / {expectedRoundsYTD} {isAr ? 'دورة' : 'rnd'})
+                </span>
+              </div>
             </div>
+            <div className="mt-2">
+              <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    pacedCompletionRate >= 100 ? 'bg-emerald-400' : pacedCompletionRate >= 80 ? 'bg-[#FFC000]' : 'bg-amber-400'
+                  }`}
+                  style={{ width: `${Math.min(100, pacedCompletionRate)}%` }} 
+                />
+              </div>
+              <span className="text-[10px] text-slate-300 block mt-1">
+                {isAr ? `المستهدف حتى نهاية ${currentMonthName}: ${expectedRoundsYTD} دورة` : `YTD Target: ${expectedRoundsYTD} rounds`}
+              </span>
+            </div>
+          </div>
+
+          {/* Card 2: Cumulative Annual Full-Year Completion Rate (نسبة الإنجاز السنوية الكلية) */}
+          <div className="bg-white/5 rounded-xl p-3 border border-white/10 flex flex-col justify-between">
+            <div>
+              <span className="text-[11px] text-slate-300 font-bold flex items-center gap-1">
+                <span>📈</span>
+                <span>{isAr ? 'الإنجاز السنوي الكلي (12 شهر)' : 'Full Year Completion (12M)'}</span>
+              </span>
+              <div className="mt-1 flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-black text-white">
+                  {overallCompletionRate}%
+                </span>
+                <span className="text-[11px] text-slate-300 font-medium">
+                  ({totalCompletedRounds} / {totalTargetRounds})
+                </span>
+              </div>
+            </div>
+            <div className="mt-2">
+              <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
+                <div 
+                  className="bg-white h-full rounded-full transition-all duration-500" 
+                  style={{ width: `${overallCompletionRate}%` }} 
+                />
+              </div>
+              <span className="text-[10px] text-slate-300 block mt-1">
+                {isAr ? `إجمالي العام: ${totalCompletedRounds} من ${totalTargetRounds} دورة` : `Total Year: ${totalCompletedRounds} of ${totalTargetRounds}`}
+              </span>
+            </div>
+          </div>
+
+          {/* Card 3: Target Total Rounds */}
+          <div className="bg-white/5 rounded-xl p-3 border border-white/10 flex flex-col justify-between">
+            <div>
+              <span className="text-[11px] text-slate-300 font-bold flex items-center gap-1">
+                <span>🎯</span>
+                <span>{isAr ? 'إجمالي مستهدف العام' : 'Full Year Plan Target'}</span>
+              </span>
+              <span className="text-2xl sm:text-3xl font-black text-[#FFC000] mt-1 block">
+                {totalTargetRounds} <span className="text-xs font-bold text-slate-300">{isAr ? 'دورة' : 'Rounds'}</span>
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-300 block mt-2">
+              {targetsWithExecution.length} {isAr ? 'برامج تدريبية معتمدة' : 'Approved Programs'}
+            </span>
+          </div>
+
+          {/* Card 4: Remaining Rounds */}
+          <div className="bg-white/5 rounded-xl p-3 border border-white/10 flex flex-col justify-between">
+            <div>
+              <span className="text-[11px] text-slate-300 font-bold flex items-center gap-1">
+                <span>⏳</span>
+                <span>{isAr ? 'الدورات المتبقية للتنفيذ' : 'Remaining Target Rounds'}</span>
+              </span>
+              <span className="text-2xl sm:text-3xl font-black text-amber-300 mt-1 block">
+                {totalRemainingRounds} <span className="text-xs font-bold text-slate-300">{isAr ? 'دورة' : 'Rounds'}</span>
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-300 block mt-2">
+              {totalScheduledRounds} {isAr ? 'دورات مجدولة حالياً' : 'Currently Scheduled'}
+            </span>
           </div>
         </div>
       </div>
@@ -657,6 +805,38 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       {/* 5. TAB CONTENT 2: Progress & Achievements Tracker */}
       {activeMainTab === 'achievements' && (
         <div className="space-y-4">
+          {/* Schedule Alignment Callout Banner (شرح التوافق الزمني وحساب نسبة الإنجاز) */}
+          <div className="bg-gradient-to-r from-[#002D62] to-[#001833] rounded-2xl p-4 sm:p-5 text-white shadow-sm border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-base sm:text-lg">⏱️</span>
+                <h3 className="font-black text-sm sm:text-base text-white">
+                  {isAr ? `المتابعة الزمنية الذكية لشهر ${currentMonthName} (${currentRealQuarter})` : `Intelligent Schedule Pacing for ${currentMonthName} (${currentRealQuarter})`}
+                </h3>
+                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${paceStatus.badge}`}>
+                  {paceStatus.label}
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed max-w-3xl">
+                {isAr
+                  ? `بناءً على الخطة الزمنية المنقضية (${elapsedMonths} من 12 شهراً)، المستهدف الزمني المطلوب إنجازه حتى اليوم هو ${expectedRoundsYTD} دورة تدريبية. إنجازكم الفعلي (${totalCompletedRounds} دورة) يمثل التزاماً بنسبة ${pacedCompletionRate}% من المستهدف الزمني، في حين تبلغ نسبة التحقيق السنوية الكلية ${overallCompletionRate}%.`
+                  : `Based on the elapsed time (${elapsedMonths} of 12 months), the expected YTD target is ${expectedRoundsYTD} rounds. Actual execution (${totalCompletedRounds} rounds) represents ${pacedCompletionRate}% schedule compliance, while total annual completion stands at ${overallCompletionRate}%.`}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0 bg-white/10 p-3 rounded-xl border border-white/15">
+              <div className="text-center px-2">
+                <span className="text-[10px] text-slate-300 block">{isAr ? 'الإنجاز الزمني' : 'Paced Pace'}</span>
+                <span className="text-xl sm:text-2xl font-black text-[#FFC000]">{pacedCompletionRate}%</span>
+              </div>
+              <div className="h-8 w-px bg-white/20" />
+              <div className="text-center px-2">
+                <span className="text-[10px] text-slate-300 block">{isAr ? 'السنوي الكلي' : 'Annual Total'}</span>
+                <span className="text-xl sm:text-2xl font-black text-white">{overallCompletionRate}%</span>
+              </div>
+            </div>
+          </div>
+
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left rtl:text-right border-collapse text-xs">
@@ -664,6 +844,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                   <tr>
                     <th className="py-3.5 px-4">{isAr ? 'اسم البرنامج التدريبي' : 'Training Program'}</th>
                     <th className="py-3.5 px-4 text-center">{isAr ? 'الفصل' : 'Quarter'}</th>
+                    <th className="py-3.5 px-4 text-center">{isAr ? 'الموقف الزمني' : 'Schedule Pace'}</th>
                     <th className="py-3.5 px-4 text-center">{isAr ? 'المستهدف' : 'Target'}</th>
                     <th className="py-3.5 px-4 text-center">{isAr ? 'المنفذ فعلياً' : 'Completed'}</th>
                     <th className="py-3.5 px-4 text-center">{isAr ? 'المتبقي' : 'Remaining'}</th>
@@ -675,6 +856,42 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {filteredTargets.map(t => {
                     const track = getTrackMeta(t.track);
+                    const qNum = quarterIndex[t.quarter] || 1;
+                    
+                    // Schedule alignment evaluation
+                    let scheduleBadge = {
+                      text: isAr ? '✓ مكتمل' : '✓ Completed',
+                      classes: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                    };
+                    if (t.executionStatus === 'completed') {
+                      scheduleBadge = {
+                        text: isAr ? '✓ مكتمل' : '✓ Completed',
+                        classes: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                      };
+                    } else if (isCurrentYearPlan) {
+                      if (qNum < currentQuarterNum) {
+                        scheduleBadge = {
+                          text: isAr ? '⚠️ متأخر عن الفصل' : '⚠️ Past Quarter',
+                          classes: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                        };
+                      } else if (qNum === currentQuarterNum) {
+                        scheduleBadge = {
+                          text: isAr ? '⚡ جاري في الربع الحالي' : '⚡ Current Quarter',
+                          classes: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                        };
+                      } else {
+                        scheduleBadge = {
+                          text: isAr ? '📅 مقرر لاحقاً' : '📅 Upcoming',
+                          classes: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                        };
+                      }
+                    } else {
+                      scheduleBadge = {
+                        text: selectedYear < currentRealYear ? (isAr ? 'منتهي' : 'Archived') : (isAr ? 'قادم' : 'Upcoming'),
+                        classes: 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                      };
+                    }
+
                     return (
                       <tr 
                         key={t.id}
@@ -693,6 +910,12 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                         <td className="py-3.5 px-4 text-center">
                           <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-black text-slate-700 dark:text-slate-300">
                             {t.quarter}
+                          </span>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-center">
+                          <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold ${scheduleBadge.classes}`}>
+                            {scheduleBadge.text}
                           </span>
                         </td>
 

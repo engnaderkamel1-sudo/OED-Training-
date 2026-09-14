@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.2.0",
-  releaseName: "Annual Training Plan & Progress Tracker Pro Max",
+  version: "1.2.1",
+  releaseName: "Annual Training Plan & Time-Paced Dual Metric Pro Max",
   buildDate: "2026",
   buildTimestamp: "2026",
   
