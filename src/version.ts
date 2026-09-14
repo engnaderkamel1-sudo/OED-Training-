@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ============================================================================
  * OED-TTMS VERSION & SYSTEM METADATA
  * ============================================================================
@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.0.0",
-  releaseName: "Official Release",
+  version: "1.1.0",
+  releaseName: "Annual Training Plan Release",
   buildDate: "2026",
   buildTimestamp: "2026",
   
