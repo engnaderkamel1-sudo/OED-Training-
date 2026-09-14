@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.2.3",
-  releaseName: "Annual Plan YTD % Metric Standard",
+  version: "1.2.4",
+  releaseName: "Harmonious Light/Dark Palette for Annual Plan",
   buildDate: "2026",
   buildTimestamp: "2026",
   

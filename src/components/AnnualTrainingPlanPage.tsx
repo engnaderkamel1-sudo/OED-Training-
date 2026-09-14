@@ -227,39 +227,39 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         return {
           shortLabel: 'Archived',
           label: 'Archived Plan',
-          badge: 'bg-slate-700/60 text-slate-200 border border-slate-600'
+          badge: 'bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600'
         };
       }
       return {
         shortLabel: 'Upcoming',
         label: 'Upcoming Plan',
-        badge: 'bg-blue-900/60 text-blue-200 border border-blue-700/50'
+        badge: 'bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700/50'
       };
     }
     if (totalTargetRounds === 0) {
       return {
         shortLabel: 'Setup',
         label: 'Plan In Setup',
-        badge: 'bg-slate-700/40 text-slate-300 border border-slate-600'
+        badge: 'bg-slate-100 dark:bg-slate-700/40 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600'
       };
     }
     if (pacedCompletionRate >= 100) {
       return {
         shortLabel: 'On Track',
         label: `100% On Schedule (Thru ${currentMonthName})`,
-        badge: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+        badge: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30'
       };
     } else if (pacedCompletionRate >= 80) {
       return {
         shortLabel: 'Near Target',
         label: `Near Target Pace (Thru ${currentMonthName})`,
-        badge: 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+        badge: 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30'
       };
     } else {
       return {
         shortLabel: 'Behind',
         label: `Behind Schedule (Thru ${currentMonthName})`,
-        badge: 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+        badge: 'bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30'
       };
     }
   }, [isCurrentYearPlan, selectedYear, currentRealYear, pacedCompletionRate, currentMonthName, totalTargetRounds]);
@@ -416,17 +416,17 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     <div className="min-h-screen p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto text-slate-900 dark:text-slate-100">
       
       {/* 1. Executive Orascom Header Banner */}
-      <div className="rounded-2xl bg-gradient-to-r from-[#002D62] via-[#001D42] to-[#0A2244] text-white p-6 sm:p-8 shadow-md border border-blue-900/60 relative overflow-hidden">
+      <div className="rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-6 sm:p-8 shadow-xs border border-slate-200 dark:border-slate-800 relative overflow-hidden transition-colors">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-bold tracking-wide">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-amber-400/20 text-[#002D62] dark:text-amber-300 border border-blue-200 dark:border-amber-400/30 text-xs font-bold tracking-wide">
               <CalendarRange size={13} />
               <span>Equipment Department (OED) — {selectedYear} Annual Training Plan</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#002D62] dark:text-white flex items-center gap-3">
               <span>Annual Training Plan & Achievement Tracking</span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
               Manage approved annual training courses, define round targets per program, and monitor real-time schedule compliance and remaining sessions.
             </p>
           </div>
@@ -434,7 +434,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
           {/* Quick Year Selector & Print Header Action */}
           <div className="flex flex-wrap items-center gap-3 shrink-0 print:hidden">
             {/* Year Selector */}
-            <div className="bg-white/10 rounded-xl p-1 flex items-center gap-1 border border-white/15 backdrop-blur-sm">
+            <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-1 flex items-center gap-1 border border-slate-200 dark:border-slate-700">
               {availableYears.map(yr => (
                 <button
                   key={yr}
@@ -442,8 +442,8 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                   onClick={() => setSelectedYear(yr)}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                     selectedYear === yr
-                      ? 'bg-amber-400 text-slate-950 shadow-sm'
-                      : 'text-white/80 hover:text-white hover:bg-white/10'
+                      ? 'bg-[#002D62] text-white shadow-xs dark:bg-amber-400 dark:text-slate-950'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-[#002D62] dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
                   }`}
                 >
                   {yr}
@@ -453,7 +453,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddYearModalOpen(true)}
-                  className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-amber-300 hover:bg-white/15 transition-all flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#002D62] dark:text-amber-300 hover:bg-white dark:hover:bg-slate-700 transition-all flex items-center gap-1 cursor-pointer"
                   title="Add New Year Plan"
                 >
                   <PlusCircle size={13} />
@@ -465,7 +465,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
             <button
               type="button"
               onClick={handlePrint}
-              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-2 border border-white/20 transition-all cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-2 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
               title="Print Plan Report"
             >
               <Printer size={15} />
@@ -475,12 +475,12 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         </div>
 
         {/* Executive KPI Summary Strip: Dual Metric (Paced vs Cumulative) */}
-        <div className="mt-6 pt-5 border-t border-white/15 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {/* Card 1: Time-Paced Completion Rate */}
-          <div className="bg-white/10 rounded-xl p-3.5 border border-white/20 shadow-xs relative overflow-hidden flex flex-col justify-between backdrop-blur-sm">
+        <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* Card 1: Time-Paced Completion Rate (YTD) */}
+          <div className="bg-blue-50/70 dark:bg-slate-800/90 rounded-xl p-3.5 border border-blue-200/80 dark:border-slate-700 shadow-2xs relative overflow-hidden flex flex-col justify-between transition-colors">
             <div>
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[11px] text-slate-200 font-bold flex items-center gap-1">
+                <span className="text-[11px] text-[#002D62] dark:text-slate-200 font-bold flex items-center gap-1">
                   <span>⏱️</span>
                   <span>YTD % (Thru {currentMonthName})</span>
                 </span>
@@ -489,86 +489,86 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                 </span>
               </div>
               <div className="mt-1.5 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black text-amber-300">
+                <span className="text-2xl sm:text-3xl font-black text-[#002D62] dark:text-amber-300">
                   {pacedCompletionRate}%
                 </span>
-                <span className="text-[11px] text-slate-300 font-medium">
+                <span className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
                   ({totalCompletedRounds} / {expectedRoundsYTD} rounds)
                 </span>
               </div>
             </div>
             <div className="mt-2.5">
-              <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
+              <div className="w-full bg-blue-200/60 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
                 <div 
                   className={`h-full rounded-full transition-all duration-500 ${
-                    pacedCompletionRate >= 100 ? 'bg-emerald-400' : pacedCompletionRate >= 80 ? 'bg-amber-400' : 'bg-rose-400'
+                    pacedCompletionRate >= 100 ? 'bg-emerald-500 dark:bg-emerald-400' : pacedCompletionRate >= 80 ? 'bg-amber-500 dark:bg-amber-400' : 'bg-rose-500 dark:bg-rose-400'
                   }`}
                   style={{ width: `${Math.min(100, pacedCompletionRate)}%` }} 
                 />
               </div>
-              <span className="text-[10px] text-slate-300 block mt-1">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
                 YTD Expected Target: {expectedRoundsYTD} rounds
               </span>
             </div>
           </div>
 
           {/* Card 2: Cumulative Annual Full-Year Completion Rate */}
-          <div className="bg-white/5 rounded-xl p-3.5 border border-white/10 flex flex-col justify-between">
+          <div className="bg-slate-50 dark:bg-slate-800/90 rounded-xl p-3.5 border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-colors">
             <div>
-              <span className="text-[11px] text-slate-300 font-bold flex items-center gap-1">
+              <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1">
                 <span>📈</span>
                 <span>Full Year Target (12 Months)</span>
               </span>
               <div className="mt-1.5 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black text-white">
+                <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
                   {overallCompletionRate}%
                 </span>
-                <span className="text-[11px] text-slate-300 font-medium">
+                <span className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
                   ({totalCompletedRounds} / {totalTargetRounds})
                 </span>
               </div>
             </div>
             <div className="mt-2.5">
-              <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
                 <div 
-                  className="bg-white h-full rounded-full transition-all duration-500" 
+                  className="bg-[#002D62] dark:bg-amber-400 h-full rounded-full transition-all duration-500" 
                   style={{ width: `${overallCompletionRate}%` }} 
                 />
               </div>
-              <span className="text-[10px] text-slate-300 block mt-1">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
                 Annual Progress: {totalCompletedRounds} of {totalTargetRounds} rounds
               </span>
             </div>
           </div>
 
           {/* Card 3: Target Total Rounds */}
-          <div className="bg-white/5 rounded-xl p-3.5 border border-white/10 flex flex-col justify-between">
+          <div className="bg-slate-50 dark:bg-slate-800/90 rounded-xl p-3.5 border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-colors">
             <div>
-              <span className="text-[11px] text-slate-300 font-bold flex items-center gap-1">
+              <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1">
                 <span>🎯</span>
                 <span>Annual Target Rounds</span>
               </span>
-              <span className="text-2xl sm:text-3xl font-black text-amber-300 mt-1.5 block">
-                {totalTargetRounds} <span className="text-xs font-bold text-slate-300">Rounds</span>
+              <span className="text-2xl sm:text-3xl font-black text-[#002D62] dark:text-amber-300 mt-1.5 block">
+                {totalTargetRounds} <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Rounds</span>
               </span>
             </div>
-            <span className="text-[10px] text-slate-300 block mt-2.5">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-2.5">
               {targetsWithExecution.length} Approved Programs
             </span>
           </div>
 
           {/* Card 4: Remaining Rounds */}
-          <div className="bg-white/5 rounded-xl p-3.5 border border-white/10 flex flex-col justify-between">
+          <div className="bg-slate-50 dark:bg-slate-800/90 rounded-xl p-3.5 border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-colors">
             <div>
-              <span className="text-[11px] text-slate-300 font-bold flex items-center gap-1">
+              <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1">
                 <span>⏳</span>
                 <span>Remaining Target Rounds</span>
               </span>
-              <span className="text-2xl sm:text-3xl font-black text-amber-200 mt-1.5 block">
-                {totalRemainingRounds} <span className="text-xs font-bold text-slate-300">Rounds</span>
+              <span className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 mt-1.5 block">
+                {totalRemainingRounds} <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Rounds</span>
               </span>
             </div>
-            <span className="text-[10px] text-slate-300 block mt-2.5">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-2.5">
               {totalScheduledRounds} Currently Scheduled
             </span>
           </div>
@@ -811,31 +811,31 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       {activeMainTab === 'achievements' && (
         <div className="space-y-4">
           {/* Schedule Alignment Callout Banner */}
-          <div className="bg-gradient-to-r from-[#002D62] via-[#001D42] to-[#0A2244] rounded-2xl p-5 text-white shadow-sm border border-blue-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-blue-50/80 dark:bg-slate-900 rounded-2xl p-5 text-slate-900 dark:text-white shadow-xs border border-blue-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-colors">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="text-base sm:text-lg">⏱️</span>
-                <h3 className="font-black text-sm sm:text-base text-white">
+                <h3 className="font-black text-sm sm:text-base text-[#002D62] dark:text-white">
                   Intelligent Schedule Pacing for {currentMonthName} ({currentRealQuarter})
                 </h3>
                 <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${paceStatus.badge}`}>
                   {paceStatus.label}
                 </span>
               </div>
-              <p className="text-xs text-slate-300 leading-relaxed max-w-3xl">
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">
                 Based on the elapsed timeline ({elapsedMonths} of 12 months), the target rounds required to date are {expectedRoundsYTD} rounds. Actual completed sessions ({totalCompletedRounds} rounds) represent a {pacedCompletionRate}% compliance with current schedule targets, while total annual completion stands at {overallCompletionRate}%.
               </p>
             </div>
 
-            <div className="flex items-center gap-3 shrink-0 bg-white/10 p-3 rounded-xl border border-white/15">
+            <div className="flex items-center gap-3 shrink-0 bg-white dark:bg-slate-800/90 p-3 rounded-xl border border-blue-200/80 dark:border-slate-700 shadow-2xs">
               <div className="text-center px-2">
-                <span className="text-[10px] text-slate-300 block font-medium">YTD Progress %</span>
-                <span className="text-xl sm:text-2xl font-black text-amber-300">{pacedCompletionRate}%</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">YTD Progress %</span>
+                <span className="text-xl sm:text-2xl font-black text-[#002D62] dark:text-amber-300">{pacedCompletionRate}%</span>
               </div>
-              <div className="h-8 w-px bg-white/20" />
+              <div className="h-8 w-px bg-slate-200 dark:bg-slate-700" />
               <div className="text-center px-2">
-                <span className="text-[10px] text-slate-300 block font-medium">Annual Total</span>
-                <span className="text-xl sm:text-2xl font-black text-white">{overallCompletionRate}%</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Annual Total</span>
+                <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{overallCompletionRate}%</span>
               </div>
             </div>
           </div>
