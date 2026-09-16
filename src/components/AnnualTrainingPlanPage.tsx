@@ -2570,15 +2570,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Executive Sign-off Footer */}
-                    <div className="pt-4 border-t border-slate-200 dark:border-slate-800 text-center space-y-1">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#002D62] dark:text-amber-300">
-                        OED Technical Training
-                      </div>
-                      <div className="text-[9px] text-slate-400">
-                        Approved Operational Master Plan
-                      </div>
-                    </div>
+
 
                   </div>
                 </div>

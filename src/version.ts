@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.7.2",
-  releaseName: "12-Month Operational Calendar Balance & Awaiting Approval Status",
+  version: "1.7.3",
+  releaseName: "Clean Notes Panel & Streamlined Poster Layout",
   buildDate: "2026",
   buildTimestamp: "2026",
   
