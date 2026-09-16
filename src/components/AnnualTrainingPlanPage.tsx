@@ -562,8 +562,49 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       }
     });
 
+    // Also include any live upcomingSessions for selectedYear that were not matched to an annual plan target
+    const representedSessionIds = new Set(items.map(i => i.matchedSessionId).filter(Boolean));
+    upcomingSessions.forEach((s) => {
+      if (s.id && !representedSessionIds.has(s.id) && !s.isDeleted && s.status !== 'Cancelled') {
+        const sDateStr = s.startDate || (s as any).sessionDate || '';
+        const sYear = sDateStr ? new Date(sDateStr).getFullYear() : selectedYear;
+        if (sYear === selectedYear) {
+          let timingMonth: string | null = null;
+          try {
+            timingMonth = sDateStr ? new Date(sDateStr).toLocaleString('en-US', { month: 'short' }) : null;
+          } catch (e) {}
+          
+          const qNum = sDateStr ? Math.floor(new Date(sDateStr).getMonth() / 3) + 1 : 1;
+          
+          items.push({
+            id: `live_session_${s.id}`,
+            courseTargetId: s.courseId || s.id,
+            courseId: s.courseId || s.id,
+            courseTitle: s.courseTitle || 'Training Session',
+            courseTitleEn: s.courseTitle || 'Training Session',
+            targetAudience: 'engineers',
+            track: 'mechanical',
+            roundIndex: 1,
+            totalPlannedRounds: 1,
+            quarter: `Q${qNum}` as any,
+            plannedTimingNote: timingMonth ? `Scheduled in ${timingMonth}` : undefined,
+            actualDateRange: s.startDate && s.endDate ? `${s.startDate} – ${s.endDate}` : ((s as any).sessionDate || null),
+            actualTimingMonth: timingMonth,
+            isDateChanged: false,
+            status: s.status === 'Completed' ? 'completed' : 'scheduled',
+            plannedTrainees: s.targetParticipants ? (parseInt(s.targetParticipants, 10) || 6) : 6,
+            actualTrainees: s.registeredUsers?.length || 0,
+            matchedSessionId: s.id,
+            matchedSessionNumber: s.sessionNumber,
+            instructorName: (s as any).instructor,
+            location: s.location
+          });
+        }
+      }
+    });
+
     return items;
-  }, [targetsWithExecution]);
+  }, [targetsWithExecution, upcomingSessions, selectedYear]);
 
   const filteredAnnualSessionLineItems = useMemo(() => {
     return annualSessionLineItems.filter(item => {
@@ -2401,7 +2442,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                           return (
                                             <div 
                                               key={`empty_${wIdx}_${dIdx}`} 
-                                              className="min-h-[58px] sm:min-h-[66px] bg-slate-50/40 dark:bg-slate-950/30 opacity-30" 
+                                              className="min-h-[72px] sm:min-h-[82px] bg-slate-50/40 dark:bg-slate-950/30 opacity-30" 
                                             />
                                           );
                                         }
@@ -2415,7 +2456,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                                 setIsHolidayModalOpen(true);
                                               }
                                             }}
-                                            className={`min-h-[58px] sm:min-h-[66px] p-1 pb-6 flex flex-col justify-start transition-colors cursor-pointer relative ${
+                                            className={`min-h-[72px] sm:min-h-[82px] p-1 pb-7 flex flex-col justify-start transition-colors cursor-pointer relative ${
                                               day.hasPublicHoliday 
                                                 ? 'bg-purple-50/90 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 border border-purple-300 dark:border-purple-800/70' 
                                                 : day.hasPersonalVacation
@@ -2447,7 +2488,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                             {/* Directly Visible Official Public Holiday Banner */}
                                             {day.hasPublicHoliday && (
                                               <div 
-                                                className="mt-1 px-1.5 py-0.5 rounded bg-purple-700 text-white text-[7.5px] font-black leading-tight tracking-tight uppercase shadow-2xs flex items-center gap-1 z-10"
+                                                className="mt-1 px-1.5 py-0.5 rounded bg-purple-700 dark:bg-purple-800 text-white text-[7.5px] sm:text-[8px] font-black leading-tight tracking-tight uppercase shadow-2xs flex items-center gap-1 z-10 border border-purple-400/30"
                                                 title={day.holidays?.find((h: any) => h.type === 'public')?.title}
                                               >
                                                 <span className="w-1.5 h-1.5 rounded-full bg-[#FFC000] shrink-0" />
@@ -2460,7 +2501,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                             {/* Directly Visible Personal Vacation Banner */}
                                             {day.hasPersonalVacation && !day.hasPublicHoliday && (
                                               <div 
-                                                className="mt-1 px-1.5 py-0.5 rounded bg-rose-600 text-white text-[7.5px] font-bold leading-tight tracking-tight shadow-2xs flex items-center gap-1 z-10"
+                                                className="mt-1 px-1.5 py-0.5 rounded bg-rose-600 dark:bg-rose-700 text-white text-[7.5px] sm:text-[8px] font-bold leading-tight tracking-tight shadow-2xs flex items-center gap-1 z-10 border border-rose-400/30"
                                                 title={day.holidays?.find((h: any) => h.type === 'personal')?.title}
                                               >
                                                 <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />

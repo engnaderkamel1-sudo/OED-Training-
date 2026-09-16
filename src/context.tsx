@@ -745,7 +745,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   const [localUsers, setLocalUsers] = useState<User[]>(() => (typeof window !== 'undefined' && (sessionStorage.getItem('oed_vip_demo_active') === 'true' || window.location.search.includes('demo='))) ? DEMO_FALLBACK_USERS : []);
   const [localRecords, setLocalRecords] = useState<TrainingRecord[]>([]);
-  const [cleanedData, setCleanedDataState] = useState<CleanedRecord[]>(() => (typeof window !== 'undefined' && (sessionStorage.getItem('oed_vip_demo_active') === 'true' || window.location.search.includes('demo='))) ? DEMO_FALLBACK_CLEANED_RECORDS : []);
+  const [cleanedData, setCleanedDataState] = useState<CleanedRecord[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('oed_cached_cleaned_data');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {}
+      if (sessionStorage.getItem('oed_vip_demo_active') === 'true' || window.location.search.includes('demo=')) {
+        return DEMO_FALLBACK_CLEANED_RECORDS;
+      }
+    }
+    return [];
+  });
+  const [cleanedFileName, setCleanedFileNameState] = useState<string>('');
   const [upcomingSessions, setUpcomingSessionsState] = useState<UpcomingSession[]>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -762,7 +777,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [loginLogs, setLoginLogsState] = useState<LoginLog[]>([]);
   const [suggestions, setSuggestionsState] = useState<Suggestion[]>([]);
   const [handoutRevisions, setHandoutRevisionsState] = useState<HandoutRevision[]>([]);
-  const [firebaseCourses, setFirebaseCoursesState] = useState<Course[]>([]);
+  const [firebaseCourses, setFirebaseCoursesState] = useState<Course[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('oed_cached_courses');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {}
+    }
+    return [];
+  });
   const [annualPlans, setAnnualPlansState] = useState<AnnualYearPlan[]>(() => {
     try {
       const stored = localStorage.getItem('oed_annual_plans');
@@ -787,7 +813,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          const mergedMap = new Map<string, HolidayOrVacation>();
+          DEFAULT_2026_PUBLIC_HOLIDAYS.forEach(h => mergedMap.set(h.id, h));
+          parsed.forEach((h: HolidayOrVacation) => mergedMap.set(h.id, h));
+          return Array.from(mergedMap.values());
         }
       }
     } catch (e) {}
@@ -898,7 +927,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const unsubCourses = onSnapshot(collection(db, "courses"), (snapshot) => {
       const crs: Course[] = [];
       snapshot.forEach((d) => crs.push(d.data() as Course));
-      setFirebaseCoursesState(crs);
+      if (crs.length > 0) {
+        setFirebaseCoursesState(crs);
+        try {
+          localStorage.setItem('oed_cached_courses', JSON.stringify(crs));
+        } catch (e) {}
+      }
     }, (error) => {
       checkQuotaError(error);
       console.error("Firebase Courses Error:", error);
@@ -1057,16 +1091,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
 
     const unsubHolidays = onSnapshot(collection(db, "holidaysAndVacations"), (snapshot) => {
+      const items: HolidayOrVacation[] = [];
       if (!snapshot.empty) {
-        const items: HolidayOrVacation[] = [];
         snapshot.forEach((d) => {
           items.push(d.data() as HolidayOrVacation);
         });
-        setHolidaysAndVacationsState(items);
-        try {
-          localStorage.setItem('oed_holidays_and_vacations', JSON.stringify(items));
-        } catch (e) {}
       }
+      const mergedMap = new Map<string, HolidayOrVacation>();
+      DEFAULT_2026_PUBLIC_HOLIDAYS.forEach(h => mergedMap.set(h.id, h));
+      items.forEach(h => mergedMap.set(h.id, h));
+      const finalHolidays = Array.from(mergedMap.values());
+      
+      setHolidaysAndVacationsState(finalHolidays);
+      try {
+        localStorage.setItem('oed_holidays_and_vacations', JSON.stringify(finalHolidays));
+      } catch (e) {}
     }, (error) => {
       checkQuotaError(error);
       console.warn("Firebase Holidays Error:", error);
@@ -1162,6 +1201,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
 
       setCleanedDataState(data);
+      if (data.length > 0) {
+        try {
+          localStorage.setItem('oed_cached_cleaned_data', JSON.stringify(data));
+        } catch (e) {}
+      }
       setRecordsLoaded(true);
 
       // Auto-calculate and cache global KPIs when full/broad data is fetched
@@ -1562,6 +1606,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const setCleanedData = (data: CleanedRecord[]) => {
+    setCleanedDataState(data);
+    try {
+      localStorage.setItem('oed_cached_cleaned_data', JSON.stringify(data));
+    } catch (e) {}
     const batch = writeBatch(db);
     data.forEach(record => {
       const id = record.id || generateUUID();

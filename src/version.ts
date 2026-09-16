@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.8.3",
-  releaseName: "Always-Visible Holidays & Session Persistence",
+  version: "1.8.4",
+  releaseName: "Always-Visible Official Holidays & Session Data Persistence",
   buildDate: "2026",
   buildTimestamp: "2026",
   
