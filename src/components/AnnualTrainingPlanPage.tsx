@@ -35,9 +35,12 @@ import {
   UploadCloud,
   FileSpreadsheet,
   RefreshCw,
-  FileCheck
+  FileCheck,
+  Palmtree,
+  Flag
 } from 'lucide-react';
 import { AnnualYearPlan, AnnualPlanCourseTarget, Course } from '../types';
+import { HolidaysAndVacationsModal } from './HolidaysAndVacationsModal';
 
 declare const XLSX: any;
 
@@ -50,6 +53,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     annualPlans, 
     saveAnnualPlan, 
     deleteAnnualPlan,
+    holidaysAndVacations,
     setCurrentView,
     theme
   } = useAppContext();
@@ -61,6 +65,16 @@ export const AnnualTrainingPlanPage: React.FC = () => {
   const [activeMainTab, setActiveMainTab] = useState<'plan' | 'annualResults' | 'wallCalendar' | 'achievements' | 'audienceMatrix'>('plan');
   const [annualResultsFilter, setAnnualResultsFilter] = useState<'ALL' | 'COMPLETED' | 'IN_PROGRESS' | 'AWAITING_APPROVAL' | 'PENDING'>('ALL');
   const [selectedCalendarSession, setSelectedCalendarSession] = useState<any | null>(null);
+
+  // Holidays & Vacations Management Modal State
+  const [isHolidayModalOpen, setIsHolidayModalOpen] = useState<boolean>(false);
+  const [holidayModalInitialDate, setHolidayModalInitialDate] = useState<string | undefined>(undefined);
+  const [selectedDayPopover, setSelectedDayPopover] = useState<{
+    dateStr: string;
+    dayNumber: number;
+    monthName: string;
+    holidays: any[];
+  } | null>(null);
 
   // Selected Year State (defaults to current year 2026 or newest)
   const availableYears = useMemo(() => {
@@ -770,12 +784,27 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         const dayOfWeek = new Date(selectedYear, monthIndex, d).getDay();
         const isWorkday = dayOfWeek >= 0 && dayOfWeek <= 4;
 
+        // Find any active public holiday or personal vacation on this date
+        const matchingHolidays = holidaysAndVacations.filter(h => {
+          if (dateStr < h.startDate || dateStr > h.endDate) return false;
+          if (h.type === 'public') return true;
+          // personal vacation
+          if (isAdmin) return true;
+          return h.userId === user?.id;
+        });
+
+        const hasPublicHoliday = matchingHolidays.some(h => h.type === 'public');
+        const hasPersonalVacation = matchingHolidays.some(h => h.type === 'personal');
+
         flatCells.push({
           dayNumber: d,
           dateStr,
           dayOfWeek,
-          isWorkday
-        });
+          isWorkday,
+          holidays: matchingHolidays,
+          hasPublicHoliday,
+          hasPersonalVacation
+        } as any);
       }
 
       // Complete to full 7-day weeks (35 or 42 cells)
@@ -897,7 +926,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         monthSessions
       };
     });
-  }, [selectedYear, annualSessionLineItems]);
+  }, [selectedYear, annualSessionLineItems, holidaysAndVacations, user?.id, isAdmin]);
 
   // -------------------------------------------------------------
   // Handlers: Year Creation, Plan Clone & Target CRUD
@@ -2273,6 +2302,17 @@ export const AnnualTrainingPlanPage: React.FC = () => {
               <div className="flex items-center gap-2.5 print:hidden">
                 <button
                   type="button"
+                  onClick={() => {
+                    setHolidayModalInitialDate(undefined);
+                    setIsHolidayModalOpen(true);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-2 border border-purple-400 shadow-sm transition-all cursor-pointer active:scale-95"
+                >
+                  <Palmtree size={14} className="text-[#FFC000]" />
+                  <span>Holidays & Vacations</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => setActiveMainTab('annualResults')}
                   className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-2 border border-white/20 transition-all cursor-pointer backdrop-blur-xs"
                 >
@@ -2369,11 +2409,40 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                         return (
                                           <div
                                             key={`day_${wIdx}_${day.dayNumber}`}
-                                            className="h-10 sm:h-12 p-1 flex flex-col justify-start bg-white dark:bg-slate-900 transition-colors"
+                                            onClick={() => {
+                                              if (day.dateStr) {
+                                                setHolidayModalInitialDate(day.dateStr);
+                                                setIsHolidayModalOpen(true);
+                                              }
+                                            }}
+                                            className={`h-10 sm:h-12 p-1 flex flex-col justify-start transition-colors cursor-pointer relative ${
+                                              day.hasPublicHoliday 
+                                                ? 'bg-purple-50/85 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800/60' 
+                                                : day.hasPersonalVacation
+                                                ? 'bg-rose-50/85 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800/60'
+                                                : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                                            }`}
+                                            title={
+                                              day.holidays && day.holidays.length > 0
+                                                ? day.holidays.map((h: any) => `${h.type === 'public' ? 'Public Holiday' : 'Personal Vacation'}: ${h.title}`).join(' | ')
+                                                : `Click to view or add vacation on ${day.dateStr}`
+                                            }
                                           >
-                                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                                              {day.dayNumber}
-                                            </span>
+                                            <div className="flex items-center justify-between w-full">
+                                              <span className={`text-[10px] font-bold ${
+                                                day.hasPublicHoliday ? 'text-purple-700 dark:text-purple-300 font-black' :
+                                                day.hasPersonalVacation ? 'text-rose-600 dark:text-rose-400 font-black' :
+                                                'text-slate-500 dark:text-slate-400'
+                                              }`}>
+                                                {day.dayNumber}
+                                              </span>
+                                              {day.hasPublicHoliday && (
+                                                <span className="w-1.5 h-1.5 rounded-full bg-purple-600 dark:bg-purple-400 shrink-0" title="Public Holiday" />
+                                              )}
+                                              {day.hasPersonalVacation && !day.hasPublicHoliday && (
+                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 dark:bg-rose-400 shrink-0" title="Personal Vacation" />
+                                              )}
+                                            </div>
                                           </div>
                                         );
                                       })}
@@ -2546,6 +2615,26 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                       </div>
                       <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-5">
                         Targeted in annual operational plan.
+                      </p>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="w-3.5 h-3.5 rounded bg-purple-600 border border-purple-700 shrink-0" />
+                        <span className="text-xs font-bold text-purple-900 dark:text-purple-300">
+                          Official Public Holiday
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-5">
+                        National or religious statutory holiday.
+                      </p>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="w-3.5 h-3.5 rounded bg-rose-500 border border-rose-600 shrink-0" />
+                        <span className="text-xs font-bold text-rose-800 dark:text-rose-300">
+                          Personal Vacation
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-5">
+                        Approved annual, casual, or personal leave.
                       </p>
                     </div>
 
@@ -3665,6 +3754,17 @@ export const AnnualTrainingPlanPage: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Holidays & Vacations Management Modal */}
+      <HolidaysAndVacationsModal
+        isOpen={isHolidayModalOpen}
+        onClose={() => {
+          setIsHolidayModalOpen(false);
+          setHolidayModalInitialDate(undefined);
+        }}
+        selectedYear={selectedYear}
+        initialDate={holidayModalInitialDate}
+      />
     </div>
   );
 };

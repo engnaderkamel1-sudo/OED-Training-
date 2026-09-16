@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { Language, User, Role, Course, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement, LoginLog, Suggestion, HandoutRevision, AnnualYearPlan, AnnualPlanCourseTarget } from './types';
+import { Language, User, Role, Course, TrainingRecord, CleanedRecord, UpcomingSession, SystemAnnouncement, LoginLog, Suggestion, HandoutRevision, AnnualYearPlan, AnnualPlanCourseTarget, HolidayOrVacation } from './types';
 import { translations } from './i18n';
 import { collection, onSnapshot, doc, getDoc, setDoc, writeBatch, deleteDoc, getDocs, query, where, limit } from 'firebase/firestore';
 import { db } from './firebase';
@@ -64,6 +64,10 @@ interface AppContextType {
   annualPlans: AnnualYearPlan[];
   saveAnnualPlan: (plan: AnnualYearPlan) => Promise<void>;
   deleteAnnualPlan: (planId: string) => Promise<void>;
+  holidaysAndVacations: HolidayOrVacation[];
+  addHolidayOrVacation: (item: Omit<HolidayOrVacation, 'id' | 'createdAt'>) => Promise<void>;
+  updateHolidayOrVacation: (id: string, updates: Partial<HolidayOrVacation>) => Promise<void>;
+  deleteHolidayOrVacation: (id: string) => Promise<void>;
   debugRole: Role;
   setDebugRole: (role: Role) => void;
   t: (key: keyof typeof translations['en']) => string;
@@ -497,6 +501,129 @@ export const DEFAULT_CERTIFIED_2026_PLAN: AnnualYearPlan = {
   targets: DEFAULT_CERTIFIED_2026_TARGETS
 };
 
+export const DEFAULT_2026_PUBLIC_HOLIDAYS: HolidayOrVacation[] = [
+  {
+    id: 'hol_2026_coptic_xmas',
+    title: 'Coptic Christmas',
+    type: 'public',
+    category: 'religious_holiday',
+    startDate: '2026-01-07',
+    endDate: '2026-01-07',
+    year: 2026,
+    notes: 'Official National Holiday'
+  },
+  {
+    id: 'hol_2026_rev_jan25',
+    title: '25th of January Revolution & Police Day',
+    type: 'public',
+    category: 'national_holiday',
+    startDate: '2026-01-25',
+    endDate: '2026-01-25',
+    year: 2026,
+    notes: 'Official National Holiday'
+  },
+  {
+    id: 'hol_2026_eid_fitr',
+    title: 'Eid Al-Fitr Holiday',
+    type: 'public',
+    category: 'religious_holiday',
+    startDate: '2026-03-20',
+    endDate: '2026-03-23',
+    year: 2026,
+    notes: 'Official Multi-Day Holiday'
+  },
+  {
+    id: 'hol_2026_sinai_liberation',
+    title: 'Sinai Liberation Day',
+    type: 'public',
+    category: 'national_holiday',
+    startDate: '2026-04-25',
+    endDate: '2026-04-25',
+    year: 2026,
+    notes: 'Official National Holiday'
+  },
+  {
+    id: 'hol_2026_labour_day',
+    title: 'Labour Day',
+    type: 'public',
+    category: 'national_holiday',
+    startDate: '2026-05-01',
+    endDate: '2026-05-01',
+    year: 2026,
+    notes: 'Official National Holiday'
+  },
+  {
+    id: 'hol_2026_sham_el_nessim',
+    title: 'Sham El-Nessim Spring Festival',
+    type: 'public',
+    category: 'national_holiday',
+    startDate: '2026-05-04',
+    endDate: '2026-05-04',
+    year: 2026,
+    notes: 'Official National Holiday'
+  },
+  {
+    id: 'hol_2026_eid_adha',
+    title: 'Eid Al-Adha Holiday',
+    type: 'public',
+    category: 'religious_holiday',
+    startDate: '2026-05-27',
+    endDate: '2026-05-31',
+    year: 2026,
+    notes: 'Official Multi-Day Holiday'
+  },
+  {
+    id: 'hol_2026_islamic_new_year',
+    title: 'Islamic New Year',
+    type: 'public',
+    category: 'religious_holiday',
+    startDate: '2026-06-16',
+    endDate: '2026-06-16',
+    year: 2026,
+    notes: 'Official Religious Holiday'
+  },
+  {
+    id: 'hol_2026_revolution_june30',
+    title: '30th of June Revolution',
+    type: 'public',
+    category: 'national_holiday',
+    startDate: '2026-06-30',
+    endDate: '2026-06-30',
+    year: 2026,
+    notes: 'Official National Holiday'
+  },
+  {
+    id: 'hol_2026_revolution_july23',
+    title: '23rd of July Revolution Day',
+    type: 'public',
+    category: 'national_holiday',
+    startDate: '2026-07-23',
+    endDate: '2026-07-23',
+    year: 2026,
+    notes: 'Official National Holiday'
+  },
+  {
+    id: 'hol_2026_prophet_birthday',
+    title: 'Prophet Muhammad Birthday (Mawlid)',
+    type: 'public',
+    category: 'religious_holiday',
+    startDate: '2026-08-25',
+    endDate: '2026-08-25',
+    year: 2026,
+    notes: 'Official Religious Holiday'
+  },
+  {
+    id: 'hol_2026_armed_forces_day',
+    title: 'Armed Forces Day (6th of October Victory)',
+    type: 'public',
+    category: 'national_holiday',
+    startDate: '2026-10-06',
+    endDate: '2026-10-06',
+    year: 2026,
+    notes: 'Official National Holiday'
+  }
+];
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -642,6 +769,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     } catch (e) {}
     return [DEFAULT_CERTIFIED_2026_PLAN];
+  });
+
+  const [holidaysAndVacations, setHolidaysAndVacationsState] = useState<HolidayOrVacation[]>(() => {
+    try {
+      const stored = localStorage.getItem('oed_holidays_and_vacations');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return DEFAULT_2026_PUBLIC_HOLIDAYS;
   });
 
   const [debugRole, setDebugRole] = useState<Role>(null);
@@ -901,6 +1041,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.warn("Firebase Annual Plans Error:", error);
     });
 
+    const unsubHolidays = onSnapshot(collection(db, "holidaysAndVacations"), (snapshot) => {
+      if (!snapshot.empty) {
+        const items: HolidayOrVacation[] = [];
+        snapshot.forEach((d) => {
+          items.push(d.data() as HolidayOrVacation);
+        });
+        setHolidaysAndVacationsState(items);
+        try {
+          localStorage.setItem('oed_holidays_and_vacations', JSON.stringify(items));
+        } catch (e) {}
+      }
+    }, (error) => {
+      checkQuotaError(error);
+      console.warn("Firebase Holidays Error:", error);
+    });
+
     return () => {
       unsubUsers();
       unsubCourses();
@@ -911,6 +1067,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       unsubVersion();
       unsubKPIs();
       unsubAnnualPlans();
+      unsubHolidays();
     };
   }, [user?.id, user?.role]);
 
@@ -1730,6 +1887,64 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const addHolidayOrVacation = async (item: Omit<HolidayOrVacation, 'id' | 'createdAt'>) => {
+    const id = `hol_${generateUUID().substring(0, 10)}`;
+    const fullItem: HolidayOrVacation = {
+      ...item,
+      id,
+      createdAt: new Date().toISOString()
+    };
+    const cleanItem = Object.fromEntries(Object.entries(fullItem).filter(([_, v]) => v !== undefined)) as HolidayOrVacation;
+
+    setHolidaysAndVacationsState(prev => {
+      const updated = [...prev.filter(h => h.id !== id), cleanItem];
+      try {
+        localStorage.setItem('oed_holidays_and_vacations', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    try {
+      await setDoc(doc(db, "holidaysAndVacations", id), cleanItem);
+    } catch (e) {
+      console.warn("Firestore save holiday error:", e);
+    }
+  };
+
+  const updateHolidayOrVacation = async (id: string, updates: Partial<HolidayOrVacation>) => {
+    const cleanUpdates = Object.fromEntries(Object.entries(updates).filter(([_, v]) => v !== undefined));
+
+    setHolidaysAndVacationsState(prev => {
+      const updated = prev.map(h => h.id === id ? { ...h, ...cleanUpdates } as HolidayOrVacation : h);
+      try {
+        localStorage.setItem('oed_holidays_and_vacations', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    try {
+      await setDoc(doc(db, "holidaysAndVacations", id), cleanUpdates, { merge: true });
+    } catch (e) {
+      console.warn("Firestore update holiday error:", e);
+    }
+  };
+
+  const deleteHolidayOrVacation = async (id: string) => {
+    setHolidaysAndVacationsState(prev => {
+      const updated = prev.filter(h => h.id !== id);
+      try {
+        localStorage.setItem('oed_holidays_and_vacations', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    try {
+      await deleteDoc(doc(db, "holidaysAndVacations", id));
+    } catch (e) {
+      console.warn("Firestore delete holiday error:", e);
+    }
+  };
+
   return (
     <AppContext.Provider value={{ 
       language, setLanguage, 
@@ -1742,6 +1957,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       uniqueDepartments,
       courses, addCourse, updateCourse, deleteCourse,
       annualPlans, saveAnnualPlan, deleteAnnualPlan,
+      holidaysAndVacations, addHolidayOrVacation, updateHolidayOrVacation, deleteHolidayOrVacation,
       upcomingSessions, setUpcomingSessions,
       addUpcomingSession, updateUpcomingSession, deleteUpcomingSession, restoreUpcomingSession,
       cancelSession, reactivateSession, registerTrainee, unregisterTrainee,

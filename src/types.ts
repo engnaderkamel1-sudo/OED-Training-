@@ -240,3 +240,29 @@ export interface AnnualYearPlan {
   createdAt?: string;
   updatedAt?: string;
 }
+
+// --- Official Public Holidays & Personal Vacations ---
+export type HolidayType = 'public' | 'personal';
+export type VacationCategory = 
+  | 'national_holiday' 
+  | 'religious_holiday' 
+  | 'annual_leave' 
+  | 'casual_leave' 
+  | 'sick_leave' 
+  | 'other';
+
+export interface HolidayOrVacation {
+  id: string;
+  title: string;
+  type: HolidayType; // 'public' or 'personal'
+  category: VacationCategory;
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
+  year: number;      // e.g. 2026
+  userId?: string;   // For personal vacation
+  userName?: string;
+  userHrCode?: string;
+  notes?: string;
+  createdAt?: string;
+  createdBy?: string;
+}
