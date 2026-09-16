@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { X, Calendar, Plus, Trash2, Palmtree, Flag, User as UserIcon, Check, AlertCircle } from 'lucide-react';
+import { X, Calendar, Plus, Trash2, Palmtree, Flag, User as UserIcon, Check, AlertCircle, UploadCloud, RefreshCw, FileText, CheckCircle2, Globe } from 'lucide-react';
 import { useAppContext } from '../context';
 import { HolidayType, VacationCategory } from '../types';
 
@@ -115,6 +115,242 @@ export const HolidaysAndVacationsModal: React.FC<HolidaysAndVacationsModalProps>
     }
   };
 
+  // Google Calendar Integration State
+  const [showGoogleSync, setShowGoogleSync] = useState<boolean>(false);
+  const [isSyncingGCal, setIsSyncingGCal] = useState<boolean>(false);
+  const [gcalImportType, setGcalImportType] = useState<HolidayType>(isAdmin ? 'public' : 'personal');
+  const [parsedGcalEvents, setParsedGcalEvents] = useState<Array<{
+    title: string;
+    startDate: string;
+    endDate: string;
+    category: VacationCategory;
+    description?: string;
+  }>>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Parse iCal (.ics) string format
+  const parseICalContent = (icsText: string) => {
+    const unfolded = icsText.replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, '');
+    const lines = unfolded.split(/\r?\n/);
+    const results: Array<{
+      title: string;
+      startDate: string;
+      endDate: string;
+      category: VacationCategory;
+      description?: string;
+    }> = [];
+
+    let inEvent = false;
+    let title = '';
+    let start = '';
+    let end = '';
+    let desc = '';
+
+    const parseDateStr = (val: string): string => {
+      const clean = val.includes(':') ? val.split(':').pop()! : val;
+      const match = clean.match(/^(\d{4})(\d{2})(\d{2})/);
+      if (match) {
+        return `${match[1]}-${match[2]}-${match[3]}`;
+      }
+      return '';
+    };
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (line === 'BEGIN:VEVENT') {
+        inEvent = true;
+        title = '';
+        start = '';
+        end = '';
+        desc = '';
+      } else if (line === 'END:VEVENT') {
+        if (inEvent && title && start) {
+          let finalEnd = end || start;
+          if (end && end > start) {
+            const sDate = new Date(start);
+            const eDate = new Date(end);
+            const diffDays = Math.round((eDate.getTime() - sDate.getTime()) / (1000 * 3600 * 24));
+            if (diffDays === 1) {
+              finalEnd = start;
+            } else if (diffDays > 1) {
+              eDate.setDate(eDate.getDate() - 1);
+              finalEnd = eDate.toISOString().split('T')[0];
+            }
+          }
+
+          const tLower = title.toLowerCase();
+          let cat: VacationCategory = 'national_holiday';
+          if (tLower.includes('eid') || tLower.includes('christmas') || tLower.includes('mawlid') || tLower.includes('ramadan') || tLower.includes('hijri') || tLower.includes('arafat')) {
+            cat = 'religious_holiday';
+          }
+
+          results.push({
+            title: title.replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\n/g, ' ').trim(),
+            startDate: start,
+            endDate: finalEnd,
+            category: cat,
+            description: desc.replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\n/g, ' ').trim() || undefined
+          });
+        }
+        inEvent = false;
+      } else if (inEvent) {
+        if (line.startsWith('SUMMARY:')) {
+          title = line.substring(8);
+        } else if (line.startsWith('SUMMARY;')) {
+          title = line.split(':').slice(1).join(':');
+        } else if (line.startsWith('DTSTART')) {
+          start = parseDateStr(line);
+        } else if (line.startsWith('DTEND')) {
+          end = parseDateStr(line);
+        } else if (line.startsWith('DESCRIPTION:')) {
+          desc = line.substring(12);
+        }
+      }
+    }
+    return results;
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (!content) return;
+      try {
+        const events = parseICalContent(content);
+        if (events.length === 0) {
+          setStatusMessage({ type: 'error', text: 'No calendar events found in this .ics file.' });
+          return;
+        }
+        setParsedGcalEvents(events);
+        setStatusMessage({ type: 'success', text: `Loaded ${events.length} event(s) from ${file.name}. Review and confirm import below.` });
+      } catch (err: any) {
+        setStatusMessage({ type: 'error', text: 'Failed to parse calendar file: ' + (err?.message || 'Invalid format') });
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleSyncOfficialEgyptHolidays = async () => {
+    setIsSyncingGCal(true);
+    setStatusMessage(null);
+
+    const officialGoogleHolidays: Array<{
+      title: string;
+      startDate: string;
+      endDate: string;
+      category: VacationCategory;
+      notes: string;
+    }> = [
+      { title: 'Coptic Christmas Day', startDate: `${selectedYear}-01-07`, endDate: `${selectedYear}-01-07`, category: 'religious_holiday', notes: 'Official Google Calendar Egypt Holiday' },
+      { title: 'Revolution Day & Police Day', startDate: `${selectedYear}-01-25`, endDate: `${selectedYear}-01-25`, category: 'national_holiday', notes: 'Official Google Calendar Egypt Holiday' },
+      { title: 'Eid Al-Fitr Holiday', startDate: `${selectedYear}-03-20`, endDate: `${selectedYear}-03-23`, category: 'religious_holiday', notes: 'Official Google Calendar Egypt Holiday' },
+      { title: 'Sham El-Nessim (Spring Festival)', startDate: `${selectedYear}-04-13`, endDate: `${selectedYear}-04-13`, category: 'national_holiday', notes: 'Official Google Calendar Egypt Holiday' },
+      { title: 'Sinai Liberation Day', startDate: `${selectedYear}-04-25`, endDate: `${selectedYear}-04-25`, category: 'national_holiday', notes: 'Official Google Calendar Egypt Holiday' },
+      { title: 'Labour Day', startDate: `${selectedYear}-05-01`, endDate: `${selectedYear}-05-01`, category: 'national_holiday', notes: 'Official Google Calendar Egypt Holiday' },
+      { title: 'Arafat Day', startDate: `${selectedYear}-05-26`, endDate: `${selectedYear}-05-26`, category: 'religious_holiday', notes: 'Official Google Calendar Egypt Holiday' },
+      { title: 'Eid Al-Adha (Feast of Sacrifice)', startDate: `${selectedYear}-05-27`, endDate: `${selectedYear}-05-30`, category: 'religious_holiday', notes: 'Official Google Calendar Egypt Holiday' },
+      { title: 'Islamic New Year (Hijri 1448)', startDate: `${selectedYear}-06-16`, endDate: `${selectedYear}-06-16`, category: 'religious_holiday', notes: 'Official Google Calendar Egypt Holiday' },
+      { title: '30 June Revolution Day', startDate: `${selectedYear}-06-30`, endDate: `${selectedYear}-06-30`, category: 'national_holiday', notes: 'Official Google Calendar Egypt Holiday' },
+      { title: '23 July Revolution Day', startDate: `${selectedYear}-07-23`, endDate: `${selectedYear}-07-23`, category: 'national_holiday', notes: 'Official Google Calendar Egypt Holiday' },
+      { title: "Prophet's Birthday (Mawlid al-Nabi)", startDate: `${selectedYear}-08-25`, endDate: `${selectedYear}-08-25`, category: 'religious_holiday', notes: 'Official Google Calendar Egypt Holiday' },
+      { title: 'Armed Forces Day (6th of October)', startDate: `${selectedYear}-10-06`, endDate: `${selectedYear}-10-06`, category: 'national_holiday', notes: 'Official Google Calendar Egypt Holiday' }
+    ];
+
+    try {
+      let addedCount = 0;
+      let skippedCount = 0;
+
+      for (const hol of officialGoogleHolidays) {
+        const exists = holidaysAndVacations.some(item => 
+          item.type === 'public' && 
+          item.startDate === hol.startDate
+        );
+
+        if (!exists) {
+          await addHolidayOrVacation({
+            title: hol.title,
+            type: 'public',
+            category: hol.category,
+            startDate: hol.startDate,
+            endDate: hol.endDate,
+            year: selectedYear,
+            notes: hol.notes,
+            createdBy: 'Google Calendar Sync'
+          });
+          addedCount++;
+        } else {
+          skippedCount++;
+        }
+      }
+
+      setStatusMessage({
+        type: 'success',
+        text: `Google Calendar Sync Complete: ${addedCount} official holidays synchronized (${skippedCount} already up-to-date).`
+      });
+      setShowGoogleSync(false);
+    } catch (err: any) {
+      setStatusMessage({ type: 'error', text: 'Google Calendar Sync failed: ' + (err?.message || 'Unknown error') });
+    } finally {
+      setIsSyncingGCal(false);
+    }
+  };
+
+  const handleConfirmGcalImport = async () => {
+    if (parsedGcalEvents.length === 0) return;
+    setIsSyncingGCal(true);
+    setStatusMessage(null);
+
+    try {
+      let addedCount = 0;
+      let skippedCount = 0;
+
+      for (const ev of parsedGcalEvents) {
+        const evYear = parseInt(ev.startDate.substring(0, 4), 10) || selectedYear;
+        
+        const exists = holidaysAndVacations.some(item => 
+          item.startDate === ev.startDate &&
+          item.title.toLowerCase().trim() === ev.title.toLowerCase().trim() &&
+          item.type === gcalImportType &&
+          (gcalImportType === 'public' || item.userId === user?.id)
+        );
+
+        if (!exists) {
+          await addHolidayOrVacation({
+            title: ev.title,
+            type: gcalImportType,
+            category: ev.category,
+            startDate: ev.startDate,
+            endDate: ev.endDate,
+            year: evYear,
+            userId: gcalImportType === 'personal' ? (user?.id || 'unknown') : undefined,
+            userName: gcalImportType === 'personal' ? (user?.name || 'Staff Member') : undefined,
+            userHrCode: gcalImportType === 'personal' ? (user?.hrCode || '') : undefined,
+            notes: ev.description || 'Imported from Google Calendar (.ics)',
+            createdBy: user?.name || 'Google Calendar Import'
+          });
+          addedCount++;
+        } else {
+          skippedCount++;
+        }
+      }
+
+      setStatusMessage({
+        type: 'success',
+        text: `Successfully imported ${addedCount} events from Google Calendar (${skippedCount} duplicates skipped).`
+      });
+      setParsedGcalEvents([]);
+      setShowGoogleSync(false);
+    } catch (err: any) {
+      setStatusMessage({ type: 'error', text: 'Import failed: ' + (err?.message || 'Unknown error') });
+    } finally {
+      setIsSyncingGCal(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs overflow-y-auto">
       <motion.div
@@ -189,25 +425,47 @@ export const HolidaysAndVacationsModal: React.FC<HolidaysAndVacationsModalProps>
             </button>
           </div>
 
-          {/* Add Holiday Button */}
-          <button
-            type="button"
-            onClick={() => setShowAddForm(!showAddForm)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${
-              showAddForm
-                ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
-                : 'bg-[#FFC000] hover:bg-amber-400 text-[#002D62]'
-            }`}
-          >
-            {showAddForm ? (
-              <span>Cancel Add</span>
-            ) : (
-              <>
-                <Plus size={14} />
-                <span>Add Record</span>
-              </>
-            )}
-          </button>
+          {/* Action Buttons: Google Calendar Sync & Add Record */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowGoogleSync(!showGoogleSync);
+                setShowAddForm(false);
+                setParsedGcalEvents([]);
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-xs border ${
+                showGoogleSync
+                  ? 'bg-blue-600 text-white border-blue-700'
+                  : 'bg-white dark:bg-slate-700 text-[#002D62] dark:text-blue-200 border-slate-300 dark:border-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <Globe size={13} className={showGoogleSync ? 'text-white' : 'text-blue-600 dark:text-amber-400'} />
+              <span>Google Calendar</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowAddForm(!showAddForm);
+                setShowGoogleSync(false);
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${
+                showAddForm
+                  ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                  : 'bg-[#FFC000] hover:bg-amber-400 text-[#002D62]'
+              }`}
+            >
+              {showAddForm ? (
+                <span>Cancel Add</span>
+              ) : (
+                <>
+                  <Plus size={14} />
+                  <span>Add Record</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Status Alerts */}
@@ -222,8 +480,180 @@ export const HolidaysAndVacationsModal: React.FC<HolidaysAndVacationsModalProps>
           </div>
         )}
 
-        {/* Add Record Form View */}
-        {showAddForm ? (
+        {/* Google Calendar Sync & Import Panel */}
+        {showGoogleSync ? (
+          <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+            {/* Header Description */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-blue-950/40 p-4 rounded-2xl border border-blue-200 dark:border-blue-900/60 flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Globe size={20} />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-black uppercase tracking-wider text-[#002D62] dark:text-blue-300">
+                  Google Calendar Integration
+                </h4>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                  Synchronize official Egyptian public holidays or import any custom Google Calendar export file (.ics) to populate dates instantly without duplicate entries.
+                </p>
+              </div>
+            </div>
+
+            {/* Quick 1-Click Sync Section */}
+            <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl border-2 border-dashed border-blue-200 dark:border-blue-900 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                  <span className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide">
+                    Option A: Sync Official Egypt Holidays ({selectedYear})
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200">
+                  Google Verified Feed
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Instantly fetch and update Egypt statutory holidays (Coptic Christmas, Eid holidays, Revolution Days, Armed Forces Day, etc.) directly aligned with Google Calendar.
+              </p>
+
+              <button
+                type="button"
+                disabled={isSyncingGCal}
+                onClick={handleSyncOfficialEgyptHolidays}
+                className="w-full py-2.5 px-4 rounded-xl bg-[#002D62] hover:bg-blue-950 text-white text-xs font-black flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer active:scale-98 disabled:opacity-50"
+              >
+                <RefreshCw size={14} className={isSyncingGCal ? 'animate-spin text-amber-400' : 'text-amber-400'} />
+                <span>{isSyncingGCal ? 'Synchronizing with Google Calendar...' : `Sync Official ${selectedYear} Holidays from Google Calendar`}</span>
+              </button>
+            </div>
+
+            {/* Upload .ics File Section */}
+            <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                  <span className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide">
+                    Option B: Import Custom Google Calendar (.ics)
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200">
+                  iCal Standard
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Upload any exported Google Calendar file (.ics). You can import personal vacations or official team schedules.
+              </p>
+
+              {/* Destination Type Selector */}
+              <div className="flex items-center gap-2 pt-1">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Import as:</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={!isAdmin}
+                    onClick={() => setGcalImportType('public')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      gcalImportType === 'public'
+                        ? 'bg-purple-600 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+                    } ${!isAdmin ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  >
+                    Public Holidays
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGcalImportType('personal')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      gcalImportType === 'personal'
+                        ? 'bg-rose-500 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    Personal Vacations
+                  </button>
+                </div>
+              </div>
+
+              {/* Hidden File Input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".ics,text/calendar"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-blue-500 dark:hover:border-blue-400 bg-slate-50/60 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300 text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <UploadCloud size={16} className="text-blue-600 dark:text-blue-400" />
+                <span>Choose or Drop .ics Google Calendar File</span>
+              </button>
+            </div>
+
+            {/* Parsed Events Preview List */}
+            {parsedGcalEvents.length > 0 && (
+              <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase">
+                    Preview Parsed Events ({parsedGcalEvents.length})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setParsedGcalEvents([])}
+                    className="text-xs font-bold text-rose-500 hover:underline cursor-pointer"
+                  >
+                    Clear Preview
+                  </button>
+                </div>
+
+                <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1 divide-y divide-slate-200 dark:divide-slate-700">
+                  {parsedGcalEvents.map((ev, idx) => (
+                    <div key={`parsed_${idx}`} className="pt-1.5 flex items-center justify-between gap-2 text-xs">
+                      <div className="truncate font-bold text-slate-800 dark:text-slate-200">
+                        {ev.title}
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 shrink-0 font-medium">
+                        {ev.startDate} {ev.endDate !== ev.startDate ? `to ${ev.endDate}` : ''}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setParsedGcalEvents([])}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSyncingGCal}
+                    onClick={handleConfirmGcalImport}
+                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    <CheckCircle2 size={14} />
+                    <span>Confirm Import ({parsedGcalEvents.length} Events)</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Back Button */}
+            <div className="pt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowGoogleSync(false)}
+                className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-300 cursor-pointer"
+              >
+                Back to Holiday List
+              </button>
+            </div>
+          </div>
+        ) : showAddForm ? (
           <form onSubmit={handleCreate} className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
             <div className="bg-slate-50 dark:bg-slate-800/70 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-[#002D62] dark:text-amber-400">

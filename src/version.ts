@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.8.0",
-  releaseName: "Official Holidays & Personal Vacations System",
+  version: "1.8.1",
+  releaseName: "Google Calendar Sync & iCal Feed Import",
   buildDate: "2026",
   buildTimestamp: "2026",
   
