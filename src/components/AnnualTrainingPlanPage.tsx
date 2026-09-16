@@ -57,8 +57,9 @@ export const AnnualTrainingPlanPage: React.FC = () => {
   const isDark = theme === 'dark';
   const isAdmin = user?.role === 'admin';
 
-  // Active Top-Level Navigation Tab: 'plan' | 'achievements' | 'audienceMatrix'
-  const [activeMainTab, setActiveMainTab] = useState<'plan' | 'achievements' | 'audienceMatrix'>('plan');
+  // Active Top-Level Navigation Tab: 'plan' | 'annualResults' | 'achievements' | 'audienceMatrix'
+  const [activeMainTab, setActiveMainTab] = useState<'plan' | 'annualResults' | 'achievements' | 'audienceMatrix'>('plan');
+  const [annualResultsFilter, setAnnualResultsFilter] = useState<'ALL' | 'COMPLETED' | 'IN_PROGRESS' | 'PENDING'>('ALL');
 
   // Selected Year State (defaults to current year 2026 or newest)
   const availableYears = useMemo(() => {
@@ -396,6 +397,173 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       }
     };
   }, [targetsWithExecution]);
+
+  // -------------------------------------------------------------
+  // Annual Results: Line-Item per Session Breakdown with Live Sync
+  // -------------------------------------------------------------
+  const annualSessionLineItems = useMemo(() => {
+    const items: Array<{
+      id: string;
+      courseTargetId: string;
+      courseId?: string;
+      courseTitle: string;
+      courseTitleEn?: string;
+      targetAudience: 'engineers' | 'technicians_operators' | 'summer_training';
+      track: AnnualPlanCourseTarget['track'];
+      roundIndex: number;
+      totalPlannedRounds: number;
+      quarter: string;
+      plannedTimingNote: string;
+      actualDateRange: string | null;
+      actualTimingMonth: string | null;
+      isDateChanged: boolean;
+      status: 'completed' | 'in_progress' | 'pending';
+      plannedTrainees: number;
+      actualTrainees: number;
+      matchedSessionId?: string;
+      matchedSessionNumber?: string | number;
+      instructorName?: string;
+      location?: string;
+    }> = [];
+
+    targetsWithExecution.forEach(t => {
+      const plannedRounds = Math.max(1, t.targetRounds || 1);
+      const tpr = t.traineesPerRound || 6;
+      const liveSessions = (t.matchingLiveSessions || []).slice().sort((a: any, b: any) => {
+        const timeA = new Date(a.startDate || 0).getTime();
+        const timeB = new Date(b.startDate || 0).getTime();
+        return timeA - timeB;
+      });
+
+      // Split into completed vs active (in-progress/scheduled)
+      const completedSessions = liveSessions.filter((s: any) => s.status?.toLowerCase() === 'completed');
+      const activeSessions = liveSessions.filter((s: any) => s.status?.toLowerCase() !== 'completed' && s.status?.toLowerCase() !== 'cancelled');
+
+      const totalRoundsToDisplay = Math.max(plannedRounds, completedSessions.length + activeSessions.length);
+
+      for (let r = 1; r <= totalRoundsToDisplay; r++) {
+        let status: 'completed' | 'in_progress' | 'pending' = 'pending';
+        let actualDates: string | null = null;
+        let actualTimingMonth: string | null = null;
+        let actualTrainees = 0;
+        let matchedSession: any = null;
+
+        if (r <= completedSessions.length) {
+          matchedSession = completedSessions[r - 1];
+          status = 'completed';
+          if (matchedSession.startDate && matchedSession.endDate) {
+            actualDates = `${matchedSession.startDate} – ${matchedSession.endDate}`;
+            try {
+              actualTimingMonth = new Date(matchedSession.startDate).toLocaleString('en-US', { month: 'short' });
+            } catch (e) {
+              actualTimingMonth = null;
+            }
+          }
+          actualTrainees = matchedSession.registeredUsers?.length || tpr;
+        } else if (r <= completedSessions.length + activeSessions.length) {
+          matchedSession = activeSessions[r - completedSessions.length - 1];
+          status = 'in_progress';
+          if (matchedSession.startDate && matchedSession.endDate) {
+            actualDates = `${matchedSession.startDate} – ${matchedSession.endDate}`;
+            try {
+              actualTimingMonth = new Date(matchedSession.startDate).toLocaleString('en-US', { month: 'short' });
+            } catch (e) {
+              actualTimingMonth = null;
+            }
+          }
+          actualTrainees = matchedSession.registeredUsers?.length || 0;
+        } else if (r <= (t.completedRounds || 0)) {
+          // Historical completed batch
+          status = 'completed';
+          actualDates = 'Completed (Master Records)';
+          actualTrainees = tpr;
+        } else {
+          // Pending for future
+          status = 'pending';
+          actualDates = null;
+          actualTrainees = 0;
+        }
+
+        const plannedMonthNote = t.notes ? t.notes.replace(/^Scheduled in\s*/i, '').trim() : t.quarter;
+        const isDateChanged = Boolean(
+          actualTimingMonth && 
+          plannedMonthNote && 
+          !plannedMonthNote.toLowerCase().includes(actualTimingMonth.toLowerCase())
+        );
+
+        items.push({
+          id: `${t.id}_round_${r}`,
+          courseTargetId: t.id,
+          courseId: t.courseId,
+          courseTitle: t.courseTitle,
+          courseTitleEn: t.courseTitleEn,
+          targetAudience: t.targetAudience,
+          track: t.track,
+          roundIndex: r,
+          totalPlannedRounds: plannedRounds,
+          quarter: t.quarter,
+          plannedTimingNote: plannedMonthNote,
+          actualDateRange: actualDates,
+          actualTimingMonth,
+          isDateChanged,
+          status,
+          plannedTrainees: tpr,
+          actualTrainees,
+          matchedSessionId: matchedSession?.id,
+          matchedSessionNumber: matchedSession?.sessionNumber,
+          instructorName: matchedSession?.instructorName,
+          location: matchedSession?.location || t.notes
+        });
+      }
+    });
+
+    return items;
+  }, [targetsWithExecution]);
+
+  const filteredAnnualSessionLineItems = useMemo(() => {
+    return annualSessionLineItems.filter(item => {
+      // Status filter
+      if (annualResultsFilter === 'COMPLETED' && item.status !== 'completed') return false;
+      if (annualResultsFilter === 'IN_PROGRESS' && item.status !== 'in_progress') return false;
+      if (annualResultsFilter === 'PENDING' && item.status !== 'pending') return false;
+
+      // Quarter filter
+      if (selectedQuarter !== 'ALL' && item.quarter !== selectedQuarter) return false;
+
+      // Search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesTitle = item.courseTitle.toLowerCase().includes(q);
+        const matchesAudience = item.targetAudience.toLowerCase().includes(q);
+        const matchesTiming = (item.plannedTimingNote || '').toLowerCase().includes(q) || (item.actualDateRange || '').toLowerCase().includes(q);
+        return matchesTitle || matchesAudience || matchesTiming;
+      }
+
+      return true;
+    });
+  }, [annualSessionLineItems, annualResultsFilter, selectedQuarter, searchQuery]);
+
+  const annualResultsKPI = useMemo(() => {
+    const totalSessions = annualSessionLineItems.length;
+    const completedSessions = annualSessionLineItems.filter(i => i.status === 'completed').length;
+    const inProgressSessions = annualSessionLineItems.filter(i => i.status === 'in_progress').length;
+    const pendingSessions = annualSessionLineItems.filter(i => i.status === 'pending').length;
+
+    const totalPlannedTrainees = annualSessionLineItems.reduce((acc, i) => acc + i.plannedTrainees, 0);
+    const actualTrainees = annualSessionLineItems.reduce((acc, i) => acc + i.actualTrainees, 0);
+
+    const completionRate = totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0;
+
+    return {
+      totalSessions,
+      completedSessions,
+      inProgressSessions,
+      pendingSessions,
+      totalPlannedTrainees,
+      actualTrainees,
+      completionRate
+    };
+  }, [annualSessionLineItems]);
 
   // Track Meta
   const getTrackMeta = (track: AnnualPlanCourseTarget['track']) => {
@@ -1090,6 +1258,26 @@ export const AnnualTrainingPlanPage: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => setActiveMainTab('annualResults')}
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all duration-200 cursor-pointer active:scale-[0.98] ${
+              activeMainTab === 'annualResults'
+                ? 'bg-[#002D62] text-white shadow-md shadow-[#002D62]/25 dark:bg-blue-900 dark:text-white ring-1 ring-white/10'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-xs hover:text-slate-950 dark:hover:text-white'
+            }`}
+          >
+            <Award size={16} className={activeMainTab === 'annualResults' ? 'text-amber-400' : 'text-slate-500 dark:text-slate-400'} />
+            <span>Annual Results</span>
+            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+              activeMainTab === 'annualResults'
+                ? 'bg-amber-400 text-slate-950'
+                : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60'
+            }`}>
+              {annualResultsKPI.completedSessions}/{annualResultsKPI.totalSessions} Done
+            </span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveMainTab('achievements')}
             className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all duration-200 cursor-pointer active:scale-[0.98] ${
               activeMainTab === 'achievements'
@@ -1210,6 +1398,32 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                   }`}
                 >
                   {f === 'ALL' ? 'All' : f === 'COMPLETED' ? 'Completed' : f === 'IN_PROGRESS' ? 'In Progress' : 'Remaining'}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Annual Results Status Filter (Only when on annualResults tab) */}
+          {activeMainTab === 'annualResults' && (
+            <div className="flex items-center gap-1 border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-slate-800 pt-2 sm:pt-0 sm:pl-3 flex-wrap">
+              {(['ALL', 'COMPLETED', 'IN_PROGRESS', 'PENDING'] as const).map(f => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setAnnualResultsFilter(f)}
+                  className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    annualResultsFilter === f
+                      ? 'bg-[#002D62] text-white dark:bg-blue-900 dark:text-white shadow-2xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {f === 'ALL'
+                    ? `All (${annualResultsKPI.totalSessions})`
+                    : f === 'COMPLETED'
+                    ? `🟢 Completed (${annualResultsKPI.completedSessions})`
+                    : f === 'IN_PROGRESS'
+                    ? `🟡 In Progress (${annualResultsKPI.inProgressSessions})`
+                    : `⚪ Pending (${annualResultsKPI.pendingSessions})`}
                 </button>
               ))}
             </div>
@@ -1359,7 +1573,309 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         </div>
       )}
 
-      {/* 5. TAB CONTENT 2: Progress & Achievements Tracker */}
+      {/* 5. TAB CONTENT: Annual Results — Line-Item per Session Scorecard */}
+      {activeMainTab === 'annualResults' && (
+        <div className="space-y-5">
+          {/* Executive KPI Summary Strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {/* Card 1: Delivery Rate */}
+            <div className="col-span-2 sm:col-span-1 bg-blue-50/70 dark:bg-slate-900 rounded-2xl p-4 border border-blue-200/80 dark:border-slate-800 shadow-2xs flex flex-col justify-between">
+              <div>
+                <span className="text-[11px] font-bold text-[#002D62] dark:text-blue-300 block">
+                  Delivery Rate
+                </span>
+                <div className="text-2xl sm:text-3xl font-black text-[#002D62] dark:text-amber-300 mt-1">
+                  {annualResultsKPI.completionRate}%
+                </div>
+              </div>
+              <div className="mt-3 space-y-1">
+                <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      annualResultsKPI.completionRate >= 100
+                        ? 'bg-emerald-500'
+                        : annualResultsKPI.completionRate > 0
+                        ? 'bg-amber-400'
+                        : 'bg-slate-300'
+                    }`}
+                    style={{ width: `${Math.min(100, annualResultsKPI.completionRate)}%` }}
+                  />
+                </div>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">
+                  {annualResultsKPI.completedSessions} of {annualResultsKPI.totalSessions} Sessions Delivered
+                </span>
+              </div>
+            </div>
+
+            {/* Card 2: Completed Sessions */}
+            <div className="bg-emerald-50/70 dark:bg-slate-900 rounded-2xl p-4 border border-emerald-200/80 dark:border-slate-800 shadow-2xs">
+              <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Completed</span>
+              </span>
+              <div className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300 mt-1">
+                {annualResultsKPI.completedSessions}
+              </div>
+              <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-medium block mt-1">
+                {annualResultsKPI.actualTrainees} Trainees Attended
+              </span>
+            </div>
+
+            {/* Card 3: In Progress Sessions */}
+            <div className="bg-amber-50/70 dark:bg-slate-900 rounded-2xl p-4 border border-amber-200/80 dark:border-slate-800 shadow-2xs">
+              <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                <span>In Progress</span>
+              </span>
+              <div className="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 mt-1">
+                {annualResultsKPI.inProgressSessions}
+              </div>
+              <span className="text-[11px] text-amber-700/80 dark:text-amber-400/80 font-medium block mt-1">
+                Active / Scheduled Now
+              </span>
+            </div>
+
+            {/* Card 4: Pending Sessions */}
+            <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xs">
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-slate-400" />
+                <span>Pending</span>
+              </span>
+              <div className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-200 mt-1">
+                {annualResultsKPI.pendingSessions}
+              </div>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-1">
+                Upcoming in Schedule
+              </span>
+            </div>
+
+            {/* Card 5: Total Trainees Target */}
+            <div className="bg-blue-50/40 dark:bg-slate-900 rounded-2xl p-4 border border-blue-100 dark:border-slate-800 shadow-2xs">
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 block">
+                Total Trainees
+              </span>
+              <div className="text-xl sm:text-2xl font-black text-[#002D62] dark:text-white mt-1">
+                {annualResultsKPI.actualTrainees} <span className="text-xs font-semibold text-slate-400">/ {annualResultsKPI.totalPlannedTrainees}</span>
+              </div>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block mt-1">
+                Target: 6 Trainees / Session
+              </span>
+            </div>
+          </div>
+
+          {/* Line-Item per Session Results Table */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+            <div className="p-4 bg-slate-50/80 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-[#002D62] dark:text-white flex items-center gap-2">
+                  <Award size={18} className="text-[#FFC000]" />
+                  <span>{selectedYear} Annual Training Results & Session Delivery</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Real-time status breakdown for every planned course round and live session.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-2xs">
+                  Showing {filteredAnnualSessionLineItems.length} of {annualSessionLineItems.length} Sessions
+                </span>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead className="sticky top-0 z-20 shadow-md">
+                  <tr className="bg-[#002D62] text-white">
+                    <th className="sticky top-0 bg-[#002D62] text-white py-3.5 px-4 min-w-[240px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
+                      Course Title
+                    </th>
+                    <th className="sticky top-0 bg-[#002D62] text-white py-3.5 px-3 min-w-[120px] text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
+                      Round
+                    </th>
+                    <th className="sticky top-0 bg-[#002D62] text-white py-3.5 px-3 min-w-[150px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
+                      Target Audience
+                    </th>
+                    <th className="sticky top-0 bg-[#002D62] text-white py-3.5 px-4 min-w-[240px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
+                      Scheduled Timing (Planned vs Actual)
+                    </th>
+                    <th className="sticky top-0 bg-[#002D62] text-white py-3.5 px-4 min-w-[160px] text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
+                      Trainees (Planned vs Actual)
+                    </th>
+                    <th className="sticky top-0 bg-[#002D62] text-white py-3.5 px-4 min-w-[150px] text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
+                      Delivery Status
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {filteredAnnualSessionLineItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-16 text-center text-slate-400">
+                        <div className="space-y-2">
+                          <BookOpen size={28} className="mx-auto text-slate-300 dark:text-slate-600" />
+                          <p className="font-bold text-sm text-slate-600 dark:text-slate-300">
+                            No session records found matching your filter criteria.
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            Try switching to "All" or adjusting the quarter selection.
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredAnnualSessionLineItems.map(item => {
+                      const trackMeta = getTrackMeta(item.track);
+
+                      // Row background tint based on status
+                      const rowBg =
+                        item.status === 'completed'
+                          ? 'bg-emerald-50/30 hover:bg-emerald-50/60 dark:bg-emerald-950/15 dark:hover:bg-emerald-950/30'
+                          : item.status === 'in_progress'
+                          ? 'bg-amber-50/30 hover:bg-amber-50/60 dark:bg-amber-950/15 dark:hover:bg-amber-950/30'
+                          : 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/50';
+
+                      return (
+                        <tr key={item.id} className={`${rowBg} transition-colors`}>
+                          {/* 1. Course Title & Track */}
+                          <td className="py-3.5 px-4">
+                            <div className="space-y-1">
+                              <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm block">
+                                {item.courseTitle}
+                              </span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${trackMeta.badge}`}>
+                                  {trackMeta.label}
+                                </span>
+                                {item.location && (
+                                  <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
+                                    📍 {item.location}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* 2. Round */}
+                          <td className="py-3.5 px-3 text-center">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 whitespace-nowrap shadow-2xs">
+                              {item.roundIndex <= item.totalPlannedRounds
+                                ? `Round ${item.roundIndex} of ${item.totalPlannedRounds}`
+                                : `Extra Round #${item.roundIndex}`}
+                            </span>
+                          </td>
+
+                          {/* 3. Target Audience */}
+                          <td className="py-3.5 px-3">
+                            {item.targetAudience === 'engineers' && (
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold whitespace-nowrap bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
+                                Engineers
+                              </span>
+                            )}
+                            {item.targetAudience === 'technicians_operators' && (
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold whitespace-nowrap bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
+                                Techs & Operators
+                              </span>
+                            )}
+                            {item.targetAudience === 'summer_training' && (
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold whitespace-nowrap bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800">
+                                Summer Training
+                              </span>
+                            )}
+                          </td>
+
+                          {/* 4. Scheduled Timing (Planned vs Actual) */}
+                          <td className="py-3.5 px-4">
+                            <div className="space-y-0.5">
+                              {item.actualDateRange ? (
+                                <div className="space-y-0.5">
+                                  <div className="flex items-center gap-1.5 text-xs font-black text-[#002D62] dark:text-amber-300">
+                                    <Calendar size={13} className="shrink-0" />
+                                    <span>{item.actualDateRange}</span>
+                                  </div>
+                                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">
+                                    Planned: {item.plannedTimingNote || item.quarter}
+                                    {item.isDateChanged && (
+                                      <span className="ml-1 text-amber-600 dark:text-amber-400 font-bold">
+                                        (Rescheduled)
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+                                  <CalendarDays size={13} className="text-slate-400 shrink-0" />
+                                  <span>Planned: {item.plannedTimingNote || item.quarter}</span>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* 5. Trainees (Planned vs Actual) */}
+                          <td className="py-3.5 px-4 text-center">
+                            {item.status === 'completed' ? (
+                              <div className="space-y-0.5">
+                                <span className="text-sm font-black text-emerald-700 dark:text-emerald-400 block">
+                                  {item.actualTrainees} Trainees
+                                </span>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                                  Planned: {item.plannedTrainees} (Target Achieved)
+                                </span>
+                              </div>
+                            ) : item.status === 'in_progress' ? (
+                              <div className="space-y-0.5">
+                                <span className="text-sm font-black text-amber-600 dark:text-amber-400 block">
+                                  {item.actualTrainees} Registered
+                                </span>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                                  Target: {item.plannedTrainees} Trainees
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="space-y-0.5">
+                                <span className="text-sm font-black text-slate-600 dark:text-slate-300 block">
+                                  0 / {item.plannedTrainees}
+                                </span>
+                                <span className="text-[10px] text-slate-400 block">
+                                  Planned: {item.plannedTrainees} Trainees
+                                </span>
+                              </div>
+                            )}
+                          </td>
+
+                          {/* 6. Delivery Status Badge */}
+                          <td className="py-3.5 px-4 text-center">
+                            {item.status === 'completed' && (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shadow-2xs whitespace-nowrap">
+                                <CheckCircle2 size={13} />
+                                <span>Completed</span>
+                              </span>
+                            )}
+                            {item.status === 'in_progress' && (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shadow-2xs whitespace-nowrap">
+                                <Clock size={13} className="animate-spin text-amber-600 dark:text-amber-400" />
+                                <span>In Progress</span>
+                              </span>
+                            )}
+                            {item.status === 'pending' && (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-2xs whitespace-nowrap">
+                                <Calendar size={13} className="text-slate-400" />
+                                <span>Pending</span>
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. TAB CONTENT 3: Progress & Achievements Tracker */}
       {activeMainTab === 'achievements' && (
         <div className="space-y-4">
           {/* Schedule Alignment Callout Banner */}

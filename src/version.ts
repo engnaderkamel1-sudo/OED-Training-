@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.5.3",
-  releaseName: "Streamlined Plan Table without Track Column",
+  version: "1.6.0",
+  releaseName: "Annual Results Live Line-Item Scorecard",
   buildDate: "2026",
   buildTimestamp: "2026",
   
