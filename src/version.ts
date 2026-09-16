@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.8.6",
-  releaseName: "Clean Calendar Notes Panel",
+  version: "1.8.7",
+  releaseName: "Optional Vacation Title & Auto-Categorization",
   buildDate: "2026",
   buildTimestamp: "2026",
   

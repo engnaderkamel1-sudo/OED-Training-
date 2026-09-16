@@ -73,10 +73,22 @@ export const HolidaysAndVacationsModal: React.FC<HolidaysAndVacationsModalProps>
     return item.userId === user?.id;
   }).sort((a, b) => a.startDate.localeCompare(b.startDate));
 
+  const getCategoryDefaultTitle = (cat: VacationCategory, type: HolidayType) => {
+    switch (cat) {
+      case 'annual_leave': return 'Annual Leave';
+      case 'casual_leave': return 'Casual Leave';
+      case 'sick_leave': return 'Sick Leave';
+      case 'national_holiday': return 'National Holiday';
+      case 'religious_holiday': return 'Religious Holiday';
+      default: return type === 'public' ? 'Official Holiday' : 'Personal Vacation';
+    }
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formTitle.trim() || !formStartDate) {
-      setStatusMessage({ type: 'error', text: 'Please fill in the title and start date.' });
+    const finalTitle = formTitle.trim() || getCategoryDefaultTitle(formCategory, formType);
+    if (!formStartDate) {
+      setStatusMessage({ type: 'error', text: 'Please select a start date.' });
       return;
     }
 
@@ -92,7 +104,7 @@ export const HolidaysAndVacationsModal: React.FC<HolidaysAndVacationsModalProps>
       const yearFromDate = parseInt(formStartDate.substring(0, 4), 10) || selectedYear;
 
       await addHolidayOrVacation({
-        title: formTitle.trim(),
+        title: finalTitle,
         type: formType,
         category: formCategory,
         startDate: formStartDate,
@@ -703,15 +715,14 @@ export const HolidaysAndVacationsModal: React.FC<HolidaysAndVacationsModalProps>
               {/* Title */}
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  Title / Event Name *
+                  Title / Event Name <span className="text-slate-400 font-normal text-[11px]">(Optional)</span>
                 </label>
                 <input
                   type="text"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder={formType === 'public' ? 'e.g., Armed Forces Day' : 'e.g., Annual Leave'}
+                  placeholder={`Optional — Defaults to "${getCategoryDefaultTitle(formCategory, formType)}"`}
                   className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-hidden"
-                  required
                 />
               </div>
 
