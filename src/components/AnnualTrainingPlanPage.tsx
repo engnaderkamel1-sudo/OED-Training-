@@ -57,9 +57,10 @@ export const AnnualTrainingPlanPage: React.FC = () => {
   const isDark = theme === 'dark';
   const isAdmin = user?.role === 'admin';
 
-  // Active Top-Level Navigation Tab: 'plan' | 'annualResults' | 'achievements' | 'audienceMatrix'
-  const [activeMainTab, setActiveMainTab] = useState<'plan' | 'annualResults' | 'achievements' | 'audienceMatrix'>('plan');
+  // Active Top-Level Navigation Tab: 'plan' | 'annualResults' | 'wallCalendar' | 'achievements' | 'audienceMatrix'
+  const [activeMainTab, setActiveMainTab] = useState<'plan' | 'annualResults' | 'wallCalendar' | 'achievements' | 'audienceMatrix'>('plan');
   const [annualResultsFilter, setAnnualResultsFilter] = useState<'ALL' | 'COMPLETED' | 'IN_PROGRESS' | 'PENDING'>('ALL');
+  const [selectedCalendarSession, setSelectedCalendarSession] = useState<any | null>(null);
 
   // Selected Year State (defaults to current year 2026 or newest)
   const availableYears = useMemo(() => {
@@ -584,6 +585,126 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         return { label: 'General Technical', badge: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300' };
     }
   };
+
+  // -------------------------------------------------------------
+  // Wall Calendar: 12-Month Quarterly Schedule Data Engine
+  // -------------------------------------------------------------
+  const calendarMonthsData = useMemo(() => {
+    const monthNames = [
+      'JANUARY', 'FEBRUARY', 'MARCH',
+      'APRIL', 'MAY', 'JUNE',
+      'JULY', 'AUGUST', 'SEPTEMBER',
+      'OCTOBER', 'NOVEMBER', 'DECEMBER'
+    ];
+
+    // Build day map: 'YYYY-MM-DD' -> array of matched session items
+    const daySessionsMap = new Map<string, typeof annualSessionLineItems>();
+
+    annualSessionLineItems.forEach(item => {
+      if (item.actualDateRange && item.actualDateRange.includes('–')) {
+        const [startStr, endStr] = item.actualDateRange.split('–').map(s => s.trim());
+        const start = new Date(startStr);
+        const end = new Date(endStr);
+        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+          const curr = new Date(start);
+          while (curr <= end) {
+            const y = curr.getFullYear();
+            const m = String(curr.getMonth() + 1).padStart(2, '0');
+            const d = String(curr.getDate()).padStart(2, '0');
+            const key = `${y}-${m}-${d}`;
+            if (!daySessionsMap.has(key)) {
+              daySessionsMap.set(key, []);
+            }
+            daySessionsMap.get(key)!.push(item);
+            curr.setDate(curr.getDate() + 1);
+          }
+        }
+      }
+    });
+
+    return monthNames.map((name, monthIndex) => {
+      // Days in month
+      const daysInMonth = new Date(selectedYear, monthIndex + 1, 0).getDate();
+      // First day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+      const firstDayOfWeek = new Date(selectedYear, monthIndex, 1).getDay();
+
+      // Quarter
+      const quarterNumber = Math.floor(monthIndex / 3) + 1;
+      const quarterName = `Q${quarterNumber}`;
+
+      // Build grid cells (up to 35 or 42 cells)
+      const days: Array<{
+        dayNumber: number | null;
+        dateStr: string | null;
+        isWorkday: boolean;
+        sessions: typeof annualSessionLineItems;
+      }> = [];
+
+      // Empty leading slots
+      for (let i = 0; i < firstDayOfWeek; i++) {
+        days.push({
+          dayNumber: null,
+          dateStr: null,
+          isWorkday: false,
+          sessions: []
+        });
+      }
+
+      // Actual month days
+      for (let d = 1; d <= daysInMonth; d++) {
+        const mStr = String(monthIndex + 1).padStart(2, '0');
+        const dStr = String(d).padStart(2, '0');
+        const dateStr = `${selectedYear}-${mStr}-${dStr}`;
+        const dayOfWeek = new Date(selectedYear, monthIndex, d).getDay();
+        // Sunday (0) to Thursday (4) are standard work days in Egypt / Construction
+        const isWorkday = dayOfWeek >= 0 && dayOfWeek <= 4;
+        const matched = daySessionsMap.get(dateStr) || [];
+
+        days.push({
+          dayNumber: d,
+          dateStr,
+          isWorkday,
+          sessions: matched
+        });
+      }
+
+      // Trailing slots to complete 35 or 42 grid
+      const totalCellsNeeded = days.length <= 35 ? 35 : 42;
+      while (days.length < totalCellsNeeded) {
+        days.push({
+          dayNumber: null,
+          dateStr: null,
+          isWorkday: false,
+          sessions: []
+        });
+      }
+
+      // Sessions scheduled in this month (both dated and planned)
+      const monthShort = new Date(selectedYear, monthIndex, 1).toLocaleString('en-US', { month: 'short' });
+      const monthFull = new Date(selectedYear, monthIndex, 1).toLocaleString('en-US', { month: 'long' });
+
+      const monthSessions = annualSessionLineItems.filter(item => {
+        if (item.actualTimingMonth && item.actualTimingMonth.toLowerCase() === monthShort.toLowerCase()) {
+          return true;
+        }
+        if (item.plannedTimingNote && (
+          item.plannedTimingNote.toLowerCase().includes(monthShort.toLowerCase()) ||
+          item.plannedTimingNote.toLowerCase().includes(monthFull.toLowerCase())
+        )) {
+          return true;
+        }
+        return false;
+      });
+
+      return {
+        monthIndex,
+        name,
+        quarter: quarterName,
+        days,
+        monthSessions
+      };
+    });
+  }, [selectedYear, annualSessionLineItems]);
 
   // -------------------------------------------------------------
   // Handlers: Year Creation, Plan Clone & Target CRUD
@@ -1278,6 +1399,26 @@ export const AnnualTrainingPlanPage: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => setActiveMainTab('wallCalendar')}
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all duration-200 cursor-pointer active:scale-[0.98] ${
+              activeMainTab === 'wallCalendar'
+                ? 'bg-[#002D62] text-white shadow-md shadow-[#002D62]/25 dark:bg-blue-900 dark:text-white ring-1 ring-white/10'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-xs hover:text-slate-950 dark:hover:text-white'
+            }`}
+          >
+            <CalendarRange size={16} className={activeMainTab === 'wallCalendar' ? 'text-[#FFC000]' : 'text-slate-500 dark:text-slate-400'} />
+            <span>Quarterly Schedule</span>
+            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+              activeMainTab === 'wallCalendar'
+                ? 'bg-[#FFC000] text-[#001D42]'
+                : 'bg-blue-50 dark:bg-blue-950/40 text-[#002D62] dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60'
+            }`}>
+              12 Months
+            </span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveMainTab('achievements')}
             className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all duration-200 cursor-pointer active:scale-[0.98] ${
               activeMainTab === 'achievements'
@@ -1677,6 +1818,15 @@ export const AnnualTrainingPlanPage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveMainTab('wallCalendar')}
+                  className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-[#002D62] dark:text-amber-300 font-bold text-xs flex items-center gap-1.5 border border-blue-200/80 dark:border-slate-700 transition-all cursor-pointer shadow-2xs"
+                  title="Switch to Executive 12-Month Wall Calendar Poster"
+                >
+                  <CalendarRange size={14} className="text-[#FFC000]" />
+                  <span>Quarterly Calendar View</span>
+                </button>
                 <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-2xs">
                   Showing {filteredAnnualSessionLineItems.length} of {annualSessionLineItems.length} Sessions
                 </span>
@@ -1872,6 +2022,408 @@ export const AnnualTrainingPlanPage: React.FC = () => {
               </table>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 5.5 TAB CONTENT: Wall Calendar — 12-Month Quarterly Schedule Poster */}
+      {activeMainTab === 'wallCalendar' && (
+        <div className="space-y-6">
+          {/* Wall Calendar Outer Poster Canvas */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-[#002D62] dark:border-blue-900 shadow-xl overflow-hidden print:border-none print:shadow-none">
+            
+            {/* Poster Main Header Banner */}
+            <div className="bg-[#002D62] text-white p-5 sm:p-6 border-b-2 border-blue-950 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-[#FFC000]" />
+                  <span className="text-xs font-black tracking-widest text-amber-300 uppercase">
+                    Orascom Construction — Equipment Department (OED)
+                  </span>
+                </div>
+                <h2 className="text-2xl sm:text-4xl font-serif font-black tracking-wide text-white uppercase drop-shadow-sm">
+                  {selectedYear} Quarterly Schedule
+                </h2>
+                <p className="text-xs sm:text-sm text-blue-200 font-medium">
+                  Official Master Operational Schedule & Session Delivery Matrix
+                </p>
+              </div>
+
+              {/* Poster Header Action Controls */}
+              <div className="flex items-center gap-2.5 print:hidden">
+                <button
+                  type="button"
+                  onClick={() => setActiveMainTab('annualResults')}
+                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-2 border border-white/20 transition-all cursor-pointer backdrop-blur-xs"
+                >
+                  <Award size={14} className="text-[#FFC000]" />
+                  <span>Annual Results Table</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="px-4 py-2 rounded-xl bg-[#FFC000] hover:bg-amber-400 text-[#002D62] font-black text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
+                >
+                  <Printer size={14} />
+                  <span>Print Wall Poster</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Poster Body: 12-Month Calendar Grid (Left 4 Columns) + Notes Panel (Right Column) */}
+            <div className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-950">
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+                
+                {/* 12-Month Quarterly Calendar Area (Spans 9 or 10 cols on xl) */}
+                <div className="xl:col-span-9 2xl:col-span-10 space-y-6">
+                  
+                  {/* The 4 Quarters: Each Quarter contains a row of 3 months */}
+                  {[1, 2, 3, 4].map(qNum => {
+                    const quarterMonths = calendarMonthsData.filter(m => m.quarter === `Q${qNum}`);
+                    const quarterTitles: Record<number, string> = {
+                      1: '1st Quarter (Jan – Mar)',
+                      2: '2nd Quarter (Apr – Jun)',
+                      3: '3rd Quarter (Jul – Sep)',
+                      4: '4th Quarter (Oct – Dec)'
+                    };
+
+                    return (
+                      <div key={`quarter_${qNum}`} className="space-y-2">
+                        {/* Quarter Header Strip */}
+                        <div className="flex items-center justify-between px-3 py-1.5 bg-[#002D62] text-white rounded-xl shadow-2xs">
+                          <span className="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded bg-amber-400 text-slate-950 text-[11px] font-black">
+                              Q{qNum}
+                            </span>
+                            <span>{quarterTitles[qNum]}</span>
+                          </span>
+                          <span className="text-[11px] text-blue-200 font-semibold">
+                            {quarterMonths.reduce((acc, m) => acc + m.monthSessions.length, 0)} Sessions Assigned
+                          </span>
+                        </div>
+
+                        {/* 3 Months Grid for this Quarter */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {quarterMonths.map(month => (
+                            <div 
+                              key={month.name} 
+                              className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden flex flex-col justify-between"
+                            >
+                              {/* Month Header Banner */}
+                              <div className="bg-[#002D62] text-white py-2 px-3 flex items-center justify-between border-b border-blue-900">
+                                <span className="font-serif font-black tracking-wider text-xs sm:text-sm uppercase text-white">
+                                  {month.name}
+                                </span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-blue-100">
+                                  {month.monthSessions.length} Sessions
+                                </span>
+                              </div>
+
+                              {/* Days of Week Header */}
+                              <div className="grid grid-cols-7 text-center bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 py-1 text-[10px] font-black text-slate-600 dark:text-slate-300">
+                                <span className="text-rose-600 dark:text-rose-400">S</span>
+                                <span>M</span>
+                                <span>T</span>
+                                <span>W</span>
+                                <span>T</span>
+                                <span className="text-amber-600 dark:text-amber-400">F</span>
+                                <span className="text-amber-600 dark:text-amber-400">S</span>
+                              </div>
+
+                              {/* Calendar 7-Column Day Grid */}
+                              <div className="grid grid-cols-7 divide-x divide-y divide-slate-100 dark:divide-slate-800/50 text-[11px]">
+                                {month.days.map((day, idx) => {
+                                  if (day.dayNumber === null) {
+                                    return (
+                                      <div 
+                                        key={`empty_${idx}`} 
+                                        className="h-10 sm:h-12 bg-slate-50/50 dark:bg-slate-950/40 opacity-40" 
+                                      />
+                                    );
+                                  }
+
+                                  const hasSessions = day.sessions.length > 0;
+                                  const primarySession = day.sessions[0];
+                                  
+                                  // Determine cell color
+                                  let cellBg = 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                                  let pillColor = '';
+                                  
+                                  if (hasSessions) {
+                                    if (primarySession.status === 'completed') {
+                                      cellBg = 'bg-emerald-100/70 hover:bg-emerald-200/80 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-950 dark:text-emerald-100 font-black cursor-pointer';
+                                      pillColor = 'bg-emerald-600 text-white';
+                                    } else if (primarySession.status === 'in_progress') {
+                                      cellBg = 'bg-amber-100/80 hover:bg-amber-200/90 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 text-amber-950 dark:text-amber-100 font-black cursor-pointer';
+                                      pillColor = 'bg-amber-500 text-slate-950';
+                                    } else {
+                                      cellBg = 'bg-blue-50/80 hover:bg-blue-100/90 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100 font-black cursor-pointer';
+                                      pillColor = 'bg-[#002D62] text-white';
+                                    }
+                                  }
+
+                                  return (
+                                    <div
+                                      key={`day_${day.dayNumber}`}
+                                      onClick={() => hasSessions && setSelectedCalendarSession(primarySession)}
+                                      className={`h-10 sm:h-12 p-1 flex flex-col justify-between transition-all duration-150 relative group ${cellBg}`}
+                                      title={hasSessions ? `${primarySession.courseTitle} (${primarySession.status})` : undefined}
+                                    >
+                                      {/* Day Number */}
+                                      <div className="flex items-center justify-between">
+                                        <span className={`text-[10px] font-bold ${
+                                          hasSessions 
+                                            ? 'text-inherit font-black' 
+                                            : 'text-slate-500 dark:text-slate-400'
+                                        }`}>
+                                          {day.dayNumber}
+                                        </span>
+                                        {hasSessions && (
+                                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />
+                                        )}
+                                      </div>
+
+                                      {/* Micro session indicator badge */}
+                                      {hasSessions && (
+                                        <div className="truncate">
+                                          <span className={`block truncate px-1 py-0.2 rounded text-[8px] font-black uppercase tracking-tighter ${pillColor}`}>
+                                            {primarySession.courseTitle.substring(0, 8)}..
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Month Bottom Legend / Course Summary */}
+                              <div className="p-2 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800 space-y-1">
+                                {month.monthSessions.length === 0 ? (
+                                  <span className="text-[10px] text-slate-400 italic block text-center py-0.5">
+                                    No sessions scheduled
+                                  </span>
+                                ) : (
+                                  month.monthSessions.slice(0, 2).map((ms, msIdx) => (
+                                    <div 
+                                      key={ms.id || msIdx}
+                                      onClick={() => setSelectedCalendarSession(ms)}
+                                      className="flex items-center justify-between gap-1 p-1 rounded bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 cursor-pointer hover:border-blue-400 transition-colors"
+                                    >
+                                      <span className="text-[10px] font-bold truncate text-slate-800 dark:text-slate-200 max-w-[150px]">
+                                        {ms.courseTitle}
+                                      </span>
+                                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-black shrink-0 ${
+                                        ms.status === 'completed'
+                                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'
+                                          : ms.status === 'in_progress'
+                                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300'
+                                          : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                                      }`}>
+                                        {ms.status === 'completed' ? 'Done' : ms.status === 'in_progress' ? 'Active' : 'Plan'}
+                                      </span>
+                                    </div>
+                                  ))
+                                )}
+                                {month.monthSessions.length > 2 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedCalendarSession(month.monthSessions[2])}
+                                    className="text-[9px] font-black text-[#002D62] dark:text-amber-300 hover:underline block text-center w-full"
+                                  >
+                                    + {month.monthSessions.length - 2} more sessions
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Right-Hand Notes Column (Poster Replica) */}
+                <div className="xl:col-span-3 2xl:col-span-2 space-y-4">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-[#002D62] dark:border-blue-900 p-4 sm:p-5 shadow-xs flex flex-col justify-between space-y-5">
+                    
+                    {/* Notes Header with Lined Sheet Effect */}
+                    <div>
+                      <div className="bg-[#002D62] text-white p-2.5 rounded-xl text-center shadow-2xs">
+                        <h3 className="font-serif font-black text-sm uppercase tracking-widest text-[#FFC000]">
+                          Notes & Key Targets
+                        </h3>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 text-center">
+                        Executive Reference & Delivery Guidelines for {selectedYear}
+                      </p>
+                    </div>
+
+                    {/* Color Code Legend Panel */}
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block border-b border-slate-200 dark:border-slate-700 pb-1">
+                        🎨 Color Code Legend
+                      </span>
+                      
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 rounded bg-emerald-500 border border-emerald-600 shrink-0" />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          Completed Session
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-6">
+                        Held with verified attendees.
+                      </p>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="w-4 h-4 rounded bg-amber-400 border border-amber-500 shrink-0" />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          In Progress / Active
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-6">
+                        Currently scheduled in sessions.
+                      </p>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="w-4 h-4 rounded bg-[#002D62] border border-blue-900 shrink-0" />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          Planned Course
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-6">
+                        Targeted in upcoming months.
+                      </p>
+                    </div>
+
+                    {/* Lined Note Pad Simulator */}
+                    <div className="space-y-2 pt-1">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+                        📝 Operational Notes
+                      </span>
+                      <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 font-medium">
+                        <div className="p-2 rounded bg-amber-50/70 dark:bg-slate-800 border border-amber-200/80 dark:border-slate-700">
+                          <span className="font-bold text-amber-900 dark:text-amber-300 block">Round Target:</span>
+                          <span>6 participants planned per standard course session.</span>
+                        </div>
+                        <div className="p-2 rounded bg-blue-50/70 dark:bg-slate-800 border border-blue-200/80 dark:border-slate-700">
+                          <span className="font-bold text-[#002D62] dark:text-blue-300 block">Pacing Cadence:</span>
+                          <span>Monthly review of actual vs planned round completions.</span>
+                        </div>
+                        <div className="p-2 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                          <span className="font-bold text-slate-800 dark:text-slate-200 block">Interactive Poster:</span>
+                          <span>Click any highlighted day in the calendar to view full course and trainer details.</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Executive Sign-off Footer */}
+                    <div className="pt-4 border-t border-slate-200 dark:border-slate-800 text-center space-y-1">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#002D62] dark:text-amber-300">
+                        OED Technical Training
+                      </div>
+                      <div className="text-[9px] text-slate-400">
+                        Approved Operational Master Plan
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          {/* Quick Session Detail Modal / Popover on Calendar Day Click */}
+          <AnimatePresence>
+            {selectedCalendarSession && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-[#002D62] dark:border-blue-900 shadow-2xl p-6 max-w-lg w-full space-y-4"
+                >
+                  <div className="flex items-start justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+                    <div className="space-y-1">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black ${
+                        selectedCalendarSession.status === 'completed'
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300'
+                          : selectedCalendarSession.status === 'in_progress'
+                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300'
+                          : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                      }`}>
+                        {selectedCalendarSession.status === 'completed' ? '🟢 Completed' : selectedCalendarSession.status === 'in_progress' ? '🟡 In Progress' : '⚪ Pending'}
+                      </span>
+                      <h3 className="text-lg font-black text-[#002D62] dark:text-white">
+                        {selectedCalendarSession.courseTitle}
+                      </h3>
+                      {selectedCalendarSession.courseTitleEn && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {selectedCalendarSession.courseTitleEn}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCalendarSession(null)}
+                      className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                      <span className="text-[10px] text-slate-500 font-bold block">Round Execution</span>
+                      <span className="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5 block">
+                        Round {selectedCalendarSession.roundIndex} of {selectedCalendarSession.totalPlannedRounds}
+                      </span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                      <span className="text-[10px] text-slate-500 font-bold block">Scheduled Quarter</span>
+                      <span className="text-sm font-black text-[#002D62] dark:text-amber-300 mt-0.5 block">
+                        {selectedCalendarSession.quarter}
+                      </span>
+                    </div>
+
+                    <div className="col-span-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-1">
+                      <span className="text-[10px] text-slate-500 font-bold block">Timing & Dates</span>
+                      <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <Calendar size={13} className="text-[#002D62] dark:text-amber-400" />
+                        <span>{selectedCalendarSession.actualDateRange || selectedCalendarSession.plannedTimingNote || 'Not specified'}</span>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                      <span className="text-[10px] text-slate-500 font-bold block">Target Audience</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5 block capitalize">
+                        {selectedCalendarSession.targetAudience?.replace('_', ' ')}
+                      </span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                      <span className="text-[10px] text-slate-500 font-bold block">Trainees (Actual / Target)</span>
+                      <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 mt-0.5 block">
+                        {selectedCalendarSession.actualTrainees} / {selectedCalendarSession.plannedTrainees} Trainees
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCalendarSession(null)}
+                      className="px-5 py-2 rounded-xl bg-[#002D62] hover:bg-blue-950 text-white font-bold text-xs transition-all cursor-pointer shadow-xs"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
         </div>
       )}
 

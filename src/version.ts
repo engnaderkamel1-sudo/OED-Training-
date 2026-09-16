@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.6.0",
-  releaseName: "Annual Results Live Line-Item Scorecard",
+  version: "1.7.0",
+  releaseName: "Executive Annual Wall Calendar & Quarterly Schedule",
   buildDate: "2026",
   buildTimestamp: "2026",
   
