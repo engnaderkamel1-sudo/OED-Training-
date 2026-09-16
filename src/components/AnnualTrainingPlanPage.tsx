@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useAppContext } from '../context';
+import React, { useState, useMemo, useRef } from 'react';
+import { useAppContext, generateUUID } from '../context';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CalendarRange, 
@@ -31,9 +31,15 @@ import {
   Copy, 
   ChevronDown,
   Target,
-  ArrowUpRight
+  ArrowUpRight,
+  UploadCloud,
+  FileSpreadsheet,
+  RefreshCw,
+  FileCheck
 } from 'lucide-react';
 import { AnnualYearPlan, AnnualPlanCourseTarget, Course } from '../types';
+
+declare const XLSX: any;
 
 export const AnnualTrainingPlanPage: React.FC = () => {
   const { 
@@ -87,6 +93,18 @@ export const AnnualTrainingPlanPage: React.FC = () => {
   const [isAddYearModalOpen, setIsAddYearModalOpen] = useState(false);
   const [newYearInput, setNewYearInput] = useState(String(new Date().getFullYear() + 1));
   const [cloneFromYear, setCloneFromYear] = useState('none');
+
+  // Excel Plan Import State
+  const [isUploadPlanModalOpen, setIsUploadPlanModalOpen] = useState(false);
+  const [isParsingPlan, setIsParsingPlan] = useState(false);
+  const [isSavingPlanImport, setIsSavingPlanImport] = useState(false);
+  const [uploadPlanFileName, setUploadPlanFileName] = useState('');
+  const [parsedPlanYear, setParsedPlanYear] = useState<number>(2026);
+  const [parsedTargets, setParsedTargets] = useState<AnnualPlanCourseTarget[]>([]);
+  const [importStrategy, setImportStrategy] = useState<'replace' | 'merge'>('replace');
+  const [uploadPlanError, setUploadPlanError] = useState<string | null>(null);
+  const [isDraggingPlan, setIsDraggingPlan] = useState(false);
+  const planFileInputRef = useRef<HTMLInputElement>(null);
 
   const [isAddCourseModalOpen, setIsAddCourseModalOpen] = useState(false);
   const [editingTargetId, setEditingTargetId] = useState<string | null>(null);
@@ -534,6 +552,291 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     });
   };
 
+  // -------------------------------------------------------------
+  // Excel Plan Importer: Parse & Extract Annual Plan
+  // -------------------------------------------------------------
+  const handlePlanFileSelected = async (file: File) => {
+    if (!file) return;
+    setUploadPlanError(null);
+    setIsParsingPlan(true);
+    setUploadPlanFileName(file.name);
+
+    try {
+      if (typeof XLSX === 'undefined') {
+        throw new Error('Excel parsing engine (XLSX) is initializing. Please try again in a moment.');
+      }
+
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+        throw new Error('The uploaded Excel workbook contains no readable worksheets.');
+      }
+
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+      if (!rows || rows.length === 0) {
+        throw new Error('The selected worksheet is empty.');
+      }
+
+      // 1. Auto-detect plan year from header / title rows (first 10 rows)
+      let detectedYear = selectedYear || 2026;
+      for (let r = 0; r < Math.min(10, rows.length); r++) {
+        const rowStr = (rows[r] || []).join(' ');
+        const match = rowStr.match(/\b(20\d\d)\b/);
+        if (match) {
+          const parsed = parseInt(match[1], 10);
+          if (parsed >= 2020 && parsed <= 2040) {
+            detectedYear = parsed;
+            break;
+          }
+        }
+      }
+
+      // 2. Locate table header row & column indexes
+      let headerRowIdx = -1;
+      let colCourse = 5;    // Default: Column F (index 5)
+      let colMonth = 4;     // Default: Column E (index 4)
+      let colAudience = 6;  // Default: Column G (index 6)
+      let colSessions = 7;  // Default: Column H (index 7)
+
+      for (let r = 0; r < Math.min(15, rows.length); r++) {
+        const row = rows[r] || [];
+        for (let c = 0; c < row.length; c++) {
+          const cell = String(row[c] || '').trim().toLowerCase();
+          if (cell === 'course' || cell === 'course title' || cell === 'training course' || cell === 'courses') {
+            headerRowIdx = r;
+            colCourse = c;
+          }
+          if (cell === 'audience' || cell === 'target audience' || cell.includes('audience')) {
+            colAudience = c;
+          }
+          if (cell.includes('session') || cell.includes('round') || cell.includes('no of') || cell === 'sessions') {
+            colSessions = c;
+          }
+          if (cell === 'month' || cell.includes('month')) {
+            colMonth = c;
+          }
+        }
+        if (headerRowIdx !== -1) break;
+      }
+
+      // Fallback if header wasn't found
+      if (headerRowIdx === -1) {
+        headerRowIdx = 4;
+      }
+
+      // 3. Month & Quarter mapping dictionary
+      const monthMap: Record<string, { quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4'; name: string }> = {
+        january: { quarter: 'Q1', name: 'January' },
+        jan: { quarter: 'Q1', name: 'January' },
+        february: { quarter: 'Q1', name: 'February' },
+        feb: { quarter: 'Q1', name: 'February' },
+        march: { quarter: 'Q1', name: 'March' },
+        mar: { quarter: 'Q1', name: 'March' },
+        april: { quarter: 'Q2', name: 'April' },
+        apr: { quarter: 'Q2', name: 'April' },
+        may: { quarter: 'Q2', name: 'May' },
+        june: { quarter: 'Q2', name: 'June' },
+        jun: { quarter: 'Q2', name: 'June' },
+        july: { quarter: 'Q3', name: 'July' },
+        jul: { quarter: 'Q3', name: 'July' },
+        august: { quarter: 'Q3', name: 'August' },
+        aug: { quarter: 'Q3', name: 'August' },
+        september: { quarter: 'Q3', name: 'September' },
+        sep: { quarter: 'Q3', name: 'September' },
+        october: { quarter: 'Q4', name: 'October' },
+        oct: { quarter: 'Q4', name: 'October' },
+        november: { quarter: 'Q4', name: 'November' },
+        nov: { quarter: 'Q4', name: 'November' },
+        december: { quarter: 'Q4', name: 'December' },
+        dec: { quarter: 'Q4', name: 'December' }
+      };
+
+      const detectTrack = (courseTitle: string): AnnualPlanCourseTarget['track'] => {
+        const c = courseTitle.toLowerCase();
+        if (c.includes('hydraulic') || c.includes('powertrain') || c.includes('transmission')) return 'hydraulic';
+        if (c.includes('electric') || c.includes('electronic') || c.includes('wiring')) return 'electrical';
+        if (c.includes('tbm') || c.includes('tunnel')) return 'tbm';
+        if (c.includes('sos') || c.includes('diagnostic') || c.includes('troubleshooting')) return 'quality_sos';
+        if (c.includes('equipment') || c.includes('loader') || c.includes('excavator') || c.includes('crane')) return 'heavy_machinery';
+        return 'mechanical';
+      };
+
+      const extractedTargets: AnnualPlanCourseTarget[] = [];
+      let currentMonth = '';
+      let currentCourse = '';
+
+      for (let r = headerRowIdx + 1; r < rows.length; r++) {
+        const row = rows[r] || [];
+        const mRaw = String(row[colMonth] || '').trim();
+        const cRaw = String(row[colCourse] || '').trim();
+        const aRaw = String(row[colAudience] || '').trim();
+        const sRaw = String(row[colSessions] || '').trim();
+
+        // Stop condition: summary rows or totals
+        if (
+          cRaw.includes('Technical Training Plan') ||
+          cRaw.includes('Total Courses') ||
+          cRaw.includes('Total Sessions') ||
+          cRaw.includes('Training Summary') ||
+          cRaw.includes('Grand Total')
+        ) {
+          break;
+        }
+
+        // Clean month value
+        const cleanM = mRaw.replace(/[^a-zA-Z]/g, '').toLowerCase();
+        if (cleanM && monthMap[cleanM]) {
+          currentMonth = monthMap[cleanM].name;
+        }
+
+        // Clean course title
+        if (cRaw && !cRaw.match(/^\d+$/)) {
+          currentCourse = cRaw;
+        }
+
+        // Sessions count
+        let numSessions = 0;
+        if (/^\d+$/.test(sRaw)) {
+          numSessions = parseInt(sRaw, 10);
+        }
+
+        if (currentCourse && (numSessions > 0 || aRaw)) {
+          const cLower = currentCourse.toLowerCase();
+          const aLower = aRaw.toLowerCase();
+
+          let audience: NonNullable<AnnualPlanCourseTarget['targetAudience']> = 'engineers';
+          if (cLower.includes('summer') || aLower.includes('summer')) {
+            audience = 'summer_training';
+          } else if (
+            aLower.includes('tech') ||
+            aLower.includes('driver') ||
+            aLower.includes('operator') ||
+            aLower.includes('fitter') ||
+            aLower.includes('mechanic')
+          ) {
+            audience = 'technicians_operators';
+          } else if (aLower.includes('eng')) {
+            audience = 'engineers';
+          }
+
+          const q = (currentMonth && monthMap[currentMonth.toLowerCase()])
+            ? monthMap[currentMonth.toLowerCase()].quarter
+            : 'Q1';
+
+          const rounds = numSessions > 0 ? numSessions : 1;
+          const tpr = 6;
+          const trainees = rounds * tpr;
+          const track = detectTrack(currentCourse);
+
+          // Attempt to match course in catalog for catalog ID linkage
+          const matchedCourse = courses.find(
+            c => (c.title || '').trim().toLowerCase() === currentCourse.toLowerCase()
+          );
+
+          extractedTargets.push({
+            id: `t_${Date.now()}_${generateUUID().substring(0, 8)}_${extractedTargets.length}`,
+            courseId: matchedCourse?.id,
+            courseTitle: currentCourse,
+            courseTitleEn: matchedCourse?.titleEn || currentCourse,
+            targetRounds: rounds,
+            traineesPerRound: tpr,
+            targetTrainees: trainees,
+            targetAudience: audience,
+            quarter: q,
+            track: track,
+            durationDays: matchedCourse?.durationDays || 5,
+            notes: currentMonth ? `Scheduled in ${currentMonth}` : ''
+          });
+        }
+      }
+
+      if (extractedTargets.length === 0) {
+        throw new Error('No valid course targets could be extracted. Please make sure the Excel follows the OED Training Plan structure.');
+      }
+
+      setParsedPlanYear(detectedYear);
+      setParsedTargets(extractedTargets);
+    } catch (err: any) {
+      console.error('Error parsing plan Excel:', err);
+      setUploadPlanError(err?.message || 'Failed to read or parse Excel file.');
+    } finally {
+      setIsParsingPlan(false);
+    }
+  };
+
+  const handleConfirmImport = async () => {
+    if (parsedTargets.length === 0) return;
+    setIsSavingPlanImport(true);
+    try {
+      const existingPlan = annualPlans.find(p => p.year === parsedPlanYear);
+      let finalTargets: AnnualPlanCourseTarget[] = [];
+
+      if (importStrategy === 'merge' && existingPlan && existingPlan.targets) {
+        finalTargets = [...existingPlan.targets];
+        parsedTargets.forEach(newT => {
+          const existingIdx = finalTargets.findIndex(
+            t => t.courseTitle.trim().toLowerCase() === newT.courseTitle.trim().toLowerCase() && t.targetAudience === newT.targetAudience
+          );
+          if (existingIdx >= 0) {
+            finalTargets[existingIdx] = { ...finalTargets[existingIdx], ...newT };
+          } else {
+            finalTargets.push(newT);
+          }
+        });
+      } else {
+        finalTargets = parsedTargets;
+      }
+
+      const planToSave: AnnualYearPlan = {
+        id: existingPlan?.id || String(parsedPlanYear),
+        year: parsedPlanYear,
+        title: `Annual Training Plan ${parsedPlanYear}`,
+        status: 'active',
+        targets: finalTargets,
+        updatedAt: new Date().toISOString(),
+        createdAt: existingPlan?.createdAt || new Date().toISOString()
+      };
+
+      await saveAnnualPlan(planToSave);
+      setSelectedYear(parsedPlanYear);
+      setIsUploadPlanModalOpen(false);
+      setParsedTargets([]);
+      setUploadPlanFileName('');
+      setUploadPlanError(null);
+    } catch (err: any) {
+      console.error('Error saving imported plan:', err);
+      setUploadPlanError(err?.message || 'Failed to save annual plan to database.');
+    } finally {
+      setIsSavingPlanImport(false);
+    }
+  };
+
+  const handleResetUploadModal = () => {
+    setParsedTargets([]);
+    setUploadPlanFileName('');
+    setUploadPlanError(null);
+    if (planFileInputRef.current) {
+      planFileInputRef.current.value = '';
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingPlan(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handlePlanFileSelected(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handlePlanFileSelected(e.target.files[0]);
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -622,17 +925,35 @@ export const AnnualTrainingPlanPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Prominent Action: + Add New Year Plan (Admin Only) */}
+          {/* Prominent Action: + Add New Year Plan & Import Plan (Excel) (Admin Only) */}
           {isAdmin && (
-            <button
-              type="button"
-              onClick={() => setIsAddYearModalOpen(true)}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 dark:from-slate-800 dark:to-slate-700 border-2 border-dashed border-[#002D62]/40 dark:border-amber-400/40 text-[#002D62] dark:text-amber-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-2xs hover:shadow-xs shrink-0"
-              title="Add New Year Plan"
-            >
-              <PlusCircle size={17} className="text-[#002D62] dark:text-amber-400" />
-              <span>+ Add New Year Plan</span>
-            </button>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => {
+                  setParsedTargets([]);
+                  setUploadPlanFileName('');
+                  setUploadPlanError(null);
+                  setParsedPlanYear(selectedYear);
+                  setIsUploadPlanModalOpen(true);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-300 dark:border-slate-700 text-[#002D62] dark:text-amber-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-2xs hover:shadow-xs shrink-0"
+                title="Import Annual Plan from Excel spreadsheet"
+              >
+                <UploadCloud size={17} className="text-[#002D62] dark:text-amber-400" />
+                <span>Import Plan (Excel)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsAddYearModalOpen(true)}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 dark:from-slate-800 dark:to-slate-700 border-2 border-dashed border-[#002D62]/40 dark:border-amber-400/40 text-[#002D62] dark:text-amber-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-2xs hover:shadow-xs shrink-0"
+                title="Add New Year Plan"
+              >
+                <PlusCircle size={17} className="text-[#002D62] dark:text-amber-400" />
+                <span>+ Add New Year Plan</span>
+              </button>
+            </div>
           )}
         </div>
 
@@ -801,16 +1122,34 @@ export const AnnualTrainingPlanPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Action Button: Add Course Target to Plan (Admin Only) */}
+        {/* Action Button: Add Course Target & Import Plan (Excel) (Admin Only) */}
         {isAdmin && activeMainTab === 'plan' && (
-          <button
-            type="button"
-            onClick={openAddCourseModal}
-            className="px-4 py-2.5 rounded-xl bg-[#002D62] hover:bg-blue-950 dark:bg-blue-800 dark:hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer active:scale-95"
-          >
-            <PlusCircle size={16} className="text-[#FFC000]" />
-            <span>Add Course Target</span>
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => {
+                setParsedTargets([]);
+                setUploadPlanFileName('');
+                setUploadPlanError(null);
+                setParsedPlanYear(selectedYear);
+                setIsUploadPlanModalOpen(true);
+              }}
+              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer active:scale-95"
+              title="Import Annual Plan from Excel"
+            >
+              <UploadCloud size={16} className="text-[#002D62] dark:text-amber-400" />
+              <span>Import Plan (Excel)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={openAddCourseModal}
+              className="px-4 py-2.5 rounded-xl bg-[#002D62] hover:bg-blue-950 dark:bg-blue-800 dark:hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer active:scale-95"
+            >
+              <PlusCircle size={16} className="text-[#FFC000]" />
+              <span>Add Course Target</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -1640,6 +1979,355 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Modal 3: Import Annual Training Plan (Excel) */}
+        {isUploadPlanModalOpen && (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-[#002D62] dark:text-amber-400 flex items-center justify-center border border-blue-200 dark:border-blue-800/60 shadow-2xs">
+                    <FileSpreadsheet size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-[#002D62] dark:text-white flex items-center gap-2">
+                      <span>Import Annual Training Plan</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-[#002D62] dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">
+                        Excel .xlsx
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Upload your annual plan spreadsheet to auto-extract courses, quarters, audiences, and targets.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsUploadPlanModalOpen(false)}
+                  className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 cursor-pointer transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Hidden File Input */}
+              <input
+                ref={planFileInputRef}
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+
+              {/* Modal Body */}
+              <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-5">
+                {/* 1. Error Display */}
+                {uploadPlanError && (
+                  <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-300 text-xs flex items-center gap-2.5">
+                    <AlertCircle size={17} className="shrink-0 text-rose-600 dark:text-rose-400" />
+                    <span className="font-semibold">{uploadPlanError}</span>
+                  </div>
+                )}
+
+                {/* 2. Drag & Drop Area (when no data parsed yet) */}
+                {parsedTargets.length === 0 && (
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDraggingPlan(true);
+                    }}
+                    onDragLeave={() => setIsDraggingPlan(false)}
+                    onDrop={handleDrop}
+                    onClick={() => {
+                      if (!isParsingPlan) planFileInputRef.current?.click();
+                    }}
+                    className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-200 ${
+                      isDraggingPlan
+                        ? 'border-amber-500 bg-amber-50/30 dark:bg-amber-950/20 scale-[0.99]'
+                        : 'border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 hover:bg-blue-50/30 dark:hover:bg-slate-800/70 hover:border-[#002D62] dark:hover:border-amber-400'
+                    }`}
+                  >
+                    <div className="w-16 h-16 rounded-3xl bg-white dark:bg-slate-800 shadow-md flex items-center justify-center border border-slate-200 dark:border-slate-700 text-[#002D62] dark:text-amber-400">
+                      {isParsingPlan ? (
+                        <RefreshCw size={28} className="animate-spin text-amber-500" />
+                      ) : (
+                        <UploadCloud size={30} />
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5 max-w-md">
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                        {isParsingPlan
+                          ? 'Parsing & extracting training plan spreadsheet...'
+                          : 'Click or drag & drop Annual Training Plan (.xlsx) here'}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Matches official Equipment Department annual plan sheets (Month, Course, Audience, Sessions).
+                      </p>
+                    </div>
+
+                    {!isParsingPlan && (
+                      <div className="flex items-center gap-2 flex-wrap justify-center pt-2">
+                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-[#002D62] dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                          Auto Year Detection
+                        </span>
+                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                          Quarter & Audience Mapping
+                        </span>
+                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                          6 Trainees / Session
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 3. Parsed Data Preview & Configuration (when data is ready) */}
+                {parsedTargets.length > 0 && (
+                  <div className="space-y-5">
+                    {/* Executive Stats Summary Strip */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {/* Stat 1: Target Year */}
+                      <div className="bg-blue-50/70 dark:bg-slate-800/90 rounded-2xl p-3.5 border border-blue-200/80 dark:border-slate-700 shadow-2xs">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Plan Year</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <input
+                            type="number"
+                            min="2020"
+                            max="2040"
+                            value={parsedPlanYear}
+                            onChange={(e) => setParsedPlanYear(parseInt(e.target.value, 10) || selectedYear)}
+                            className="w-20 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-black text-[#002D62] dark:text-amber-300"
+                          />
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 text-[#002D62] dark:text-blue-300">
+                            Auto
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Stat 2: Total Programs */}
+                      <div className="bg-slate-50 dark:bg-slate-800/90 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-700 shadow-2xs">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Programs Extracted</span>
+                        <div className="text-xl font-black text-slate-900 dark:text-white mt-1">
+                          {parsedTargets.length} <span className="text-xs font-semibold text-slate-500">Courses</span>
+                        </div>
+                      </div>
+
+                      {/* Stat 3: Total Sessions */}
+                      <div className="bg-slate-50 dark:bg-slate-800/90 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-700 shadow-2xs">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Total Planned Sessions</span>
+                        <div className="text-xl font-black text-[#002D62] dark:text-amber-300 mt-1">
+                          {parsedTargets.reduce((acc, t) => acc + t.targetRounds, 0)} <span className="text-xs font-semibold text-slate-500">Rounds</span>
+                        </div>
+                      </div>
+
+                      {/* Stat 4: Planned Trainees */}
+                      <div className="bg-emerald-50/70 dark:bg-slate-800/90 rounded-2xl p-3.5 border border-emerald-200/80 dark:border-slate-700 shadow-2xs">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Total Planned Trainees</span>
+                        <div className="text-xl font-black text-emerald-800 dark:text-emerald-300 mt-1">
+                          {parsedTargets.reduce((acc, t) => acc + (t.targetTrainees || t.targetRounds * 6), 0)} <span className="text-xs font-semibold text-slate-500">(x6)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* File Badge & Strategy Selector */}
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
+                          <FileCheck size={16} className="text-emerald-600 dark:text-emerald-400" />
+                          <span>Source File:</span>
+                          <span className="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono text-[11px]">
+                            {uploadPlanFileName}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => planFileInputRef.current?.click()}
+                          className="text-xs text-[#002D62] dark:text-amber-400 hover:underline font-bold cursor-pointer"
+                        >
+                          Change File
+                        </button>
+                      </div>
+
+                      {/* Strategy Picker */}
+                      <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center gap-4 text-xs font-bold">
+                        <span className="text-slate-500 dark:text-slate-400">Import Strategy:</span>
+
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="importStrategy"
+                            value="replace"
+                            checked={importStrategy === 'replace'}
+                            onChange={() => setImportStrategy('replace')}
+                            className="text-[#002D62] focus:ring-[#002D62]"
+                          />
+                          <span>Replace Existing Plan</span>
+                          <span className="text-[10px] text-slate-500 font-normal">
+                            (Overwrite targets for {parsedPlanYear})
+                          </span>
+                        </label>
+
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="importStrategy"
+                            value="merge"
+                            checked={importStrategy === 'merge'}
+                            onChange={() => setImportStrategy('merge')}
+                            className="text-[#002D62] focus:ring-[#002D62]"
+                          />
+                          <span>Merge & Append</span>
+                          <span className="text-[10px] text-slate-500 font-normal">
+                            (Preserve existing & append/update)
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Preview Table */}
+                    <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs">
+                      <div className="p-3 bg-slate-100/80 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                          Preview Extracted Programs ({parsedTargets.length})
+                        </span>
+                        <span className="text-[11px] text-slate-500">
+                          Review programs before saving to database
+                        </span>
+                      </div>
+
+                      <div className="max-h-72 overflow-y-auto overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            <tr>
+                              <th className="px-3 py-2.5 w-10 text-center">#</th>
+                              <th className="px-3 py-2.5">Course Title</th>
+                              <th className="px-3 py-2.5 text-center">Quarter</th>
+                              <th className="px-3 py-2.5">Target Audience</th>
+                              <th className="px-3 py-2.5">Track</th>
+                              <th className="px-3 py-2.5 text-center">Sessions</th>
+                              <th className="px-3 py-2.5 text-center">Planned Trainees</th>
+                              <th className="px-3 py-2.5">Notes</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {parsedTargets.map((target, idx) => {
+                              const trackInfo = getTrackMeta(target.track);
+
+                              return (
+                                <tr key={target.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                  <td className="px-3 py-2.5 text-center text-slate-400 font-mono">
+                                    {idx + 1}
+                                  </td>
+                                  <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100">
+                                    {target.courseTitle}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center">
+                                    <span className="px-2 py-0.5 rounded text-[11px] font-black bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                      {target.quarter}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    {target.targetAudience === 'engineers' && (
+                                      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
+                                        Engineers
+                                      </span>
+                                    )}
+                                    {target.targetAudience === 'technicians_operators' && (
+                                      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
+                                        Techs & Operators
+                                      </span>
+                                    )}
+                                    {target.targetAudience === 'summer_training' && (
+                                      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800">
+                                        Summer Training
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${trackInfo.badge}`}>
+                                      {trackInfo.label}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center font-black text-[#002D62] dark:text-amber-300">
+                                    {target.targetRounds}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center font-bold text-emerald-700 dark:text-emerald-400">
+                                    {target.targetTrainees || target.targetRounds * 6}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400 text-[11px]">
+                                    {target.notes || '---'}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between gap-3 shrink-0">
+                <div>
+                  {parsedTargets.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleResetUploadModal}
+                      className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    >
+                      Clear & Choose Another File
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsUploadPlanModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={parsedTargets.length === 0 || isSavingPlanImport}
+                    onClick={handleConfirmImport}
+                    className={`px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-xs ${
+                      parsedTargets.length === 0 || isSavingPlanImport
+                        ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-700 text-slate-500'
+                        : 'bg-[#002D62] hover:bg-blue-950 dark:bg-blue-800 dark:hover:bg-blue-700 text-white active:scale-95'
+                    }`}
+                  >
+                    {isSavingPlanImport ? (
+                      <>
+                        <RefreshCw size={14} className="animate-spin text-amber-400" />
+                        <span>Saving Plan...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 size={15} className="text-[#FFC000]" />
+                        <span>Confirm & Import ({parsedTargets.length} Programs)</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}

@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.4.0",
-  releaseName: "Dedicated Presentation & Handout Resource Links",
+  version: "1.5.0",
+  releaseName: "Annual Training Plan Excel Import & Smart Parser",
   buildDate: "2026",
   buildTimestamp: "2026",
   
