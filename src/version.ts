@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.8.4",
-  releaseName: "Always-Visible Official Holidays & Session Data Persistence",
+  version: "1.8.5",
+  releaseName: "Continuous Multi-Day Holiday Spanning Bars",
   buildDate: "2026",
   buildTimestamp: "2026",
   

@@ -917,7 +917,38 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         });
       });
 
-      // Break each event span across calendar week rows for continuous horizontal bars
+      // Active holidays and vacations for this month spanning across days
+      const mStartStr = `${selectedYear}-${String(monthIndex + 1).padStart(2, '0')}-01`;
+      const mEndStr = `${selectedYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+
+      const activeMonthHolidays = holidaysAndVacations.filter(h => {
+        if (h.startDate > mEndStr || h.endDate < mStartStr) return false;
+        if (h.type === 'public') return true;
+        if (isAdmin) return true;
+        return h.userId === user?.id;
+      });
+
+      const scheduledHolidaySpans = activeMonthHolidays.map(h => {
+        let startDay = 1;
+        let endDay = daysInMonth;
+
+        if (h.startDate >= mStartStr) {
+          const parts = h.startDate.split('-');
+          startDay = parseInt(parts[2], 10) || 1;
+        }
+        if (h.endDate <= mEndStr) {
+          const parts = h.endDate.split('-');
+          endDay = parseInt(parts[2], 10) || daysInMonth;
+        }
+
+        return {
+          holiday: h,
+          startDay,
+          endDay
+        };
+      });
+
+      // Break each event and holiday span across calendar week rows for continuous horizontal bars
       const weekRows = weeks.map((weekCells) => {
         const firstCellDay = weekCells.find(c => c.dayNumber !== null)?.dayNumber || null;
         const lastCellDay = weekCells.slice().reverse().find(c => c.dayNumber !== null)?.dayNumber || null;
@@ -930,7 +961,37 @@ export const AnnualTrainingPlanPage: React.FC = () => {
           isEnd: boolean;
         }> = [];
 
+        const holidayBarsInThisWeek: Array<{
+          holiday: (typeof holidaysAndVacations)[0];
+          startCol: number; // 0 to 6
+          spanCols: number; // 1 to 7
+          isStart: boolean;
+          isEnd: boolean;
+        }> = [];
+
         if (firstCellDay !== null && lastCellDay !== null) {
+          // Multi-day holiday bars
+          scheduledHolidaySpans.forEach(hSpan => {
+            if (hSpan.startDay <= lastCellDay && hSpan.endDay >= firstCellDay) {
+              const segStartDay = Math.max(hSpan.startDay, firstCellDay);
+              const segEndDay = Math.min(hSpan.endDay, lastCellDay);
+
+              const startCol = weekCells.findIndex(c => c.dayNumber === segStartDay);
+              const endCol = weekCells.findIndex(c => c.dayNumber === segEndDay);
+
+              if (startCol !== -1 && endCol !== -1 && endCol >= startCol) {
+                holidayBarsInThisWeek.push({
+                  holiday: hSpan.holiday,
+                  startCol,
+                  spanCols: endCol - startCol + 1,
+                  isStart: hSpan.startDay === segStartDay,
+                  isEnd: hSpan.endDay === segEndDay
+                });
+              }
+            }
+          });
+
+          // Course session bars
           scheduledEventSpans.forEach(ev => {
             if (ev.startDay <= lastCellDay && ev.endDay >= firstCellDay) {
               const segStartDay = Math.max(ev.startDay, firstCellDay);
@@ -954,7 +1015,8 @@ export const AnnualTrainingPlanPage: React.FC = () => {
 
         return {
           cells: weekCells,
-          events: eventBarsInThisWeek
+          events: eventBarsInThisWeek,
+          holidayBars: holidayBarsInThisWeek
         };
       });
 
@@ -2484,36 +2546,47 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 dark:bg-rose-400 shrink-0" title="Personal Vacation" />
                                               )}
                                             </div>
-
-                                            {/* Directly Visible Official Public Holiday Banner */}
-                                            {day.hasPublicHoliday && (
-                                              <div 
-                                                className="mt-1 px-1.5 py-0.5 rounded bg-purple-700 dark:bg-purple-800 text-white text-[7.5px] sm:text-[8px] font-black leading-tight tracking-tight uppercase shadow-2xs flex items-center gap-1 z-10 border border-purple-400/30"
-                                                title={day.holidays?.find((h: any) => h.type === 'public')?.title}
-                                              >
-                                                <span className="w-1.5 h-1.5 rounded-full bg-[#FFC000] shrink-0" />
-                                                <span className="truncate">
-                                                  {day.holidays?.find((h: any) => h.type === 'public')?.title}
-                                                </span>
-                                              </div>
-                                            )}
-
-                                            {/* Directly Visible Personal Vacation Banner */}
-                                            {day.hasPersonalVacation && !day.hasPublicHoliday && (
-                                              <div 
-                                                className="mt-1 px-1.5 py-0.5 rounded bg-rose-600 dark:bg-rose-700 text-white text-[7.5px] sm:text-[8px] font-bold leading-tight tracking-tight shadow-2xs flex items-center gap-1 z-10 border border-rose-400/30"
-                                                title={day.holidays?.find((h: any) => h.type === 'personal')?.title}
-                                              >
-                                                <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
-                                                <span className="truncate">
-                                                  {day.holidays?.find((h: any) => h.type === 'personal')?.title}
-                                                </span>
-                                              </div>
-                                            )}
                                           </div>
                                         );
                                       })}
                                     </div>
+
+                                    {/* Continuous Multi-Day Spanning Holiday Bars Layer */}
+                                    {wRow.holidayBars && wRow.holidayBars.length > 0 && (
+                                      <div className="absolute left-0 right-0 top-[21px] px-0.5 pointer-events-auto space-y-0.5 z-15">
+                                        {wRow.holidayBars.map((hBar, hIdx) => {
+                                          const leftPct = (hBar.startCol / 7) * 100;
+                                          const widthPct = (hBar.spanCols / 7) * 100;
+                                          const isPublic = hBar.holiday.type === 'public';
+                                          
+                                          const barStyle = isPublic
+                                            ? 'bg-purple-700 hover:bg-purple-800 text-white border border-purple-400/50 shadow-2xs'
+                                            : 'bg-rose-600 hover:bg-rose-700 text-white border border-rose-400/50 shadow-2xs';
+
+                                          return (
+                                            <div
+                                              key={`hbar_${wIdx}_${hIdx}`}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setHolidayModalInitialDate(hBar.holiday.startDate);
+                                                setIsHolidayModalOpen(true);
+                                              }}
+                                              style={{
+                                                marginLeft: `${leftPct}%`,
+                                                width: `calc(${widthPct}% - 2px)`
+                                              }}
+                                              className={`h-4.5 px-2 rounded-md flex items-center justify-center gap-1.5 text-[8px] sm:text-[8.5px] font-black cursor-pointer transition-all duration-150 transform hover:scale-[1.005] overflow-hidden ${barStyle}`}
+                                              title={`${isPublic ? 'Official Public Holiday' : 'Personal Vacation'}: ${hBar.holiday.title} (${hBar.holiday.startDate} to ${hBar.holiday.endDate}) — Click to view details`}
+                                            >
+                                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isPublic ? 'bg-[#FFC000]' : 'bg-white'}`} />
+                                              <span className="truncate tracking-tight uppercase font-black text-center">
+                                                {hBar.holiday.title}
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
 
                                     {/* Continuous Multi-Day Event Bars Layer */}
                                     {wRow.events.length > 0 && (
