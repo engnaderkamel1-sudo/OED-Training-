@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.7.0",
-  releaseName: "Executive Annual Wall Calendar & Quarterly Schedule",
+  version: "1.7.1",
+  releaseName: "Quarterly Wall Calendar Multi-Day Spanning Event Bars",
   buildDate: "2026",
   buildTimestamp: "2026",
   

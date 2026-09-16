@@ -597,110 +597,228 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       'OCTOBER', 'NOVEMBER', 'DECEMBER'
     ];
 
-    // Build day map: 'YYYY-MM-DD' -> array of matched session items
-    const daySessionsMap = new Map<string, typeof annualSessionLineItems>();
+    const monthMapLookup: Record<string, number> = {
+      january: 0, jan: 0,
+      february: 1, feb: 1,
+      march: 2, mar: 2,
+      april: 3, apr: 3,
+      may: 4,
+      june: 5, jun: 5,
+      july: 6, jul: 6,
+      august: 7, aug: 7,
+      september: 8, sep: 8,
+      october: 9, oct: 9,
+      november: 10, nov: 10,
+      december: 11, dec: 11
+    };
+
+    // Group items by assigned month index (0 to 11)
+    const itemsByMonth: Array<typeof annualSessionLineItems> = Array.from({ length: 12 }, () => []);
 
     annualSessionLineItems.forEach(item => {
-      if (item.actualDateRange && item.actualDateRange.includes('–')) {
-        const [startStr, endStr] = item.actualDateRange.split('–').map(s => s.trim());
-        const start = new Date(startStr);
-        const end = new Date(endStr);
-        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-          const curr = new Date(start);
-          while (curr <= end) {
-            const y = curr.getFullYear();
-            const m = String(curr.getMonth() + 1).padStart(2, '0');
-            const d = String(curr.getDate()).padStart(2, '0');
-            const key = `${y}-${m}-${d}`;
-            if (!daySessionsMap.has(key)) {
-              daySessionsMap.set(key, []);
-            }
-            daySessionsMap.get(key)!.push(item);
-            curr.setDate(curr.getDate() + 1);
+      let mIdx: number | null = null;
+
+      // 1. Check actual timing month
+      if (item.actualTimingMonth) {
+        const mKey = item.actualTimingMonth.toLowerCase().trim();
+        if (monthMapLookup[mKey] !== undefined) {
+          mIdx = monthMapLookup[mKey];
+        }
+      }
+
+      // 2. Check actual date range
+      if (mIdx === null && item.actualDateRange && item.actualDateRange.includes('–')) {
+        const [startStr] = item.actualDateRange.split('–').map(s => s.trim());
+        const d = new Date(startStr);
+        if (!isNaN(d.getTime())) {
+          mIdx = d.getMonth();
+        }
+      }
+
+      // 3. Check planned timing note (e.g. "Scheduled in January", "May")
+      if (mIdx === null && item.plannedTimingNote) {
+        const noteClean = item.plannedTimingNote.toLowerCase().replace(/[^a-z]/g, ' ');
+        const words = noteClean.split(/\s+/);
+        for (const w of words) {
+          if (monthMapLookup[w] !== undefined) {
+            mIdx = monthMapLookup[w];
+            break;
           }
         }
       }
+
+      // 4. Fallback to Quarter (Q1 -> Jan/Feb/Mar, Q2 -> Apr/May/Jun, etc.)
+      if (mIdx === null && item.quarter) {
+        const qNum = parseInt(item.quarter.replace(/[^0-9]/g, ''), 10) || 1;
+        const baseMonth = (qNum - 1) * 3;
+        const roundOffset = (item.roundIndex - 1) % 3;
+        mIdx = Math.min(11, baseMonth + roundOffset);
+      }
+
+      if (mIdx === null) {
+        mIdx = 0;
+      }
+
+      itemsByMonth[mIdx].push(item);
     });
 
+    // Process each month to produce 7-column calendar weeks and multi-day spanning bars
     return monthNames.map((name, monthIndex) => {
-      // Days in month
       const daysInMonth = new Date(selectedYear, monthIndex + 1, 0).getDate();
-      // First day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-      const firstDayOfWeek = new Date(selectedYear, monthIndex, 1).getDay();
-
-      // Quarter
+      const firstDayOfWeek = new Date(selectedYear, monthIndex, 1).getDay(); // 0 = Sun ... 6 = Sat
       const quarterNumber = Math.floor(monthIndex / 3) + 1;
       const quarterName = `Q${quarterNumber}`;
 
-      // Build grid cells (up to 35 or 42 cells)
-      const days: Array<{
+      // Build flat cells
+      const flatCells: Array<{
         dayNumber: number | null;
         dateStr: string | null;
+        dayOfWeek: number;
         isWorkday: boolean;
-        sessions: typeof annualSessionLineItems;
       }> = [];
 
-      // Empty leading slots
+      // Leading empty slots
       for (let i = 0; i < firstDayOfWeek; i++) {
-        days.push({
+        flatCells.push({
           dayNumber: null,
           dateStr: null,
-          isWorkday: false,
-          sessions: []
+          dayOfWeek: i,
+          isWorkday: false
         });
       }
 
-      // Actual month days
+      // Real days
       for (let d = 1; d <= daysInMonth; d++) {
         const mStr = String(monthIndex + 1).padStart(2, '0');
         const dStr = String(d).padStart(2, '0');
         const dateStr = `${selectedYear}-${mStr}-${dStr}`;
         const dayOfWeek = new Date(selectedYear, monthIndex, d).getDay();
-        // Sunday (0) to Thursday (4) are standard work days in Egypt / Construction
         const isWorkday = dayOfWeek >= 0 && dayOfWeek <= 4;
-        const matched = daySessionsMap.get(dateStr) || [];
 
-        days.push({
+        flatCells.push({
           dayNumber: d,
           dateStr,
-          isWorkday,
-          sessions: matched
+          dayOfWeek,
+          isWorkday
         });
       }
 
-      // Trailing slots to complete 35 or 42 grid
-      const totalCellsNeeded = days.length <= 35 ? 35 : 42;
-      while (days.length < totalCellsNeeded) {
-        days.push({
+      // Complete to full 7-day weeks (35 or 42 cells)
+      const totalCellsNeeded = flatCells.length <= 35 ? 35 : 42;
+      while (flatCells.length < totalCellsNeeded) {
+        flatCells.push({
           dayNumber: null,
           dateStr: null,
-          isWorkday: false,
-          sessions: []
+          dayOfWeek: flatCells.length % 7,
+          isWorkday: false
         });
       }
 
-      // Sessions scheduled in this month (both dated and planned)
-      const monthShort = new Date(selectedYear, monthIndex, 1).toLocaleString('en-US', { month: 'short' });
-      const monthFull = new Date(selectedYear, monthIndex, 1).toLocaleString('en-US', { month: 'long' });
+      // Group flatCells into weeks (rows of 7 days)
+      const weeks: Array<typeof flatCells> = [];
+      for (let i = 0; i < flatCells.length; i += 7) {
+        weeks.push(flatCells.slice(i, i + 7));
+      }
 
-      const monthSessions = annualSessionLineItems.filter(item => {
-        if (item.actualTimingMonth && item.actualTimingMonth.toLowerCase() === monthShort.toLowerCase()) {
-          return true;
+      // Schedule all sessions assigned to this month into concrete day ranges
+      const monthSessions = itemsByMonth[monthIndex];
+
+      // Standard work slots inside this month (Sun to Thu weeks)
+      // Slot 1: Days 4-8 (or 3-7 depending on start), Slot 2: Days 11-15, Slot 3: Days 18-22, Slot 4: Days 25-29
+      const scheduledEventSpans: Array<{
+        session: (typeof annualSessionLineItems)[0];
+        startDay: number;
+        endDay: number;
+        duration: number;
+      }> = [];
+
+      // Find suitable Sunday-starts for consecutive work-weeks
+      const sundayDays: number[] = [];
+      for (let d = 1; d <= daysInMonth; d++) {
+        if (new Date(selectedYear, monthIndex, d).getDay() === 0) {
+          sundayDays.push(d);
         }
-        if (item.plannedTimingNote && (
-          item.plannedTimingNote.toLowerCase().includes(monthShort.toLowerCase()) ||
-          item.plannedTimingNote.toLowerCase().includes(monthFull.toLowerCase())
-        )) {
-          return true;
+      }
+
+      monthSessions.forEach((session, sIdx) => {
+        let startDay = 0;
+        let endDay = 0;
+
+        // If session has exact dates in this month
+        if (session.actualDateRange && session.actualDateRange.includes('–')) {
+          const [startStr, endStr] = session.actualDateRange.split('–').map(s => s.trim());
+          const sDate = new Date(startStr);
+          const eDate = new Date(endStr);
+          if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime()) && sDate.getMonth() === monthIndex) {
+            startDay = sDate.getDate();
+            endDay = Math.min(daysInMonth, eDate.getDate());
+          }
         }
-        return false;
+
+        // If not exact or fell outside, assign to a dedicated week in this month
+        if (!startDay || !endDay || endDay < startDay) {
+          const targetSun = sundayDays[sIdx % Math.max(1, sundayDays.length)] || ((sIdx * 7) % Math.max(1, daysInMonth - 5) + 1);
+          startDay = Math.max(1, Math.min(daysInMonth - 3, targetSun));
+          // Default 3 to 4 working days span
+          const durationDays = 3;
+          endDay = Math.min(daysInMonth, startDay + durationDays - 1);
+        }
+
+        scheduledEventSpans.push({
+          session,
+          startDay,
+          endDay,
+          duration: endDay - startDay + 1
+        });
+      });
+
+      // Break each event span across calendar week rows for continuous horizontal bars
+      const weekRows = weeks.map((weekCells) => {
+        const firstCellDay = weekCells.find(c => c.dayNumber !== null)?.dayNumber || null;
+        const lastCellDay = weekCells.slice().reverse().find(c => c.dayNumber !== null)?.dayNumber || null;
+
+        const eventBarsInThisWeek: Array<{
+          session: (typeof annualSessionLineItems)[0];
+          startCol: number; // 0 to 6
+          spanCols: number; // 1 to 7
+          isStart: boolean;
+          isEnd: boolean;
+        }> = [];
+
+        if (firstCellDay !== null && lastCellDay !== null) {
+          scheduledEventSpans.forEach(ev => {
+            if (ev.startDay <= lastCellDay && ev.endDay >= firstCellDay) {
+              const segStartDay = Math.max(ev.startDay, firstCellDay);
+              const segEndDay = Math.min(ev.endDay, lastCellDay);
+
+              const startCol = weekCells.findIndex(c => c.dayNumber === segStartDay);
+              const endCol = weekCells.findIndex(c => c.dayNumber === segEndDay);
+
+              if (startCol !== -1 && endCol !== -1 && endCol >= startCol) {
+                eventBarsInThisWeek.push({
+                  session: ev.session,
+                  startCol,
+                  spanCols: endCol - startCol + 1,
+                  isStart: ev.startDay === segStartDay,
+                  isEnd: ev.endDay === segEndDay
+                });
+              }
+            }
+          });
+        }
+
+        return {
+          cells: weekCells,
+          events: eventBarsInThisWeek
+        };
       });
 
       return {
         monthIndex,
         name,
         quarter: quarterName,
-        days,
+        days: flatCells,
+        weekRows,
         monthSessions
       };
     });
@@ -2129,70 +2247,76 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                 <span className="text-amber-600 dark:text-amber-400">S</span>
                               </div>
 
-                              {/* Calendar 7-Column Day Grid */}
-                              <div className="grid grid-cols-7 divide-x divide-y divide-slate-100 dark:divide-slate-800/50 text-[11px]">
-                                {month.days.map((day, idx) => {
-                                  if (day.dayNumber === null) {
-                                    return (
-                                      <div 
-                                        key={`empty_${idx}`} 
-                                        className="h-10 sm:h-12 bg-slate-50/50 dark:bg-slate-950/40 opacity-40" 
-                                      />
-                                    );
-                                  }
+                              {/* Calendar 7-Column Day Grid with Continuous Multi-Day Spanning Event Bars */}
+                              <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800/50 text-[11px]">
+                                {month.weekRows.map((wRow, wIdx) => (
+                                  <div key={`w_${wIdx}`} className="relative">
+                                    {/* 7 Day Slots */}
+                                    <div className="grid grid-cols-7 divide-x divide-slate-100 dark:divide-slate-800/50">
+                                      {wRow.cells.map((day, dIdx) => {
+                                        if (day.dayNumber === null) {
+                                          return (
+                                            <div 
+                                              key={`empty_${wIdx}_${dIdx}`} 
+                                              className="h-10 sm:h-12 bg-slate-50/40 dark:bg-slate-950/30 opacity-30" 
+                                            />
+                                          );
+                                        }
 
-                                  const hasSessions = day.sessions.length > 0;
-                                  const primarySession = day.sessions[0];
-                                  
-                                  // Determine cell color
-                                  let cellBg = 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
-                                  let pillColor = '';
-                                  
-                                  if (hasSessions) {
-                                    if (primarySession.status === 'completed') {
-                                      cellBg = 'bg-emerald-100/70 hover:bg-emerald-200/80 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-950 dark:text-emerald-100 font-black cursor-pointer';
-                                      pillColor = 'bg-emerald-600 text-white';
-                                    } else if (primarySession.status === 'in_progress') {
-                                      cellBg = 'bg-amber-100/80 hover:bg-amber-200/90 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 text-amber-950 dark:text-amber-100 font-black cursor-pointer';
-                                      pillColor = 'bg-amber-500 text-slate-950';
-                                    } else {
-                                      cellBg = 'bg-blue-50/80 hover:bg-blue-100/90 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100 font-black cursor-pointer';
-                                      pillColor = 'bg-[#002D62] text-white';
-                                    }
-                                  }
-
-                                  return (
-                                    <div
-                                      key={`day_${day.dayNumber}`}
-                                      onClick={() => hasSessions && setSelectedCalendarSession(primarySession)}
-                                      className={`h-10 sm:h-12 p-1 flex flex-col justify-between transition-all duration-150 relative group ${cellBg}`}
-                                      title={hasSessions ? `${primarySession.courseTitle} (${primarySession.status})` : undefined}
-                                    >
-                                      {/* Day Number */}
-                                      <div className="flex items-center justify-between">
-                                        <span className={`text-[10px] font-bold ${
-                                          hasSessions 
-                                            ? 'text-inherit font-black' 
-                                            : 'text-slate-500 dark:text-slate-400'
-                                        }`}>
-                                          {day.dayNumber}
-                                        </span>
-                                        {hasSessions && (
-                                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />
-                                        )}
-                                      </div>
-
-                                      {/* Micro session indicator badge */}
-                                      {hasSessions && (
-                                        <div className="truncate">
-                                          <span className={`block truncate px-1 py-0.2 rounded text-[8px] font-black uppercase tracking-tighter ${pillColor}`}>
-                                            {primarySession.courseTitle.substring(0, 8)}..
-                                          </span>
-                                        </div>
-                                      )}
+                                        return (
+                                          <div
+                                            key={`day_${wIdx}_${day.dayNumber}`}
+                                            className="h-10 sm:h-12 p-1 flex flex-col justify-start bg-white dark:bg-slate-900 transition-colors"
+                                          >
+                                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                                              {day.dayNumber}
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
                                     </div>
-                                  );
-                                })}
+
+                                    {/* Continuous Multi-Day Event Bars Layer */}
+                                    {wRow.events.length > 0 && (
+                                      <div className="absolute left-0 right-0 bottom-1 px-0.5 pointer-events-auto space-y-0.5">
+                                        {wRow.events.slice(0, 1).map((ev, evIdx) => {
+                                          const leftPct = (ev.startCol / 7) * 100;
+                                          const widthPct = (ev.spanCols / 7) * 100;
+
+                                          let barBg = 'bg-[#002D62] text-white hover:bg-blue-900 border-blue-950 shadow-xs';
+                                          if (ev.session.status === 'completed') {
+                                            barBg = 'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-800 shadow-xs';
+                                          } else if (ev.session.status === 'in_progress') {
+                                            barBg = 'bg-amber-400 text-slate-950 hover:bg-amber-500 border-amber-600 shadow-xs font-black';
+                                          }
+
+                                          return (
+                                            <div
+                                              key={`bar_${wIdx}_${evIdx}`}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedCalendarSession(ev.session);
+                                              }}
+                                              style={{
+                                                marginLeft: `${leftPct}%`,
+                                                width: `calc(${widthPct}% - 2px)`
+                                              }}
+                                              className={`h-5 px-1.5 rounded flex items-center justify-between gap-1 text-[9px] font-black cursor-pointer border transition-all duration-150 transform hover:scale-[1.01] overflow-hidden ${barBg}`}
+                                              title={`${ev.session.courseTitle} (${ev.session.status}) — Click for details`}
+                                            >
+                                              <span className="truncate tracking-tight uppercase">
+                                                {ev.session.courseTitle}
+                                              </span>
+                                              <span className="text-[8px] opacity-90 shrink-0 font-bold">
+                                                R{ev.session.roundIndex}
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
                               </div>
 
                               {/* Month Bottom Legend / Course Summary */}
