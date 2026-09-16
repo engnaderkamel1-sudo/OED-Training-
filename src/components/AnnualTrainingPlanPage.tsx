@@ -3756,15 +3756,17 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       </AnimatePresence>
 
       {/* Holidays & Vacations Management Modal */}
-      <HolidaysAndVacationsModal
-        isOpen={isHolidayModalOpen}
-        onClose={() => {
-          setIsHolidayModalOpen(false);
-          setHolidayModalInitialDate(undefined);
-        }}
-        selectedYear={selectedYear}
-        initialDate={holidayModalInitialDate}
-      />
+      {isHolidayModalOpen && (
+        <HolidaysAndVacationsModal
+          isOpen={isHolidayModalOpen}
+          onClose={() => {
+            setIsHolidayModalOpen(false);
+            setHolidayModalInitialDate(undefined);
+          }}
+          selectedYear={selectedYear}
+          initialDate={holidayModalInitialDate}
+        />
+      )}
     </div>
   );
 };

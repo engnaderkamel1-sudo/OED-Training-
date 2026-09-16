@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.8.1",
-  releaseName: "Google Calendar Sync & iCal Feed Import",
+  version: "1.8.2",
+  releaseName: "Holidays Modal Hook Lifecycle & Error 310 Fix",
   buildDate: "2026",
   buildTimestamp: "2026",
   

@@ -40,7 +40,18 @@ export const HolidaysAndVacationsModal: React.FC<HolidaysAndVacationsModalProps>
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  if (!isOpen) return null;
+  // Google Calendar Integration State
+  const [showGoogleSync, setShowGoogleSync] = useState<boolean>(false);
+  const [isSyncingGCal, setIsSyncingGCal] = useState<boolean>(false);
+  const [gcalImportType, setGcalImportType] = useState<HolidayType>(isAdmin ? 'public' : 'personal');
+  const [parsedGcalEvents, setParsedGcalEvents] = useState<Array<{
+    title: string;
+    startDate: string;
+    endDate: string;
+    category: VacationCategory;
+    description?: string;
+  }>>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Filter items for current selected year
   const yearItems = holidaysAndVacations.filter(item => {
@@ -114,19 +125,6 @@ export const HolidaysAndVacationsModal: React.FC<HolidaysAndVacationsModalProps>
       }
     }
   };
-
-  // Google Calendar Integration State
-  const [showGoogleSync, setShowGoogleSync] = useState<boolean>(false);
-  const [isSyncingGCal, setIsSyncingGCal] = useState<boolean>(false);
-  const [gcalImportType, setGcalImportType] = useState<HolidayType>(isAdmin ? 'public' : 'personal');
-  const [parsedGcalEvents, setParsedGcalEvents] = useState<Array<{
-    title: string;
-    startDate: string;
-    endDate: string;
-    category: VacationCategory;
-    description?: string;
-  }>>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Parse iCal (.ics) string format
   const parseICalContent = (icsText: string) => {
@@ -350,6 +348,8 @@ export const HolidaysAndVacationsModal: React.FC<HolidaysAndVacationsModalProps>
       setIsSyncingGCal(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs overflow-y-auto">
