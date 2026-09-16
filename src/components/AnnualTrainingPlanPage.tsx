@@ -2788,27 +2788,6 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                       </p>
                     </div>
 
-                    {/* Lined Note Pad Simulator */}
-                    <div className="space-y-2 pt-1">
-                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
-                        📝 Operational Notes
-                      </span>
-                      <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 font-medium">
-                        <div className="p-2 rounded bg-amber-50/70 dark:bg-slate-800 border border-amber-200/80 dark:border-slate-700">
-                          <span className="font-bold text-amber-900 dark:text-amber-300 block">Round Target:</span>
-                          <span>6 participants planned per standard course session.</span>
-                        </div>
-                        <div className="p-2 rounded bg-blue-50/70 dark:bg-slate-800 border border-blue-200/80 dark:border-slate-700">
-                          <span className="font-bold text-[#002D62] dark:text-blue-300 block">Pacing Cadence:</span>
-                          <span>Monthly review of actual vs planned round completions.</span>
-                        </div>
-                        <div className="p-2 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                          <span className="font-bold text-slate-800 dark:text-slate-200 block">Interactive Poster:</span>
-                          <span>Click any highlighted day in the calendar to view full course and trainer details.</span>
-                        </div>
-                      </div>
-                    </div>
-
 
 
                   </div>

@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.8.5",
-  releaseName: "Continuous Multi-Day Holiday Spanning Bars",
+  version: "1.8.6",
+  releaseName: "Clean Calendar Notes Panel",
   buildDate: "2026",
   buildTimestamp: "2026",
   
