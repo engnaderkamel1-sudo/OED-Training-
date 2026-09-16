@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.7.1",
-  releaseName: "Quarterly Wall Calendar Multi-Day Spanning Event Bars",
+  version: "1.7.2",
+  releaseName: "12-Month Operational Calendar Balance & Awaiting Approval Status",
   buildDate: "2026",
   buildTimestamp: "2026",
   

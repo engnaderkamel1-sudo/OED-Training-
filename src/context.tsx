@@ -278,12 +278,223 @@ export const DEMO_FALLBACK_CLEANED_RECORDS: CleanedRecord[] = [
   }
 ];
 
+export const DEFAULT_CERTIFIED_2026_TARGETS: AnnualPlanCourseTarget[] = [
+  {
+    id: 't_2026_01_electrical_power',
+    courseTitle: 'Electrical Power Generation',
+    courseTitleEn: 'Electrical Power Generation',
+    targetRounds: 2,
+    traineesPerRound: 6,
+    targetTrainees: 12,
+    targetAudience: 'engineers',
+    quarter: 'Q1',
+    track: 'electrical',
+    durationDays: 5,
+    notes: 'Scheduled in January'
+  },
+  {
+    id: 't_2026_02_diesel_engine_eng',
+    courseTitle: 'Diesel Engine Mechanical Fundamentals',
+    courseTitleEn: 'Diesel Engine Mechanical Fundamentals',
+    targetRounds: 1,
+    traineesPerRound: 6,
+    targetTrainees: 6,
+    targetAudience: 'engineers',
+    quarter: 'Q1',
+    track: 'mechanical',
+    durationDays: 5,
+    notes: 'Scheduled in February'
+  },
+  {
+    id: 't_2026_03_diesel_engine_tech',
+    courseTitle: 'Diesel Engine Mechanical Fundamentals',
+    courseTitleEn: 'Diesel Engine Mechanical Fundamentals',
+    targetRounds: 1,
+    traineesPerRound: 6,
+    targetTrainees: 6,
+    targetAudience: 'technicians_operators',
+    quarter: 'Q1',
+    track: 'mechanical',
+    durationDays: 5,
+    notes: 'Scheduled in February'
+  },
+  {
+    id: 't_2026_04_electricity_fund',
+    courseTitle: 'Electricity Fundamentals',
+    courseTitleEn: 'Electricity Fundamentals',
+    targetRounds: 1,
+    traineesPerRound: 6,
+    targetTrainees: 6,
+    targetAudience: 'engineers',
+    quarter: 'Q1',
+    track: 'electrical',
+    durationDays: 5,
+    notes: 'Scheduled in March'
+  },
+  {
+    id: 't_2026_05_electronic_diesel_et',
+    courseTitle: 'Electronic Diesel Engine & ET',
+    courseTitleEn: 'Electronic Diesel Engine & ET',
+    targetRounds: 1,
+    traineesPerRound: 6,
+    targetTrainees: 6,
+    targetAudience: 'engineers',
+    quarter: 'Q1',
+    track: 'electrical',
+    durationDays: 5,
+    notes: 'Scheduled in March'
+  },
+  {
+    id: 't_2026_06_hydraulic_fund_eng',
+    courseTitle: 'Hydraulic Fundamentals',
+    courseTitleEn: 'Hydraulic Fundamentals',
+    targetRounds: 1,
+    traineesPerRound: 6,
+    targetTrainees: 6,
+    targetAudience: 'engineers',
+    quarter: 'Q2',
+    track: 'hydraulic',
+    durationDays: 5,
+    notes: 'Scheduled in April'
+  },
+  {
+    id: 't_2026_07_hydraulic_fund_tech',
+    courseTitle: 'Hydraulic Fundamentals',
+    courseTitleEn: 'Hydraulic Fundamentals',
+    targetRounds: 2,
+    traineesPerRound: 6,
+    targetTrainees: 12,
+    targetAudience: 'technicians_operators',
+    quarter: 'Q2',
+    track: 'hydraulic',
+    durationDays: 5,
+    notes: 'Scheduled in May'
+  },
+  {
+    id: 't_2026_08_adv_hydraulic',
+    courseTitle: 'Advanced Hydraulic Control Systems',
+    courseTitleEn: 'Advanced Hydraulic Control Systems',
+    targetRounds: 2,
+    traineesPerRound: 6,
+    targetTrainees: 12,
+    targetAudience: 'engineers',
+    quarter: 'Q2',
+    track: 'hydraulic',
+    durationDays: 5,
+    notes: 'Scheduled in June'
+  },
+  {
+    id: 't_2026_09_power_train',
+    courseTitle: 'Power Train',
+    courseTitleEn: 'Power Train',
+    targetRounds: 1,
+    traineesPerRound: 6,
+    targetTrainees: 6,
+    targetAudience: 'engineers',
+    quarter: 'Q3',
+    track: 'hydraulic',
+    durationDays: 5,
+    notes: 'Scheduled in July'
+  },
+  {
+    id: 't_2026_10_950h_loader',
+    courseTitle: '950H Loader',
+    courseTitleEn: '950H Loader',
+    targetRounds: 2,
+    traineesPerRound: 6,
+    targetTrainees: 12,
+    targetAudience: 'engineers',
+    quarter: 'Q3',
+    track: 'heavy_machinery',
+    durationDays: 5,
+    notes: 'Scheduled in August'
+  },
+  {
+    id: 't_2026_11_summer_training',
+    courseTitle: 'Summer Training',
+    courseTitleEn: 'Summer Training',
+    targetRounds: 1,
+    traineesPerRound: 6,
+    targetTrainees: 6,
+    targetAudience: 'summer_training',
+    quarter: 'Q3',
+    track: 'mechanical',
+    durationDays: 5,
+    notes: 'Scheduled in September'
+  },
+  {
+    id: 't_2026_12_defensive_drive',
+    courseTitle: 'Defensive Drive',
+    courseTitleEn: 'Defensive Drive',
+    targetRounds: 4,
+    traineesPerRound: 6,
+    targetTrainees: 24,
+    targetAudience: 'technicians_operators',
+    quarter: 'Q3',
+    track: 'heavy_machinery',
+    durationDays: 5,
+    notes: 'Scheduled in September'
+  },
+  {
+    id: 't_2026_13_sos',
+    courseTitle: 'Scheduled Oil Sample S.O.S',
+    courseTitleEn: 'Scheduled Oil Sample S.O.S',
+    targetRounds: 2,
+    traineesPerRound: 6,
+    targetTrainees: 12,
+    targetAudience: 'engineers',
+    quarter: 'Q4',
+    track: 'quality_sos',
+    durationDays: 5,
+    notes: 'Scheduled in October'
+  },
+  {
+    id: 't_2026_14_lessons_learned_eng',
+    courseTitle: 'Maintenance & Repair Lessons Learned 1',
+    courseTitleEn: 'Maintenance & Repair Lessons Learned 1',
+    targetRounds: 2,
+    traineesPerRound: 6,
+    targetTrainees: 12,
+    targetAudience: 'engineers',
+    quarter: 'Q4',
+    track: 'mechanical',
+    durationDays: 5,
+    notes: 'Scheduled in October'
+  },
+  {
+    id: 't_2026_15_lessons_learned_tech',
+    courseTitle: 'Maintenance & Repair Lessons Learned 1',
+    courseTitleEn: 'Maintenance & Repair Lessons Learned 1',
+    targetRounds: 2,
+    traineesPerRound: 6,
+    targetTrainees: 12,
+    targetAudience: 'technicians_operators',
+    quarter: 'Q4',
+    track: 'mechanical',
+    durationDays: 5,
+    notes: 'Scheduled in November'
+  },
+  {
+    id: 't_2026_16_14m_motor_grader',
+    courseTitle: '14M Motor Grader',
+    courseTitleEn: '14M Motor Grader',
+    targetRounds: 2,
+    traineesPerRound: 6,
+    targetTrainees: 12,
+    targetAudience: 'engineers',
+    quarter: 'Q4',
+    track: 'heavy_machinery',
+    durationDays: 5,
+    notes: 'Scheduled in December'
+  }
+];
+
 export const DEFAULT_CERTIFIED_2026_PLAN: AnnualYearPlan = {
   id: '2026',
   year: 2026,
   title: 'Annual Training Plan 2026',
   status: 'active',
-  targets: []
+  targets: DEFAULT_CERTIFIED_2026_TARGETS
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -420,7 +631,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const stored = localStorage.getItem('oed_annual_plans');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map(p => {
+            if (p.year === 2026 && (!p.targets || p.targets.length === 0)) {
+              return { ...p, targets: DEFAULT_CERTIFIED_2026_TARGETS };
+            }
+            return p;
+          });
+        }
       }
     } catch (e) {}
     return [DEFAULT_CERTIFIED_2026_PLAN];
@@ -665,7 +883,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const unsubAnnualPlans = onSnapshot(collection(db, "annualTrainingPlans"), (snapshot) => {
       if (!snapshot.empty) {
         const plans: AnnualYearPlan[] = [];
-        snapshot.forEach((d) => plans.push(d.data() as AnnualYearPlan));
+        snapshot.forEach((d) => {
+          const pData = d.data() as AnnualYearPlan;
+          if (pData.year === 2026 && (!pData.targets || pData.targets.length === 0)) {
+            pData.targets = DEFAULT_CERTIFIED_2026_TARGETS;
+          }
+          plans.push(pData);
+        });
         plans.sort((a, b) => b.year - a.year);
         setAnnualPlansState(plans);
         try {

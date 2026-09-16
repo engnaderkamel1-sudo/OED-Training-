@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { useAppContext, generateUUID } from '../context';
+import { useAppContext, generateUUID, DEFAULT_CERTIFIED_2026_PLAN, DEFAULT_CERTIFIED_2026_TARGETS } from '../context';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CalendarRange, 
@@ -59,7 +59,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
 
   // Active Top-Level Navigation Tab: 'plan' | 'annualResults' | 'wallCalendar' | 'achievements' | 'audienceMatrix'
   const [activeMainTab, setActiveMainTab] = useState<'plan' | 'annualResults' | 'wallCalendar' | 'achievements' | 'audienceMatrix'>('plan');
-  const [annualResultsFilter, setAnnualResultsFilter] = useState<'ALL' | 'COMPLETED' | 'IN_PROGRESS' | 'PENDING'>('ALL');
+  const [annualResultsFilter, setAnnualResultsFilter] = useState<'ALL' | 'COMPLETED' | 'IN_PROGRESS' | 'AWAITING_APPROVAL' | 'PENDING'>('ALL');
   const [selectedCalendarSession, setSelectedCalendarSession] = useState<any | null>(null);
 
   // Selected Year State (defaults to current year 2026 or newest)
@@ -76,8 +76,14 @@ export const AnnualTrainingPlanPage: React.FC = () => {
   // Active Year Plan
   const currentPlan = useMemo(() => {
     const found = annualPlans.find(p => p.year === selectedYear);
-    if (found) return found;
-    return {
+    if (found && found.targets && found.targets.length > 0) return found;
+    if (selectedYear === 2026) {
+      return {
+        ...DEFAULT_CERTIFIED_2026_PLAN,
+        id: found?.id || '2026'
+      };
+    }
+    return found || {
       id: String(selectedYear),
       year: selectedYear,
       title: `Annual Training Plan ${selectedYear}`,
@@ -418,7 +424,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       actualDateRange: string | null;
       actualTimingMonth: string | null;
       isDateChanged: boolean;
-      status: 'completed' | 'in_progress' | 'pending';
+      status: 'completed' | 'in_progress' | 'awaiting_approval' | 'scheduled' | 'pending';
       plannedTrainees: number;
       actualTrainees: number;
       matchedSessionId?: string;
@@ -436,14 +442,14 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         return timeA - timeB;
       });
 
-      // Split into completed vs active (in-progress/scheduled)
+      // Split into completed vs active (in-progress/scheduled/pending approval)
       const completedSessions = liveSessions.filter((s: any) => s.status?.toLowerCase() === 'completed');
       const activeSessions = liveSessions.filter((s: any) => s.status?.toLowerCase() !== 'completed' && s.status?.toLowerCase() !== 'cancelled');
 
       const totalRoundsToDisplay = Math.max(plannedRounds, completedSessions.length + activeSessions.length);
 
       for (let r = 1; r <= totalRoundsToDisplay; r++) {
-        let status: 'completed' | 'in_progress' | 'pending' = 'pending';
+        let status: 'completed' | 'in_progress' | 'awaiting_approval' | 'scheduled' | 'pending' = 'pending';
         let actualDates: string | null = null;
         let actualTimingMonth: string | null = null;
         let actualTrainees = 0;
@@ -463,7 +469,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
           actualTrainees = matchedSession.registeredUsers?.length || tpr;
         } else if (r <= completedSessions.length + activeSessions.length) {
           matchedSession = activeSessions[r - completedSessions.length - 1];
-          status = 'in_progress';
+          
           if (matchedSession.startDate && matchedSession.endDate) {
             actualDates = `${matchedSession.startDate} – ${matchedSession.endDate}`;
             try {
@@ -471,7 +477,31 @@ export const AnnualTrainingPlanPage: React.FC = () => {
             } catch (e) {
               actualTimingMonth = null;
             }
+          } else if (matchedSession.sessionDate) {
+            actualDates = matchedSession.sessionDate;
+            try {
+              actualTimingMonth = new Date(matchedSession.sessionDate).toLocaleString('en-US', { month: 'short' });
+            } catch (e) {
+              actualTimingMonth = null;
+            }
           }
+
+          // Evaluate session end and start against today's date
+          const todayStr = new Date().toISOString().split('T')[0];
+          const sEnd = (matchedSession.endDate || matchedSession.sessionDate || '').split('T')[0];
+          const sStart = (matchedSession.startDate || matchedSession.sessionDate || '').split('T')[0];
+
+          if (sEnd && sEnd < todayStr) {
+            // Scheduled dates have passed, but admin hasn't finalized/approved it yet!
+            status = 'awaiting_approval';
+          } else if (sStart && sStart > todayStr) {
+            // Future upcoming dates
+            status = 'scheduled';
+          } else {
+            // Currently active today
+            status = 'in_progress';
+          }
+
           actualTrainees = matchedSession.registeredUsers?.length || 0;
         } else if (r <= (t.completedRounds || 0)) {
           // Historical completed batch
@@ -526,7 +556,8 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       // Status filter
       if (annualResultsFilter === 'COMPLETED' && item.status !== 'completed') return false;
       if (annualResultsFilter === 'IN_PROGRESS' && item.status !== 'in_progress') return false;
-      if (annualResultsFilter === 'PENDING' && item.status !== 'pending') return false;
+      if (annualResultsFilter === 'AWAITING_APPROVAL' && item.status !== 'awaiting_approval') return false;
+      if (annualResultsFilter === 'PENDING' && item.status !== 'pending' && item.status !== 'scheduled') return false;
 
       // Quarter filter
       if (selectedQuarter !== 'ALL' && item.quarter !== selectedQuarter) return false;
@@ -548,6 +579,8 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     const totalSessions = annualSessionLineItems.length;
     const completedSessions = annualSessionLineItems.filter(i => i.status === 'completed').length;
     const inProgressSessions = annualSessionLineItems.filter(i => i.status === 'in_progress').length;
+    const awaitingApprovalSessions = annualSessionLineItems.filter(i => i.status === 'awaiting_approval').length;
+    const scheduledSessions = annualSessionLineItems.filter(i => i.status === 'scheduled').length;
     const pendingSessions = annualSessionLineItems.filter(i => i.status === 'pending').length;
 
     const totalPlannedTrainees = annualSessionLineItems.reduce((acc, i) => acc + i.plannedTrainees, 0);
@@ -559,6 +592,8 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       totalSessions,
       completedSessions,
       inProgressSessions,
+      awaitingApprovalSessions,
+      scheduledSessions,
       pendingSessions,
       totalPlannedTrainees,
       actualTrainees,
@@ -618,25 +653,8 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     annualSessionLineItems.forEach(item => {
       let mIdx: number | null = null;
 
-      // 1. Check actual timing month
-      if (item.actualTimingMonth) {
-        const mKey = item.actualTimingMonth.toLowerCase().trim();
-        if (monthMapLookup[mKey] !== undefined) {
-          mIdx = monthMapLookup[mKey];
-        }
-      }
-
-      // 2. Check actual date range
-      if (mIdx === null && item.actualDateRange && item.actualDateRange.includes('–')) {
-        const [startStr] = item.actualDateRange.split('–').map(s => s.trim());
-        const d = new Date(startStr);
-        if (!isNaN(d.getTime())) {
-          mIdx = d.getMonth();
-        }
-      }
-
-      // 3. Check planned timing note (e.g. "Scheduled in January", "May")
-      if (mIdx === null && item.plannedTimingNote) {
+      // 1. Check planned timing note for explicit month (e.g. "Scheduled in January", "May")
+      if (item.plannedTimingNote) {
         const noteClean = item.plannedTimingNote.toLowerCase().replace(/[^a-z]/g, ' ');
         const words = noteClean.split(/\s+/);
         for (const w of words) {
@@ -647,7 +665,64 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         }
       }
 
-      // 4. Fallback to Quarter (Q1 -> Jan/Feb/Mar, Q2 -> Apr/May/Jun, etc.)
+      // 2. Master Course Schedule Map (guarantees official 12-month distribution for all 16 programs)
+      if (mIdx === null) {
+        const titleLower = (item.courseTitle || '').toLowerCase().trim();
+        const isTech = item.targetAudience === 'technicians_operators';
+
+        if (titleLower.includes('diesel engine') && isTech) {
+          mIdx = 1; // February (Technicians)
+        } else if (titleLower.includes('diesel engine')) {
+          mIdx = 1; // February (Engineers)
+        } else if (titleLower.includes('hydraulic') && isTech) {
+          mIdx = 4; // May (Technicians)
+        } else if (titleLower.includes('hydraulic') && titleLower.includes('advanced')) {
+          mIdx = 5; // June (Engineers)
+        } else if (titleLower.includes('hydraulic')) {
+          mIdx = 3; // April (Engineers)
+        } else if (titleLower.includes('maintenance') && isTech) {
+          mIdx = 10; // November (Technicians)
+        } else if (titleLower.includes('maintenance')) {
+          mIdx = 9; // October (Engineers)
+        } else if (titleLower.includes('electrical power') || titleLower.includes('generation')) {
+          mIdx = 0; // January (Engineers)
+        } else if (titleLower.includes('electricity') || titleLower.includes('fundamentals')) {
+          mIdx = 2; // March (Engineers)
+        } else if (titleLower.includes('electronic diesel') || titleLower.includes(' et')) {
+          mIdx = 2; // March (Engineers)
+        } else if (titleLower.includes('power train')) {
+          mIdx = 6; // July (Engineers)
+        } else if (titleLower.includes('950h') || titleLower.includes('loader')) {
+          mIdx = 7; // August (Engineers)
+        } else if (titleLower.includes('summer')) {
+          mIdx = 8; // September (Engineers)
+        } else if (titleLower.includes('defensive')) {
+          mIdx = 8; // September (Drivers)
+        } else if (titleLower.includes('oil sample') || titleLower.includes('s.o.s')) {
+          mIdx = 9; // October (Engineers)
+        } else if (titleLower.includes('14m') || titleLower.includes('grader')) {
+          mIdx = 11; // December (Engineers)
+        }
+      }
+
+      // 3. Check actual timing month if real session is scheduled in a specific month
+      if (mIdx === null && item.actualTimingMonth) {
+        const mKey = item.actualTimingMonth.toLowerCase().trim();
+        if (monthMapLookup[mKey] !== undefined) {
+          mIdx = monthMapLookup[mKey];
+        }
+      }
+
+      // 4. Check actual date range
+      if (mIdx === null && item.actualDateRange && item.actualDateRange.includes('–')) {
+        const [startStr] = item.actualDateRange.split('–').map(s => s.trim());
+        const d = new Date(startStr);
+        if (!isNaN(d.getTime())) {
+          mIdx = d.getMonth();
+        }
+      }
+
+      // 5. Fallback to Quarter (Q1 -> Jan/Feb/Mar, Q2 -> Apr/May/Jun, etc.)
       if (mIdx === null && item.quarter) {
         const qNum = parseInt(item.quarter.replace(/[^0-9]/g, ''), 10) || 1;
         const baseMonth = (qNum - 1) * 3;
@@ -1665,7 +1740,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
           {/* Annual Results Status Filter (Only when on annualResults tab) */}
           {activeMainTab === 'annualResults' && (
             <div className="flex items-center gap-1 border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-slate-800 pt-2 sm:pt-0 sm:pl-3 flex-wrap">
-              {(['ALL', 'COMPLETED', 'IN_PROGRESS', 'PENDING'] as const).map(f => (
+              {(['ALL', 'COMPLETED', 'IN_PROGRESS', 'AWAITING_APPROVAL', 'PENDING'] as const).map(f => (
                 <button
                   key={f}
                   type="button"
@@ -1681,8 +1756,10 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                     : f === 'COMPLETED'
                     ? `🟢 Completed (${annualResultsKPI.completedSessions})`
                     : f === 'IN_PROGRESS'
-                    ? `🟡 In Progress (${annualResultsKPI.inProgressSessions})`
-                    : `⚪ Pending (${annualResultsKPI.pendingSessions})`}
+                    ? `🟡 Active (${annualResultsKPI.inProgressSessions})`
+                    : f === 'AWAITING_APPROVAL'
+                    ? `🟠 Awaiting Approval (${annualResultsKPI.awaitingApprovalSessions})`
+                    : `⚪ Planned (${annualResultsKPI.pendingSessions + annualResultsKPI.scheduledSessions})`}
                 </button>
               ))}
             </div>
@@ -1880,44 +1957,45 @@ export const AnnualTrainingPlanPage: React.FC = () => {
               </span>
             </div>
 
-            {/* Card 3: In Progress Sessions */}
+            {/* Card 3: Active Now (In Progress) */}
             <div className="bg-amber-50/70 dark:bg-slate-900 rounded-2xl p-4 border border-amber-200/80 dark:border-slate-800 shadow-2xs">
               <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-500" />
-                <span>In Progress</span>
+                <span>Active Now</span>
               </span>
               <div className="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 mt-1">
                 {annualResultsKPI.inProgressSessions}
               </div>
               <span className="text-[11px] text-amber-700/80 dark:text-amber-400/80 font-medium block mt-1">
-                Active / Scheduled Now
+                Running Today
               </span>
             </div>
 
-            {/* Card 4: Pending Sessions */}
+            {/* Card 4: Awaiting Approval (Ended) */}
+            <div className="bg-orange-50/70 dark:bg-slate-900 rounded-2xl p-4 border border-orange-200/80 dark:border-slate-800 shadow-2xs">
+              <span className="text-[11px] font-bold text-orange-900 dark:text-orange-300 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                <span>Awaiting Approval</span>
+              </span>
+              <div className="text-2xl sm:text-3xl font-black text-orange-900 dark:text-orange-300 mt-1">
+                {annualResultsKPI.awaitingApprovalSessions}
+              </div>
+              <span className="text-[11px] text-orange-800/80 dark:text-orange-400/80 font-medium block mt-1">
+                Ended / Pending Sign-off
+              </span>
+            </div>
+
+            {/* Card 5: Planned Sessions */}
             <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xs">
               <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-slate-400" />
-                <span>Pending</span>
+                <span>Planned</span>
               </span>
               <div className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-200 mt-1">
-                {annualResultsKPI.pendingSessions}
+                {annualResultsKPI.pendingSessions + annualResultsKPI.scheduledSessions}
               </div>
               <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-1">
                 Upcoming in Schedule
-              </span>
-            </div>
-
-            {/* Card 5: Total Trainees Target */}
-            <div className="bg-blue-50/40 dark:bg-slate-900 rounded-2xl p-4 border border-blue-100 dark:border-slate-800 shadow-2xs">
-              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 block">
-                Total Trainees
-              </span>
-              <div className="text-xl sm:text-2xl font-black text-[#002D62] dark:text-white mt-1">
-                {annualResultsKPI.actualTrainees} <span className="text-xs font-semibold text-slate-400">/ {annualResultsKPI.totalPlannedTrainees}</span>
-              </div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block mt-1">
-                Target: 6 Trainees / Session
               </span>
             </div>
           </div>
@@ -2001,6 +2079,10 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                           ? 'bg-emerald-50/30 hover:bg-emerald-50/60 dark:bg-emerald-950/15 dark:hover:bg-emerald-950/30'
                           : item.status === 'in_progress'
                           ? 'bg-amber-50/30 hover:bg-amber-50/60 dark:bg-amber-950/15 dark:hover:bg-amber-950/30'
+                          : item.status === 'awaiting_approval'
+                          ? 'bg-orange-50/40 hover:bg-orange-50/70 dark:bg-orange-950/20 dark:hover:bg-orange-950/40'
+                          : item.status === 'scheduled'
+                          ? 'bg-sky-50/30 hover:bg-sky-50/60 dark:bg-sky-950/15 dark:hover:bg-sky-950/30'
                           : 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/50';
 
                       return (
@@ -2099,6 +2181,15 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                   Target: {item.plannedTrainees} Trainees
                                 </span>
                               </div>
+                            ) : item.status === 'awaiting_approval' ? (
+                              <div className="space-y-0.5">
+                                <span className="text-sm font-black text-orange-600 dark:text-orange-400 block">
+                                  {item.actualTrainees} Attended
+                                </span>
+                                <span className="text-[10px] text-orange-700/80 dark:text-orange-400/80 font-bold block">
+                                  Awaiting Sign-off ({item.plannedTrainees} Target)
+                                </span>
+                              </div>
                             ) : (
                               <div className="space-y-0.5">
                                 <span className="text-sm font-black text-slate-600 dark:text-slate-300 block">
@@ -2122,13 +2213,25 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                             {item.status === 'in_progress' && (
                               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shadow-2xs whitespace-nowrap">
                                 <Clock size={13} className="animate-spin text-amber-600 dark:text-amber-400" />
-                                <span>In Progress</span>
+                                <span>Active Now</span>
+                              </span>
+                            )}
+                            {item.status === 'awaiting_approval' && (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-orange-100 dark:bg-orange-900/40 text-orange-900 dark:text-orange-300 border border-orange-300 dark:border-orange-800 shadow-2xs whitespace-nowrap" title="Session dates have ended. Awaiting administrator finalization.">
+                                <AlertCircle size={13} className="text-orange-600 dark:text-orange-400" />
+                                <span>Awaiting Approval</span>
+                              </span>
+                            )}
+                            {item.status === 'scheduled' && (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-sky-50 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 shadow-2xs whitespace-nowrap">
+                                <Calendar size={13} className="text-sky-500" />
+                                <span>Scheduled</span>
                               </span>
                             )}
                             {item.status === 'pending' && (
                               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-2xs whitespace-nowrap">
                                 <Calendar size={13} className="text-slate-400" />
-                                <span>Pending</span>
+                                <span>Planned</span>
                               </span>
                             )}
                           </td>
@@ -2279,7 +2382,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                     {/* Continuous Multi-Day Event Bars Layer */}
                                     {wRow.events.length > 0 && (
                                       <div className="absolute left-0 right-0 bottom-1 px-0.5 pointer-events-auto space-y-0.5">
-                                        {wRow.events.slice(0, 1).map((ev, evIdx) => {
+                                        {wRow.events.slice(0, 2).map((ev, evIdx) => {
                                           const leftPct = (ev.startCol / 7) * 100;
                                           const widthPct = (ev.spanCols / 7) * 100;
 
@@ -2288,6 +2391,10 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                             barBg = 'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-800 shadow-xs';
                                           } else if (ev.session.status === 'in_progress') {
                                             barBg = 'bg-amber-400 text-slate-950 hover:bg-amber-500 border-amber-600 shadow-xs font-black';
+                                          } else if (ev.session.status === 'awaiting_approval') {
+                                            barBg = 'bg-orange-500 text-white hover:bg-orange-600 border-orange-700 shadow-xs font-bold';
+                                          } else if (ev.session.status === 'scheduled') {
+                                            barBg = 'bg-sky-600 text-white hover:bg-sky-700 border-sky-800 shadow-xs font-medium';
                                           }
 
                                           return (
@@ -2301,13 +2408,13 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                                 marginLeft: `${leftPct}%`,
                                                 width: `calc(${widthPct}% - 2px)`
                                               }}
-                                              className={`h-5 px-1.5 rounded flex items-center justify-between gap-1 text-[9px] font-black cursor-pointer border transition-all duration-150 transform hover:scale-[1.01] overflow-hidden ${barBg}`}
-                                              title={`${ev.session.courseTitle} (${ev.session.status}) — Click for details`}
+                                              className={`h-4.5 px-1.5 rounded flex items-center justify-between gap-1 text-[8.5px] font-black cursor-pointer border transition-all duration-150 transform hover:scale-[1.01] overflow-hidden ${barBg}`}
+                                              title={`${ev.session.courseTitle} (${ev.session.status.replace('_', ' ')}) — Click for details`}
                                             >
                                               <span className="truncate tracking-tight uppercase">
                                                 {ev.session.courseTitle}
                                               </span>
-                                              <span className="text-[8px] opacity-90 shrink-0 font-bold">
+                                              <span className="text-[7.5px] opacity-90 shrink-0 font-bold">
                                                 R{ev.session.roundIndex}
                                               </span>
                                             </div>
@@ -2340,9 +2447,13 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                           ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'
                                           : ms.status === 'in_progress'
                                           ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300'
+                                          : ms.status === 'awaiting_approval'
+                                          ? 'bg-orange-100 text-orange-900 dark:bg-orange-900/60 dark:text-orange-300'
+                                          : ms.status === 'scheduled'
+                                          ? 'bg-sky-100 text-sky-800 dark:bg-sky-900/60 dark:text-sky-300'
                                           : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                                       }`}>
-                                        {ms.status === 'completed' ? 'Done' : ms.status === 'in_progress' ? 'Active' : 'Plan'}
+                                        {ms.status === 'completed' ? 'Done' : ms.status === 'in_progress' ? 'Active' : ms.status === 'awaiting_approval' ? 'Awaiting' : ms.status === 'scheduled' ? 'Sched' : 'Plan'}
                                       </span>
                                     </div>
                                   ))
@@ -2388,33 +2499,53 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                       </span>
                       
                       <div className="flex items-center gap-2">
-                        <span className="w-4 h-4 rounded bg-emerald-500 border border-emerald-600 shrink-0" />
+                        <span className="w-3.5 h-3.5 rounded bg-emerald-500 border border-emerald-600 shrink-0" />
                         <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                           Completed Session
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-6">
-                        Held with verified attendees.
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-5">
+                        Delivered with verified attendees.
                       </p>
 
                       <div className="flex items-center gap-2 pt-1">
-                        <span className="w-4 h-4 rounded bg-amber-400 border border-amber-500 shrink-0" />
+                        <span className="w-3.5 h-3.5 rounded bg-amber-400 border border-amber-500 shrink-0" />
                         <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                          In Progress / Active
+                          Active Now (In Progress)
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-6">
-                        Currently scheduled in sessions.
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-5">
+                        Currently in session today.
                       </p>
 
                       <div className="flex items-center gap-2 pt-1">
-                        <span className="w-4 h-4 rounded bg-[#002D62] border border-blue-900 shrink-0" />
+                        <span className="w-3.5 h-3.5 rounded bg-orange-500 border border-orange-600 shrink-0" />
                         <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                          Planned Course
+                          Awaiting Approval
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-6">
-                        Targeted in upcoming months.
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-5">
+                        Dates ended; awaiting admin sign-off.
+                      </p>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="w-3.5 h-3.5 rounded bg-sky-600 border border-sky-700 shrink-0" />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          Scheduled Session
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-5">
+                        Assigned on upcoming calendar dates.
+                      </p>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="w-3.5 h-3.5 rounded bg-[#002D62] border border-blue-900 shrink-0" />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          Planned Course Target
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 pl-5">
+                        Targeted in annual operational plan.
                       </p>
                     </div>
 
@@ -2474,9 +2605,21 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                           ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300'
                           : selectedCalendarSession.status === 'in_progress'
                           ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300'
+                          : selectedCalendarSession.status === 'awaiting_approval'
+                          ? 'bg-orange-100 text-orange-900 dark:bg-orange-900/50 dark:text-orange-300'
+                          : selectedCalendarSession.status === 'scheduled'
+                          ? 'bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300'
                           : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                       }`}>
-                        {selectedCalendarSession.status === 'completed' ? '🟢 Completed' : selectedCalendarSession.status === 'in_progress' ? '🟡 In Progress' : '⚪ Pending'}
+                        {selectedCalendarSession.status === 'completed'
+                          ? '🟢 Completed'
+                          : selectedCalendarSession.status === 'in_progress'
+                          ? '🟡 Active Now'
+                          : selectedCalendarSession.status === 'awaiting_approval'
+                          ? '🟠 Awaiting Approval (Ended)'
+                          : selectedCalendarSession.status === 'scheduled'
+                          ? '🔵 Scheduled'
+                          : '⚪ Planned'}
                       </span>
                       <h3 className="text-lg font-black text-[#002D62] dark:text-white">
                         {selectedCalendarSession.courseTitle}
