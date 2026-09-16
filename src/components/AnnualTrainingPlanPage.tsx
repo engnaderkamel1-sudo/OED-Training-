@@ -2210,30 +2210,30 @@ export const AnnualTrainingPlanPage: React.FC = () => {
 
                       <div className="max-h-72 overflow-y-auto overflow-x-auto relative">
                         <table className="w-full text-left text-xs border-collapse">
-                          <thead className="sticky top-0 z-20 shadow-xs">
-                            <tr className="bg-slate-100 dark:bg-slate-800 border-b-2 border-slate-300 dark:border-slate-700">
-                              <th className="sticky top-0 bg-slate-100 dark:bg-slate-800 px-3 py-3 w-12 text-center font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] border-b-2 border-slate-300 dark:border-slate-700">
+                          <thead className="sticky top-0 z-20 shadow-md">
+                            <tr className="bg-[#002D62] text-white">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 w-12 text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 #
                               </th>
-                              <th className="sticky top-0 bg-slate-100 dark:bg-slate-800 px-3 py-3 min-w-[220px] font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] border-b-2 border-slate-300 dark:border-slate-700">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[220px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 Course Title
                               </th>
-                              <th className="sticky top-0 bg-slate-100 dark:bg-slate-800 px-3 py-3 min-w-[75px] text-center font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] border-b-2 border-slate-300 dark:border-slate-700">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[75px] text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 Quarter
                               </th>
-                              <th className="sticky top-0 bg-slate-100 dark:bg-slate-800 px-3 py-3 min-w-[150px] font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] border-b-2 border-slate-300 dark:border-slate-700">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[150px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 Target Audience
                               </th>
-                              <th className="sticky top-0 bg-slate-100 dark:bg-slate-800 px-3 py-3 min-w-[170px] font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] border-b-2 border-slate-300 dark:border-slate-700">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[170px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 Track
                               </th>
-                              <th className="sticky top-0 bg-slate-100 dark:bg-slate-800 px-3 py-3 min-w-[85px] text-center font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] border-b-2 border-slate-300 dark:border-slate-700">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[85px] text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 Sessions
                               </th>
-                              <th className="sticky top-0 bg-slate-100 dark:bg-slate-800 px-3 py-3 min-w-[120px] text-center font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] border-b-2 border-slate-300 dark:border-slate-700">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[120px] text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 Planned Trainees
                               </th>
-                              <th className="sticky top-0 bg-slate-100 dark:bg-slate-800 px-3 py-3 min-w-[130px] font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] border-b-2 border-slate-300 dark:border-slate-700">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[130px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 Schedule Note
                               </th>
                             </tr>

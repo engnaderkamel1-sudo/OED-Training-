@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.5.1",
-  releaseName: "Fixed Plan Table Headers & Column Alignment",
+  version: "1.5.2",
+  releaseName: "Executive Navy High-Contrast Plan Table Headers",
   buildDate: "2026",
   buildTimestamp: "2026",
   
