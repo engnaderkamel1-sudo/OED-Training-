@@ -2401,7 +2401,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                           return (
                                             <div 
                                               key={`empty_${wIdx}_${dIdx}`} 
-                                              className="h-10 sm:h-12 bg-slate-50/40 dark:bg-slate-950/30 opacity-30" 
+                                              className="min-h-[58px] sm:min-h-[66px] bg-slate-50/40 dark:bg-slate-950/30 opacity-30" 
                                             />
                                           );
                                         }
@@ -2415,11 +2415,11 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                                 setIsHolidayModalOpen(true);
                                               }
                                             }}
-                                            className={`h-10 sm:h-12 p-1 flex flex-col justify-start transition-colors cursor-pointer relative ${
+                                            className={`min-h-[58px] sm:min-h-[66px] p-1 pb-6 flex flex-col justify-start transition-colors cursor-pointer relative ${
                                               day.hasPublicHoliday 
-                                                ? 'bg-purple-50/85 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800/60' 
+                                                ? 'bg-purple-50/90 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 border border-purple-300 dark:border-purple-800/70' 
                                                 : day.hasPersonalVacation
-                                                ? 'bg-rose-50/85 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800/60'
+                                                ? 'bg-rose-50/90 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-300 dark:border-rose-800/70'
                                                 : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/60'
                                             }`}
                                             title={
@@ -2430,8 +2430,8 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                           >
                                             <div className="flex items-center justify-between w-full">
                                               <span className={`text-[10px] font-bold ${
-                                                day.hasPublicHoliday ? 'text-purple-700 dark:text-purple-300 font-black' :
-                                                day.hasPersonalVacation ? 'text-rose-600 dark:text-rose-400 font-black' :
+                                                day.hasPublicHoliday ? 'text-purple-800 dark:text-purple-300 font-black' :
+                                                day.hasPersonalVacation ? 'text-rose-700 dark:text-rose-400 font-black' :
                                                 'text-slate-500 dark:text-slate-400'
                                               }`}>
                                                 {day.dayNumber}
@@ -2443,6 +2443,32 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 dark:bg-rose-400 shrink-0" title="Personal Vacation" />
                                               )}
                                             </div>
+
+                                            {/* Directly Visible Official Public Holiday Banner */}
+                                            {day.hasPublicHoliday && (
+                                              <div 
+                                                className="mt-1 px-1.5 py-0.5 rounded bg-purple-700 text-white text-[7.5px] font-black leading-tight tracking-tight uppercase shadow-2xs flex items-center gap-1 z-10"
+                                                title={day.holidays?.find((h: any) => h.type === 'public')?.title}
+                                              >
+                                                <span className="w-1.5 h-1.5 rounded-full bg-[#FFC000] shrink-0" />
+                                                <span className="truncate">
+                                                  {day.holidays?.find((h: any) => h.type === 'public')?.title}
+                                                </span>
+                                              </div>
+                                            )}
+
+                                            {/* Directly Visible Personal Vacation Banner */}
+                                            {day.hasPersonalVacation && !day.hasPublicHoliday && (
+                                              <div 
+                                                className="mt-1 px-1.5 py-0.5 rounded bg-rose-600 text-white text-[7.5px] font-bold leading-tight tracking-tight shadow-2xs flex items-center gap-1 z-10"
+                                                title={day.holidays?.find((h: any) => h.type === 'personal')?.title}
+                                              >
+                                                <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
+                                                <span className="truncate">
+                                                  {day.holidays?.find((h: any) => h.type === 'personal')?.title}
+                                                </span>
+                                              </div>
+                                            )}
                                           </div>
                                         );
                                       })}
@@ -2450,7 +2476,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
 
                                     {/* Continuous Multi-Day Event Bars Layer */}
                                     {wRow.events.length > 0 && (
-                                      <div className="absolute left-0 right-0 bottom-1 px-0.5 pointer-events-auto space-y-0.5">
+                                      <div className="absolute left-0 right-0 bottom-1 px-0.5 pointer-events-auto space-y-0.5 z-20">
                                         {wRow.events.slice(0, 2).map((ev, evIdx) => {
                                           const leftPct = (ev.startCol / 7) * 100;
                                           const widthPct = (ev.spanCols / 7) * 100;
@@ -2497,6 +2523,16 @@ export const AnnualTrainingPlanPage: React.FC = () => {
 
                               {/* Month Bottom Legend / Course Summary */}
                               <div className="p-2 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800 space-y-1">
+                                {/* Official Holidays in this Month */}
+                                {month.days.some((d: any) => d.hasPublicHoliday) && (
+                                  <div className="px-2 py-1 rounded-lg bg-purple-100 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800/60 text-[9px] font-black text-purple-900 dark:text-purple-200 flex items-center gap-1.5 shadow-2xs">
+                                    <span className="w-2 h-2 rounded-full bg-purple-600 shrink-0" />
+                                    <span className="truncate">
+                                      {Array.from(new Set(month.days.flatMap((d: any) => d.holidays?.filter((h: any) => h.type === 'public').map((h: any) => `${d.dayNumber} ${month.name.substring(0, 3)}: ${h.title}`) || []))).join(' • ')}
+                                    </span>
+                                  </div>
+                                )}
+
                                 {month.monthSessions.length === 0 ? (
                                   <span className="text-[10px] text-slate-400 italic block text-center py-0.5">
                                     No sessions scheduled

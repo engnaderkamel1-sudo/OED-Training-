@@ -746,8 +746,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [localUsers, setLocalUsers] = useState<User[]>(() => (typeof window !== 'undefined' && (sessionStorage.getItem('oed_vip_demo_active') === 'true' || window.location.search.includes('demo='))) ? DEMO_FALLBACK_USERS : []);
   const [localRecords, setLocalRecords] = useState<TrainingRecord[]>([]);
   const [cleanedData, setCleanedDataState] = useState<CleanedRecord[]>(() => (typeof window !== 'undefined' && (sessionStorage.getItem('oed_vip_demo_active') === 'true' || window.location.search.includes('demo='))) ? DEMO_FALLBACK_CLEANED_RECORDS : []);
-  const [cleanedFileName, setCleanedFileNameState] = useState<string>('');
-  const [upcomingSessions, setUpcomingSessionsState] = useState<UpcomingSession[]>(() => (typeof window !== 'undefined' && (sessionStorage.getItem('oed_vip_demo_active') === 'true' || window.location.search.includes('demo='))) ? DEMO_FALLBACK_SESSIONS : []);
+  const [upcomingSessions, setUpcomingSessionsState] = useState<UpcomingSession[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('oed_cached_upcoming_sessions');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {}
+    }
+    return DEMO_FALLBACK_SESSIONS;
+  });
   const [announcements, setAnnouncementsState] = useState<SystemAnnouncement[]>([]);
   const [loginLogs, setLoginLogsState] = useState<LoginLog[]>([]);
   const [suggestions, setSuggestionsState] = useState<Suggestion[]>([]);
@@ -897,7 +907,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const unsubSessions = onSnapshot(collection(db, "sessions"), (snapshot) => {
       const sessions: UpcomingSession[] = [];
       snapshot.forEach((d) => sessions.push(d.data() as UpcomingSession));
-      setUpcomingSessionsState(sessions);
+      if (sessions.length > 0) {
+        setUpcomingSessionsState(sessions);
+        try {
+          localStorage.setItem('oed_cached_upcoming_sessions', JSON.stringify(sessions));
+        } catch (e) {}
+      }
     }, (error) => {
       checkQuotaError(error);
       console.error("Firebase Sessions Error:", error);
@@ -1519,12 +1534,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       registeredUsers: session.registeredUsers || [],
       unregisteredUsers: session.unregisteredUsers || []
     };
-    const cleanSession = Object.fromEntries(Object.entries(sessionWithId).filter(([_, v]) => v !== undefined));
+    const cleanSession = Object.fromEntries(Object.entries(sessionWithId).filter(([_, v]) => v !== undefined)) as UpcomingSession;
+    setUpcomingSessionsState(prev => {
+      const updated = [cleanSession, ...prev.filter(s => s.id !== cleanSession.id)];
+      try { localStorage.setItem('oed_cached_upcoming_sessions', JSON.stringify(updated)); } catch (e) {}
+      return updated;
+    });
     await setDoc(doc(db, "sessions", sessionWithId.id), cleanSession);
   };
 
   const updateUpcomingSession = async (updatedSession: UpcomingSession) => {
-    const cleanSession = Object.fromEntries(Object.entries(updatedSession).filter(([_, v]) => v !== undefined));
+    const cleanSession = Object.fromEntries(Object.entries(updatedSession).filter(([_, v]) => v !== undefined)) as UpcomingSession;
+    setUpcomingSessionsState(prev => {
+      const updated = prev.map(s => s.id === updatedSession.id ? cleanSession : s);
+      try { localStorage.setItem('oed_cached_upcoming_sessions', JSON.stringify(updated)); } catch (e) {}
+      return updated;
+    });
     await setDoc(doc(db, "sessions", updatedSession.id), cleanSession);
   };
 

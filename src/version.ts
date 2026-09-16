@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.8.2",
-  releaseName: "Holidays Modal Hook Lifecycle & Error 310 Fix",
+  version: "1.8.3",
+  releaseName: "Always-Visible Holidays & Session Persistence",
   buildDate: "2026",
   buildTimestamp: "2026",
   
