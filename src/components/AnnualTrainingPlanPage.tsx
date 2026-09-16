@@ -2215,33 +2215,28 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                               <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 w-12 text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 #
                               </th>
-                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[220px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[240px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 Course Title
                               </th>
-                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[75px] text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[80px] text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 Quarter
                               </th>
-                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[150px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[160px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 Target Audience
                               </th>
-                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[170px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
-                                Track
-                              </th>
-                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[85px] text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[90px] text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 Sessions
                               </th>
-                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[120px] text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[130px] text-center font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 Planned Trainees
                               </th>
-                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[130px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
+                              <th className="sticky top-0 bg-[#002D62] text-white px-3 py-3 min-w-[140px] font-black uppercase tracking-wider text-[11px] border-b border-blue-950">
                                 Schedule Note
                               </th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
                             {parsedTargets.map((target, idx) => {
-                              const trackInfo = getTrackMeta(target.track);
-
                               return (
                                 <tr key={target.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                   <td className="px-3 py-3 text-center text-slate-400 font-mono font-bold">
@@ -2271,11 +2266,6 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                         Summer Training
                                       </span>
                                     )}
-                                  </td>
-                                  <td className="px-3 py-3">
-                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold whitespace-nowrap border ${trackInfo.badge}`}>
-                                      {trackInfo.label}
-                                    </span>
                                   </td>
                                   <td className="px-3 py-3 text-center font-black text-sm text-[#002D62] dark:text-amber-300">
                                     {target.targetRounds}

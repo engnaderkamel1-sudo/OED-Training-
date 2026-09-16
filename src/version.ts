@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.5.2",
-  releaseName: "Executive Navy High-Contrast Plan Table Headers",
+  version: "1.5.3",
+  releaseName: "Streamlined Plan Table without Track Column",
   buildDate: "2026",
   buildTimestamp: "2026",
   
