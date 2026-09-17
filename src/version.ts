@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ============================================================================
  * OED-TTMS VERSION & SYSTEM METADATA
  * ============================================================================
@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "2.0.3",
-  releaseName: "Summer Internship Banner: 72 Students Across 2024-2026 Added to Dashboard",
+  version: "2.0.4",
+  releaseName: "Interactive Summer Internship Directory: 72 Trainee Records Across 2024-2026",
   buildDate: "2026",
   buildTimestamp: "2026",
   
