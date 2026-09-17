@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "2.0.2",
-  releaseName: "Master Excel Sync: 6 Missing Sessions Added, 1,071 Total Records",
+  version: "2.0.3",
+  releaseName: "Summer Internship Banner: 72 Students Across 2024-2026 Added to Dashboard",
   buildDate: "2026",
   buildTimestamp: "2026",
   

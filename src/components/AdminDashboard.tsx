@@ -1,4 +1,4 @@
-import { UserManagementTab } from './UserManagementTab';
+﻿import { UserManagementTab } from './UserManagementTab';
 import { SystemErrorsModal } from './SystemErrorsModal';
 import { FirebaseUsageModal } from './FirebaseUsageModal';
 import { EditRecordModal } from './EditRecordModal';
@@ -35,6 +35,7 @@ import { AttendanceReminderModal } from "./AttendanceReminderModal";
 import { importFromOneDrive } from "../utils/dataSync";
 import { exportCloudBackup } from "../utils/exportUtils";
 import { isSessionActiveNow, sendNativePushNotification } from "../utils/sessionTimeUtils";
+import SUMMER_TRAINING_RAW from "../data/summerTraining.json";
 
 declare const XLSX: any;
 
@@ -2693,6 +2694,7 @@ Content-Type: text/html; charset="utf-8"
                   </div>
                 )}
 
+                {/* ===== Summer Internship Banner (inserted) ===== */}
                 {/* On-Demand Server Query Action Bar */}
                 <div id="training-records-table-anchor" className="mb-6 p-4 rounded-xl border flex flex-wrap items-center justify-between gap-3 shadow-2xs print:hidden" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                   <div className="flex flex-wrap items-center gap-3">
