@@ -113,7 +113,7 @@ export const AdminDashboard: React.FC = () => {
   const {
     t, language, user, users, setUsers, records, setRecords, upcomingSessions,
     setUpcomingSessions, addUpcomingSession, updateUpcomingSession, cancelSession,
-    reactivateSession, cleanedData, loginLogs, currentView, setCurrentView, addAnnouncement, theme,
+    reactivateSession, cleanedData, setCleanedData, loginLogs, currentView, setCurrentView, addAnnouncement, theme,
     systemVersion, updateSystemVersion, fetchTrainingRecords, isFetchingRecords, recordsLoaded, courses, addCourse, globalKPIs,
     isExecutiveDemoEnabled, toggleExecutiveDemo
   } = useAppContext();
@@ -789,6 +789,44 @@ Please log in to register for this session through the OED-TTMS Application.
   const [drillDownModalType, setDrillDownModalType] = useState<null | 'courses' | 'sessions' | 'trainees' | 'engineers' | 'technicians' | 'operators'>(null);
   const [drillDownSearch, setDrillDownSearch] = useState('');
   const [drillDownExpandedSession, setDrillDownExpandedSession] = useState<string | null>(null);
+
+  const handleDeleteRecord = async (recordId: string) => {
+    if (!recordId) return;
+    const confirmMsg = language === 'ar' 
+      ? 'هل أنت متأكد من حذف هذا السجل التدريبي نهائياً من المنظومة؟' 
+      : 'Are you sure you want to permanently delete this training record?';
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      // 1. Delete from Firestore if present
+      try {
+        await deleteDoc(doc(db, "cleanedData", recordId));
+      } catch (err) {
+        console.warn("Firestore delete record notice:", err);
+      }
+
+      // 2. Update cleanedData in memory
+      const updatedCleaned = (cleanedData || []).filter(r => r.id !== recordId);
+      if (setCleanedData) {
+        setCleanedData(updatedCleaned);
+      }
+
+      // 3. Update records in memory
+      if (setRecords) {
+        setRecords((records || []).filter(r => r.id !== recordId));
+      }
+
+      // 4. Update localStorage cache directly
+      try {
+        localStorage.setItem('oed_cached_cleaned_data', JSON.stringify(updatedCleaned));
+      } catch (e) {}
+
+      alert(language === 'ar' ? 'تم حذف السجل بنجاح.' : 'Record deleted successfully.');
+    } catch (err) {
+      console.error("Delete record error:", err);
+      alert(language === 'ar' ? 'حدث خطأ أثناء الحذف.' : 'Error deleting record.');
+    }
+  };
 
   const [showBackupPromptModal, setShowBackupPromptModal] = useState(false);
   const [isExportingBackup, setIsExportingBackup] = useState(false);
@@ -2876,7 +2914,7 @@ Content-Type: text/html; charset="utf-8"
                               <td className="p-3 font-bold" style={{ color: textColor }}><DataField>{formatScore(r.raw?.["Score"] || r.score)}</DataField></td>
                               <td className="p-3" style={{ color: textMuted }}><DataField>{formatDateToStandard(r.attendanceDate)}</DataField></td>
                               <td className="p-3 text-center">
-                                <button onClick={async (e) => { e.stopPropagation(); if (window.confirm(language === "ar" ? "هل أنت متأكد من حذف هذا السجل نهائياً؟" : "Delete record?")) { try { await deleteDoc(doc(db, "cleanedData", r.id)); setRecords(records.filter(rec => rec.id !== r.id)); } catch (err) { alert("Error deleting"); } } }} className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center"><Trash2 size={16} /></button>
+                                <button onClick={(e) => { e.stopPropagation(); handleDeleteRecord(r.id); }} className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center" title={language === 'ar' ? 'حذف' : 'Delete'}><Trash2 size={16} /></button>
                                 <button onClick={(e) => { e.stopPropagation(); setEditingRecord(r); }} className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center"><Edit2 size={16} /></button>
                               </td>
                             </tr>

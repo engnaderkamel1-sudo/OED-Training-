@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.9.9",
-  releaseName: "Stable Executive Drill-Down & Verified Dynamic Handlers",
+  version: "1.9.10",
+  releaseName: "Cleaned Master Records Catalog & Unified Delete Engine",
   buildDate: "2026",
   buildTimestamp: "2026",
   

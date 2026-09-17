@@ -756,8 +756,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       try {
         const stored = localStorage.getItem('oed_cached_cleaned_data');
         if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length >= 500) return parsed;
+          let parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length >= 500) {
+            parsed = parsed.filter((r: any) => r.courseName !== 'vars' && r.courseName !== '5050');
+            return parsed;
+          }
         }
       } catch (e) {}
     }
