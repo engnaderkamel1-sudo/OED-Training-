@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.9.3",
-  releaseName: "Master Excel Synchronization & Chunked Cloud Persistence Engine",
+  version: "1.9.4",
+  releaseName: "Executive Dual Metric KPI Engine: Gross Attendances vs Unique Individuals",
   buildDate: "2026",
   buildTimestamp: "2026",
   
