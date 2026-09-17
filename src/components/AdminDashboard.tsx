@@ -2082,7 +2082,8 @@ Content-Type: text/html; charset="utf-8"
     const map = new Map<string, { title: string; sessions: Set<string>; trainees: Set<string>; totalAttendances: number }>();
     (allRecordsPool || []).forEach(r => {
       const title = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
-      const dateStr = (r.date || r.trainingDate || 'Unknown').trim();
+      const rawDate = r.attendanceDate || r.date || r.trainingDate || r.raw?.['Date'] || r.raw?.['Attendance Date'] || '';
+      const dateStr = String(rawDate).trim() || 'Unknown';
       const sessionKey = `${title}__${dateStr}`;
       const hrKey = (r.hrCode || r.userId || r.traineeName || '').toLowerCase().trim();
       if (!map.has(title)) {
@@ -2102,7 +2103,8 @@ Content-Type: text/html; charset="utf-8"
     const map = new Map<string, { sessionKey: string; courseTitle: string; date: string; attendees: Array<{ hrCode: string; name: string; department: string; score?: any }> }>();
     (allRecordsPool || []).forEach(r => {
       const courseTitle = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
-      const date = (r.date || r.trainingDate || 'Unknown Date').trim();
+      const rawDate = r.attendanceDate || r.date || r.trainingDate || r.raw?.['Date'] || r.raw?.['Attendance Date'] || '';
+      const date = String(rawDate).trim() || 'Unknown Date';
       const sessionKey = `${courseTitle}__${date}`;
       const hrCode = (r.hrCode || r.userId || '').toString().trim();
       const name = r.traineeName || r.name || 'Unknown Trainee';
@@ -2114,7 +2116,12 @@ Content-Type: text/html; charset="utf-8"
       }
       map.get(sessionKey)!.attendees.push({ hrCode, name, department, score });
     });
-    return Array.from(map.values()).sort((a, b) => (b.date > a.date ? 1 : -1));
+    return Array.from(map.values()).sort((a, b) => {
+      const timeA = new Date(a.date).getTime();
+      const timeB = new Date(b.date).getTime();
+      if (!isNaN(timeA) && !isNaN(timeB)) return timeB - timeA;
+      return b.date > a.date ? 1 : -1;
+    });
   }, [allRecordsPool]);
 
   const drillDownTraineesList = useMemo(() => {

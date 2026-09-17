@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "2.0.0",
-  releaseName: "Full Master Excel Direct Immersion — 23 Verified Courses & 1,004 Records",
+  version: "2.0.1",
+  releaseName: "Full Chronological Session Matrix with Robust Date Resolution",
   buildDate: "2026",
   buildTimestamp: "2026",
   
