@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.9.7",
-  releaseName: "Executive Interactive Drill-Down KPI Engine & Terminology Refinement",
+  version: "1.9.8",
+  releaseName: "Stable Executive Interactive Drill-Down KPI Engine",
   buildDate: "2026",
   buildTimestamp: "2026",
   

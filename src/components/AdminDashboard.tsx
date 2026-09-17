@@ -790,74 +790,6 @@ Please log in to register for this session through the OED-TTMS Application.
   const [drillDownSearch, setDrillDownSearch] = useState('');
   const [drillDownExpandedSession, setDrillDownExpandedSession] = useState<string | null>(null);
 
-  // Drill-Down Computed Collections (Instant in-memory 0-read execution)
-  const drillDownCoursesList = useMemo(() => {
-    const map = new Map<string, { title: string; sessions: Set<string>; trainees: Set<string>; totalAttendances: number }>();
-    (allRecordsPool || []).forEach(r => {
-      const title = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
-      const dateStr = (r.date || r.trainingDate || 'Unknown').trim();
-      const sessionKey = `${title}__${dateStr}`;
-      const hrKey = (r.hrCode || r.userId || r.traineeName || '').toLowerCase().trim();
-      if (!map.has(title)) {
-        map.set(title, { title, sessions: new Set(), trainees: new Set(), totalAttendances: 0 });
-      }
-      const entry = map.get(title)!;
-      entry.sessions.add(sessionKey);
-      if (hrKey) entry.trainees.add(hrKey);
-      entry.totalAttendances += 1;
-    });
-    return Array.from(map.values())
-      .map(c => ({ title: c.title, sessionCount: c.sessions.size, traineeCount: c.trainees.size, totalAttendances: c.totalAttendances }))
-      .sort((a, b) => b.totalAttendances - a.totalAttendances);
-  }, [allRecordsPool]);
-
-  const drillDownSessionsList = useMemo(() => {
-    const map = new Map<string, { sessionKey: string; courseTitle: string; date: string; attendees: Array<{ hrCode: string; name: string; department: string; score?: any }> }>();
-    (allRecordsPool || []).forEach(r => {
-      const courseTitle = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
-      const date = (r.date || r.trainingDate || 'Unknown Date').trim();
-      const sessionKey = `${courseTitle}__${date}`;
-      const hrCode = (r.hrCode || r.userId || '').toString().trim();
-      const name = r.traineeName || r.name || 'Unknown Trainee';
-      const department = r.department || '';
-      const score = r.score;
-
-      if (!map.has(sessionKey)) {
-        map.set(sessionKey, { sessionKey, courseTitle, date, attendees: [] });
-      }
-      map.get(sessionKey)!.attendees.push({ hrCode, name, department, score });
-    });
-    return Array.from(map.values()).sort((a, b) => (b.date > a.date ? 1 : -1));
-  }, [allRecordsPool]);
-
-  const drillDownTraineesList = useMemo(() => {
-    const map = new Map<string, { hrCode: string; name: string; roleCategory: 'engineer' | 'technician' | 'operator' | 'other'; department: string; courses: Set<string>; totalAttendances: number }>();
-    (allRecordsPool || []).forEach(r => {
-      const hrCode = (r.hrCode || r.userId || '').toString().trim();
-      const rawName = r.traineeName || r.name || 'Unknown';
-      const dept = r.department || '';
-      const course = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
-      const u = users.find(user => (user.hrCode && user.hrCode.toLowerCase() === hrCode.toLowerCase()) || (user.id && user.id.toLowerCase() === hrCode.toLowerCase()));
-      const finalName = u?.name || rawName;
-      const finalDept = u?.department || dept;
-
-      const normJob = `${u?.jobTitle || ''} ${r.jobTitle || ''} ${dept}`.toLowerCase();
-      let roleCategory: 'engineer' | 'technician' | 'operator' | 'other' = 'other';
-      if (normJob.includes('eng') || normJob.includes('Ù…Ù‡Ù†Ø¯Ø³')) roleCategory = 'engineer';
-      else if (normJob.includes('tech') || normJob.includes('ÙÙ†ÙŠ')) roleCategory = 'technician';
-      else if (normJob.includes('oper') || normJob.includes('Ø³Ø§Ø¦Ù‚') || normJob.includes('Ø¹Ø§Ù…Ù„')) roleCategory = 'operator';
-
-      const key = (hrCode || finalName).toLowerCase();
-      if (!map.has(key)) {
-        map.set(key, { hrCode, name: finalName, roleCategory, department: finalDept, courses: new Set(), totalAttendances: 0 });
-      }
-      const entry = map.get(key)!;
-      entry.courses.add(course);
-      entry.totalAttendances += 1;
-    });
-    return Array.from(map.values()).sort((a, b) => b.totalAttendances - a.totalAttendances);
-  }, [allRecordsPool, users]);
-
   const [showBackupPromptModal, setShowBackupPromptModal] = useState(false);
   const [isExportingBackup, setIsExportingBackup] = useState(false);
 
@@ -2105,6 +2037,74 @@ Content-Type: text/html; charset="utf-8"
       uniqueOperators: opUnique.size
     };
   }, [filteredRecords, cleanedData, records, users, globalKPIs, hasActiveFilters]);
+
+  // Drill-Down Computed Collections (Instant in-memory 0-read execution - Defined AFTER allRecordsPool)
+  const drillDownCoursesList = useMemo(() => {
+    const map = new Map<string, { title: string; sessions: Set<string>; trainees: Set<string>; totalAttendances: number }>();
+    (allRecordsPool || []).forEach(r => {
+      const title = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
+      const dateStr = (r.date || r.trainingDate || 'Unknown').trim();
+      const sessionKey = `${title}__${dateStr}`;
+      const hrKey = (r.hrCode || r.userId || r.traineeName || '').toLowerCase().trim();
+      if (!map.has(title)) {
+        map.set(title, { title, sessions: new Set(), trainees: new Set(), totalAttendances: 0 });
+      }
+      const entry = map.get(title)!;
+      entry.sessions.add(sessionKey);
+      if (hrKey) entry.trainees.add(hrKey);
+      entry.totalAttendances += 1;
+    });
+    return Array.from(map.values())
+      .map(c => ({ title: c.title, sessionCount: c.sessions.size, traineeCount: c.trainees.size, totalAttendances: c.totalAttendances }))
+      .sort((a, b) => b.totalAttendances - a.totalAttendances);
+  }, [allRecordsPool]);
+
+  const drillDownSessionsList = useMemo(() => {
+    const map = new Map<string, { sessionKey: string; courseTitle: string; date: string; attendees: Array<{ hrCode: string; name: string; department: string; score?: any }> }>();
+    (allRecordsPool || []).forEach(r => {
+      const courseTitle = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
+      const date = (r.date || r.trainingDate || 'Unknown Date').trim();
+      const sessionKey = `${courseTitle}__${date}`;
+      const hrCode = (r.hrCode || r.userId || '').toString().trim();
+      const name = r.traineeName || r.name || 'Unknown Trainee';
+      const department = r.department || '';
+      const score = r.score;
+
+      if (!map.has(sessionKey)) {
+        map.set(sessionKey, { sessionKey, courseTitle, date, attendees: [] });
+      }
+      map.get(sessionKey)!.attendees.push({ hrCode, name, department, score });
+    });
+    return Array.from(map.values()).sort((a, b) => (b.date > a.date ? 1 : -1));
+  }, [allRecordsPool]);
+
+  const drillDownTraineesList = useMemo(() => {
+    const map = new Map<string, { hrCode: string; name: string; roleCategory: 'engineer' | 'technician' | 'operator' | 'other'; department: string; courses: Set<string>; totalAttendances: number }>();
+    (allRecordsPool || []).forEach(r => {
+      const hrCode = (r.hrCode || r.userId || '').toString().trim();
+      const rawName = r.traineeName || r.name || 'Unknown';
+      const dept = r.department || '';
+      const course = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
+      const u = users.find(user => (user.hrCode && user.hrCode.toLowerCase() === hrCode.toLowerCase()) || (user.id && user.id.toLowerCase() === hrCode.toLowerCase()));
+      const finalName = u?.name || rawName;
+      const finalDept = u?.department || dept;
+
+      const normJob = `${u?.jobTitle || ''} ${r.jobTitle || ''} ${dept}`.toLowerCase();
+      let roleCategory: 'engineer' | 'technician' | 'operator' | 'other' = 'other';
+      if (normJob.includes('eng') || normJob.includes('مهندس')) roleCategory = 'engineer';
+      else if (normJob.includes('tech') || normJob.includes('فني')) roleCategory = 'technician';
+      else if (normJob.includes('oper') || normJob.includes('سائق') || normJob.includes('عامل')) roleCategory = 'operator';
+
+      const key = (hrCode || finalName).toLowerCase();
+      if (!map.has(key)) {
+        map.set(key, { hrCode, name: finalName, roleCategory, department: finalDept, courses: new Set(), totalAttendances: 0 });
+      }
+      const entry = map.get(key)!;
+      entry.courses.add(course);
+      entry.totalAttendances += 1;
+    });
+    return Array.from(map.values()).sort((a, b) => b.totalAttendances - a.totalAttendances);
+  }, [allRecordsPool, users]);
   const uniqueTraineeHrCodes = useMemo(() => {
     return Array.from(
       new Set(
