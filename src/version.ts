@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.9.4",
-  releaseName: "Executive Dual Metric KPI Engine: Gross Attendances vs Unique Individuals",
+  version: "1.9.5",
+  releaseName: "Annual Plan Clarity: Distinct Programs vs Total Planned Sessions",
   buildDate: "2026",
   buildTimestamp: "2026",
   

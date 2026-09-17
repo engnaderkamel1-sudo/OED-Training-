@@ -2153,12 +2153,15 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                 <span>Approved Plan Target</span>
               </span>
               <span className="text-2xl sm:text-3xl font-black text-[#002D62] dark:text-amber-300 mt-1.5 block">
-                {totalTargetRounds} <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Rounds</span>
+                {totalTargetRounds} <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Total Sessions</span>
               </span>
             </div>
-            <div className="mt-2.5">
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">
-                {targetsWithExecution.length} Approved Programs ({selectedYear})
+            <div className="mt-2.5 flex flex-col gap-0.5">
+              <span className="text-[11px] font-bold text-[#002D62] dark:text-amber-300">
+                {targetsWithExecution.length} Distinct Programs ({selectedYear})
+              </span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                {targetsWithExecution.reduce((acc, t) => acc + (t.targetTrainees || t.targetRounds * 6), 0)} Target Trainees
               </span>
             </div>
           </div>
@@ -2180,7 +2183,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                   {totalCompletedRounds}
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
-                  / {totalTargetRounds} rounds
+                  / {totalTargetRounds} sessions completed
                 </span>
               </div>
             </div>
@@ -2192,7 +2195,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                 />
               </div>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
-                {countCompletedCourses} of {targetsWithExecution.length} targets fulfilled
+                {countCompletedCourses} of {targetsWithExecution.length} programs fulfilled
               </span>
             </div>
           </div>
@@ -2237,7 +2240,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                   {grossDeliveredRounds}
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
-                  Total Rounds
+                  Total Conducted Sessions
                 </span>
               </div>
             </div>
