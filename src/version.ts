@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ============================================================================
  * OED-TTMS VERSION & SYSTEM METADATA
  * ============================================================================
@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "2.0.1",
-  releaseName: "Full Chronological Session Matrix with Robust Date Resolution",
+  version: "2.0.2",
+  releaseName: "Master Excel Sync: 6 Missing Sessions Added, 1,071 Total Records",
   buildDate: "2026",
   buildTimestamp: "2026",
   
