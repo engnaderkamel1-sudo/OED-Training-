@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.9.6",
-  releaseName: "Master Training Records Immersion & Cache Shield Engine",
+  version: "1.9.7",
+  releaseName: "Executive Interactive Drill-Down KPI Engine & Terminology Refinement",
   buildDate: "2026",
   buildTimestamp: "2026",
   

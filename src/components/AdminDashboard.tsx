@@ -785,6 +785,79 @@ Please log in to register for this session through the OED-TTMS Application.
     });
   }, [upcomingSessions, users, language]);
 
+  // Executive Drill-Down KPI Modal State
+  const [drillDownModalType, setDrillDownModalType] = useState<null | 'courses' | 'sessions' | 'trainees' | 'engineers' | 'technicians' | 'operators'>(null);
+  const [drillDownSearch, setDrillDownSearch] = useState('');
+  const [drillDownExpandedSession, setDrillDownExpandedSession] = useState<string | null>(null);
+
+  // Drill-Down Computed Collections (Instant in-memory 0-read execution)
+  const drillDownCoursesList = useMemo(() => {
+    const map = new Map<string, { title: string; sessions: Set<string>; trainees: Set<string>; totalAttendances: number }>();
+    (allRecordsPool || []).forEach(r => {
+      const title = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
+      const dateStr = (r.date || r.trainingDate || 'Unknown').trim();
+      const sessionKey = `${title}__${dateStr}`;
+      const hrKey = (r.hrCode || r.userId || r.traineeName || '').toLowerCase().trim();
+      if (!map.has(title)) {
+        map.set(title, { title, sessions: new Set(), trainees: new Set(), totalAttendances: 0 });
+      }
+      const entry = map.get(title)!;
+      entry.sessions.add(sessionKey);
+      if (hrKey) entry.trainees.add(hrKey);
+      entry.totalAttendances += 1;
+    });
+    return Array.from(map.values())
+      .map(c => ({ title: c.title, sessionCount: c.sessions.size, traineeCount: c.trainees.size, totalAttendances: c.totalAttendances }))
+      .sort((a, b) => b.totalAttendances - a.totalAttendances);
+  }, [allRecordsPool]);
+
+  const drillDownSessionsList = useMemo(() => {
+    const map = new Map<string, { sessionKey: string; courseTitle: string; date: string; attendees: Array<{ hrCode: string; name: string; department: string; score?: any }> }>();
+    (allRecordsPool || []).forEach(r => {
+      const courseTitle = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
+      const date = (r.date || r.trainingDate || 'Unknown Date').trim();
+      const sessionKey = `${courseTitle}__${date}`;
+      const hrCode = (r.hrCode || r.userId || '').toString().trim();
+      const name = r.traineeName || r.name || 'Unknown Trainee';
+      const department = r.department || '';
+      const score = r.score;
+
+      if (!map.has(sessionKey)) {
+        map.set(sessionKey, { sessionKey, courseTitle, date, attendees: [] });
+      }
+      map.get(sessionKey)!.attendees.push({ hrCode, name, department, score });
+    });
+    return Array.from(map.values()).sort((a, b) => (b.date > a.date ? 1 : -1));
+  }, [allRecordsPool]);
+
+  const drillDownTraineesList = useMemo(() => {
+    const map = new Map<string, { hrCode: string; name: string; roleCategory: 'engineer' | 'technician' | 'operator' | 'other'; department: string; courses: Set<string>; totalAttendances: number }>();
+    (allRecordsPool || []).forEach(r => {
+      const hrCode = (r.hrCode || r.userId || '').toString().trim();
+      const rawName = r.traineeName || r.name || 'Unknown';
+      const dept = r.department || '';
+      const course = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
+      const u = users.find(user => (user.hrCode && user.hrCode.toLowerCase() === hrCode.toLowerCase()) || (user.id && user.id.toLowerCase() === hrCode.toLowerCase()));
+      const finalName = u?.name || rawName;
+      const finalDept = u?.department || dept;
+
+      const normJob = `${u?.jobTitle || ''} ${r.jobTitle || ''} ${dept}`.toLowerCase();
+      let roleCategory: 'engineer' | 'technician' | 'operator' | 'other' = 'other';
+      if (normJob.includes('eng') || normJob.includes('Ù…Ù‡Ù†Ø¯Ø³')) roleCategory = 'engineer';
+      else if (normJob.includes('tech') || normJob.includes('ÙÙ†ÙŠ')) roleCategory = 'technician';
+      else if (normJob.includes('oper') || normJob.includes('Ø³Ø§Ø¦Ù‚') || normJob.includes('Ø¹Ø§Ù…Ù„')) roleCategory = 'operator';
+
+      const key = (hrCode || finalName).toLowerCase();
+      if (!map.has(key)) {
+        map.set(key, { hrCode, name: finalName, roleCategory, department: finalDept, courses: new Set(), totalAttendances: 0 });
+      }
+      const entry = map.get(key)!;
+      entry.courses.add(course);
+      entry.totalAttendances += 1;
+    });
+    return Array.from(map.values()).sort((a, b) => b.totalAttendances - a.totalAttendances);
+  }, [allRecordsPool, users]);
+
   const [showBackupPromptModal, setShowBackupPromptModal] = useState(false);
   const [isExportingBackup, setIsExportingBackup] = useState(false);
 
@@ -2439,84 +2512,143 @@ Content-Type: text/html; charset="utf-8"
                     </div>
                   </div>
                 ) : (
-                  /* Global KPI Summary Cards - Dual Metric Engine */
+                  {/* Global KPI Summary Cards - Dual Metric Engine & Interactive Drill-Down */}
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 mb-6 print:hidden">
-                    {/* 1. Total Courses */}
-                    <div className="p-4 rounded-2xl border shadow-xs flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-md" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center mb-2">
+                    {/* 1. Total Courses (Clickable Drill-Down) */}
+                    <div 
+                      onClick={() => { setDrillDownModalType('courses'); setDrillDownSearch(''); }}
+                      role="button"
+                      tabIndex={0}
+                      title="Click to view all courses, sessions, and trainee counts"
+                      className="group p-4 rounded-2xl border shadow-xs flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-lg hover:scale-[1.03] cursor-pointer hover:border-blue-400 dark:hover:border-blue-500" 
+                      style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <BookOpen size={20} style={{ color: isDark ? '#60a5fa' : '#002D62' }} />
                       </div>
                       <span className="text-xs font-semibold tracking-wide" style={{ color: textMuted }}>Total Courses</span>
-                      <span className="text-2xl font-black mt-1" style={{ color: textColor }}>{(kpiStats.totalCourses || 26).toLocaleString()}</span>
-                      <span className="mt-1.5 px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                        Catalog Programs
+                      <span className="text-2xl font-black mt-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" style={{ color: textColor }}>{(kpiStats.totalCourses || 26).toLocaleString()}</span>
+                      <span className="mt-1.5 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        Distinct Courses
+                      </span>
+                      <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 opacity-75 group-hover:opacity-100 transition-opacity mt-1">
+                        View List &rarr;
                       </span>
                     </div>
 
-                    {/* 2. Total Sessions */}
-                    <div className="p-4 rounded-2xl border shadow-xs flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-md" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                      <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center mb-2">
+                    {/* 2. Total Sessions (Clickable Drill-Down) */}
+                    <div 
+                      onClick={() => { setDrillDownModalType('sessions'); setDrillDownSearch(''); }}
+                      role="button"
+                      tabIndex={0}
+                      title="Click to view all conducted batches and dates"
+                      className="group p-4 rounded-2xl border shadow-xs flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-lg hover:scale-[1.03] cursor-pointer hover:border-amber-400 dark:hover:border-amber-500" 
+                      style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <Calendar size={20} className="text-[#FFC000]" />
                       </div>
                       <span className="text-xs font-semibold tracking-wide" style={{ color: textMuted }}>Total Sessions</span>
-                      <span className="text-2xl font-black mt-1" style={{ color: textColor }}>{(kpiStats.totalSessions || 130).toLocaleString()}</span>
-                      <span className="mt-1.5 px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                        Conducted Batches
+                      <span className="text-2xl font-black mt-1 group-hover:text-amber-500 transition-colors" style={{ color: textColor }}>{(kpiStats.totalSessions || 130).toLocaleString()}</span>
+                      <span className="mt-1.5 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                        Conducted Sessions
+                      </span>
+                      <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 opacity-75 group-hover:opacity-100 transition-opacity mt-1">
+                        View Matrix &rarr;
                       </span>
                     </div>
 
-                    {/* 3. Total Trainee Attendances (Gross vs Unique) */}
-                    <div className="p-4 rounded-2xl border-2 shadow-sm flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-md border-emerald-500/40 bg-emerald-50/15 dark:bg-emerald-950/15">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/70 flex items-center justify-center mb-2">
+                    {/* 3. Total Trainee Attendances (Clickable Drill-Down) */}
+                    <div 
+                      onClick={() => { setDrillDownModalType('trainees'); setDrillDownSearch(''); }}
+                      role="button"
+                      tabIndex={0}
+                      title="Click to view all unique trainees and attended courses"
+                      className="group p-4 rounded-2xl border-2 shadow-sm flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-lg hover:scale-[1.03] cursor-pointer border-emerald-500/50 bg-emerald-50/15 dark:bg-emerald-950/15 hover:border-emerald-500"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/70 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <Users size={20} className="text-emerald-600 dark:text-emerald-400" />
                       </div>
                       <span className="text-xs font-bold tracking-wide text-emerald-800 dark:text-emerald-300">Total Attendances</span>
                       <span className="text-2xl font-black mt-1 text-emerald-700 dark:text-emerald-300">{(kpiStats.totalParticipants || 0).toLocaleString()}</span>
-                      <span className="mt-1.5 px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-emerald-600 text-white shadow-xs">
+                      <span className="mt-1.5 px-2.5 py-0.5 text-[10px] font-extrabold rounded-full bg-emerald-600 text-white shadow-xs">
                         {(kpiStats.uniqueTrainees || 0).toLocaleString()} Unique Trainees
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 opacity-75 group-hover:opacity-100 transition-opacity mt-1">
+                        View Directory &rarr;
                       </span>
                     </div>
 
-                    {/* 4. Engineers */}
-                    <div className="p-4 rounded-2xl border shadow-xs flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-md" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                      <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/50 flex items-center justify-center mb-2">
+                    {/* 4. Engineers (Clickable Drill-Down) */}
+                    <div 
+                      onClick={() => { setDrillDownModalType('engineers'); setDrillDownSearch(''); }}
+                      role="button"
+                      tabIndex={0}
+                      title="Click to view all engineers"
+                      className="group p-4 rounded-2xl border shadow-xs flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-lg hover:scale-[1.03] cursor-pointer hover:border-sky-400 dark:hover:border-sky-500" 
+                      style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <HardHat size={20} className="text-sky-600 dark:text-sky-400" />
                       </div>
                       <span className="text-xs font-semibold tracking-wide" style={{ color: textMuted }}>Engineers</span>
-                      <span className="text-2xl font-black mt-1" style={{ color: textColor }}>{(kpiStats.totalEngineers || 0).toLocaleString()}</span>
-                      <span className="mt-1.5 px-2 py-0.5 text-[10px] font-bold rounded-full bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
+                      <span className="text-2xl font-black mt-1 group-hover:text-sky-500 transition-colors" style={{ color: textColor }}>{(kpiStats.totalEngineers || 0).toLocaleString()}</span>
+                      <span className="mt-1.5 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
                         {(kpiStats.uniqueEngineers || 0).toLocaleString()} Unique
+                      </span>
+                      <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 opacity-75 group-hover:opacity-100 transition-opacity mt-1">
+                        View Engineers &rarr;
                       </span>
                     </div>
 
-                    {/* 5. Technicians */}
-                    <div className="p-4 rounded-2xl border shadow-xs flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-md" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                      <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/50 flex items-center justify-center mb-2">
+                    {/* 5. Technicians (Clickable Drill-Down) */}
+                    <div 
+                      onClick={() => { setDrillDownModalType('technicians'); setDrillDownSearch(''); }}
+                      role="button"
+                      tabIndex={0}
+                      title="Click to view all technicians"
+                      className="group p-4 rounded-2xl border shadow-xs flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-lg hover:scale-[1.03] cursor-pointer hover:border-purple-400 dark:hover:border-purple-500" 
+                      style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <Wrench size={20} className="text-purple-600 dark:text-purple-400" />
                       </div>
                       <span className="text-xs font-semibold tracking-wide" style={{ color: textMuted }}>Technicians</span>
-                      <span className="text-2xl font-black mt-1" style={{ color: textColor }}>{(kpiStats.totalTechnicians || 0).toLocaleString()}</span>
-                      <span className="mt-1.5 px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                      <span className="text-2xl font-black mt-1 group-hover:text-purple-500 transition-colors" style={{ color: textColor }}>{(kpiStats.totalTechnicians || 0).toLocaleString()}</span>
+                      <span className="mt-1.5 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                         {(kpiStats.uniqueTechnicians || 0).toLocaleString()} Unique
+                      </span>
+                      <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 opacity-75 group-hover:opacity-100 transition-opacity mt-1">
+                        View Techs &rarr;
                       </span>
                     </div>
 
-                    {/* 6. Operators */}
-                    <div className="p-4 rounded-2xl border shadow-xs flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-md" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                      <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/50 flex items-center justify-center mb-2">
+                    {/* 6. Operators (Clickable Drill-Down) */}
+                    <div 
+                      onClick={() => { setDrillDownModalType('operators'); setDrillDownSearch(''); }}
+                      role="button"
+                      tabIndex={0}
+                      title="Click to view all operators"
+                      className="group p-4 rounded-2xl border shadow-xs flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-lg hover:scale-[1.03] cursor-pointer hover:border-orange-400 dark:hover:border-orange-500" 
+                      style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <Settings size={20} className="text-orange-600 dark:text-orange-400" />
                       </div>
                       <span className="text-xs font-semibold tracking-wide" style={{ color: textMuted }}>Operators</span>
-                      <span className="text-2xl font-black mt-1" style={{ color: textColor }}>{(kpiStats.totalOperators || 0).toLocaleString()}</span>
-                      <span className="mt-1.5 px-2 py-0.5 text-[10px] font-bold rounded-full bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
+                      <span className="text-2xl font-black mt-1 group-hover:text-orange-500 transition-colors" style={{ color: textColor }}>{(kpiStats.totalOperators || 0).toLocaleString()}</span>
+                      <span className="mt-1.5 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
                         {(kpiStats.uniqueOperators || 0).toLocaleString()} Unique
+                      </span>
+                      <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 opacity-75 group-hover:opacity-100 transition-opacity mt-1">
+                        View Operators &rarr;
                       </span>
                     </div>
                   </div>
                 )}
 
                 {/* On-Demand Server Query Action Bar */}
-                <div className="mb-6 p-4 rounded-xl border flex flex-wrap items-center justify-between gap-3 shadow-2xs print:hidden" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
+                <div id="training-records-table-anchor" className="mb-6 p-4 rounded-xl border flex flex-wrap items-center justify-between gap-3 shadow-2xs print:hidden" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
                   <div className="flex flex-wrap items-center gap-3">
                     <button
                       onClick={() => handleExecuteRecordsSearch(false)}
@@ -4360,6 +4492,326 @@ Content-Type: text/html; charset="utf-8"
                   </div>
                 </form>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+            {/* Executive KPI Drill-Down Modal Dialog */}
+      {drillDownModalType && (
+        <div className="fixed inset-0 z-[99999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-fade-in print:hidden">
+          <div 
+            className="bg-white dark:bg-[#0A1220] rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-[#002D62] text-white p-5 sm:p-6 flex items-center justify-between border-b border-blue-950/50">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-amber-400 text-[#002D62] flex items-center justify-center font-black shadow-md">
+                  {drillDownModalType === 'courses' && <BookOpen size={24} />}
+                  {drillDownModalType === 'sessions' && <Calendar size={24} />}
+                  {drillDownModalType === 'trainees' && <Users size={24} />}
+                  {drillDownModalType === 'engineers' && <HardHat size={24} />}
+                  {drillDownModalType === 'technicians' && <Wrench size={24} />}
+                  {drillDownModalType === 'operators' && <Settings size={24} />}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide">
+                      {drillDownModalType === 'courses' && 'Distinct Training Programs'}
+                      {drillDownModalType === 'sessions' && 'Conducted Training Sessions'}
+                      {drillDownModalType === 'trainees' && 'Trainee Personnel Directory'}
+                      {drillDownModalType === 'engineers' && 'Engineers Training Directory'}
+                      {drillDownModalType === 'technicians' && 'Technicians Training Directory'}
+                      {drillDownModalType === 'operators' && 'Operators Training Directory'}
+                    </h3>
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#FFC000] text-[#002D62] text-xs font-black">
+                      {drillDownModalType === 'courses' && drillDownCoursesList.length}
+                      {drillDownModalType === 'sessions' && drillDownSessionsList.length}
+                      {drillDownModalType === 'trainees' && drillDownTraineesList.length}
+                      {drillDownModalType === 'engineers' && drillDownTraineesList.filter(t => t.roleCategory === 'engineer').length}
+                      {drillDownModalType === 'technicians' && drillDownTraineesList.filter(t => t.roleCategory === 'technician').length}
+                      {drillDownModalType === 'operators' && drillDownTraineesList.filter(t => t.roleCategory === 'operator').length}
+                    </span>
+                  </div>
+                  <p className="text-xs text-blue-200 mt-0.5">
+                    {drillDownModalType === 'courses' && 'Complete master catalog of courses conducted with session counts and attendance volume'}
+                    {drillDownModalType === 'sessions' && 'Chronological matrix of all conducted batches, delivery dates, and roster headcounts'}
+                    {(drillDownModalType === 'trainees' || drillDownModalType === 'engineers' || drillDownModalType === 'technicians' || drillDownModalType === 'operators') && 'Individual trainee personnel records, departments, and course attendance history'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDrillDownModalType(null)}
+                className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Search Filter Bar */}
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex items-center gap-3">
+              <div className="relative flex-1">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={drillDownSearch}
+                  onChange={(e) => setDrillDownSearch(e.target.value)}
+                  placeholder={`Search in ${drillDownModalType}...`}
+                  className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#002D62] dark:focus:ring-amber-400"
+                />
+                {drillDownSearch && (
+                  <button 
+                    onClick={() => setDrillDownSearch('')} 
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Body Content */}
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-3">
+              {/* VIEW 1: COURSES LIST */}
+              {drillDownModalType === 'courses' && (
+                <div className="space-y-2.5">
+                  {drillDownCoursesList
+                    .filter(c => !drillDownSearch || c.title.toLowerCase().includes(drillDownSearch.toLowerCase()))
+                    .map((course, idx) => (
+                      <div 
+                        key={course.title} 
+                        className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 bg-white dark:bg-[#0F1B2E] flex flex-wrap items-center justify-between gap-3 shadow-2xs hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-center gap-3.5 min-w-[240px] flex-1">
+                          <span className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950 text-[#002D62] dark:text-blue-300 flex items-center justify-center text-xs font-black shrink-0">
+                            {idx + 1}
+                          </span>
+                          <div>
+                            <h4 className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">
+                              {course.title}
+                            </h4>
+                            <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                              <span className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
+                                <Calendar size={13} /> {course.sessionCount} {course.sessionCount === 1 ? 'Session' : 'Sessions'}
+                              </span>
+                              <span>&bull;</span>
+                              <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                                <Users size={13} /> {course.traineeCount} Unique Trainees
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0">
+                          <div className="text-right">
+                            <span className="text-xs text-slate-400 block font-medium">Attendances</span>
+                            <span className="text-lg font-black text-[#002D62] dark:text-[#FFC000]">
+                              {course.totalAttendances.toLocaleString()}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSearchCourse(course.title);
+                              setDrillDownModalType(null);
+                              const el = document.getElementById('training-records-table-anchor');
+                              if (el) el.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-[#002D62] dark:text-blue-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>Filter in Table</span>
+                            <ExternalLink size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+
+              {/* VIEW 2: SESSIONS MATRIX */}
+              {drillDownModalType === 'sessions' && (
+                <div className="space-y-2.5">
+                  {drillDownSessionsList
+                    .filter(s => !drillDownSearch || s.courseTitle.toLowerCase().includes(drillDownSearch.toLowerCase()) || s.date.toLowerCase().includes(drillDownSearch.toLowerCase()))
+                    .map((session, idx) => {
+                      const isExpanded = drillDownExpandedSession === session.sessionKey;
+                      return (
+                        <div 
+                          key={session.sessionKey} 
+                          className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F1B2E] overflow-hidden shadow-2xs transition-all"
+                        >
+                          <div className="p-4 flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex items-center gap-3.5 flex-1 min-w-[240px]">
+                              <span className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 flex items-center justify-center text-xs font-black shrink-0">
+                                {idx + 1}
+                              </span>
+                              <div>
+                                <h4 className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">
+                                  {session.courseTitle}
+                                </h4>
+                                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                  <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-bold font-mono">
+                                    {session.date}
+                                  </span>
+                                  <span>&bull;</span>
+                                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                                    {session.attendees.length} Attendees
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                onClick={() => setDrillDownExpandedSession(isExpanded ? null : session.sessionKey)}
+                                className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors"
+                              >
+                                {isExpanded ? 'Hide Trainees' : `View ${session.attendees.length} Trainees`}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSearchCourse(session.courseTitle);
+                                  setSearchDate(session.date);
+                                  setDrillDownModalType(null);
+                                  const el = document.getElementById('training-records-table-anchor');
+                                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                }}
+                                className="px-3.5 py-1.5 rounded-xl bg-[#002D62] hover:bg-blue-900 text-white text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>Filter</span>
+                                <ExternalLink size={12} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Expanded Trainee Sub-Table */}
+                          {isExpanded && (
+                            <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/40 p-4 max-h-60 overflow-y-auto">
+                              <table className="w-full text-xs">
+                                <thead>
+                                  <tr className="text-left font-bold text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2">
+                                    <th className="pb-2">HR Code</th>
+                                    <th className="pb-2">Trainee Name</th>
+                                    <th className="pb-2">Department</th>
+                                    <th className="pb-2 text-right">Score</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                                  {session.attendees.map((att, attIdx) => (
+                                    <tr key={`${att.hrCode}-${attIdx}`} className="hover:bg-slate-100/50 dark:hover:bg-slate-800/30">
+                                      <td className="py-2 font-mono font-bold text-slate-700 dark:text-slate-300">{att.hrCode || '-'}</td>
+                                      <td className="py-2 font-semibold text-slate-900 dark:text-slate-100">{att.name}</td>
+                                      <td className="py-2 text-slate-500 dark:text-slate-400">{att.department || '-'}</td>
+                                      <td className="py-2 text-right font-black text-amber-500">{att.score ?? '-'}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+
+              {/* VIEW 3: TRAINEES DIRECTORY (All, Engineers, Technicians, Operators) */}
+              {(drillDownModalType === 'trainees' || drillDownModalType === 'engineers' || drillDownModalType === 'technicians' || drillDownModalType === 'operators') && (
+                <div className="space-y-2.5">
+                  {drillDownTraineesList
+                    .filter(t => {
+                      if (drillDownModalType === 'engineers') return t.roleCategory === 'engineer';
+                      if (drillDownModalType === 'technicians') return t.roleCategory === 'technician';
+                      if (drillDownModalType === 'operators') return t.roleCategory === 'operator';
+                      return true;
+                    })
+                    .filter(t => {
+                      if (!drillDownSearch) return true;
+                      const q = drillDownSearch.toLowerCase();
+                      return t.name.toLowerCase().includes(q) || t.hrCode.toLowerCase().includes(q) || t.department.toLowerCase().includes(q);
+                    })
+                    .map((trainee, idx) => (
+                      <div 
+                        key={`${trainee.hrCode}-${idx}`} 
+                        className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F1B2E] flex flex-wrap items-center justify-between gap-3 shadow-2xs hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-center gap-3.5 flex-1 min-w-[240px]">
+                          <span className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 flex items-center justify-center text-xs font-black shrink-0">
+                            {idx + 1}
+                          </span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">
+                                {trainee.name}
+                              </h4>
+                              {trainee.hrCode && (
+                                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300">
+                                  {trainee.hrCode}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                              {trainee.department && (
+                                <span className="font-medium text-slate-600 dark:text-slate-300">{trainee.department}</span>
+                              )}
+                              <span>&bull;</span>
+                              <span className="font-bold text-[#002D62] dark:text-[#FFC000]">
+                                {trainee.courses.size} {trainee.courses.size === 1 ? 'Course' : 'Courses'} Attended
+                              </span>
+                            </div>
+                            {/* Course pills preview */}
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {Array.from(trainee.courses).map(c => (
+                                <span key={c} className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/80 text-[10px] font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                  {c}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0">
+                          <div className="text-right">
+                            <span className="text-xs text-slate-400 block font-medium">Attendances</span>
+                            <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
+                              {trainee.totalAttendances}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              if (trainee.hrCode) {
+                                setSearchHrCode(trainee.hrCode);
+                              } else {
+                                setSearchTraineeName(trainee.name);
+                              }
+                              setDrillDownModalType(null);
+                              const el = document.getElementById('training-records-table-anchor');
+                              if (el) el.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>Filter Trainee</span>
+                            <ExternalLink size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500">
+                100% In-Memory Dynamic Breakdown &bull; Zero Server Reads
+              </span>
+              <button
+                onClick={() => setDrillDownModalType(null)}
+                className="px-5 py-2 rounded-xl bg-[#002D62] text-white hover:bg-blue-900 font-bold text-xs shadow-sm cursor-pointer transition-colors"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>
