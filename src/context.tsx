@@ -1196,7 +1196,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       // If specific query returned 0 or no query constraints, and user is admin:
       // Fetch broad data so client-side flexible filter can match partial titles, different cases, etc.
       if (data.length === 0 && user && user.role === 'admin') {
-        const broadSnap = await getDocs(query(q, limit(1000)));
+        const broadSnap = await getDocs(query(q, limit(5000)));
         broadSnap.forEach((d: any) => data.push(d.data() as CleanedRecord));
       }
 
@@ -1605,18 +1605,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     reactivateSession(String(id).trim());
   };
 
-  const setCleanedData = (data: CleanedRecord[]) => {
+  const setCleanedData = async (data: CleanedRecord[]) => {
     setCleanedDataState(data);
     try {
       localStorage.setItem('oed_cached_cleaned_data', JSON.stringify(data));
     } catch (e) {}
-    const batch = writeBatch(db);
-    data.forEach(record => {
-      const id = record.id || generateUUID();
-      const ref = doc(db, "cleanedData", id);
-      batch.set(ref, { ...record, id });
-    });
-    batch.commit().catch(console.error);
+
+    // Chunk batch writes into groups of 400 (Firestore maximum batch size is 500)
+    try {
+      const CHUNK_SIZE = 400;
+      for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+        const chunk = data.slice(i, i + CHUNK_SIZE);
+        const batch = writeBatch(db);
+        chunk.forEach(record => {
+          const id = record.id || generateUUID();
+          const ref = doc(db, "cleanedData", id);
+          batch.set(ref, { ...record, id });
+        });
+        await batch.commit();
+      }
+    } catch (err) {
+      console.error("Failed to commit cleanedData batches to Firestore:", err);
+    }
   };
 
   const setCleanedFileName = (name: string) => {
