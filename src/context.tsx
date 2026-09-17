@@ -754,11 +754,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [cleanedData, setCleanedDataState] = useState<CleanedRecord[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const stored = localStorage.getItem('oed_cached_cleaned_data');
+        const stored = localStorage.getItem('oed_cached_cleaned_data_v23');
         if (stored) {
-          let parsed = JSON.parse(stored);
+          const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length >= 500) {
-            parsed = parsed.filter((r: any) => r.courseName !== 'vars' && r.courseName !== '5050');
             return parsed;
           }
         }
@@ -1582,6 +1581,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const setCleanedData = async (data: CleanedRecord[]) => {
     setCleanedDataState(data);
     try {
+      localStorage.setItem('oed_cached_cleaned_data_v23', JSON.stringify(data));
       localStorage.setItem('oed_cached_cleaned_data', JSON.stringify(data));
     } catch (e) {}
 

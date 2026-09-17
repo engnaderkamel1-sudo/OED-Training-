@@ -818,6 +818,7 @@ Please log in to register for this session through the OED-TTMS Application.
 
       // 4. Update localStorage cache directly
       try {
+        localStorage.setItem('oed_cached_cleaned_data_v23', JSON.stringify(updatedCleaned));
         localStorage.setItem('oed_cached_cleaned_data', JSON.stringify(updatedCleaned));
       } catch (e) {}
 

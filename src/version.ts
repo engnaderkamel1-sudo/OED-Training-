@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.9.10",
-  releaseName: "Cleaned Master Records Catalog & Unified Delete Engine",
+  version: "2.0.0",
+  releaseName: "Full Master Excel Direct Immersion — 23 Verified Courses & 1,004 Records",
   buildDate: "2026",
   buildTimestamp: "2026",
   
