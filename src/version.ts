@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.9.5",
-  releaseName: "Annual Plan Clarity: Distinct Programs vs Total Planned Sessions",
+  version: "1.9.6",
+  releaseName: "Master Training Records Immersion & Cache Shield Engine",
   buildDate: "2026",
   buildTimestamp: "2026",
   

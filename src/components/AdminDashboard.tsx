@@ -1,4 +1,4 @@
-import { UserManagementTab } from './UserManagementTab';
+﻿import { UserManagementTab } from './UserManagementTab';
 import { SystemErrorsModal } from './SystemErrorsModal';
 import { FirebaseUsageModal } from './FirebaseUsageModal';
 import { EditRecordModal } from './EditRecordModal';
@@ -1895,11 +1895,17 @@ Content-Type: text/html; charset="utf-8"
     reader.readAsArrayBuffer(file);
   };
 
+  const allRecordsPool = useMemo(() => {
+    if (cleanedData && cleanedData.length > 0) return cleanedData;
+    if (records && records.length > 0) return records;
+    return [];
+  }, [cleanedData, records]);
+
   const hasActiveFilters = Boolean((searchHrCode && searchHrCode.trim()) || (searchTrainee && searchTrainee.trim()) || searchDepartment || selectedCourseFilter || fromDateFilter || toDateFilter);
 
   const filteredRecords = useMemo(() => {
     if (!hasActiveFilters && !isFullReportView) return [];
-    return records.filter((r) => {
+    return allRecordsPool.filter((r) => {
       const user = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}` || u.name?.toLowerCase() === r.userId?.toLowerCase());
       if (searchHrCode && searchHrCode.trim()) {
         const q = searchHrCode.trim().toLowerCase();
@@ -1943,7 +1949,7 @@ Content-Type: text/html; charset="utf-8"
       }
       return true;
     });
-  }, [hasActiveFilters, isFullReportView, records, users, searchHrCode, searchTrainee, searchDepartment, selectedCourseFilter, fromDateFilter, toDateFilter]);
+  }, [hasActiveFilters, isFullReportView, allRecordsPool, users, searchHrCode, searchTrainee, searchDepartment, selectedCourseFilter, fromDateFilter, toDateFilter]);
 
     const kpiStats = useMemo(() => {
     // If active filters are applied but no records matched, return true 0s
@@ -1962,9 +1968,9 @@ Content-Type: text/html; charset="utf-8"
       };
     }
 
-    const dataSource: any[] = filteredRecords.length > 0 
-      ? filteredRecords 
-      : ((cleanedData && cleanedData.length > 0) ? cleanedData : (records && records.length > 0 ? records : []));
+    const dataSource: any[] = (hasActiveFilters && filteredRecords.length > 0)
+      ? filteredRecords
+      : allRecordsPool;
 
     if (dataSource.length === 0) {
       return {
@@ -2674,11 +2680,7 @@ Content-Type: text/html; charset="utf-8"
                             <div className="relative">
                               <select 
                                 value={searchDepartment} 
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setSearchDepartment(val);
-                                  fetchTrainingRecords({ department: val });
-                                }} 
+                                onChange={(e) => setSearchDepartment(e.target.value)} 
                                 className="w-full border rounded-md px-2 py-1 text-xs focus:ring-[#FFC000] appearance-none pr-6 shadow-2xs font-medium" 
                                 style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
                               >
@@ -2693,11 +2695,7 @@ Content-Type: text/html; charset="utf-8"
                             <div className="relative">
                               <select 
                                 value={selectedCourseFilter} 
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setSelectedCourseFilter(val);
-                                  fetchTrainingRecords({ courseName: val });
-                                }} 
+                                onChange={(e) => setSelectedCourseFilter(e.target.value)} 
                                 className="w-full border rounded-md px-2 py-1 text-xs focus:ring-[#FFC000] appearance-none pr-6 shadow-2xs font-medium" 
                                 style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
                               >
