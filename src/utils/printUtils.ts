@@ -368,7 +368,38 @@ export const generateReportHTML = (options: ReportOptions): string => {
  * Mobile & iFrame safe print handler
  */
 export const safePrintReport = (options: ReportOptions) => {
+  const isIOS = typeof navigator !== 'undefined' && (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
+
   const htmlContent = generateReportHTML(options);
+
+  // iOS / iPhone / Safari: Avoid hidden iframe which WebKit restricts
+  if (isIOS) {
+    try {
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const blobUrl = URL.createObjectURL(blob);
+      const printWindow = window.open(blobUrl, '_blank');
+      if (printWindow) {
+        setTimeout(() => {
+          try {
+            printWindow.focus();
+            printWindow.print();
+          } catch (e) {
+            console.warn('iOS print focus warning:', e);
+          }
+        }, 500);
+        return;
+      }
+    } catch (e) {
+      console.warn('iOS blob open failed, falling back to PDF download:', e);
+    }
+
+    // Direct fallback for iOS: Download vector PDF directly
+    downloadReportPDF(options);
+    return;
+  }
 
   try {
     // Attempt 1: Try opening a clean window / tab (best for popup or iframe break out)

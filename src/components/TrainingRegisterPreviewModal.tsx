@@ -378,6 +378,28 @@ export const TrainingRegisterPreviewModal: React.FC<TrainingRegisterPreviewModal
     setIsPrinting(true);
     const html = generatePrintableHTML();
 
+    const isIOS = typeof navigator !== 'undefined' && (
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    );
+
+    if (isIOS) {
+      try {
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const blobUrl = URL.createObjectURL(blob);
+        const printWindow = window.open(blobUrl, '_blank');
+        if (printWindow) {
+          setIsPrinting(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('iOS blob open failed:', err);
+      }
+      handleDownloadPDF();
+      setIsPrinting(false);
+      return;
+    }
+
     try {
       // 1. Create a hidden iframe for 100% reliable, zero-blank native PDF print
       const iframe = document.createElement('iframe');

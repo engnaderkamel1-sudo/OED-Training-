@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.9.0",
-  releaseName: "Historical Training Plan Auto-Generation & Planned vs Emergent Metrics",
+  version: "1.9.1",
+  releaseName: "Enhanced Mobile & iOS Print Engine with Vector Fallbacks",
   buildDate: "2026",
   buildTimestamp: "2026",
   
