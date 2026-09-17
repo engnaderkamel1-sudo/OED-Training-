@@ -785,6 +785,17 @@ Please log in to register for this session through the OED-TTMS Application.
 
   useEffect(() => {
     const checkAndRunAutoBackup = () => {
+      // 0. Never show backup reminder in Demo mode!
+      if (
+        user?.isDemoUser || 
+        (typeof window !== 'undefined' && (
+          sessionStorage.getItem('oed_vip_demo_active') === 'true' || 
+          window.location.search.includes('demo=')
+        ))
+      ) {
+        return;
+      }
+
       // 1. Check if disabled permanently
       if (localStorage.getItem('disable_auto_backup_prompt') === 'true') return;
 
@@ -4265,7 +4276,7 @@ Content-Type: text/html; charset="utf-8"
       )}
 
       {/* Weekly Cloud Backup Confirmation Modal */}
-      {showBackupPromptModal && (
+      {showBackupPromptModal && !user?.isDemoUser && (
         <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fade-in">
           <div className="bg-white dark:bg-[#0E1A32] rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-300 dark:border-slate-700 animate-scale-in">
             <div className="bg-[#002D62] text-white p-4 sm:p-5 flex justify-between items-center border-b border-blue-900">

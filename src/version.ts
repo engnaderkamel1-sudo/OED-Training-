@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.8.8",
-  releaseName: "Executive Year Dropdown & Plan Management (Edit & Delete)",
+  version: "1.8.9",
+  releaseName: "Suppress Backup Reminder in Demo Mode",
   buildDate: "2026",
   buildTimestamp: "2026",
   
