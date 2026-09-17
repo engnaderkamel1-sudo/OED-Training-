@@ -226,7 +226,7 @@ export interface AnnualPlanCourseTarget {
   traineesPerRound?: number; // عدد المتدربين لكل دورة (افتراضياً 6)
   targetAudience?: 'engineers' | 'technicians_operators' | 'summer_training'; // الفئة المستهدفة
   quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4';
-  track: 'mechanical' | 'hydraulic' | 'electrical' | 'heavy_machinery' | 'tbm' | 'quality_sos';
+  track?: 'mechanical' | 'hydraulic' | 'electrical' | 'heavy_machinery' | 'tbm' | 'quality_sos';
   durationDays: number;
   notes?: string;
 }

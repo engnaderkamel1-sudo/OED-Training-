@@ -37,7 +37,9 @@ import {
   RefreshCw,
   FileCheck,
   Palmtree,
-  Flag
+  Flag,
+  Wand2,
+  Zap
 } from 'lucide-react';
 import { AnnualYearPlan, AnnualPlanCourseTarget, Course } from '../types';
 import { HolidaysAndVacationsModal } from './HolidaysAndVacationsModal';
@@ -142,9 +144,14 @@ export const AnnualTrainingPlanPage: React.FC = () => {
   const [targetFormTrainees, setTargetFormTrainees] = useState('12');
   const [targetFormAudience, setTargetFormAudience] = useState<NonNullable<AnnualPlanCourseTarget['targetAudience']>>('engineers');
   const [targetFormQuarter, setTargetFormQuarter] = useState<'Q1' | 'Q2' | 'Q3' | 'Q4'>('Q1');
-  const [targetFormTrack, setTargetFormTrack] = useState<AnnualPlanCourseTarget['track']>('mechanical');
   const [targetFormDuration, setTargetFormDuration] = useState('5');
   const [targetFormNotes, setTargetFormNotes] = useState('');
+
+  // Auto-Generate Training Plans from History State
+  const [isAutoGenerateModalOpen, setIsAutoGenerateModalOpen] = useState(false);
+  const [isGeneratingPlans, setIsGeneratingPlans] = useState(false);
+  const [autoGenerateOverwriteExisting, setAutoGenerateOverwriteExisting] = useState(false);
+  const [selectedYearsToAutoGenerate, setSelectedYearsToAutoGenerate] = useState<number[]>([]);
 
   // Auto-sync trainees when rounds or trainees/round change
   const handleRoundsChange = (val: string) => {
@@ -161,6 +168,63 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     setTargetFormTrainees(String(r * tpr));
   };
 
+  // Extract all historical years and courses available in cleanedData
+  const historicalYearsSummary = useMemo(() => {
+    const yearCourseMap: Record<number, Map<string, { count: number; monthCounts: Record<number, number> }>> = {};
+    
+    (cleanedData || []).forEach(r => {
+      const cName = (r.courseName || '').trim();
+      if (!cName || cName.length < 2) return;
+
+      const dateStr = r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'] || '';
+      let yr: number | null = null;
+      let month = 0; // 0 to 11
+
+      if (dateStr) {
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+          yr = d.getFullYear();
+          month = d.getMonth();
+        } else {
+          const match = dateStr.match(/\b(201\d|202\d|203\d)\b/);
+          if (match) yr = parseInt(match[1], 10);
+        }
+      }
+
+      if (yr && yr >= 2018 && yr <= 2035) {
+        if (!yearCourseMap[yr]) {
+          yearCourseMap[yr] = new Map();
+        }
+        const cKey = cName.toLowerCase();
+        const existing = yearCourseMap[yr].get(cKey) || { count: 0, monthCounts: {} };
+        existing.count += 1;
+        existing.monthCounts[month] = (existing.monthCounts[month] || 0) + 1;
+        yearCourseMap[yr].set(cKey, existing);
+      }
+    });
+
+    const yearsList = Object.keys(yearCourseMap).map(Number).sort((a, b) => b - a);
+    return yearsList.map(yr => {
+      const coursesMap = yearCourseMap[yr];
+      const distinctCourses = coursesMap.size;
+      let totalTrainees = 0;
+      coursesMap.forEach(val => { totalTrainees += val.count; });
+      const estimatedRounds = Array.from(coursesMap.values()).reduce((acc, val) => {
+        return acc + Math.max(1, Math.ceil(val.count / 6));
+      }, 0);
+
+      const alreadyExists = annualPlans.some(p => p.year === yr && p.targets && p.targets.length > 0);
+
+      return {
+        year: yr,
+        distinctCourses,
+        totalTrainees,
+        estimatedRounds,
+        alreadyExists
+      };
+    });
+  }, [cleanedData, annualPlans]);
+
   // -------------------------------------------------------------
   // Data Aggregation: Match Real Completed & Scheduled Sessions
   // -------------------------------------------------------------
@@ -168,8 +232,18 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     return (currentPlan.targets || []).map(t => {
       const normalizedTargetTitle = (t.courseTitle || '').trim().toLowerCase();
 
-      // 1. Matches in upcomingSessions collection (Live from Firestore)
+      // 1. Matches in upcomingSessions collection (Filtered by selectedYear)
       const matchingLiveSessions = upcomingSessions.filter(s => {
+        let sYear: number | null = null;
+        if (s.startDate) {
+          const d = new Date(s.startDate);
+          if (!isNaN(d.getTime())) sYear = d.getFullYear();
+        } else if (s.sessionDate) {
+          const d = new Date(s.sessionDate);
+          if (!isNaN(d.getTime())) sYear = d.getFullYear();
+        }
+        if (sYear && sYear !== selectedYear) return false;
+
         const sTitle = (s.courseTitle || '').trim().toLowerCase();
         return sTitle.includes(normalizedTargetTitle) || normalizedTargetTitle.includes(sTitle);
       });
@@ -177,8 +251,21 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       const liveCompletedCount = matchingLiveSessions.filter(s => s.status === 'completed' || s.status === 'Completed').length;
       const liveScheduledCount = matchingLiveSessions.filter(s => s.status !== 'completed' && s.status !== 'Completed' && s.status !== 'cancelled' && s.status !== 'Cancelled').length;
 
-      // 2. Matches in cleanedData (Excel master historical records)
+      // 2. Matches in cleanedData (Excel master historical records filtered by selectedYear)
       const matchingHistorical = cleanedData.filter(r => {
+        const dateStr = r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'] || '';
+        let yr: number | null = null;
+        if (dateStr) {
+          const d = new Date(dateStr);
+          if (!isNaN(d.getTime())) {
+            yr = d.getFullYear();
+          } else {
+            const match = dateStr.match(/\b(201\d|202\d|203\d)\b/);
+            if (match) yr = parseInt(match[1], 10);
+          }
+        }
+        if (yr !== selectedYear) return false;
+
         const rTitle = (r.courseName || '').trim().toLowerCase();
         return rTitle.includes(normalizedTargetTitle) || normalizedTargetTitle.includes(rTitle);
       });
@@ -226,7 +313,139 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         matchingLiveSessions
       };
     });
-  }, [currentPlan, upcomingSessions, cleanedData]);
+  }, [currentPlan, upcomingSessions, cleanedData, selectedYear]);
+
+  // -------------------------------------------------------------
+  // Unplanned / On-Demand Deliveries Tracker (Outside Approved Plan)
+  // -------------------------------------------------------------
+  const unplannedExecutionItems = useMemo(() => {
+    const plannedTargetTitles = (currentPlan.targets || []).map(t => (t.courseTitle || '').trim().toLowerCase()).filter(Boolean);
+
+    const isPlannedTitle = (courseName: string) => {
+      const nName = courseName.trim().toLowerCase();
+      if (!nName) return true;
+      for (const pt of plannedTargetTitles) {
+        if (pt === nName || pt.includes(nName) || nName.includes(pt)) return true;
+      }
+      return false;
+    };
+
+    // 1. Historical records executed in selectedYear outside the plan
+    const unplannedHistMap: Record<string, {
+      courseTitle: string;
+      traineesCount: number;
+      dates: string[];
+      monthCounts: Record<number, number>;
+    }> = {};
+
+    (cleanedData || []).forEach(r => {
+      const dateStr = r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'] || '';
+      let yr: number | null = null;
+      let month = 0;
+      if (dateStr) {
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+          yr = d.getFullYear();
+          month = d.getMonth();
+        } else {
+          const match = dateStr.match(/\b(201\d|202\d|203\d)\b/);
+          if (match) yr = parseInt(match[1], 10);
+        }
+      }
+      if (yr !== selectedYear) return;
+
+      const cName = (r.courseName || '').trim();
+      if (!cName || cName.length < 2 || isPlannedTitle(cName)) return;
+
+      const key = cName.toLowerCase();
+      if (!unplannedHistMap[key]) {
+        unplannedHistMap[key] = {
+          courseTitle: cName,
+          traineesCount: 0,
+          dates: [],
+          monthCounts: {}
+        };
+      }
+      unplannedHistMap[key].traineesCount += 1;
+      unplannedHistMap[key].monthCounts[month] = (unplannedHistMap[key].monthCounts[month] || 0) + 1;
+      if (dateStr && !unplannedHistMap[key].dates.includes(dateStr)) {
+        unplannedHistMap[key].dates.push(dateStr);
+      }
+    });
+
+    // 2. Live sessions executed in selectedYear outside the plan
+    const unplannedLiveMap: Record<string, {
+      courseTitle: string;
+      sessionsCount: number;
+      traineesCount: number;
+      completedCount: number;
+    }> = {};
+
+    (upcomingSessions || []).forEach(s => {
+      let yr: number | null = null;
+      if (s.startDate) {
+        const d = new Date(s.startDate);
+        if (!isNaN(d.getTime())) yr = d.getFullYear();
+      } else if (s.sessionDate) {
+        const d = new Date(s.sessionDate);
+        if (!isNaN(d.getTime())) yr = d.getFullYear();
+      }
+      if (yr !== selectedYear) return;
+
+      const sTitle = (s.courseTitle || '').trim();
+      if (!sTitle || isPlannedTitle(sTitle)) return;
+
+      const key = sTitle.toLowerCase();
+      if (!unplannedLiveMap[key]) {
+        unplannedLiveMap[key] = {
+          courseTitle: sTitle,
+          sessionsCount: 0,
+          traineesCount: 0,
+          completedCount: 0
+        };
+      }
+      unplannedLiveMap[key].sessionsCount += 1;
+      unplannedLiveMap[key].traineesCount += (s.registeredUsers?.length || 6);
+      if (s.status === 'completed' || s.status === 'Completed') {
+        unplannedLiveMap[key].completedCount += 1;
+      }
+    });
+
+    const allKeys = Array.from(new Set([...Object.keys(unplannedHistMap), ...Object.keys(unplannedLiveMap)]));
+
+    return allKeys.map(key => {
+      const hist = unplannedHistMap[key];
+      const live = unplannedLiveMap[key];
+      const title = hist?.courseTitle || live?.courseTitle || key;
+
+      const histRounds = hist ? Math.max(1, Math.ceil(hist.traineesCount / 6)) : 0;
+      const liveRounds = live?.sessionsCount || 0;
+      const completedRounds = Math.max(histRounds, live?.completedCount || liveRounds, 1);
+      const totalTrainees = Math.max(hist?.traineesCount || 0, live?.traineesCount || 0, completedRounds * 6);
+
+      let quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4' = 'Q1';
+      if (hist) {
+        let bestM = 0;
+        let maxM = -1;
+        for (const [m, cnt] of Object.entries(hist.monthCounts)) {
+          if (cnt > maxM) {
+            maxM = cnt;
+            bestM = parseInt(m, 10);
+          }
+        }
+        quarter = bestM < 3 ? 'Q1' : bestM < 6 ? 'Q2' : bestM < 9 ? 'Q3' : 'Q4';
+      }
+
+      return {
+        id: `unplanned_${key}`,
+        courseTitle: title,
+        completedRounds,
+        traineesCount: totalTrainees,
+        quarter,
+        source: liveRounds > 0 ? 'Live Database' : 'Historical Records'
+      };
+    });
+  }, [currentPlan, cleanedData, upcomingSessions, selectedYear]);
 
   // Filtered List
   const filteredTargets = useMemo(() => {
@@ -306,6 +525,16 @@ export const AnnualTrainingPlanPage: React.FC = () => {
   const countCompletedCourses = targetsWithExecution.filter(t => t.executionStatus === 'completed').length;
   const countInProgressCourses = targetsWithExecution.filter(t => t.executionStatus === 'in_progress').length;
   const countRemainingCourses = targetsWithExecution.filter(t => t.executionStatus === 'remaining').length;
+
+  // Unplanned / Emergent Output Metrics (Delivered Outside Initial Plan)
+  const unplannedCoursesCount = unplannedExecutionItems.length;
+  const unplannedDeliveredRounds = unplannedExecutionItems.reduce((acc, item) => acc + item.completedRounds, 0);
+  const unplannedTraineesCount = unplannedExecutionItems.reduce((acc, item) => acc + item.traineesCount, 0);
+
+  // Gross Output Metrics (Planned Deliveries + On-Demand Emergent Deliveries)
+  const grossDeliveredRounds = totalCompletedRounds + unplannedDeliveredRounds;
+  const grossDeliveredCourses = countCompletedCourses + unplannedCoursesCount;
+  const grossTrainees = targetsWithExecution.reduce((acc, t) => acc + t.actualParticipants, 0) + unplannedTraineesCount;
 
   const paceStatus = useMemo(() => {
     if (!isCurrentYearPlan) {
@@ -662,25 +891,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     };
   }, [annualSessionLineItems]);
 
-  // Track Meta
-  const getTrackMeta = (track: AnnualPlanCourseTarget['track']) => {
-    switch (track) {
-      case 'mechanical':
-        return { label: 'Mechanical & Engines', badge: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800' };
-      case 'hydraulic':
-        return { label: 'Hydraulics & Powertrain', badge: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800' };
-      case 'electrical':
-        return { label: 'Electrical & Electronics', badge: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800' };
-      case 'heavy_machinery':
-        return { label: 'Heavy Equipment', badge: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700' };
-      case 'tbm':
-        return { label: 'Tunneling TBM', badge: 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-800' };
-      case 'quality_sos':
-        return { label: 'Diagnostics & SOS', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800' };
-      default:
-        return { label: 'General Technical', badge: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300' };
-    }
-  };
+
 
   // -------------------------------------------------------------
   // Wall Calendar: 12-Month Quarterly Schedule Data Engine
@@ -1118,7 +1329,6 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     setTargetFormTrainees('12');
     setTargetFormAudience('engineers');
     setTargetFormQuarter('Q1');
-    setTargetFormTrack('mechanical');
     setTargetFormDuration('5');
     setTargetFormNotes('');
     setIsAddCourseModalOpen(true);
@@ -1133,7 +1343,6 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     setTargetFormTrainees(String(target.targetTrainees || (target.targetRounds * tpr)));
     setTargetFormAudience(target.targetAudience || 'engineers');
     setTargetFormQuarter(target.quarter);
-    setTargetFormTrack(target.track);
     setTargetFormDuration(String(target.durationDays || 5));
     setTargetFormNotes(target.notes || '');
     setIsAddCourseModalOpen(true);
@@ -1161,7 +1370,6 @@ export const AnnualTrainingPlanPage: React.FC = () => {
             traineesPerRound: tpr,
             targetAudience: targetFormAudience,
             quarter: targetFormQuarter,
-            track: targetFormTrack,
             durationDays: duration,
             notes: targetFormNotes.trim()
           };
@@ -1177,7 +1385,6 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         traineesPerRound: tpr,
         targetAudience: targetFormAudience,
         quarter: targetFormQuarter,
-        track: targetFormTrack,
         durationDays: duration,
         notes: targetFormNotes.trim()
       };
@@ -1202,6 +1409,97 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       targets: updatedTargets,
       updatedAt: new Date().toISOString()
     });
+  };
+
+  // -------------------------------------------------------------
+  // Auto-Generate Training Plans from Historical Records Handler
+  // -------------------------------------------------------------
+  const handleAutoGeneratePlans = async () => {
+    if (selectedYearsToAutoGenerate.length === 0) return;
+    setIsGeneratingPlans(true);
+    try {
+      for (const yr of selectedYearsToAutoGenerate) {
+        const exists = annualPlans.some(p => p.year === yr && p.targets && p.targets.length > 0);
+        if (exists && !autoGenerateOverwriteExisting) continue;
+
+        // Group courses from cleanedData for yr
+        const courseMap: Record<string, { count: number; monthCounts: Record<number, number>; title: string }> = {};
+
+        (cleanedData || []).forEach(r => {
+          const dateStr = r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'] || '';
+          let recordYear: number | null = null;
+          let month = 0;
+          if (dateStr) {
+            const d = new Date(dateStr);
+            if (!isNaN(d.getTime())) {
+              recordYear = d.getFullYear();
+              month = d.getMonth();
+            } else {
+              const match = dateStr.match(/\b(201\d|202\d|203\d)\b/);
+              if (match) recordYear = parseInt(match[1], 10);
+            }
+          }
+          if (recordYear !== yr) return;
+
+          const cName = (r.courseName || '').trim();
+          if (!cName || cName.length < 2) return;
+
+          const key = cName.toLowerCase();
+          if (!courseMap[key]) {
+            courseMap[key] = { count: 0, monthCounts: {}, title: cName };
+          }
+          courseMap[key].count += 1;
+          courseMap[key].monthCounts[month] = (courseMap[key].monthCounts[month] || 0) + 1;
+        });
+
+        const targets: AnnualPlanCourseTarget[] = Object.values(courseMap).map((entry, idx) => {
+          let bestMonth = 0;
+          let maxCount = -1;
+          for (const [mStr, cnt] of Object.entries(entry.monthCounts)) {
+            if (cnt > maxCount) {
+              maxCount = cnt;
+              bestMonth = parseInt(mStr, 10);
+            }
+          }
+          const quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4' = 
+            bestMonth < 3 ? 'Q1' : bestMonth < 6 ? 'Q2' : bestMonth < 9 ? 'Q3' : 'Q4';
+
+          const rounds = Math.max(1, Math.ceil(entry.count / 6));
+
+          return {
+            id: `t_${yr}_${idx}_${Date.now()}`,
+            courseTitle: entry.title,
+            targetRounds: rounds,
+            traineesPerRound: 6,
+            targetTrainees: entry.count,
+            targetAudience: 'engineers',
+            quarter,
+            durationDays: 5,
+            notes: `Auto-generated from historical records (${entry.count} trainees).`
+          };
+        });
+
+        if (targets.length > 0) {
+          const newPlan: AnnualYearPlan = {
+            id: String(yr),
+            year: yr,
+            title: `Annual Training Plan ${yr}`,
+            status: yr < currentRealYear ? 'archived' : 'active',
+            targets,
+            notes: `Auto-generated from verified training attendance records (${targets.length} programs).`,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          await saveAnnualPlan(newPlan);
+        }
+      }
+      setIsAutoGenerateModalOpen(false);
+    } catch (err) {
+      console.error('Failed to auto-generate plans:', err);
+      alert('Failed to auto-generate plans. Check console for details.');
+    } finally {
+      setIsGeneratingPlans(false);
+    }
   };
 
   // -------------------------------------------------------------
@@ -1603,9 +1901,23 @@ export const AnnualTrainingPlanPage: React.FC = () => {
             )}
           </div>
 
-          {/* Prominent Action: + Add New Year Plan & Import Plan (Excel) (Admin Only) */}
+          {/* Prominent Action: Auto-Generate + Add New Year Plan + Import Plan (Excel) (Admin Only) */}
           {isAdmin && (
             <div className="flex items-center gap-2.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => {
+                  const ungenerated = historicalYearsSummary.filter(y => !y.alreadyExists).map(y => y.year);
+                  setSelectedYearsToAutoGenerate(ungenerated.length > 0 ? ungenerated : historicalYearsSummary.map(y => y.year));
+                  setIsAutoGenerateModalOpen(true);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-2xs hover:shadow-xs shrink-0"
+                title="Auto-Generate Annual Plans from Historical Database"
+              >
+                <Wand2 size={16} className="text-slate-950" />
+                <span>⚡ Auto-Generate from History</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -1635,109 +1947,141 @@ export const AnnualTrainingPlanPage: React.FC = () => {
           )}
         </div>
 
-        {/* Executive KPI Summary Strip: Dual Metric (Paced vs Cumulative) */}
-        <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {/* Card 1: Time-Paced Completion Rate (YTD) */}
-          <div className="bg-blue-50/70 dark:bg-slate-800/90 rounded-xl p-3.5 border border-blue-200/80 dark:border-slate-700 shadow-2xs relative overflow-hidden flex flex-col justify-between transition-colors">
+        {/* Executive KPI Summary Strip: Dual Metric (Approved Plan vs Delivered vs On-Demand vs Gross Output) */}
+        <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* Card 1: Approved Plan Target */}
+          <div className="bg-slate-50 dark:bg-slate-800/90 rounded-xl p-3.5 border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-colors">
+            <div>
+              <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1">
+                <span>🎯</span>
+                <span>Approved Plan Target</span>
+              </span>
+              <span className="text-2xl sm:text-3xl font-black text-[#002D62] dark:text-amber-300 mt-1.5 block">
+                {totalTargetRounds} <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Rounds</span>
+              </span>
+            </div>
+            <div className="mt-2.5">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">
+                {targetsWithExecution.length} Approved Programs ({selectedYear})
+              </span>
+            </div>
+          </div>
+
+          {/* Card 2: Delivered from Plan (Plan Adherence / Compliance) */}
+          <div className="bg-blue-50/70 dark:bg-slate-800/90 rounded-xl p-3.5 border border-blue-200/80 dark:border-slate-700 flex flex-col justify-between transition-colors">
             <div>
               <div className="flex items-center justify-between gap-1">
                 <span className="text-[11px] text-[#002D62] dark:text-slate-200 font-bold flex items-center gap-1">
-                  <span>⏱️</span>
-                  <span>Time-Paced Progress</span>
+                  <span>✅</span>
+                  <span>Delivered from Plan</span>
                 </span>
-                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${paceStatus.badge}`}>
-                  {paceStatus.shortLabel}
+                <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-[#002D62] dark:text-amber-300 border border-blue-200 dark:border-blue-700">
+                  {overallCompletionRate}% Adherence
                 </span>
               </div>
               <div className="mt-1.5 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black text-[#002D62] dark:text-amber-300">
-                  {pacedCompletionRate !== null ? `${pacedCompletionRate}%` : '---'}
+                <span className="text-2xl sm:text-3xl font-black text-[#002D62] dark:text-white">
+                  {totalCompletedRounds}
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
-                  ({totalCompletedRounds} / {expectedRoundsYTD} rounds)
+                  / {totalTargetRounds} rounds
                 </span>
               </div>
             </div>
             <div className="mt-2.5">
               <div className="w-full bg-blue-200/60 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
                 <div 
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    pacedCompletionRate !== null && pacedCompletionRate >= 100 
-                      ? 'bg-emerald-500 dark:bg-emerald-400' 
-                      : pacedCompletionRate !== null && pacedCompletionRate >= 80 
-                        ? 'bg-amber-500 dark:bg-amber-400' 
-                        : pacedCompletionRate !== null 
-                          ? 'bg-rose-500 dark:bg-rose-400' 
-                          : 'bg-slate-300 dark:bg-slate-600'
-                  }`}
-                  style={{ width: `${Math.min(100, pacedCompletionRate ?? 0)}%` }} 
-                />
-              </div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
-                Paced Target: {expectedRoundsYTD} rounds (Thru {currentMonthName})
-              </span>
-            </div>
-          </div>
-
-          {/* Card 2: Cumulative Annual Full-Year Completion Rate */}
-          <div className="bg-slate-50 dark:bg-slate-800/90 rounded-xl p-3.5 border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-colors">
-            <div>
-              <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1">
-                <span>📈</span>
-                <span>Full Year Target (12 Months)</span>
-              </span>
-              <div className="mt-1.5 flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-                  {totalTargetRounds > 0 ? `${overallCompletionRate}%` : '---'}
-                </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
-                  ({totalCompletedRounds} / {totalTargetRounds})
-                </span>
-              </div>
-            </div>
-            <div className="mt-2.5">
-              <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                <div 
                   className="bg-[#002D62] dark:bg-amber-400 h-full rounded-full transition-all duration-500" 
                   style={{ width: `${overallCompletionRate}%` }} 
                 />
               </div>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
-                Annual Progress: {totalCompletedRounds} of {totalTargetRounds} rounds
+                {countCompletedCourses} of {targetsWithExecution.length} targets fulfilled
               </span>
             </div>
           </div>
 
-          {/* Card 3: Target Total Rounds */}
-          <div className="bg-slate-50 dark:bg-slate-800/90 rounded-xl p-3.5 border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-colors">
+          {/* Card 3: On-Demand & Unplanned Deliveries (Executed Outside Initial Plan) */}
+          <div className="bg-amber-50/60 dark:bg-amber-950/20 rounded-xl p-3.5 border border-amber-200/80 dark:border-amber-800/50 flex flex-col justify-between transition-colors">
             <div>
-              <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1">
-                <span>🎯</span>
-                <span>Annual Target Rounds</span>
-              </span>
-              <span className="text-2xl sm:text-3xl font-black text-[#002D62] dark:text-amber-300 mt-1.5 block">
-                {totalTargetRounds} <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Rounds</span>
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[11px] text-amber-800 dark:text-amber-300 font-bold flex items-center gap-1">
+                  <Zap size={13} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>On-Demand Executed</span>
+                </span>
+                <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-200/70 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700">
+                  Extra Output
+                </span>
+              </div>
+              <div className="mt-1.5 flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-300">
+                  +{unplannedDeliveredRounds}
+                </span>
+                <span className="text-[11px] text-amber-800/80 dark:text-amber-300/80 font-medium">
+                  rounds ({unplannedCoursesCount} programs)
+                </span>
+              </div>
+            </div>
+            <div className="mt-2.5">
+              <span className="text-[10px] text-amber-700/80 dark:text-amber-400 block font-medium">
+                {unplannedTraineesCount.toLocaleString()} Trainees (Emergent needs)
               </span>
             </div>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-2.5">
-              {targetsWithExecution.length} Approved Programs
-            </span>
           </div>
 
-          {/* Card 4: Remaining Rounds */}
-          <div className="bg-slate-50 dark:bg-slate-800/90 rounded-xl p-3.5 border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-colors">
+          {/* Card 4: Gross Total Output (Plan + Emergent) */}
+          <div className="bg-emerald-50/60 dark:bg-emerald-950/20 rounded-xl p-3.5 border border-emerald-200/80 dark:border-emerald-800/50 flex flex-col justify-between transition-colors">
             <div>
-              <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1">
-                <span>⏳</span>
-                <span>Remaining Target Rounds</span>
+              <span className="text-[11px] text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-1">
+                <span>🏆</span>
+                <span>Gross Delivered Output</span>
               </span>
-              <span className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 mt-1.5 block">
-                {totalRemainingRounds} <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Rounds</span>
+              <div className="mt-1.5 flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300">
+                  {grossDeliveredRounds}
+                </span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
+                  Total Rounds
+                </span>
+              </div>
+            </div>
+            <div className="mt-2.5">
+              <span className="text-[10px] text-emerald-700 dark:text-emerald-400 block font-semibold">
+                {grossTrainees.toLocaleString()} Trainees Trained Across {grossDeliveredCourses} Programs
               </span>
             </div>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-2.5">
-              {totalScheduledRounds} Currently Scheduled
-            </span>
+          </div>
+
+          {/* Card 5: Time-Paced Status or Remaining Plan Target */}
+          <div className="bg-slate-50 dark:bg-slate-800/90 rounded-xl p-3.5 border border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-colors">
+            <div>
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1">
+                  <span>⏱️</span>
+                  <span>{isCurrentYearPlan ? 'Time-Paced Progress' : 'Remaining Target'}</span>
+                </span>
+                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
+                  isCurrentYearPlan ? paceStatus.badge : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600'
+                }`}>
+                  {isCurrentYearPlan ? paceStatus.shortLabel : `${totalRemainingRounds} Left`}
+                </span>
+              </div>
+              <div className="mt-1.5 flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+                  {isCurrentYearPlan 
+                    ? (pacedCompletionRate !== null ? `${pacedCompletionRate}%` : '---')
+                    : totalRemainingRounds}
+                </span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
+                  {isCurrentYearPlan ? `(vs ${expectedRoundsYTD} paced)` : 'rounds remaining'}
+                </span>
+              </div>
+            </div>
+            <div className="mt-2.5">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                {isCurrentYearPlan ? `Linear pace thru ${currentMonthName}` : `${totalScheduledRounds} Currently Scheduled`}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -1879,7 +2223,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
             <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
             <input
               type="text"
-              placeholder="Search plan by course title, track or venue..."
+              placeholder="Search plan by course title, audience or notes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl py-2 pl-9 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-[#002D62] text-slate-900 dark:text-white"
@@ -1998,7 +2342,6 @@ export const AnnualTrainingPlanPage: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredTargets.map(t => {
-                const trackMeta = getTrackMeta(t.track);
                 return (
                   <motion.div
                     key={t.id}
@@ -2017,8 +2360,8 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                             {t.targetAudience === 'technicians_operators' ? 'Techs / Ops' : t.targetAudience === 'summer_training' ? 'Summer Training' : 'Engineers'}
                           </span>
                         </div>
-                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border truncate max-w-[150px] ${trackMeta.badge}`}>
-                          {trackMeta.label}
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          {t.durationDays || 5} Days
                         </span>
                       </div>
 
@@ -2267,8 +2610,6 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                     </tr>
                   ) : (
                     filteredAnnualSessionLineItems.map(item => {
-                      const trackMeta = getTrackMeta(item.track);
-
                       // Row background tint based on status
                       const rowBg =
                         item.status === 'completed'
@@ -2283,22 +2624,17 @@ export const AnnualTrainingPlanPage: React.FC = () => {
 
                       return (
                         <tr key={item.id} className={`${rowBg} transition-colors`}>
-                          {/* 1. Course Title & Track */}
+                          {/* 1. Course Title */}
                           <td className="py-3.5 px-4">
                             <div className="space-y-1">
                               <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm block">
                                 {item.courseTitle}
                               </span>
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${trackMeta.badge}`}>
-                                  {trackMeta.label}
+                              {item.location && (
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[200px] block">
+                                  📍 {item.location}
                                 </span>
-                                {item.location && (
-                                  <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
-                                    📍 {item.location}
-                                  </span>
-                                )}
-                              </div>
+                              )}
                             </div>
                           </td>
 
@@ -2438,6 +2774,84 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* On-Demand & Unplanned Delivered Courses Section */}
+            {unplannedExecutionItems.length > 0 && (
+              <div className="p-4 sm:p-5 border-t-2 border-dashed border-slate-200 dark:border-slate-800 bg-amber-50/20 dark:bg-slate-900/40">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 flex items-center justify-center text-amber-700 dark:text-amber-400 shadow-2xs">
+                      <Zap size={18} />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>On-Demand & Emergent Deliveries</span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                          Executed Outside Initial Plan
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {unplannedExecutionItems.length} programs ({unplannedDeliveredRounds} rounds) executed in {selectedYear} to address emergent operational needs.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-bold flex-wrap">
+                    <span className="px-3 py-1 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-2xs">
+                      +{unplannedDeliveredRounds} Extra Delivered Rounds
+                    </span>
+                    <span className="px-3 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shadow-2xs">
+                      {unplannedTraineesCount.toLocaleString()} Trainees Trained
+                    </span>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-[#002D62] text-white font-black uppercase text-[11px]">
+                        <th className="py-3 px-4 min-w-[240px]">Course / Program Title</th>
+                        <th className="py-3 px-3 min-w-[100px] text-center">Quarter</th>
+                        <th className="py-3 px-3 min-w-[120px] text-center">Delivered Rounds</th>
+                        <th className="py-3 px-3 min-w-[130px] text-center">Trainees Trained</th>
+                        <th className="py-3 px-4 min-w-[150px] text-center">Classification</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {unplannedExecutionItems.map(item => (
+                        <tr key={item.id} className="hover:bg-amber-50/30 dark:hover:bg-amber-950/20 transition-colors">
+                          <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
+                            <div className="flex items-center gap-2">
+                              <span>{item.courseTitle}</span>
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                                Emergent
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-3 text-center font-bold text-slate-700 dark:text-slate-300">
+                            <span className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-black">
+                              {item.quarter}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-3 text-center">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shadow-2xs">
+                              {item.completedRounds} {item.completedRounds === 1 ? 'Round' : 'Rounds'}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-3 text-center font-bold text-slate-700 dark:text-slate-300">
+                            {item.traineesCount} Trainees
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                              <span>Operational Request</span>
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -3006,7 +3420,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
               <table className="w-full text-left border-collapse text-xs">
                 <thead className="bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800">
                   <tr>
-                    <th className="py-3 px-4">Program & Technical Track</th>
+                    <th className="py-3 px-4">Course / Program Title</th>
                     <th className="py-3 px-3 text-center">Quarter</th>
                     <th className="py-3 px-3 text-center">Audience</th>
                     <th className="py-3 px-3 text-center">Target Rounds</th>
@@ -3026,16 +3440,10 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                     </tr>
                   ) : (
                     filteredTargets.map(t => {
-                      const trackMeta = getTrackMeta(t.track);
                       return (
                         <tr key={t.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                           <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-white">
-                            <div className="flex items-center gap-2">
-                              <span>{t.courseTitle}</span>
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${trackMeta.badge}`}>
-                                {trackMeta.label}
-                              </span>
-                            </div>
+                            <span>{t.courseTitle}</span>
                           </td>
                           <td className="py-3.5 px-3 text-center font-bold text-slate-700 dark:text-slate-300">
                             {t.quarter}
@@ -3605,7 +4013,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Quarter & Track */}
+                {/* Target Quarter & Duration */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
@@ -3625,27 +4033,6 @@ export const AnnualTrainingPlanPage: React.FC = () => {
 
                   <div>
                     <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      Technical Track
-                    </label>
-                    <select
-                      value={targetFormTrack}
-                      onChange={(e) => setTargetFormTrack(e.target.value as any)}
-                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200"
-                    >
-                      <option value="mechanical">Mechanical & Engines</option>
-                      <option value="hydraulic">Hydraulics & Powertrain</option>
-                      <option value="electrical">Electrical & Electronics</option>
-                      <option value="heavy_machinery">Heavy Equipment & Fleet</option>
-                      <option value="tbm">Tunneling TBM</option>
-                      <option value="quality_sos">Diagnostics & S.O.S</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Duration & Notes */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
                       Duration (Days)
                     </label>
                     <input
@@ -3657,19 +4044,20 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                       className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-bold text-slate-900 dark:text-white"
                     />
                   </div>
+                </div>
 
-                  <div className="col-span-2">
-                    <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      Venue / Training Notes
-                    </label>
-                    <input
-                      type="text"
-                      value={targetFormNotes}
-                      onChange={(e) => setTargetFormNotes(e.target.value)}
-                      placeholder="e.g. Katamia Central Workshop..."
-                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white"
-                    />
-                  </div>
+                {/* Venue / Training Notes */}
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Venue / Training Notes
+                  </label>
+                  <input
+                    type="text"
+                    value={targetFormNotes}
+                    onChange={(e) => setTargetFormNotes(e.target.value)}
+                    placeholder="e.g. Katamia Central Workshop..."
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white"
+                  />
                 </div>
 
                 {/* Modal Buttons */}
@@ -4044,6 +4432,188 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                     )}
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Auto-Generate Annual Plans from Historical Records Modal */}
+      <AnimatePresence>
+        {isAutoGenerateModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
+            >
+              {/* Modal Header */}
+              <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 bg-[#002D62] text-white flex items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#FFC000] text-slate-950 flex items-center justify-center font-bold shadow-xs shrink-0">
+                    <Wand2 size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+                      <span>Auto-Generate Plans from Historical Records</span>
+                    </h2>
+                    <p className="text-xs text-blue-200">
+                      Reconstruct comprehensive annual plans from verified training attendance logs
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAutoGenerateModalOpen(false)}
+                  className="p-1.5 rounded-lg text-blue-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs text-slate-700 dark:text-slate-300">
+                <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl flex items-start gap-3">
+                  <Sparkles size={18} className="text-[#002D62] dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-bold text-slate-900 dark:text-white">
+                      Detected {historicalYearsSummary.length} Distinct Training Years in Database
+                    </p>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      The automated engine calculates course targets, estimated delivery rounds, realistic trainee batch capacity, and quarter scheduling based on historical execution patterns.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Years Selection List */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400 px-1">
+                    <span>Select Years to Generate:</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedYearsToAutoGenerate(historicalYearsSummary.map(y => y.year))}
+                        className="text-[#002D62] dark:text-amber-400 hover:underline cursor-pointer"
+                      >
+                        Select All
+                      </button>
+                      <span>|</span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedYearsToAutoGenerate([])}
+                        className="hover:underline cursor-pointer"
+                      >
+                        Deselect All
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                    {historicalYearsSummary.map(y => {
+                      const isSelected = selectedYearsToAutoGenerate.includes(y.year);
+                      return (
+                        <div
+                          key={y.year}
+                          onClick={() => {
+                            setSelectedYearsToAutoGenerate(prev =>
+                              prev.includes(y.year) ? prev.filter(item => item !== y.year) : [...prev, y.year]
+                            );
+                          }}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                            isSelected
+                              ? 'bg-blue-50/60 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700 shadow-2xs'
+                              : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 opacity-70 hover:opacity-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {}}
+                              className="w-4 h-4 rounded text-[#002D62] accent-[#002D62] cursor-pointer"
+                            />
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-black text-slate-900 dark:text-white">
+                                  {y.year}
+                                </span>
+                                {y.alreadyExists && (
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                                    Plan Exists
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                                {y.distinctCourses} Programs • {y.totalTrainees} Trainees • ~{y.estimatedRounds} Rounds
+                              </span>
+                            </div>
+                          </div>
+
+                          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border ${
+                            y.alreadyExists
+                              ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                              : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                          }`}>
+                            {y.alreadyExists ? 'Overwrite Ready' : 'Ready to Create'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Overwrite Toggle */}
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={autoGenerateOverwriteExisting}
+                      onChange={(e) => setAutoGenerateOverwriteExisting(e.target.checked)}
+                      className="w-4 h-4 rounded text-[#002D62] accent-[#002D62] cursor-pointer"
+                    />
+                    <span className="font-bold text-slate-800 dark:text-slate-200">
+                      Overwrite existing plans if they already contain course targets
+                    </span>
+                  </label>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 ml-6 mt-0.5">
+                    If unchecked, years that already have configured plans will be preserved.
+                  </p>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsAutoGenerateModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  disabled={selectedYearsToAutoGenerate.length === 0 || isGeneratingPlans}
+                  onClick={handleAutoGeneratePlans}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-xs ${
+                    selectedYearsToAutoGenerate.length === 0 || isGeneratingPlans
+                      ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-700 text-slate-500'
+                      : 'bg-[#002D62] hover:bg-blue-950 dark:bg-blue-800 dark:hover:bg-blue-700 text-white active:scale-95'
+                  }`}
+                >
+                  {isGeneratingPlans ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin text-[#FFC000]" />
+                      <span>Generating Plans...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap size={15} className="text-[#FFC000]" />
+                      <span>Generate Plans ({selectedYearsToAutoGenerate.length} Selected)</span>
+                    </>
+                  )}
+                </button>
               </div>
             </motion.div>
           </div>

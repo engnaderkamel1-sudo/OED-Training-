@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.8.9",
-  releaseName: "Suppress Backup Reminder in Demo Mode",
+  version: "1.9.0",
+  releaseName: "Historical Training Plan Auto-Generation & Planned vs Emergent Metrics",
   buildDate: "2026",
   buildTimestamp: "2026",
   
