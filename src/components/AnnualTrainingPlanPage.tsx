@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useAppContext, generateUUID, DEFAULT_CERTIFIED_2026_PLAN, DEFAULT_CERTIFIED_2026_TARGETS } from '../context';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -46,12 +46,119 @@ import { HolidaysAndVacationsModal } from './HolidaysAndVacationsModal';
 
 declare const XLSX: any;
 
+// -------------------------------------------------------------
+// Robust Multi-Format Date & Year Extraction Helper
+// Supports: ISO, DD/MM/YYYY, MM/DD/YYYY, Excel serial numbers (e.g. 45443),
+// Arabic digits, attendanceDate, date, Session Date, raw['Attendance Date'], etc.
+// -------------------------------------------------------------
+export const extractRecordDateInfo = (r: any): { year: number | null; month: number } => {
+  if (!r) return { year: null, month: 0 };
+
+  // 1. Check direct year fields if present
+  const directYear = r.year || r.raw?.['Year'] || r.raw?.['السنة'] || r.raw?.['سنة'];
+  if (directYear !== undefined && directYear !== null && directYear !== '') {
+    const yNum = typeof directYear === 'number' ? directYear : parseInt(String(directYear).replace(/[^\d]/g, ''), 10);
+    if (!isNaN(yNum) && yNum >= 2018 && yNum <= 2035) {
+      let m = 0;
+      const directMonth = r.month || r.raw?.['Month'] || r.raw?.['الشهر'];
+      if (directMonth !== undefined && directMonth !== null && directMonth !== '') {
+        const mNum = typeof directMonth === 'number' ? directMonth : parseInt(String(directMonth).replace(/[^\d]/g, ''), 10);
+        if (!isNaN(mNum) && mNum >= 1 && mNum <= 12) m = mNum - 1;
+      }
+      return { year: yNum, month: m };
+    }
+  }
+
+  // 2. Candidate date values
+  const val = r.date || 
+              r.attendanceDate || 
+              r.sessionDate ||
+              r.startDate ||
+              r.raw?.['Date'] || 
+              r.raw?.['Attendance Date'] || 
+              r.raw?.['attendanceDate'] || 
+              r.raw?.['Session Date'] || 
+              r.raw?.['تاريخ'] || 
+              r.raw?.['تاريخ الانعقاد'] || 
+              r.raw?.['تاريخ الحضور'] || 
+              '';
+
+  if (!val) return { year: null, month: 0 };
+
+  // 3. Handle Excel Serial Numbers (e.g. 45292 is Jan 1, 2024; 45443 is May 31, 2024)
+  const numVal = typeof val === 'number' 
+    ? val 
+    : (typeof val === 'string' && /^\d{5}(\.\d+)?$/.test(val.trim()) ? parseFloat(val.trim()) : null);
+
+  if (numVal !== null && numVal >= 35000 && numVal <= 65000) {
+    const utcDays = Math.floor(numVal - 25569);
+    const dateObj = new Date(utcDays * 86400 * 1000);
+    if (!isNaN(dateObj.getTime())) {
+      const yr = dateObj.getUTCFullYear();
+      if (yr >= 2018 && yr <= 2035) {
+        return { year: yr, month: dateObj.getUTCMonth() };
+      }
+    }
+  }
+
+  // 4. Clean and normalize Arabic/Eastern numerals
+  let str = String(val).trim();
+  str = str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+
+  // 5. Try DD/MM/YYYY or DD-MM-YYYY (Egyptian/European standard)
+  const dmyMatch = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/);
+  if (dmyMatch) {
+    let day = parseInt(dmyMatch[1], 10);
+    let m = parseInt(dmyMatch[2], 10);
+    const yr = parseInt(dmyMatch[3], 10);
+    // If month > 12 and day <= 12, swap (MM/DD/YYYY)
+    if (m > 12 && day <= 12) {
+      const tmp = day;
+      day = m;
+      m = tmp;
+    }
+    const monthIndex = Math.max(0, Math.min(11, m - 1));
+    if (yr >= 2018 && yr <= 2035) {
+      return { year: yr, month: monthIndex };
+    }
+  }
+
+  // 6. Try YYYY-MM-DD or YYYY/MM/DD (ISO standard)
+  const ymdMatch = str.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
+  if (ymdMatch) {
+    const yr = parseInt(ymdMatch[1], 10);
+    const m = Math.max(0, Math.min(11, parseInt(ymdMatch[2], 10) - 1));
+    if (yr >= 2018 && yr <= 2035) {
+      return { year: yr, month: m };
+    }
+  }
+
+  // 7. Standard JavaScript Date parser
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    const yr = parsed.getFullYear();
+    if (yr >= 2018 && yr <= 2035) {
+      return { year: yr, month: parsed.getMonth() };
+    }
+  }
+
+  // 8. Regex fallback searching for any 4-digit year 2018-2035
+  const match = str.match(/\b(201\d|202\d|203\d)\b/);
+  if (match) {
+    return { year: parseInt(match[1], 10), month: 0 };
+  }
+
+  return { year: null, month: 0 };
+};
+
 export const AnnualTrainingPlanPage: React.FC = () => {
   const { 
     user, 
     courses, 
     upcomingSessions, 
     cleanedData, 
+    records,
+    fetchTrainingRecords,
     annualPlans, 
     saveAnnualPlan, 
     deleteAnnualPlan,
@@ -59,6 +166,38 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     setCurrentView,
     theme
   } = useAppContext();
+
+  // Auto-fetch training records from database if not loaded in memory
+  useEffect(() => {
+    if ((!cleanedData || cleanedData.length === 0) && (!records || records.length === 0)) {
+      fetchTrainingRecords().catch(console.error);
+    }
+  }, [cleanedData?.length, records?.length, fetchTrainingRecords]);
+
+  // Combined verified historical dataset from cleanedData and records
+  const allHistoricalRecords = useMemo(() => {
+    const map = new Map<string, any>();
+    (cleanedData || []).forEach((r, idx) => {
+      const id = r.id || `cl_${idx}`;
+      map.set(id, r);
+    });
+    (records || []).forEach((r, idx) => {
+      const id = r.id || `rec_${idx}`;
+      if (!map.has(id)) {
+        map.set(id, {
+          id,
+          courseName: r.courseName || (r as any).courseTitle,
+          department: (r as any).department || '',
+          date: r.attendanceDate || (r as any).date,
+          attendanceDate: r.attendanceDate,
+          hrCode: r.hrCode || r.userId,
+          score: r.score,
+          raw: r.raw
+        });
+      }
+    });
+    return Array.from(map.values());
+  }, [cleanedData, records]);
 
   const isDark = theme === 'dark';
   const isAdmin = user?.role === 'admin';
@@ -78,16 +217,75 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     holidays: any[];
   } | null>(null);
 
-  // Selected Year State (defaults to current year 2026 or newest)
+  // Extract all historical years and courses available in allHistoricalRecords
+  const historicalYearsSummary = useMemo(() => {
+    const yearCourseMap: Record<number, Map<string, { count: number; dates: Set<string>; monthCounts: Record<number, number>; title: string }>> = {};
+    
+    allHistoricalRecords.forEach(r => {
+      const cName = (r.courseName || (r as any).courseTitle || '').trim();
+      if (!cName || cName.length < 2) return;
+
+      const { year: yr, month } = extractRecordDateInfo(r);
+
+      if (yr && yr >= 2018 && yr <= 2035) {
+        if (!yearCourseMap[yr]) {
+          yearCourseMap[yr] = new Map();
+        }
+        const cKey = cName.toLowerCase();
+        const existing = yearCourseMap[yr].get(cKey) || { count: 0, dates: new Set<string>(), monthCounts: {}, title: cName };
+        existing.count += 1;
+        existing.monthCounts[month] = (existing.monthCounts[month] || 0) + 1;
+        const dKey = r.attendanceDate || r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'];
+        if (dKey) existing.dates.add(String(dKey).trim());
+        yearCourseMap[yr].set(cKey, existing);
+      }
+    });
+
+    const yearsList = Object.keys(yearCourseMap).map(Number).sort((a, b) => b - a);
+    return yearsList.map(yr => {
+      const coursesMap = yearCourseMap[yr];
+      const distinctCourses = coursesMap.size;
+      let totalTrainees = 0;
+      coursesMap.forEach(val => { totalTrainees += val.count; });
+      const estimatedRounds = Array.from(coursesMap.values()).reduce((acc, val) => {
+        return acc + Math.max(val.dates.size, Math.ceil(val.count / 6), 1);
+      }, 0);
+
+      const existingPlan = annualPlans.find(p => p.year === yr);
+      const currentPlanTargetsCount = existingPlan?.targets?.length || (yr === 2026 ? DEFAULT_CERTIFIED_2026_TARGETS.length : 0);
+      const alreadyExists = currentPlanTargetsCount > 0;
+      const canUpdateWithMore = distinctCourses > currentPlanTargetsCount;
+
+      return {
+        year: yr,
+        distinctCourses,
+        totalTrainees,
+        estimatedRounds,
+        alreadyExists,
+        currentPlanTargetsCount,
+        canUpdateWithMore
+      };
+    });
+  }, [allHistoricalRecords, annualPlans]);
+
+  // Selected Year State (defaults to current year 2026 or newest available)
   const availableYears = useMemo(() => {
     const yrs = annualPlans.map(p => p.year);
+    // Include all detected historical years from the database
+    historicalYearsSummary.forEach(h => {
+      if (!yrs.includes(h.year)) yrs.push(h.year);
+    });
     if (!yrs.includes(2026)) yrs.push(2026);
     return Array.from(new Set(yrs)).sort((a, b) => b - a);
-  }, [annualPlans]);
+  }, [annualPlans, historicalYearsSummary]);
 
   const [selectedYear, setSelectedYear] = useState<number>(() => {
     return availableYears[0] || 2026;
   });
+
+  const selectedYearHistoricalInfo = useMemo(() => {
+    return historicalYearsSummary.find(y => y.year === selectedYear) || null;
+  }, [historicalYearsSummary, selectedYear]);
 
   // Active Year Plan
   const currentPlan = useMemo(() => {
@@ -168,63 +366,6 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     setTargetFormTrainees(String(r * tpr));
   };
 
-  // Extract all historical years and courses available in cleanedData
-  const historicalYearsSummary = useMemo(() => {
-    const yearCourseMap: Record<number, Map<string, { count: number; monthCounts: Record<number, number> }>> = {};
-    
-    (cleanedData || []).forEach(r => {
-      const cName = (r.courseName || '').trim();
-      if (!cName || cName.length < 2) return;
-
-      const dateStr = r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'] || '';
-      let yr: number | null = null;
-      let month = 0; // 0 to 11
-
-      if (dateStr) {
-        const d = new Date(dateStr);
-        if (!isNaN(d.getTime())) {
-          yr = d.getFullYear();
-          month = d.getMonth();
-        } else {
-          const match = dateStr.match(/\b(201\d|202\d|203\d)\b/);
-          if (match) yr = parseInt(match[1], 10);
-        }
-      }
-
-      if (yr && yr >= 2018 && yr <= 2035) {
-        if (!yearCourseMap[yr]) {
-          yearCourseMap[yr] = new Map();
-        }
-        const cKey = cName.toLowerCase();
-        const existing = yearCourseMap[yr].get(cKey) || { count: 0, monthCounts: {} };
-        existing.count += 1;
-        existing.monthCounts[month] = (existing.monthCounts[month] || 0) + 1;
-        yearCourseMap[yr].set(cKey, existing);
-      }
-    });
-
-    const yearsList = Object.keys(yearCourseMap).map(Number).sort((a, b) => b - a);
-    return yearsList.map(yr => {
-      const coursesMap = yearCourseMap[yr];
-      const distinctCourses = coursesMap.size;
-      let totalTrainees = 0;
-      coursesMap.forEach(val => { totalTrainees += val.count; });
-      const estimatedRounds = Array.from(coursesMap.values()).reduce((acc, val) => {
-        return acc + Math.max(1, Math.ceil(val.count / 6));
-      }, 0);
-
-      const alreadyExists = annualPlans.some(p => p.year === yr && p.targets && p.targets.length > 0);
-
-      return {
-        year: yr,
-        distinctCourses,
-        totalTrainees,
-        estimatedRounds,
-        alreadyExists
-      };
-    });
-  }, [cleanedData, annualPlans]);
-
   // -------------------------------------------------------------
   // Data Aggregation: Match Real Completed & Scheduled Sessions
   // -------------------------------------------------------------
@@ -236,46 +377,44 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       const matchingLiveSessions = upcomingSessions.filter(s => {
         let sYear: number | null = null;
         if (s.startDate) {
-          const d = new Date(s.startDate);
-          if (!isNaN(d.getTime())) sYear = d.getFullYear();
+          const info = extractRecordDateInfo({ date: s.startDate });
+          sYear = info.year;
         } else if (s.sessionDate) {
-          const d = new Date(s.sessionDate);
-          if (!isNaN(d.getTime())) sYear = d.getFullYear();
+          const info = extractRecordDateInfo({ date: s.sessionDate });
+          sYear = info.year;
         }
         if (sYear && sYear !== selectedYear) return false;
 
         const sTitle = (s.courseTitle || '').trim().toLowerCase();
-        return sTitle.includes(normalizedTargetTitle) || normalizedTargetTitle.includes(sTitle);
+        return sTitle === normalizedTargetTitle || 
+               (normalizedTargetTitle.length >= 6 && sTitle.length >= 6 && (sTitle.includes(normalizedTargetTitle) || normalizedTargetTitle.includes(sTitle)));
       });
 
       const liveCompletedCount = matchingLiveSessions.filter(s => s.status === 'completed' || s.status === 'Completed').length;
       const liveScheduledCount = matchingLiveSessions.filter(s => s.status !== 'completed' && s.status !== 'Completed' && s.status !== 'cancelled' && s.status !== 'Cancelled').length;
 
-      // 2. Matches in cleanedData (Excel master historical records filtered by selectedYear)
-      const matchingHistorical = cleanedData.filter(r => {
-        const dateStr = r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'] || '';
-        let yr: number | null = null;
-        if (dateStr) {
-          const d = new Date(dateStr);
-          if (!isNaN(d.getTime())) {
-            yr = d.getFullYear();
-          } else {
-            const match = dateStr.match(/\b(201\d|202\d|203\d)\b/);
-            if (match) yr = parseInt(match[1], 10);
-          }
-        }
+      // 2. Matches in allHistoricalRecords (filtered by selectedYear)
+      const matchingHistorical = allHistoricalRecords.filter(r => {
+        const { year: yr } = extractRecordDateInfo(r);
         if (yr !== selectedYear) return false;
 
-        const rTitle = (r.courseName || '').trim().toLowerCase();
-        return rTitle.includes(normalizedTargetTitle) || normalizedTargetTitle.includes(rTitle);
+        const rTitle = (r.courseName || (r as any).courseTitle || '').trim().toLowerCase();
+        if (!rTitle) return false;
+        return rTitle === normalizedTargetTitle || 
+               (normalizedTargetTitle.length >= 6 && rTitle.length >= 6 && (rTitle.includes(normalizedTargetTitle) || normalizedTargetTitle.includes(rTitle)));
       });
-      // Estimate completed session batches from historical trainee records (avg 6 trainees per session)
-      const estimatedHistoricalSessions = Math.min(
-        t.targetRounds, 
-        Math.floor(matchingHistorical.length / (t.traineesPerRound || 6)) + (matchingHistorical.length > 0 ? 1 : 0)
-      );
 
-      const totalCompleted = Math.max(liveCompletedCount, estimatedHistoricalSessions);
+      // Group historical trainees by attendance date to count distinct session batches/rounds
+      const distinctSessionDates = new Set<string>();
+      matchingHistorical.forEach(r => {
+        const dKey = r.attendanceDate || r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'] || r.id;
+        if (dKey) distinctSessionDates.add(String(dKey).trim());
+      });
+      const historicalRoundsCount = distinctSessionDates.size > 0 
+        ? distinctSessionDates.size 
+        : Math.ceil(matchingHistorical.length / (t.traineesPerRound || 6));
+
+      const totalCompleted = Math.max(liveCompletedCount, historicalRoundsCount);
       const remaining = Math.max(0, t.targetRounds - totalCompleted);
       const percent = Math.min(100, Math.round((totalCompleted / (t.targetRounds || 1)) * 100));
 
@@ -313,7 +452,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         matchingLiveSessions
       };
     });
-  }, [currentPlan, upcomingSessions, cleanedData, selectedYear]);
+  }, [currentPlan, upcomingSessions, allHistoricalRecords, selectedYear]);
 
   // -------------------------------------------------------------
   // Unplanned / On-Demand Deliveries Tracker (Outside Approved Plan)
@@ -325,7 +464,12 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       const nName = courseName.trim().toLowerCase();
       if (!nName) return true;
       for (const pt of plannedTargetTitles) {
-        if (pt === nName || pt.includes(nName) || nName.includes(pt)) return true;
+        if (!pt) continue;
+        if (pt === nName) return true;
+        if (pt.length >= 6 && nName.length >= 6) {
+          if (nName.includes(pt) && pt.length >= nName.length * 0.75) return true;
+          if (pt.includes(nName) && nName.length >= pt.length * 0.75) return true;
+        }
       }
       return false;
     };
@@ -334,27 +478,15 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     const unplannedHistMap: Record<string, {
       courseTitle: string;
       traineesCount: number;
-      dates: string[];
+      dates: Set<string>;
       monthCounts: Record<number, number>;
     }> = {};
 
-    (cleanedData || []).forEach(r => {
-      const dateStr = r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'] || '';
-      let yr: number | null = null;
-      let month = 0;
-      if (dateStr) {
-        const d = new Date(dateStr);
-        if (!isNaN(d.getTime())) {
-          yr = d.getFullYear();
-          month = d.getMonth();
-        } else {
-          const match = dateStr.match(/\b(201\d|202\d|203\d)\b/);
-          if (match) yr = parseInt(match[1], 10);
-        }
-      }
+    allHistoricalRecords.forEach(r => {
+      const { year: yr, month } = extractRecordDateInfo(r);
       if (yr !== selectedYear) return;
 
-      const cName = (r.courseName || '').trim();
+      const cName = (r.courseName || (r as any).courseTitle || '').trim();
       if (!cName || cName.length < 2 || isPlannedTitle(cName)) return;
 
       const key = cName.toLowerCase();
@@ -362,15 +494,14 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         unplannedHistMap[key] = {
           courseTitle: cName,
           traineesCount: 0,
-          dates: [],
+          dates: new Set<string>(),
           monthCounts: {}
         };
       }
       unplannedHistMap[key].traineesCount += 1;
       unplannedHistMap[key].monthCounts[month] = (unplannedHistMap[key].monthCounts[month] || 0) + 1;
-      if (dateStr && !unplannedHistMap[key].dates.includes(dateStr)) {
-        unplannedHistMap[key].dates.push(dateStr);
-      }
+      const dKey = r.attendanceDate || r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'];
+      if (dKey) unplannedHistMap[key].dates.add(String(dKey).trim());
     });
 
     // 2. Live sessions executed in selectedYear outside the plan
@@ -384,11 +515,11 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     (upcomingSessions || []).forEach(s => {
       let yr: number | null = null;
       if (s.startDate) {
-        const d = new Date(s.startDate);
-        if (!isNaN(d.getTime())) yr = d.getFullYear();
+        const info = extractRecordDateInfo({ date: s.startDate });
+        yr = info.year;
       } else if (s.sessionDate) {
-        const d = new Date(s.sessionDate);
-        if (!isNaN(d.getTime())) yr = d.getFullYear();
+        const info = extractRecordDateInfo({ date: s.sessionDate });
+        yr = info.year;
       }
       if (yr !== selectedYear) return;
 
@@ -418,7 +549,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
       const live = unplannedLiveMap[key];
       const title = hist?.courseTitle || live?.courseTitle || key;
 
-      const histRounds = hist ? Math.max(1, Math.ceil(hist.traineesCount / 6)) : 0;
+      const histRounds = hist ? Math.max(hist.dates.size, Math.ceil(hist.traineesCount / 6), 1) : 0;
       const liveRounds = live?.sessionsCount || 0;
       const completedRounds = Math.max(histRounds, live?.completedCount || liveRounds, 1);
       const totalTrainees = Math.max(hist?.traineesCount || 0, live?.traineesCount || 0, completedRounds * 6);
@@ -445,7 +576,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         source: liveRounds > 0 ? 'Live Database' : 'Historical Records'
       };
     });
-  }, [currentPlan, cleanedData, upcomingSessions, selectedYear]);
+  }, [currentPlan, allHistoricalRecords, upcomingSessions, selectedYear]);
 
   // Filtered List
   const filteredTargets = useMemo(() => {
@@ -802,14 +933,12 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     upcomingSessions.forEach((s) => {
       if (s.id && !representedSessionIds.has(s.id) && !s.isDeleted && s.status !== 'Cancelled') {
         const sDateStr = s.startDate || (s as any).sessionDate || '';
-        const sYear = sDateStr ? new Date(sDateStr).getFullYear() : selectedYear;
-        if (sYear === selectedYear) {
-          let timingMonth: string | null = null;
-          try {
-            timingMonth = sDateStr ? new Date(sDateStr).toLocaleString('en-US', { month: 'short' }) : null;
-          } catch (e) {}
-          
-          const qNum = sDateStr ? Math.floor(new Date(sDateStr).getMonth() / 3) + 1 : 1;
+        const { year: sYear, month: sMonth } = extractRecordDateInfo({ date: sDateStr });
+        const finalYear = sYear || (sDateStr ? new Date(sDateStr).getFullYear() : selectedYear);
+        if (finalYear === selectedYear) {
+          const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const timingMonth = MONTH_NAMES[sMonth] || null;
+          const qNum = Math.floor(sMonth / 3) + 1;
           
           items.push({
             id: `live_session_${s.id}`,
@@ -1414,42 +1543,63 @@ export const AnnualTrainingPlanPage: React.FC = () => {
   // -------------------------------------------------------------
   // Auto-Generate Training Plans from Historical Records Handler
   // -------------------------------------------------------------
-  const handleAutoGeneratePlans = async () => {
-    if (selectedYearsToAutoGenerate.length === 0) return;
+  // Auto-Generate Training Plans from Historical Records Handler
+  // -------------------------------------------------------------
+  const handleAutoGeneratePlans = async (specificYears?: number[], forceOverwrite?: boolean) => {
+    const yearsToRun = specificYears || selectedYearsToAutoGenerate;
+    const shouldOverwrite = forceOverwrite !== undefined ? forceOverwrite : autoGenerateOverwriteExisting;
+    if (yearsToRun.length === 0) return;
     setIsGeneratingPlans(true);
     try {
-      for (const yr of selectedYearsToAutoGenerate) {
+      for (const yr of yearsToRun) {
         const exists = annualPlans.some(p => p.year === yr && p.targets && p.targets.length > 0);
-        if (exists && !autoGenerateOverwriteExisting) continue;
+        if (exists && !shouldOverwrite) continue;
 
-        // Group courses from cleanedData for yr
-        const courseMap: Record<string, { count: number; monthCounts: Record<number, number>; title: string }> = {};
+        // Group courses from allHistoricalRecords for yr
+        const courseMap: Record<string, { count: number; dates: Set<string>; monthCounts: Record<number, number>; title: string }> = {};
 
-        (cleanedData || []).forEach(r => {
-          const dateStr = r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'] || '';
-          let recordYear: number | null = null;
-          let month = 0;
-          if (dateStr) {
-            const d = new Date(dateStr);
-            if (!isNaN(d.getTime())) {
-              recordYear = d.getFullYear();
-              month = d.getMonth();
-            } else {
-              const match = dateStr.match(/\b(201\d|202\d|203\d)\b/);
-              if (match) recordYear = parseInt(match[1], 10);
-            }
-          }
+        allHistoricalRecords.forEach(r => {
+          const { year: recordYear, month } = extractRecordDateInfo(r);
           if (recordYear !== yr) return;
 
-          const cName = (r.courseName || '').trim();
+          const cName = (r.courseName || (r as any).courseTitle || '').trim();
           if (!cName || cName.length < 2) return;
 
           const key = cName.toLowerCase();
           if (!courseMap[key]) {
-            courseMap[key] = { count: 0, monthCounts: {}, title: cName };
+            courseMap[key] = { count: 0, dates: new Set<string>(), monthCounts: {}, title: cName };
           }
           courseMap[key].count += 1;
           courseMap[key].monthCounts[month] = (courseMap[key].monthCounts[month] || 0) + 1;
+          const dKey = r.attendanceDate || r.date || r.raw?.['Date'] || r.raw?.['Attendance Date'];
+          if (dKey) courseMap[key].dates.add(String(dKey).trim());
+        });
+
+        // Also check upcomingSessions in case some are scheduled or completed in that year
+        (upcomingSessions || []).forEach(s => {
+          let sYear: number | null = null;
+          let sMonth = 0;
+          if (s.startDate) {
+            const info = extractRecordDateInfo({ date: s.startDate });
+            sYear = info.year;
+            sMonth = info.month;
+          } else if (s.sessionDate) {
+            const info = extractRecordDateInfo({ date: s.sessionDate });
+            sYear = info.year;
+            sMonth = info.month;
+          }
+          if (sYear !== yr) return;
+
+          const sTitle = (s.courseTitle || '').trim();
+          if (!sTitle) return;
+
+          const key = sTitle.toLowerCase();
+          if (!courseMap[key]) {
+            courseMap[key] = { count: 0, dates: new Set<string>(), monthCounts: {}, title: sTitle };
+          }
+          courseMap[key].count += (s.registeredUsers?.length || 6);
+          courseMap[key].monthCounts[sMonth] = (courseMap[key].monthCounts[sMonth] || 0) + 1;
+          if (s.id) courseMap[key].dates.add(s.id);
         });
 
         const targets: AnnualPlanCourseTarget[] = Object.values(courseMap).map((entry, idx) => {
@@ -1464,7 +1614,7 @@ export const AnnualTrainingPlanPage: React.FC = () => {
           const quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4' = 
             bestMonth < 3 ? 'Q1' : bestMonth < 6 ? 'Q2' : bestMonth < 9 ? 'Q3' : 'Q4';
 
-          const rounds = Math.max(1, Math.ceil(entry.count / 6));
+          const rounds = Math.max(entry.dates.size, Math.ceil(entry.count / 6), 1);
 
           return {
             id: `t_${yr}_${idx}_${Date.now()}`,
@@ -1475,25 +1625,29 @@ export const AnnualTrainingPlanPage: React.FC = () => {
             targetAudience: 'engineers',
             quarter,
             durationDays: 5,
-            notes: `Auto-generated from historical records (${entry.count} trainees).`
+            notes: `Auto-generated from verified training records (${entry.count} trainees, ${rounds} rounds).`
           };
         });
 
         if (targets.length > 0) {
+          const existingPlan = annualPlans.find(p => p.year === yr);
           const newPlan: AnnualYearPlan = {
-            id: String(yr),
+            id: existingPlan?.id || String(yr),
             year: yr,
             title: `Annual Training Plan ${yr}`,
             status: yr < currentRealYear ? 'archived' : 'active',
             targets,
             notes: `Auto-generated from verified training attendance records (${targets.length} programs).`,
-            createdAt: new Date().toISOString(),
+            createdAt: existingPlan?.createdAt || new Date().toISOString(),
             updatedAt: new Date().toISOString()
           };
           await saveAnnualPlan(newPlan);
         }
       }
       setIsAutoGenerateModalOpen(false);
+      if (yearsToRun.length > 0) {
+        setSelectedYear(yearsToRun[0]);
+      }
     } catch (err) {
       console.error('Failed to auto-generate plans:', err);
       alert('Failed to auto-generate plans. Check console for details.');
@@ -1946,6 +2100,48 @@ export const AnnualTrainingPlanPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Database Sync / Re-Populate Alert Banner for Selected Year */}
+        {selectedYearHistoricalInfo && selectedYearHistoricalInfo.canUpdateWithMore && isAdmin && (
+          <div className="mt-4 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/15 to-amber-500/5 dark:from-amber-950/40 dark:via-amber-900/30 dark:to-slate-900/40 border-2 border-amber-400/60 dark:border-amber-500/40 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-2xs">
+                <Sparkles size={18} />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs sm:text-sm font-black text-amber-950 dark:text-amber-200">
+                    Database contains {selectedYearHistoricalInfo.distinctCourses} completed courses for {selectedYear} ({selectedYearHistoricalInfo.totalTrainees} trainee attendances)
+                  </span>
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-200 dark:bg-amber-900/80 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-700">
+                    Sync Available
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                  Your current approved plan only has {selectedYearHistoricalInfo.currentPlanTargetsCount} course(s). Click to automatically populate all {selectedYearHistoricalInfo.distinctCourses} programs, rounds, and schedules from verified records.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleAutoGeneratePlans([selectedYear], true)}
+              disabled={isGeneratingPlans}
+              className="px-4 py-2.5 rounded-xl bg-[#002D62] hover:bg-blue-950 dark:bg-blue-800 dark:hover:bg-blue-700 text-amber-300 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shrink-0 transition-all cursor-pointer shadow-xs active:scale-95 border border-amber-400/40"
+            >
+              {isGeneratingPlans ? (
+                <>
+                  <RefreshCw size={15} className="animate-spin text-amber-300" />
+                  <span>Populating {selectedYear}...</span>
+                </>
+              ) : (
+                <>
+                  <Zap size={15} className="text-amber-300" />
+                  <span>⚡ Auto-Fill {selectedYear} Plan ({selectedYearHistoricalInfo.distinctCourses} Courses)</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
 
         {/* Executive KPI Summary Strip: Dual Metric (Approved Plan vs Delivered vs On-Demand vs Gross Output) */}
         <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -4519,6 +4715,9 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                             setSelectedYearsToAutoGenerate(prev =>
                               prev.includes(y.year) ? prev.filter(item => item !== y.year) : [...prev, y.year]
                             );
+                            if (y.canUpdateWithMore) {
+                              setAutoGenerateOverwriteExisting(true);
+                            }
                           }}
                           className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                             isSelected
@@ -4540,23 +4739,38 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                                 </span>
                                 {y.alreadyExists && (
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
-                                    Plan Exists
+                                    Plan Exists ({y.currentPlanTargetsCount} Courses)
                                   </span>
                                 )}
                               </div>
                               <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                                {y.distinctCourses} Programs • {y.totalTrainees} Trainees • ~{y.estimatedRounds} Rounds
+                                {y.distinctCourses} Programs in DB • {y.totalTrainees} Trainees • ~{y.estimatedRounds} Rounds
                               </span>
                             </div>
                           </div>
 
-                          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border ${
-                            y.alreadyExists
-                              ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-                              : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                          }`}>
-                            {y.alreadyExists ? 'Overwrite Ready' : 'Ready to Create'}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border ${
+                              y.canUpdateWithMore
+                                ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700'
+                                : y.alreadyExists
+                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+                                : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                            }`}>
+                              {y.canUpdateWithMore ? `Update Ready (${y.distinctCourses} vs ${y.currentPlanTargetsCount})` : y.alreadyExists ? 'Complete' : 'Ready to Create'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAutoGeneratePlans([y.year], true);
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-[#002D62] hover:bg-blue-950 text-amber-300 text-[11px] font-bold cursor-pointer transition-all shadow-2xs hover:scale-105"
+                              title={`Populate all ${y.distinctCourses} courses for ${y.year}`}
+                            >
+                              ⚡ Auto-Fill
+                            </button>
+                          </div>
                         </div>
                       );
                     })}

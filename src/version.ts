@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.9.1",
-  releaseName: "Enhanced Mobile & iOS Print Engine with Vector Fallbacks",
+  version: "1.9.2",
+  releaseName: "Historical Training Reconstruction & Multi-Format Date Synchronization Engine",
   buildDate: "2026",
   buildTimestamp: "2026",
   
