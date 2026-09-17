@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "2.0.4",
-  releaseName: "Interactive Summer Internship Directory: 72 Trainee Records Across 2024-2026",
+  version: "2.0.5",
+  releaseName: "Full Master Excel Sync Engine: Drag & Drop Dropzone, Smart Tabular Parser & Complete Dataset Replacement",
   buildDate: "2026",
   buildTimestamp: "2026",
   

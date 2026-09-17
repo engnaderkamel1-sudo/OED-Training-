@@ -654,6 +654,10 @@ Please log in to register for this session through the OED-TTMS Application.
   const [sessionToEditDirectly, setSessionToEditDirectly] = useState<UpcomingSession | null>(null);
   const [syncProgress, setSyncProgress] = useState(0);
   const [syncSuccess, setSyncSuccess] = useState(false);
+  const excelFileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [syncSummary, setSyncSummary] = useState<{ total: number; courses: number; sessions: number; fileName: string } | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   const handleSaveManualAttendance = async (sessionId: string, selectedUserCodes: string[]) => {
     try {
@@ -1840,109 +1844,254 @@ Content-Type: text/html; charset="utf-8"
     } catch (error) { setIsSyncing(false); alert("Error synchronizing"); } finally { clearInterval(progressInterval); }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const processExcelFile = async (file: File) => {
     if (!file) return;
+    setIsSyncing(true);
+    setSyncError(null);
+    setSyncSummary(null);
     setSyncFile(file);
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      try {
-        const ab = evt.target?.result;
-        const wb = XLSX.read(ab, { type: "array", cellDates: true });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[];
-        const maxCols = XLSX.utils.decode_range(ws["!ref"] || "A1:A1").e.c + 1;
-        const newUsers: any[] = []; const newRecords: any[] = [];
-        const courseRow = rows[6] || []; const coursesMap: Record<number, string> = {};
-        let currentCourse = "";
-        for (let c = 6; c < maxCols; c++) {
-          if (courseRow[c] && typeof courseRow[c] === "string" && courseRow[c].trim() !== "") currentCourse = courseRow[c].toString().trim();
-          if (currentCourse) coursesMap[c] = currentCourse;
+
+    try {
+      const ab = await file.arrayBuffer();
+      const wb = XLSX.read(ab, { type: "array", cellDates: true });
+      if (!wb || !wb.SheetNames || wb.SheetNames.length === 0) {
+        throw new Error(language === 'ar' ? 'ملف الإكسيل فارغ أو غير صالح' : 'Excel file is empty or unreadable.');
+      }
+
+      // Prioritize "Cleaned Data", then sheets with "clean", "record", "data", then sheet 0
+      let targetSheetName = wb.SheetNames.find((s: string) => s.toLowerCase().includes("cleaned data") || s.toLowerCase().includes("clean data"));
+      if (!targetSheetName) {
+        targetSheetName = wb.SheetNames.find((s: string) => s.toLowerCase().includes("data") || s.toLowerCase().includes("record") || s.toLowerCase().includes("sheet1"));
+      }
+      if (!targetSheetName) {
+        targetSheetName = wb.SheetNames[0];
+      }
+
+      const ws = wb.Sheets[targetSheetName];
+      if (!ws) throw new Error(language === 'ar' ? 'تعذر فتح ورقة البيانات في ملف الإكسيل' : 'Could not access sheet in Excel file.');
+
+      const rawRows = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
+      if (!rawRows || rawRows.length < 2) {
+        throw new Error(language === 'ar' ? 'ورقة البيانات لا تحتوي على صفوف كافية' : 'Worksheet does not contain data rows.');
+      }
+
+      const parseDateVal = (val: any): string => {
+        if (!val) return 'N/A';
+        if (val instanceof Date) {
+          const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          return `${String(val.getDate()).padStart(2, '0')}-${months[val.getMonth()]}-${val.getFullYear()}`;
         }
-        for (let r = 13; r < rows.length; r++) {
-          const row = rows[r]; if (!row) continue;
-          const id = row[2]?.toString().trim(); const name = row[5]?.toString().trim();
-          if (!id || !name) continue;
-          if (!newUsers.find((u) => u.id === id) && !users.find((u) => u.id === id)) {
-            newUsers.push({ id, name, department: row[4]?.toString().trim() || "General", jobRole: row[3]?.toString().trim() || "", phone: "0100", role: "trainee", status: "approved", hrCode: `HR${id}` });
+        if (typeof val === 'number' && val > 25000 && val < 65000) {
+          const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+          const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          return `${String(d.getDate()).padStart(2, '0')}-${months[d.getMonth()]}-${d.getFullYear()}`;
+        }
+        const s = String(val).trim();
+        const isoMatch = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+        if (isoMatch) {
+          const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          const m = parseInt(isoMatch[2], 10) - 1;
+          const day = String(parseInt(isoMatch[3], 10)).padStart(2, '0');
+          return `${day}-${months[m] || 'Jan'}-${isoMatch[1]}`;
+        }
+        return s;
+      };
+
+      let headerRowIdx = -1;
+      const colMap: Record<string, number> = {};
+
+      for (let r = 0; r < Math.min(10, rawRows.length); r++) {
+        const row = rawRows[r];
+        if (!Array.isArray(row)) continue;
+        const rowStr = row.map(c => String(c || '').toLowerCase().trim()).join(' ');
+        if (rowStr.includes('course') || rowStr.includes('hr') || rowStr.includes('trainee') || rowStr.includes('name') || rowStr.includes('اسم') || rowStr.includes('دورة')) {
+          headerRowIdx = r;
+          row.forEach((cellVal, colIdx) => {
+            const s = String(cellVal || '').trim().toLowerCase();
+            if (s.includes('hr') || s === 'id' || s.includes('كود') || s.includes('code')) colMap['hrCode'] = colIdx;
+            else if (s.includes('trainee') || s.includes('participant') || s.includes('employee name') || s === 'name' || s.includes('الاسم') || s.includes('متدرب')) colMap['name'] = colIdx;
+            else if (s.includes('dept') || s.includes('department') || s.includes('قسم') || s.includes('إدارة')) colMap['dept'] = colIdx;
+            else if (s.includes('role') || s.includes('job') || s.includes('position') || s.includes('وظيفة')) colMap['role'] = colIdx;
+            else if (s.includes('course') || s.includes('training') || s.includes('program') || s.includes('دورة') || s.includes('برنامج')) colMap['course'] = colIdx;
+            else if (s.includes('date') || s.includes('تاريخ') || s.includes('attendance date')) colMap['date'] = colIdx;
+            else if (s.includes('duration') || s.includes('مدة') || s.includes('days')) colMap['duration'] = colIdx;
+            else if (s.includes('attended') || s.includes('attendance') || s.includes('حضور')) colMap['attended'] = colIdx;
+            else if (s.includes('score') || s.includes('test') || s.includes('درجة') || s.includes('نتيجة')) colMap['score'] = colIdx;
+          });
+          break;
+        }
+      }
+
+      const parsedCleanedRecords: any[] = [];
+      const newUsers: any[] = [];
+
+      if (headerRowIdx !== -1 && (colMap['course'] !== undefined || colMap['name'] !== undefined || colMap['hrCode'] !== undefined)) {
+        for (let r = headerRowIdx + 1; r < rawRows.length; r++) {
+          const row = rawRows[r];
+          if (!row || !Array.isArray(row)) continue;
+
+          const hrRaw = colMap['hrCode'] !== undefined ? row[colMap['hrCode']] : null;
+          const nameRaw = colMap['name'] !== undefined ? row[colMap['name']] : null;
+          const courseRaw = colMap['course'] !== undefined ? row[colMap['course']] : null;
+
+          if (!hrRaw && !nameRaw && !courseRaw) continue;
+          if (!courseRaw && !nameRaw) continue;
+
+          const hrCode = String(hrRaw || '').trim().replace(/[^\w]/g, '');
+          const name = String(nameRaw || '').trim();
+          const courseName = String(courseRaw || '').trim();
+          const dept = colMap['dept'] !== undefined && row[colMap['dept']] ? String(row[colMap['dept']]).trim() : 'ORC - Katamia - Workshop';
+          
+          let role = colMap['role'] !== undefined && row[colMap['role']] ? String(row[colMap['role']]).trim().toLowerCase() : 'technician';
+          if (role.includes('eng') || role.includes('مهندس')) role = 'engineer';
+          else if (role.includes('tech') || role.includes('فني')) role = 'technician';
+          else if (role.includes('op') || role.includes('مشغل')) role = 'operator';
+          else if (!role) role = 'technician';
+
+          const formattedDate = parseDateVal(colMap['date'] !== undefined ? row[colMap['date']] : null);
+          const duration = colMap['duration'] !== undefined && row[colMap['duration']] ? String(row[colMap['duration']]).trim() : '1';
+          const attendedDays = colMap['attended'] !== undefined && row[colMap['attended']] ? String(row[colMap['attended']]).trim() : '1';
+          const score = colMap['score'] !== undefined && row[colMap['score']] ? String(row[colMap['score']]).trim() : 'Pass';
+
+          parsedCleanedRecords.push({
+            id: `rec_${r}`,
+            hrCode: hrCode || `HR_${r}`,
+            userId: hrCode || `HR_${r}`,
+            name: name || 'Trainee',
+            traineeName: name || 'Trainee',
+            department: dept,
+            role: role,
+            courseName: courseName || 'General Course',
+            courseId: courseName || 'General Course',
+            date: formattedDate,
+            attendanceDate: formattedDate,
+            duration: duration,
+            attendedDays: attendedDays,
+            score: score,
+          });
+
+          if (hrCode && name) {
+            newUsers.push({
+              id: hrCode,
+              name: name,
+              department: dept,
+              jobRole: role,
+              phone: '0100',
+              role: 'trainee',
+              status: 'approved',
+              hrCode: hrCode
+            });
           }
+        }
+      } else {
+        // Fallback: Legacy Matrix Format
+        const maxCols = XLSX.utils.decode_range(ws["!ref"] || "A1:A1").e.c + 1;
+        const courseRow = rawRows[6] || [];
+        const coursesMap: Record<number, string> = {};
+        let curCourse = "";
+        for (let c = 6; c < maxCols; c++) {
+          if (courseRow[c] && typeof courseRow[c] === "string" && courseRow[c].trim() !== "") curCourse = courseRow[c].toString().trim();
+          if (curCourse) coursesMap[c] = curCourse;
+        }
+        for (let r = 13; r < rawRows.length; r++) {
+          const row = rawRows[r];
+          if (!row) continue;
+          const id = row[2]?.toString().trim();
+          const name = row[5]?.toString().trim();
+          if (!id || !name) continue;
+          const dept = row[4]?.toString().trim() || "ORC - Katamia - Workshop";
+          const jobRole = row[3]?.toString().trim() || "technician";
+          newUsers.push({ id, name, department: dept, jobRole, phone: "0100", role: "trainee", status: "approved", hrCode: `HR${id}` });
           for (let c = 6; c < maxCols; c += 4) {
             const dateVal = row[c];
             if (dateVal) {
-              const scoreVal = row[c + 3] || 0;
-              let formattedDate = new Date().toISOString().split("T")[0];
-              if (dateVal instanceof Date) formattedDate = dateVal.toISOString().split("T")[0];
-              else if (typeof dateVal === "string") formattedDate = dateVal;
-              else if (typeof dateVal === "number") formattedDate = new Date(Math.round((dateVal - 25569) * 86400 * 1000)).toISOString().split("T")[0];
-              let formattedScore = typeof scoreVal === "number" ? `${Math.round(scoreVal * 100)}%` : scoreVal.toString();
-              const courseName = coursesMap[c] || "Unknown Course";
-              const courseId = mockCourses.find((mc) => mc.title.toLowerCase().includes(courseName.toLowerCase()))?.id || `course_${c}`;
-              const isDuplicate = records.some(rec => rec.userId === id && rec.courseName === courseName && rec.attendanceDate === formattedDate) || newRecords.some(rec => rec.userId === id && rec.courseName === courseName && rec.attendanceDate === formattedDate);
-              if (!isDuplicate) {
-                newRecords.push({ id: `rec_${Date.now()}_${r}_${c}`, userId: id, hrCode: `HR${id}`, traineeName: name, department: row[4]?.toString().trim() || "General", courseId: courseId, courseName: courseName, attendanceDate: formattedDate, score: formattedScore });
-              }
+              const scoreVal = row[c + 3] || 'Pass';
+              const formattedDate = parseDateVal(dateVal);
+              const courseName = coursesMap[c] || "Training Program";
+              parsedCleanedRecords.push({
+                id: `rec_${r}_${c}`,
+                userId: id,
+                hrCode: id,
+                name: name,
+                traineeName: name,
+                department: dept,
+                role: jobRole.toLowerCase().includes('eng') ? 'engineer' : 'technician',
+                courseName: courseName,
+                courseId: courseName,
+                date: formattedDate,
+                attendanceDate: formattedDate,
+                duration: '1',
+                attendedDays: '1',
+                score: typeof scoreVal === 'number' ? `${Math.round(scoreVal * 100)}%` : String(scoreVal)
+              });
             }
           }
         }
-        // Auto-calculate and cache global KPIs directly from Excel file without Firestore reads
-        const uniqueCourses = Array.from(new Set(Object.values(coursesMap).map(s => (s || '').trim()).filter(Boolean)));
-        const sessionsSet = new Set<string>();
-        let engCount = 0, techCount = 0, opCount = 0;
-        newRecords.forEach(rec => {
-          if (rec.courseName && rec.attendanceDate) sessionsSet.add(`${rec.courseName}-${rec.attendanceDate}`);
-          const u = newUsers.find(nu => nu.id === rec.userId) || users.find(eu => eu.id === rec.userId);
-          const roleStr = `${u?.jobRole || ''} ${u?.department || ''} ${rec.department || ''}`.toLowerCase();
-          if (roleStr.includes('eng') || roleStr.includes('مهندس')) engCount++;
-          if (roleStr.includes('tech') || roleStr.includes('فني')) techCount++;
-          if (roleStr.includes('op') || roleStr.includes('مشغل')) opCount++;
-        });
+      }
 
-        let computedKPIs = {
-          totalCourses: uniqueCourses.length || 21,
-          totalSessions: sessionsSet.size || 124,
-          totalParticipants: newRecords.length || 984,
-          totalEngineers: engCount || 765,
-          totalTechnicians: techCount || 117,
-          totalOperators: opCount || 102
-        };
+      if (parsedCleanedRecords.length === 0) {
+        throw new Error(language === 'ar' ? 'لم يتم العثور على سجلات تدريبية صالحة في الملف' : 'No valid training records could be extracted from this Excel file.');
+      }
 
-        // Check if official 'Analytics Dashboard' sheet exists and extract exact values
-        const dashboardSheet = wb.Sheets["Analytics Dashboard"] || (wb.SheetNames.length > 1 ? wb.Sheets[wb.SheetNames[1]] : null);
-        if (dashboardSheet) {
-          try {
-            const dashRows = XLSX.utils.sheet_to_json(dashboardSheet, { header: 1 }) as any[];
-            dashRows.forEach((dRow: any) => {
-              if (Array.isArray(dRow)) {
-                for (let i = 0; i < dRow.length; i++) {
-                  const cellVal = String(dRow[i] || '').toLowerCase().trim();
-                  const nextVal = parseInt(String(dRow[i + 1] || '').replace(/[^0-9]/g, ''), 10);
-                  if (!isNaN(nextVal)) {
-                    if (cellVal.includes('total courses')) computedKPIs.totalCourses = nextVal;
-                    if (cellVal.includes('total sessions')) computedKPIs.totalSessions = nextVal;
-                    if (cellVal.includes('total participants')) computedKPIs.totalParticipants = nextVal;
-                    if (cellVal.includes('total engineers')) computedKPIs.totalEngineers = nextVal;
-                    if (cellVal.includes('total technicians')) computedKPIs.totalTechnicians = nextVal;
-                    if (cellVal.includes('total operators')) computedKPIs.totalOperators = nextVal;
-                  }
-                }
-              }
-            });
-          } catch (e) {
-            console.warn("Could not parse Analytics Dashboard sheet:", e);
-          }
-        }
+      // FULL MASTER REPLACEMENT
+      if (setCleanedData) {
+        await setCleanedData(parsedCleanedRecords);
+      }
 
-        localStorage.setItem('oed_cached_global_kpis', JSON.stringify(computedKPIs));
-        try {
-          await setDoc(doc(db, "systemSettings", "globalKPIs"), computedKPIs, { merge: true });
-        } catch (e) {}
+      setRecords(parsedCleanedRecords as any);
+      setUsers((prev) => [...prev, ...newUsers.filter((nu) => !prev.some((u) => u.id === nu.id))]);
 
-        setUsers((prev) => [...prev, ...newUsers.filter((nu) => !prev.some((u) => u.id === nu.id))]);
-        setRecords((prev) => [...prev, ...newRecords]);
-        setSyncSuccess(true); setTimeout(() => setSyncSuccess(false), 5000);
-      } catch (err) { alert(language === "ar" ? "فشل قراءة الملف" : "Failed to parse file."); }
-    };
-    reader.readAsArrayBuffer(file);
+      try {
+        localStorage.setItem('oed_cached_cleaned_data_v23', JSON.stringify(parsedCleanedRecords));
+        localStorage.setItem('oed_cached_cleaned_data', JSON.stringify(parsedCleanedRecords));
+        localStorage.setItem('oed_training_filename', file.name);
+      } catch (e) {}
+
+      const distinctCourses = new Set(parsedCleanedRecords.map(r => r.courseName)).size;
+      const distinctSessions = new Set(parsedCleanedRecords.map(r => `${r.courseName}-${r.attendanceDate || r.date}`)).size;
+      const distinctTrainees = new Set(parsedCleanedRecords.map(r => r.hrCode || r.name)).size;
+      let engCount = 0, techCount = 0, opCount = 0;
+      parsedCleanedRecords.forEach(r => {
+        if (r.role === 'engineer') engCount++;
+        else if (r.role === 'technician') techCount++;
+        else if (r.role === 'operator') opCount++;
+      });
+
+      const computedKPIs = {
+        totalCourses: distinctCourses,
+        totalSessions: distinctSessions,
+        totalParticipants: parsedCleanedRecords.length,
+        uniqueTrainees: distinctTrainees,
+        totalEngineers: engCount,
+        totalTechnicians: techCount,
+        totalOperators: opCount
+      };
+
+      localStorage.setItem('oed_cached_global_kpis', JSON.stringify(computedKPIs));
+      try {
+        await setDoc(doc(db, "systemSettings", "globalKPIs"), computedKPIs, { merge: true });
+      } catch (e) {}
+
+      setSyncSummary({
+        total: parsedCleanedRecords.length,
+        courses: distinctCourses,
+        sessions: distinctSessions,
+        fileName: file.name
+      });
+      setSyncSuccess(true);
+      setTimeout(() => setSyncSuccess(false), 8000);
+    } catch (err: any) {
+      console.error("Excel import error:", err);
+      setSyncError(err?.message || (language === 'ar' ? 'حدث خطأ أثناء معالجة ملف الإكسيل' : 'Failed to parse and sync Excel file.'));
+    } finally {
+      setIsSyncing(false);
+      if (excelFileInputRef.current) excelFileInputRef.current.value = '';
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processExcelFile(file);
   };
 
   const allRecordsPool = useMemo(() => {
@@ -3862,31 +4011,103 @@ Content-Type: text/html; charset="utf-8"
                             </button>
                           </div>
 
+                          {/* Drag & Drop Master Excel Sync Zone */}
                           <div 
-                            className="p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
-                            style={{ backgroundColor: isDark ? '#162B4D' : '#F8FAFC', borderColor: borderColor }}
+                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(true); }}
+                            onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(true); }}
+                            onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(false); }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setIsDragOver(false);
+                              const files = e.dataTransfer.files;
+                              if (files && files.length > 0) {
+                                processExcelFile(files[0]);
+                              }
+                            }}
+                            className={`p-5 rounded-2xl border-2 border-dashed transition-all duration-300 relative ${
+                              isDragOver 
+                                ? 'border-[#002D62] dark:border-[#FFC000] bg-blue-50/80 dark:bg-blue-950/50 scale-[1.01] shadow-lg' 
+                                : 'border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/40 hover:border-blue-400 dark:hover:border-slate-600'
+                            }`}
                           >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-300 shrink-0 border border-blue-200 dark:border-blue-800/40">
-                                <UploadCloud size={18} />
+                            <input 
+                              type="file" 
+                              ref={excelFileInputRef}
+                              accept=".xlsx, .xls" 
+                              className="hidden" 
+                              onChange={handleFileUpload} 
+                            />
+
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                              <div className="flex items-center gap-3.5 min-w-0">
+                                <div className={`p-3 rounded-2xl transition-transform ${isDragOver ? 'scale-110' : ''} bg-blue-100 dark:bg-blue-950/80 text-[#002D62] dark:text-[#FFC000] shrink-0 border border-blue-200 dark:border-blue-800/60 shadow-xs`}>
+                                  <FileSpreadsheet size={24} />
+                                </div>
+                                <div className="min-w-0 text-center sm:text-left">
+                                  <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
+                                    <h4 className="text-sm sm:text-base font-black" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>
+                                      {language === 'ar' ? 'استيراد ومزامنة شيت الإكسيل الكامل' : 'Master Excel Sheet Full Sync & Upload'}
+                                    </h4>
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300">
+                                      {language === 'ar' ? 'مزامنة واستبدال كامل' : 'Fresh Master Replace'}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+                                    {language === 'ar' 
+                                      ? 'اسحب وأفلت شيت الإكسيل هنا، أو انقر للاختيار (.xlsx, .xls) — سيتم تحديث كافة السجلات والـ KPIs فوراً'
+                                      : 'Drag & drop your Excel file here, or browse (.xlsx, .xls) — automatically replaces and refreshes all active records & KPIs'
+                                    }
+                                  </p>
+                                </div>
                               </div>
-                              <div className="min-w-0">
-                                <h4 className="text-sm font-black" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>
-                                  {language === 'ar' ? 'استيراد ورفع ملف إكسيل محلي' : 'Import Local Excel File'}
-                                </h4>
-                                <p className="text-xs font-medium" style={{ color: textMuted }}>
-                                  {syncFile ? syncFile.name : (language === 'ar' ? 'رفع شيت إكسيل لتحديث السجلات' : 'Upload Excel sheet to update records')}
-                                </p>
+
+                              <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                                <button
+                                  type="button"
+                                  disabled={isSyncing}
+                                  onClick={() => excelFileInputRef.current?.click()}
+                                  className="w-full sm:w-auto px-5 py-2.5 bg-[#002D62] hover:bg-blue-900 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                  {isSyncing ? (
+                                    <>
+                                      <Loader2 size={15} className="animate-spin text-[#FFC000]" />
+                                      <span>{language === 'ar' ? 'جاري المعالجة والمزامنة...' : 'Processing Excel...'}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <UploadCloud size={15} className="text-[#FFC000]" />
+                                      <span>{language === 'ar' ? 'اختر ملف إكسيل' : 'Browse Excel File'}</span>
+                                    </>
+                                  )}
+                                </button>
                               </div>
                             </div>
-                            <label
-                              htmlFor="excel-upload-main"
-                              className="w-full sm:w-auto px-4 py-2.5 bg-[#002D62] hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center justify-center gap-1.5 hover:scale-105"
-                            >
-                              <UploadCloud size={14} />
-                              <span>{language === 'ar' ? 'اختر ملف' : 'Browse'}</span>
-                            </label>
-                            <input type="file" id="excel-upload-main" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
+
+                            {/* Live Status Feedback Banner */}
+                            {syncSummary && (
+                              <div className="mt-4 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 flex flex-wrap items-center justify-between gap-2 animate-fade-in">
+                                <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-200">
+                                  <CheckCircle size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                  <span>
+                                    {language === 'ar' 
+                                      ? `تم تحديث المنظومة بنجاح: ${syncSummary.total} سجل تدريبي عبر ${syncSummary.courses} كورس و${syncSummary.sessions} جلسة من (${syncSummary.fileName})`
+                                      : `Sync Complete: Loaded ${syncSummary.total} records across ${syncSummary.courses} courses and ${syncSummary.sessions} sessions from (${syncSummary.fileName})`
+                                    }
+                                  </span>
+                                </div>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-200/60 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200">
+                                  Live & Saved
+                                </span>
+                              </div>
+                            )}
+
+                            {syncError && (
+                              <div className="mt-4 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-800 flex items-center gap-2 text-xs font-bold text-red-800 dark:text-red-200 animate-fade-in">
+                                <AlertTriangle size={16} className="text-red-600 dark:text-red-400 shrink-0" />
+                                <span>{syncError}</span>
+                              </div>
+                            )}
                           </div>
 
                           <div 
