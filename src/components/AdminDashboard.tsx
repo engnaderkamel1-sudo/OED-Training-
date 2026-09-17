@@ -7,7 +7,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useAppContext } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment, collection, getDocs, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { Clock, CalendarX, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2, SearchX, UserCheck } from "lucide-react";
+import { Clock, CalendarX, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2, SearchX, UserCheck, ExternalLink } from "lucide-react";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
 import { formatScore, formatDateToStandard } from "../utils/formatters";
@@ -4613,7 +4613,7 @@ Content-Type: text/html; charset="utf-8"
                           </div>
                           <button
                             onClick={() => {
-                              setSearchCourse(course.title);
+                              setSelectedCourseFilter(course.title);
                               setDrillDownModalType(null);
                               const el = document.getElementById('training-records-table-anchor');
                               if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -4671,8 +4671,9 @@ Content-Type: text/html; charset="utf-8"
                               </button>
                               <button
                                 onClick={() => {
-                                  setSearchCourse(session.courseTitle);
-                                  setSearchDate(session.date);
+                                  setSelectedCourseFilter(session.courseTitle);
+                                  setFromDateFilter(session.date);
+                                  setToDateFilter(session.date);
                                   setDrillDownModalType(null);
                                   const el = document.getElementById('training-records-table-anchor');
                                   if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -4783,7 +4784,7 @@ Content-Type: text/html; charset="utf-8"
                               if (trainee.hrCode) {
                                 setSearchHrCode(trainee.hrCode);
                               } else {
-                                setSearchTraineeName(trainee.name);
+                                setSearchTrainee(trainee.name);
                               }
                               setDrillDownModalType(null);
                               const el = document.getElementById('training-records-table-anchor');
