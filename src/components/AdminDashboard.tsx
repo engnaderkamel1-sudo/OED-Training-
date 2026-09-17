@@ -1,4 +1,4 @@
-﻿import { UserManagementTab } from './UserManagementTab';
+import { UserManagementTab } from './UserManagementTab';
 import { SystemErrorsModal } from './SystemErrorsModal';
 import { FirebaseUsageModal } from './FirebaseUsageModal';
 import { EditRecordModal } from './EditRecordModal';
@@ -2512,7 +2512,7 @@ Content-Type: text/html; charset="utf-8"
                     </div>
                   </div>
                 ) : (
-                  {/* Global KPI Summary Cards - Dual Metric Engine & Interactive Drill-Down */}
+                  /* Global KPI Summary Cards - Dual Metric Engine & Interactive Drill-Down */
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 mb-6 print:hidden">
                     {/* 1. Total Courses (Clickable Drill-Down) */}
                     <div 
