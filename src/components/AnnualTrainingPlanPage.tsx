@@ -116,6 +116,12 @@ export const AnnualTrainingPlanPage: React.FC = () => {
   const [newYearInput, setNewYearInput] = useState(String(new Date().getFullYear() + 1));
   const [cloneFromYear, setCloneFromYear] = useState('none');
 
+  // Edit Year Plan Modal State
+  const [isEditYearModalOpen, setIsEditYearModalOpen] = useState(false);
+  const [editYearTitle, setEditYearTitle] = useState('');
+  const [editYearStatus, setEditYearStatus] = useState<'active' | 'draft' | 'archived'>('active');
+  const [editYearNotes, setEditYearNotes] = useState('');
+
   // Excel Plan Import State
   const [isUploadPlanModalOpen, setIsUploadPlanModalOpen] = useState(false);
   const [isParsingPlan, setIsParsingPlan] = useState(false);
@@ -1072,6 +1078,38 @@ export const AnnualTrainingPlanPage: React.FC = () => {
     setIsAddYearModalOpen(false);
   };
 
+  const handleSaveEditYearPlan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const updatedPlan: AnnualYearPlan = {
+      ...currentPlan,
+      title: editYearTitle.trim() || `Annual Training Plan ${selectedYear}`,
+      status: editYearStatus,
+      notes: editYearNotes.trim() || undefined,
+      updatedAt: new Date().toISOString()
+    };
+
+    await saveAnnualPlan(updatedPlan);
+    setIsEditYearModalOpen(false);
+  };
+
+  const handleDeleteActiveYearPlan = async () => {
+    const isMaster2026 = selectedYear === 2026;
+    const confirmPrompt = isMaster2026
+      ? `Are you sure you want to reset the 2026 Annual Training Plan? This will remove custom additions and restore the certified official baseline.`
+      : `Are you sure you want to permanently delete the Annual Training Plan for ${selectedYear} and all of its ${currentPlan.targets?.length || 0} program targets? This action cannot be undone.`;
+
+    if (!window.confirm(confirmPrompt)) return;
+
+    try {
+      await deleteAnnualPlan(currentPlan.id || String(selectedYear));
+      const remainingYears = availableYears.filter(y => y !== selectedYear);
+      const nextYear = remainingYears.includes(2026) ? 2026 : (remainingYears[0] || 2026);
+      setSelectedYear(nextYear);
+    } catch (e: any) {
+      alert('Failed to delete year plan: ' + (e?.message || 'Unknown error'));
+    }
+  };
+
   const openAddCourseModal = () => {
     setEditingTargetId(null);
     setTargetFormCourseTitle(courses[0]?.title || '');
@@ -1486,57 +1524,83 @@ export const AnnualTrainingPlanPage: React.FC = () => {
         </div>
 
         {/* Prominent Executive Central Year Navigation Bar */}
-        <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
+        <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4 print:hidden">
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
               <CalendarRange size={16} className="text-[#002D62] dark:text-amber-400" />
-              <span>Select Plan Year:</span>
+              <span>Plan Year:</span>
             </div>
 
-            <div className="p-1.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-2xl border border-slate-200/90 dark:border-slate-700/80 flex items-center gap-2 flex-wrap shadow-2xs">
-              {availableYears.map(yr => {
-                const isSelected = selectedYear === yr;
-                const isCurrentYear = yr === currentRealYear;
-                const yearTargetsCount = (annualPlans.find(p => p.year === yr)?.targets || []).length;
-
-                return (
-                  <button
-                    key={yr}
-                    type="button"
-                    onClick={() => setSelectedYear(yr)}
-                    className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2.5 transition-all duration-200 cursor-pointer active:scale-[0.98] ${
-                      isSelected
-                        ? 'bg-[#002D62] text-white shadow-md shadow-[#002D62]/25 dark:bg-blue-900 dark:text-white ring-1 ring-white/10'
-                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-xs hover:text-slate-950 dark:hover:text-white'
-                    }`}
-                  >
-                    <span className="text-sm sm:text-base font-black tracking-tight">{yr}</span>
-                    {isCurrentYear ? (
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-                        isSelected
-                          ? 'bg-amber-400 text-slate-950'
-                          : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60'
-                      }`}>
-                        Current
-                      </span>
-                    ) : (
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        isSelected
-                          ? 'bg-white/20 text-white'
-                          : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                      }`}>
-                        {yr > currentRealYear ? 'Upcoming' : 'Archived'}
-                      </span>
-                    )}
-                    <span className={`text-[11px] font-medium ${
-                      isSelected ? 'text-slate-200 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500'
-                    }`}>
-                      ({yearTargetsCount} {yearTargetsCount === 1 ? 'Program' : 'Programs'})
-                    </span>
-                  </button>
-                );
-              })}
+            {/* Year Dropdown Selector */}
+            <div className="relative inline-flex items-center">
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
+                className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-white dark:bg-slate-800 border-2 border-[#002D62] dark:border-blue-700 text-[#002D62] dark:text-white text-sm font-black shadow-xs hover:border-blue-900 dark:hover:border-blue-500 focus:outline-hidden focus:ring-2 focus:ring-[#002D62] transition-all cursor-pointer min-w-[240px] sm:min-w-[270px]"
+                title="Select training plan year"
+              >
+                {availableYears.map(yr => {
+                  const isCurrentYear = yr === currentRealYear;
+                  const yearTargetsCount = (annualPlans.find(p => p.year === yr)?.targets || (yr === 2026 ? DEFAULT_CERTIFIED_2026_TARGETS : [])).length;
+                  const statusTag = isCurrentYear ? 'CURRENT' : yr > currentRealYear ? 'Upcoming' : 'Archived';
+                  return (
+                    <option key={yr} value={yr} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold py-1">
+                      {yr} — {statusTag} ({yearTargetsCount} {yearTargetsCount === 1 ? 'Program' : 'Programs'})
+                    </option>
+                  );
+                })}
+              </select>
+              <div className="absolute right-3 pointer-events-none text-[#002D62] dark:text-amber-400">
+                <ChevronDown size={16} />
+              </div>
             </div>
+
+            {/* Active Year Status Tag */}
+            <span className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-2xs ${
+              selectedYear === currentRealYear
+                ? 'bg-amber-400 text-slate-950 border border-amber-500/40'
+                : selectedYear > currentRealYear
+                ? 'bg-blue-100 text-blue-950 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-800'
+                : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${
+                selectedYear === currentRealYear ? 'bg-slate-950 animate-pulse' : 'bg-current'
+              }`} />
+              <span>{selectedYear === currentRealYear ? 'Current Year' : selectedYear > currentRealYear ? 'Upcoming Year' : 'Archived Year'}</span>
+              <span className="text-[11px] opacity-75 font-bold">
+                • {targetsWithExecution.length} Programs
+              </span>
+            </span>
+
+            {/* Edit and Delete Plan Buttons (Admin Only) */}
+            {isAdmin && (
+              <div className="flex items-center gap-1.5 pl-1 sm:border-l sm:border-slate-200 dark:sm:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditYearTitle(currentPlan.title || `Annual Training Plan ${selectedYear}`);
+                    setEditYearStatus(currentPlan.status || 'active');
+                    setEditYearNotes(currentPlan.notes || '');
+                    setIsEditYearModalOpen(true);
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 border border-slate-300 dark:border-slate-700 transition-all cursor-pointer active:scale-95 shadow-2xs"
+                  title={`Edit Plan ${selectedYear} Details`}
+                >
+                  <Edit2 size={13} className="text-[#002D62] dark:text-amber-400" />
+                  <span>Edit Plan</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDeleteActiveYearPlan}
+                  className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-1.5 border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer active:scale-95 shadow-2xs"
+                  title={`Delete Annual Plan for ${selectedYear}`}
+                >
+                  <Trash2 size={13} className="text-rose-600 dark:text-rose-400" />
+                  <span>Delete Plan</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Prominent Action: + Add New Year Plan & Import Plan (Excel) (Admin Only) */}
@@ -3310,6 +3374,108 @@ export const AnnualTrainingPlanPage: React.FC = () => {
                   >
                     Create Plan
                   </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal 1B: Edit Year Plan Details */}
+      <AnimatePresence>
+        {isEditYearModalOpen && (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-800 space-y-4"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Edit2 className="text-[#002D62] dark:text-amber-400" size={18} />
+                  <span>Edit Annual Plan ({selectedYear})</span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsEditYearModalOpen(false)}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEditYearPlan} className="space-y-4 text-xs">
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Plan Title
+                  </label>
+                  <input
+                    type="text"
+                    value={editYearTitle}
+                    onChange={(e) => setEditYearTitle(e.target.value)}
+                    required
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#002D62]"
+                    placeholder={`Annual Training Plan ${selectedYear}`}
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Operational Status
+                  </label>
+                  <select
+                    value={editYearStatus}
+                    onChange={(e) => setEditYearStatus(e.target.value as any)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none"
+                  >
+                    <option value="active">Active (Official Operational Schedule)</option>
+                    <option value="draft">Draft (Under Review / Planning Phase)</option>
+                    <option value="archived">Archived (Closed Historical Records)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Executive Notes / Department Comments (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={editYearNotes}
+                    onChange={(e) => setEditYearNotes(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-medium text-slate-900 dark:text-white outline-none resize-none"
+                    placeholder="Enter operational goals, priorities, or management notes for this year..."
+                  />
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditYearModalOpen(false);
+                      handleDeleteActiveYearPlan();
+                    }}
+                    className="text-rose-600 hover:text-rose-700 dark:text-rose-400 text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:underline"
+                  >
+                    <Trash2 size={14} />
+                    <span>Delete Plan</span>
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditYearModalOpen(false)}
+                      className="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2 rounded-xl bg-[#002D62] text-white hover:bg-blue-950 dark:bg-blue-800 dark:hover:bg-blue-700 font-bold shadow-xs cursor-pointer active:scale-95"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
                 </div>
               </form>
             </motion.div>

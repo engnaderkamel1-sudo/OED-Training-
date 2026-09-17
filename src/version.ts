@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "1.8.7",
-  releaseName: "Optional Vacation Title & Auto-Categorization",
+  version: "1.8.8",
+  releaseName: "Executive Year Dropdown & Plan Management (Edit & Delete)",
   buildDate: "2026",
   buildTimestamp: "2026",
   
