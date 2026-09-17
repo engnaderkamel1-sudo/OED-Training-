@@ -7,7 +7,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useAppContext } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment, collection, getDocs, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { Clock, CalendarX, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2, SearchX, UserCheck, ExternalLink } from "lucide-react";
+import { Clock, CalendarX, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2, SearchX, UserCheck, ExternalLink, GraduationCap } from "lucide-react";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
 import { formatScore, formatDateToStandard } from "../utils/formatters";
@@ -791,14 +791,10 @@ Please log in to register for this session through the OED-TTMS Application.
   }, [upcomingSessions, users, language]);
 
   // Executive Drill-Down KPI Modal State
-  const [drillDownModalType, setDrillDownModalType] = useState<null | 'courses' | 'sessions' | 'trainees' | 'engineers' | 'technicians' | 'operators'>(null);
+  const [drillDownModalType, setDrillDownModalType] = useState<null | 'courses' | 'sessions' | 'trainees' | 'engineers' | 'technicians' | 'operators' | 'interns'>(null);
   const [drillDownSearch, setDrillDownSearch] = useState('');
   const [drillDownExpandedSession, setDrillDownExpandedSession] = useState<string | null>(null);
 
-  // Summer Internship State
-  const [isSummerExpanded, setIsSummerExpanded] = useState(false);
-  const [summerSearch, setSummerSearch] = useState('');
-  const [summerYearFilter, setSummerYearFilter] = useState<'all' | string>('all');
 
   const handleDeleteRecord = async (recordId: string) => {
     if (!recordId) return;
@@ -2163,7 +2159,9 @@ Content-Type: text/html; charset="utf-8"
         totalTechnicians: 0,
         uniqueTechnicians: 0,
         totalOperators: 0,
-        uniqueOperators: 0
+        uniqueOperators: 0,
+        totalInterns: 0,
+        uniqueInterns: 0
       };
     }
 
@@ -2173,16 +2171,18 @@ Content-Type: text/html; charset="utf-8"
 
     if (dataSource.length === 0) {
       return {
-        totalCourses: globalKPIs.totalCourses || 26,
-        totalSessions: globalKPIs.totalSessions || 130,
-        totalParticipants: globalKPIs.totalParticipants || 1004,
-        uniqueTrainees: globalKPIs.uniqueTrainees || 350,
+        totalCourses: globalKPIs.totalCourses || 25,
+        totalSessions: globalKPIs.totalSessions || 143,
+        totalParticipants: globalKPIs.totalParticipants || 1143,
+        uniqueTrainees: globalKPIs.uniqueTrainees || 435,
         totalEngineers: globalKPIs.totalEngineers || 758,
-        uniqueEngineers: globalKPIs.uniqueEngineers || 162,
-        totalTechnicians: globalKPIs.totalTechnicians || 144,
-        uniqueTechnicians: globalKPIs.uniqueTechnicians || 113,
+        uniqueEngineers: globalKPIs.uniqueEngineers || 159,
+        totalTechnicians: globalKPIs.totalTechnicians || 211,
+        uniqueTechnicians: globalKPIs.uniqueTechnicians || 150,
         totalOperators: globalKPIs.totalOperators || 102,
-        uniqueOperators: globalKPIs.uniqueOperators || 100
+        uniqueOperators: globalKPIs.uniqueOperators || 100,
+        totalInterns: 72,
+        uniqueInterns: 72
       };
     }
 
@@ -2192,7 +2192,8 @@ Content-Type: text/html; charset="utf-8"
     const engUnique = new Set<string>();
     const techUnique = new Set<string>();
     const opUnique = new Set<string>();
-    let eng = 0, tech = 0, op = 0;
+    const internUnique = new Set<string>();
+    let eng = 0, tech = 0, op = 0, intern = 0;
 
     dataSource.forEach((r: any) => {
       const u = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}` || u.name?.toLowerCase() === r.name?.toLowerCase());
@@ -2206,7 +2207,10 @@ Content-Type: text/html; charset="utf-8"
       if (traineeKey) uniqueTraineesSet.add(traineeKey);
 
       const roleStr = `${u?.jobRole || ''} ${r.role || ''} ${r.department || ''} ${cName}`.toLowerCase();
-      if (/\b(operator|operators|مشغل|مشغلين|سائق|سائقين)\b/i.test(roleStr)) {
+      if (/\b(intern|interns|student|students|summer|طالب|صيفي)\b/i.test(roleStr)) {
+        intern++;
+        if (traineeKey) internUnique.add(traineeKey);
+      } else if (/\b(operator|operators|مشغل|مشغلين|سائق|سائقين)\b/i.test(roleStr)) {
         op++;
         if (traineeKey) opUnique.add(traineeKey);
       } else if (/\b(technician|technicians|فني|فنيين)\b/i.test(roleStr)) {
@@ -2219,8 +2223,8 @@ Content-Type: text/html; charset="utf-8"
     });
 
     return {
-      totalCourses: coursesSet.size || globalKPIs.totalCourses || 26,
-      totalSessions: sessionsSet.size || globalKPIs.totalSessions || 130,
+      totalCourses: coursesSet.size || globalKPIs.totalCourses || 25,
+      totalSessions: sessionsSet.size || globalKPIs.totalSessions || 143,
       totalParticipants: dataSource.length,
       uniqueTrainees: uniqueTraineesSet.size,
       totalEngineers: eng,
@@ -2228,7 +2232,9 @@ Content-Type: text/html; charset="utf-8"
       totalTechnicians: tech,
       uniqueTechnicians: techUnique.size,
       totalOperators: op,
-      uniqueOperators: opUnique.size
+      uniqueOperators: opUnique.size,
+      totalInterns: intern,
+      uniqueInterns: internUnique.size
     };
   }, [filteredRecords, cleanedData, records, users, globalKPIs, hasActiveFilters]);
 
@@ -2280,7 +2286,7 @@ Content-Type: text/html; charset="utf-8"
   }, [allRecordsPool]);
 
   const drillDownTraineesList = useMemo(() => {
-    const map = new Map<string, { hrCode: string; name: string; roleCategory: 'engineer' | 'technician' | 'operator' | 'other'; department: string; courses: Set<string>; totalAttendances: number }>();
+    const map = new Map<string, { hrCode: string; name: string; roleCategory: 'engineer' | 'technician' | 'operator' | 'intern' | 'other'; department: string; courses: Set<string>; totalAttendances: number }>();
     (allRecordsPool || []).forEach(r => {
       const hrCode = (r.hrCode || r.userId || '').toString().trim();
       const rawName = r.traineeName || r.name || 'Unknown';
@@ -2290,9 +2296,10 @@ Content-Type: text/html; charset="utf-8"
       const finalName = u?.name || rawName;
       const finalDept = u?.department || dept;
 
-      const normJob = `${u?.jobTitle || ''} ${r.jobTitle || ''} ${dept}`.toLowerCase();
-      let roleCategory: 'engineer' | 'technician' | 'operator' | 'other' = 'other';
-      if (normJob.includes('eng') || normJob.includes('مهندس')) roleCategory = 'engineer';
+      const normJob = `${u?.jobTitle || ''} ${r.role || ''} ${r.jobTitle || ''} ${dept}`.toLowerCase();
+      let roleCategory: 'engineer' | 'technician' | 'operator' | 'intern' | 'other' = 'other';
+      if (normJob.includes('intern') || normJob.includes('summer') || normJob.includes('طالب')) roleCategory = 'intern';
+      else if (normJob.includes('eng') || normJob.includes('مهندس')) roleCategory = 'engineer';
       else if (normJob.includes('tech') || normJob.includes('فني')) roleCategory = 'technician';
       else if (normJob.includes('oper') || normJob.includes('سائق') || normJob.includes('عامل')) roleCategory = 'operator';
 
@@ -2714,7 +2721,7 @@ Content-Type: text/html; charset="utf-8"
                   </div>
                 ) : (
                   /* Global KPI Summary Cards - Dual Metric Engine & Interactive Drill-Down */
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 mb-6 print:hidden">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6 print:hidden">
                     {/* 1. Total Courses (Clickable Drill-Down) */}
                     <div 
                       onClick={() => { setDrillDownModalType('courses'); setDrillDownSearch(''); }}
@@ -2845,173 +2852,30 @@ Content-Type: text/html; charset="utf-8"
                         View Operators &rarr;
                       </span>
                     </div>
+
+                    {/* 7. Student Interns (Clickable Drill-Down) */}
+                    <div 
+                      onClick={() => { setDrillDownModalType('interns'); setDrillDownSearch(''); }}
+                      role="button"
+                      tabIndex={0}
+                      title="Click to view all university student interns"
+                      className="group p-4 rounded-2xl border shadow-xs flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-lg hover:scale-[1.03] cursor-pointer hover:border-amber-400 dark:hover:border-amber-500" 
+                      style={{ backgroundColor: cardColor, borderColor: borderColor }}
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                        <GraduationCap size={20} className="text-[#002D62] dark:text-[#FFC000]" />
+                      </div>
+                      <span className="text-xs font-semibold tracking-wide" style={{ color: textMuted }}>Student Interns</span>
+                      <span className="text-2xl font-black mt-1 group-hover:text-amber-500 transition-colors" style={{ color: textColor }}>{(kpiStats.totalInterns || 72).toLocaleString()}</span>
+                      <span className="mt-1.5 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                        {(kpiStats.uniqueInterns || 72).toLocaleString()} Unique
+                      </span>
+                      <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 opacity-75 group-hover:opacity-100 transition-opacity mt-1">
+                        View Interns &rarr;
+                      </span>
+                    </div>
                   </div>
                 )}
-
-                {/* ===== Summer Internship Program Banner & Interactive Directory ===== */}
-                {(() => {
-                  const summerData = SUMMER_TRAINING_RAW as Array<{id:string;name:string;department:string;hrCode:string;courseName:string;date:string;year:string;duration:number;attendedDays:string;score:string;type:string}>;
-                  const totalStudents = summerData.length;
-                  const years = [...new Set(summerData.map((r) => r.year))].sort();
-                  const sessions = [...new Set(summerData.map((r) => `${r.year}-${r.courseName}`))].length;
-                  const courseNames = [...new Set(summerData.map((r) => r.courseName))];
-
-                  const filteredSummerList = summerData.filter((r) => {
-                    if (summerYearFilter !== 'all' && r.year !== summerYearFilter) return false;
-                    if (summerSearch) {
-                      const q = summerSearch.toLowerCase();
-                      return (
-                        r.name.toLowerCase().includes(q) ||
-                        r.courseName.toLowerCase().includes(q) ||
-                        (r.hrCode && r.hrCode.toLowerCase().includes(q)) ||
-                        r.date.toLowerCase().includes(q)
-                      );
-                    }
-                    return true;
-                  });
-
-                  return (
-                    <div className="mb-5 p-4 rounded-2xl border-2 border-amber-400/60 dark:border-amber-500/40 bg-gradient-to-r from-amber-50/80 via-yellow-50/60 to-orange-50/40 dark:from-amber-950/30 dark:via-yellow-950/20 dark:to-orange-950/20 print:hidden shadow-sm">
-                      <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-amber-400/20 dark:bg-amber-400/10 flex items-center justify-center flex-shrink-0">
-                            <span className="text-xl">🎓</span>
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-black text-amber-800 dark:text-amber-300">Summer Internship Program</span>
-                              {years.map((y) => (
-                                <span key={y} className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-400/30 text-amber-900 dark:text-amber-300 border border-amber-400/50">{y}</span>
-                              ))}
-                            </div>
-                            <p className="text-[11px] text-amber-700/80 dark:text-amber-400/70 mt-0.5">
-                              University student internships — verified records maintained distinct from employee KPIs
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/70 dark:bg-slate-800/60 border border-amber-300/60 dark:border-amber-700/40 shadow-xs">
-                            <Users size={13} className="text-amber-600 dark:text-amber-400" />
-                            <span className="text-xs font-black text-amber-800 dark:text-amber-300">{totalStudents}</span>
-                            <span className="text-[10px] text-amber-600/70 dark:text-amber-400/60 ml-0.5">Students</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/70 dark:bg-slate-800/60 border border-amber-300/60 dark:border-amber-700/40 shadow-xs">
-                            <Calendar size={13} className="text-amber-600 dark:text-amber-400" />
-                            <span className="text-xs font-black text-amber-800 dark:text-amber-300">{sessions}</span>
-                            <span className="text-[10px] text-amber-600/70 dark:text-amber-400/60 ml-0.5">Sessions</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/70 dark:bg-slate-800/60 border border-amber-300/60 dark:border-amber-700/40 shadow-xs">
-                            <BookOpen size={13} className="text-amber-600 dark:text-amber-400" />
-                            <span className="text-xs font-black text-amber-800 dark:text-amber-300">{courseNames.length}</span>
-                            <span className="text-[10px] text-amber-600/70 dark:text-amber-400/60 ml-0.5">Courses</span>
-                          </div>
-                          <button
-                            onClick={() => setIsSummerExpanded(!isSummerExpanded)}
-                            className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-black shadow-xs transition-all flex items-center gap-1.5 cursor-pointer ml-auto sm:ml-0"
-                            title="Toggle Summer Internship Trainee Roster"
-                          >
-                            <span>{isSummerExpanded ? 'Hide Students' : 'View Trainees & Rosters'}</span>
-                            <span className="text-[10px]">{isSummerExpanded ? '▲' : '▼'}</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Expandable Directory */}
-                      {isSummerExpanded && (
-                        <div className="mt-4 pt-4 border-t border-amber-300/60 dark:border-amber-700/40 space-y-3">
-                          {/* Search & Year Bar */}
-                          <div className="flex flex-wrap items-center justify-between gap-3 bg-white/60 dark:bg-slate-900/50 p-3 rounded-xl border border-amber-200 dark:border-amber-900/50">
-                            <div className="relative flex-1 min-w-[200px]">
-                              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-600/60 dark:text-amber-400/60" />
-                              <input
-                                type="text"
-                                value={summerSearch}
-                                onChange={(e) => setSummerSearch(e.target.value)}
-                                placeholder="Search student name, phone/ID, course..."
-                                className="w-full pl-9 pr-8 py-1.5 text-xs rounded-lg border border-amber-300/70 dark:border-amber-700/60 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                              />
-                              {summerSearch && (
-                                <button onClick={() => setSummerSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                                  <X size={12} />
-                                </button>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-                              <span className="text-[11px] font-bold text-amber-900 dark:text-amber-300 mr-1">Year:</span>
-                              {['all', ...years].map((yr) => {
-                                const count = yr === 'all' ? totalStudents : summerData.filter((r) => r.year === yr).length;
-                                const isActive = summerYearFilter === yr;
-                                return (
-                                  <button
-                                    key={yr}
-                                    onClick={() => setSummerYearFilter(yr)}
-                                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                      isActive
-                                        ? 'bg-amber-500 text-white shadow-xs'
-                                        : 'bg-white/80 dark:bg-slate-800 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-slate-700'
-                                    }`}
-                                  >
-                                    {yr === 'all' ? 'All' : yr} ({count})
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Student Trainee Table */}
-                          <div className="overflow-x-auto rounded-xl border border-amber-200/80 dark:border-amber-900/60 max-h-[380px] overflow-y-auto bg-white/80 dark:bg-slate-900/80 shadow-inner">
-                            <table className="w-full text-left text-xs border-collapse">
-                              <thead className="sticky top-0 bg-amber-100/95 dark:bg-amber-950/95 text-amber-950 dark:text-amber-200 font-black border-b border-amber-300/60 dark:border-amber-800/60 backdrop-blur-xs">
-                                <tr>
-                                  <th className="py-2.5 px-3 w-10 text-center">#</th>
-                                  <th className="py-2.5 px-3">Student Trainee Name</th>
-                                  <th className="py-2.5 px-3">Course / Topic</th>
-                                  <th className="py-2.5 px-3">Date</th>
-                                  <th className="py-2.5 px-3">Year</th>
-                                  <th className="py-2.5 px-3">Duration</th>
-                                  <th className="py-2.5 px-3">Attended</th>
-                                  <th className="py-2.5 px-3">Phone / Reference ID</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-amber-100 dark:divide-amber-950/60">
-                                {filteredSummerList.length === 0 ? (
-                                  <tr>
-                                    <td colSpan={8} className="py-6 text-center text-amber-800/60 dark:text-amber-400/60 font-semibold">
-                                      No summer trainees match the filter criteria.
-                                    </td>
-                                  </tr>
-                                ) : (
-                                  filteredSummerList.map((row, idx) => (
-                                    <tr key={row.id || idx} className="hover:bg-amber-50/70 dark:hover:bg-amber-950/30 transition-colors">
-                                      <td className="py-2 px-3 text-center text-slate-400 font-mono text-[11px]">{idx + 1}</td>
-                                      <td className="py-2 px-3 font-bold text-slate-900 dark:text-slate-100">{row.name}</td>
-                                      <td className="py-2 px-3 text-slate-700 dark:text-slate-300 font-semibold">
-                                        <span className="inline-flex items-center gap-1">
-                                          <BookOpen size={11} className="text-amber-600 shrink-0" />
-                                          {row.courseName}
-                                        </span>
-                                      </td>
-                                      <td className="py-2 px-3 text-slate-600 dark:text-slate-400 font-medium">{row.date}</td>
-                                      <td className="py-2 px-3">
-                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300/60">
-                                          {row.year}
-                                        </span>
-                                      </td>
-                                      <td className="py-2 px-3 text-slate-600 dark:text-slate-400">{row.duration ? `${row.duration} Days` : '—'}</td>
-                                      <td className="py-2 px-3 text-slate-600 dark:text-slate-400">{row.attendedDays ? `${row.attendedDays} Days` : '—'}</td>
-                                      <td className="py-2 px-3 font-mono text-[11px] text-slate-500 dark:text-slate-400">{row.hrCode || '—'}</td>
-                                    </tr>
-                                  ))
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
 
                 {/* On-Demand Server Query Action Bar */}
                 <div id="training-records-table-anchor" className="mb-6 p-4 rounded-xl border flex flex-wrap items-center justify-between gap-3 shadow-2xs print:hidden" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
@@ -4952,6 +4816,7 @@ Content-Type: text/html; charset="utf-8"
                   {drillDownModalType === 'engineers' && <HardHat size={24} />}
                   {drillDownModalType === 'technicians' && <Wrench size={24} />}
                   {drillDownModalType === 'operators' && <Settings size={24} />}
+                  {drillDownModalType === 'interns' && <GraduationCap size={24} />}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -4962,6 +4827,7 @@ Content-Type: text/html; charset="utf-8"
                       {drillDownModalType === 'engineers' && 'Engineers Training Directory'}
                       {drillDownModalType === 'technicians' && 'Technicians Training Directory'}
                       {drillDownModalType === 'operators' && 'Operators Training Directory'}
+                      {drillDownModalType === 'interns' && 'Student Interns Directory'}
                     </h3>
                     <span className="px-2.5 py-0.5 rounded-full bg-[#FFC000] text-[#002D62] text-xs font-black">
                       {drillDownModalType === 'courses' && drillDownCoursesList.length}
@@ -4970,12 +4836,13 @@ Content-Type: text/html; charset="utf-8"
                       {drillDownModalType === 'engineers' && drillDownTraineesList.filter(t => t.roleCategory === 'engineer').length}
                       {drillDownModalType === 'technicians' && drillDownTraineesList.filter(t => t.roleCategory === 'technician').length}
                       {drillDownModalType === 'operators' && drillDownTraineesList.filter(t => t.roleCategory === 'operator').length}
+                      {drillDownModalType === 'interns' && drillDownTraineesList.filter(t => t.roleCategory === 'intern').length}
                     </span>
                   </div>
                   <p className="text-xs text-blue-200 mt-0.5">
                     {drillDownModalType === 'courses' && 'Complete master catalog of courses conducted with session counts and attendance volume'}
                     {drillDownModalType === 'sessions' && 'Chronological matrix of all conducted batches, delivery dates, and roster headcounts'}
-                    {(drillDownModalType === 'trainees' || drillDownModalType === 'engineers' || drillDownModalType === 'technicians' || drillDownModalType === 'operators') && 'Individual trainee personnel records, departments, and course attendance history'}
+                    {(drillDownModalType === 'trainees' || drillDownModalType === 'engineers' || drillDownModalType === 'technicians' || drillDownModalType === 'operators' || drillDownModalType === 'interns') && 'Individual trainee personnel records, departments, and course attendance history'}
                   </p>
                 </div>
               </div>
@@ -5155,14 +5022,15 @@ Content-Type: text/html; charset="utf-8"
                 </div>
               )}
 
-              {/* VIEW 3: TRAINEES DIRECTORY (All, Engineers, Technicians, Operators) */}
-              {(drillDownModalType === 'trainees' || drillDownModalType === 'engineers' || drillDownModalType === 'technicians' || drillDownModalType === 'operators') && (
+              {/* VIEW 3: TRAINEES DIRECTORY (All, Engineers, Technicians, Operators, Interns) */}
+              {(drillDownModalType === 'trainees' || drillDownModalType === 'engineers' || drillDownModalType === 'technicians' || drillDownModalType === 'operators' || drillDownModalType === 'interns') && (
                 <div className="space-y-2.5">
                   {drillDownTraineesList
                     .filter(t => {
                       if (drillDownModalType === 'engineers') return t.roleCategory === 'engineer';
                       if (drillDownModalType === 'technicians') return t.roleCategory === 'technician';
                       if (drillDownModalType === 'operators') return t.roleCategory === 'operator';
+                      if (drillDownModalType === 'interns') return t.roleCategory === 'intern';
                       return true;
                     })
                     .filter(t => {

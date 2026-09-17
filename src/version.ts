@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "2.0.5",
-  releaseName: "Full Master Excel Sync Engine: Drag & Drop Dropzone, Smart Tabular Parser & Complete Dataset Replacement",
+  version: "2.0.6",
+  releaseName: "Unified Summer Training Induction: 72 Interns Integrated into Master Dataset & Executive KPI Grid",
   buildDate: "2026",
   buildTimestamp: "2026",
   
