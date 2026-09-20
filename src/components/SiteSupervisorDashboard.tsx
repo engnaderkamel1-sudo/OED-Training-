@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAppContext } from "../context";
 import { DataField } from "./DataField";
+import { formatRole } from "../utils/formatters";
 import { CheckCircle, Users, AlertCircle, BookOpen } from "lucide-react";
 
 export const SiteSupervisorDashboard: React.FC = () => {
@@ -203,7 +204,7 @@ export const SiteSupervisorDashboard: React.FC = () => {
                         <DataField>{m.name}</DataField>
                       </td>
                       <td className="p-3 text-sm">
-                        <DataField>{m.jobRole || m.role}</DataField>
+                        <DataField>{formatRole(m.jobRole || m.role)}</DataField>
                       </td>
                       <td className="p-3">
                         <span

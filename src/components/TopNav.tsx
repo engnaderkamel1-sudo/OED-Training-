@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useAppContext } from '../context';
+import { formatRole } from '../utils/formatters';
 import { 
   LogOut, 
   Moon, 
@@ -617,7 +618,7 @@ export const TopNav: React.FC = () => {
                                 color: '#FFFFFF'
                               }}
                             >
-                              {user.jobRole || user.role}
+                              {formatRole(user.jobRole || user.role)}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 mt-1">
@@ -963,7 +964,7 @@ export const TopNav: React.FC = () => {
               <div className="mt-4 text-center">
                 <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">{user.name || 'User'}</h3>
                 <p className="text-xs sm:text-sm font-bold text-[#FFC000] mt-0.5">
-                  {user.jobRole || user.role} • HR Code: {user.hrCode || 'N/A'}
+                  {formatRole(user.jobRole || user.role)} • HR Code: {user.hrCode || 'N/A'}
                 </p>
                 {user.department && (
                   <p className="text-xs text-gray-300 mt-0.5">{user.department}</p>

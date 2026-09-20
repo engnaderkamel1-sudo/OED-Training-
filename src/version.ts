@@ -16,10 +16,10 @@
  */
 
 export const APP_VERSION = {
-  version: "2.1.3",
-  releaseName: "Fixed Sticky Header Row Bleed-through & Added Executive Session Print Buttons",
+  version: "2.1.4",
+  releaseName: "Standardized Role Capitalization (Title Case) across Entire Application & Reports",
   releaseDate: "20-Sep-2026",
-  build: "2026.09.20.03",
+  build: "2026.09.20.04",
   
   // Official Developer Credit
   creditLine: "Designed & Developed by Nader Reda | OED Technical Training Manager",

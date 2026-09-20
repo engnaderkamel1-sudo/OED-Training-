@@ -6,6 +6,7 @@ import {
   Users, History, ShieldCheck, Cpu 
 } from 'lucide-react';
 import { useAppContext } from '../context';
+import { formatRole } from '../utils/formatters';
 
 export const ActivityLogsView: React.FC = () => {
   const { language, theme, users, user: currentUser } = useAppContext();
@@ -195,7 +196,7 @@ export const ActivityLogsView: React.FC = () => {
                 <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 flex-wrap">
                   <span className="font-mono">{u.hrCode}</span>
                   <span>•</span>
-                  <span>{u.role}</span>
+                  <span>{formatRole(u.role)}</span>
                   {u.location && (
                     <>
                       <span>•</span>

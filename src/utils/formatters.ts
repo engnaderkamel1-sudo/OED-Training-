@@ -289,4 +289,16 @@ export const formatCourseIteration = (iter?: string | number): string => {
   return wordMap[n] || `Round ${n}`;
 };
 
-
+/**
+ * Capitalizes the first letter of each word in a role/job title across the application
+ * (e.g. "engineer" -> "Engineer", "technician" -> "Technician", "site engineer" -> "Site Engineer", "admin" -> "Admin").
+ */
+export const formatRole = (role?: string | null): string => {
+  if (!role || typeof role !== 'string') return '';
+  const trimmed = role.trim();
+  if (!trimmed || trimmed === '-' || trimmed === '--') return trimmed;
+  return trimmed
+    .split(/[\s_-]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};

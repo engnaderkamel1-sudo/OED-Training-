@@ -1,7 +1,7 @@
 import { UpcomingSession, User, TrainingRecord } from '../types';
 import { escapeHtml } from './securityUtils';
 import html2pdf from 'html2pdf.js';
-import { formatScore, formatDateToStandard } from './formatters';
+import { formatScore, formatDateToStandard, formatRole } from './formatters';
 
 export interface ReportRecord {
   id?: string;
@@ -75,7 +75,7 @@ export const generateReportHTML = (options: ReportOptions): string => {
         rawVal = String(r.name || r.raw?.['Trainee Name'] || r.raw?.['Name'] || '');
         break;
       case 'role':
-        rawVal = String(r.role || r.raw?.['Role'] || r.raw?.['Job Title'] || '');
+        rawVal = String(formatRole(r.role || r.raw?.['Role'] || r.raw?.['Job Title'] || ''));
         break;
       case 'department':
         rawVal = String(r.department || r.raw?.['Department'] || '');
@@ -293,7 +293,7 @@ export const generateReportHTML = (options: ReportOptions): string => {
             </div>
             <div style="font-size: 12px; color: #64748b; font-weight: 600; display: flex; gap: 12px;">
               <span>🏢 ${singleTrainee.department}</span>
-              ${singleTrainee.jobRole ? `<span>👷‍♂️ ${singleTrainee.jobRole}</span>` : ''}
+              ${singleTrainee.jobRole ? `<span>👷‍♂️ ${escapeHtml(formatRole(singleTrainee.jobRole))}</span>` : ''}
             </div>
           </div>
         </div>

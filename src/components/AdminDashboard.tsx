@@ -10,7 +10,7 @@ import { db, auth } from '../firebase';
 import { Clock, CalendarX, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2, SearchX, UserCheck, ExternalLink, GraduationCap } from "lucide-react";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
-import { formatScore, formatDateToStandard, formatDateToISO } from "../utils/formatters";
+import { formatScore, formatDateToStandard, formatDateToISO, formatRole } from "../utils/formatters";
 import { 
   getOccupiedSessionNumbers, 
   getNextGlobalSessionNumber, 
@@ -1835,7 +1835,7 @@ Content-Type: text/html; charset="utf-8"
         name: singleTraineeProfile.name, 
         hrCode: singleTraineeProfile.hrCode, 
         department: singleTraineeProfile.department, 
-        jobRole: singleTraineeProfile.jobRole,
+        jobRole: formatRole(singleTraineeProfile.jobRole),
         profileImageUrl: singleTraineeProfile.imageUrl,
         totalCourses: singleTraineeProfile.totalCourses,
         totalSessions: singleTraineeProfile.totalSessions,
@@ -2401,7 +2401,7 @@ Content-Type: text/html; charset="utf-8"
     const hrCode = u?.hrCode || firstRec.hrCode || targetHr;
     const imageUrl = u?.profileImageUrl || firstRec.raw?.["Profile Image"] || firstRec.raw?.["Photo"];
     const department = u?.department || firstRec.department || "Equipment Department";
-    const jobRole = u?.jobRole || u?.role || firstRec.role || (language === 'ar' ? 'مهندس معدات' : 'Equipment Engineer');
+    const jobRole = formatRole(u?.jobRole || u?.role || firstRec.role || 'Equipment Engineer');
 
     // Total Unique Courses
     const uniqueCourses = new Set(filteredRecords.map(r => r.courseName || r.courseId)).size;
@@ -2709,7 +2709,7 @@ Content-Type: text/html; charset="utf-8"
                               style={{ backgroundColor: isDark ? '#1E293B' : '#F1F5F9', borderColor }}
                             >
                               <HardHat size={13} className="text-amber-500" />
-                              <span>{singleTraineeProfile.jobRole}</span>
+                              <span>{formatRole(singleTraineeProfile.jobRole)}</span>
                             </span>
                           </div>
                         </div>
@@ -3039,7 +3039,7 @@ Content-Type: text/html; charset="utf-8"
                                           hrCode: u?.hrCode || r.hrCode || r.userId || r.raw?.['HR Code'] || r.raw?.['ID'] || '-',
                                           name: u?.name || r.traineeName || r.name || 'Unknown Trainee',
                                           department: u?.department || r.department || '-',
-                                          role: u?.jobRole || u?.role || '-',
+                                          role: formatRole(u?.jobRole || u?.role || r.role || '-'),
                                           courseName: selectedCourseDetails.title,
                                           attendedDays: String(r.raw?.['Attended Days'] || r.daysAttended || r.attendedDays || '1'),
                                           duration: String(r.raw?.['Course Duration'] || r.totalDays || r.duration || '1'),
@@ -5114,7 +5114,7 @@ Content-Type: text/html; charset="utf-8"
                                       hrCode: att.hrCode || '-',
                                       name: att.name || 'Unknown Trainee',
                                       department: att.department || '-',
-                                      role: att.role || '-',
+                                      role: formatRole(att.role || '-'),
                                       courseName: session.courseTitle,
                                       attendedDays: String(att.attendedDays || '1'),
                                       duration: String(att.duration || '1'),

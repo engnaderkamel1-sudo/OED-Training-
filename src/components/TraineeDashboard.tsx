@@ -7,6 +7,7 @@ import { Smartphone, HardHat, QRScannerModal } from './QRScannerModal';
 import { Smartphone, HardHat, HandoutRevisionModal } from './HandoutRevisionModal';
 import { Smartphone, HardHat, isSessionActiveNow, sendNativePushNotification } from '../utils/sessionTimeUtils';
 import { Smartphone, HardHat, sanitizeUrl } from '../utils/securityUtils';
+import { formatRole } from '../utils/formatters';
 
 export const playNotificationSound = () => {
   try {
@@ -635,7 +636,7 @@ export const TraineeDashboard: React.FC = () => {
                       <span className="text-xs bg-[#FFC000] text-[#001D42] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
                         {user?.isDemoUser 
                           ? (language === 'ar' ? 'مهندس صيانة' : 'ENGINEER') 
-                          : (user?.jobRole || user?.role || 'Technical Staff')}
+                          : formatRole(user?.jobRole || user?.role || 'Technical Staff')}
                       </span>
                     </div>
                     <div className="text-xs text-blue-200 mt-1 flex items-center gap-3 flex-wrap">
@@ -1436,7 +1437,7 @@ export const TraineeDashboard: React.FC = () => {
                 <div className="mt-4 text-center">
                   <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">{user.name || 'User'}</h3>
                   <p className="text-xs sm:text-sm font-bold text-[#FFC000] mt-0.5">
-                    {user.jobRole || user.role || 'Technical Staff'} • HR Code: {user.hrCode || 'N/A'}
+                    {formatRole(user.jobRole || user.role || 'Technical Staff')} • HR Code: {user.hrCode || 'N/A'}
                   </p>
                   {user.department && (
                     <p className="text-xs text-gray-300 mt-0.5">{user.department}</p>

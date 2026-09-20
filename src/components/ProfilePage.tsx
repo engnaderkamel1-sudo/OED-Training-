@@ -7,6 +7,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { DataField } from './DataField';
 import { sanitizeUserForStorage } from '../utils/cryptoUtils';
+import { formatRole } from '../utils/formatters';
 
 export const ProfilePage: React.FC = () => {
   const { user, setUser, users, setUsers, language, t } = useAppContext();
@@ -279,7 +280,7 @@ export const ProfilePage: React.FC = () => {
               <div className="space-y-6">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white"><DataField>{user.name}</DataField></h1>
-                  <p className="text-[#002D62] dark:text-[#FFC000] font-semibold mt-0.5">{user.jobRole || (user.role === 'trainee' ? t('trainee') : user.role)}</p>
+                  <p className="text-[#002D62] dark:text-[#FFC000] font-semibold mt-0.5">{formatRole(user.jobRole || user.role)}</p>
                   {user.isGuest && (
                     <span className="inline-block mt-2 px-2.5 py-0.5 bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 text-xs font-bold rounded-full border border-orange-200">
                       {language === 'ar' ? 'حساب مؤقت' : 'Temporary Account'}
@@ -521,7 +522,7 @@ export const ProfilePage: React.FC = () => {
               <div className="mt-4 text-center">
                 <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">{user.name || 'User'}</h3>
                 <p className="text-xs sm:text-sm font-bold text-[#FFC000] mt-0.5">
-                  {user.jobRole || user.role} • HR Code: {user.hrCode || 'N/A'}
+                  {formatRole(user.jobRole || user.role)} • HR Code: {user.hrCode || 'N/A'}
                 </p>
                 {user.department && (
                   <p className="text-xs text-gray-300 mt-0.5">{user.department}</p>
