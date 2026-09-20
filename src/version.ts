@@ -16,10 +16,10 @@
  */
 
 export const APP_VERSION = {
-  version: "2.1.2",
-  releaseName: "Executive Trainees Tables Upgrade: Unified Design with Sticky Headers, Sequential Index (#), Formatted % Scores & Attendance Ratio",
-  buildDate: "2026",
-  buildTimestamp: "2026",
+  version: "2.1.3",
+  releaseName: "Fixed Sticky Header Row Bleed-through & Added Executive Session Print Buttons",
+  releaseDate: "20-Sep-2026",
+  build: "2026.09.20.03",
   
   // Official Developer Credit
   creditLine: "Designed & Developed by Nader Reda | OED Technical Training Manager",
