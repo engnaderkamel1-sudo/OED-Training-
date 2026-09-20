@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "2.1.1",
-  releaseName: "Session Filter & Date Normalizer: Seamless Session-to-Records Filter Navigation with ISO Date Standardization",
+  version: "2.1.2",
+  releaseName: "Executive Trainees Tables Upgrade: Unified Design with Sticky Headers, Sequential Index (#), Formatted % Scores & Attendance Ratio",
   buildDate: "2026",
   buildTimestamp: "2026",
   
