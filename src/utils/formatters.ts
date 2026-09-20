@@ -139,6 +139,111 @@ export const formatDateToStandard = (dateValue: any): string => {
 };
 
 /**
+ * Converts any date representation (Excel serial number, DD-MMM-YYYY, YYYY-MM-DD, Date object)
+ * into a standard ISO date string: YYYY-MM-DD (e.g., "2026-09-09").
+ * Ideal for HTML5 <input type="date"> value and lexicographical date range filtering.
+ */
+export const formatDateToISO = (dateValue: any): string => {
+  if (dateValue === null || dateValue === undefined || dateValue === '' || dateValue === 'N/A' || dateValue === '--') {
+    return '';
+  }
+
+  try {
+    if (dateValue instanceof Date) {
+      if (isNaN(dateValue.getTime())) return '';
+      const year = dateValue.getFullYear();
+      const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+      const day = String(dateValue.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    if (typeof dateValue === 'number') {
+      if (isNaN(dateValue)) return '';
+      let d: Date;
+      if (dateValue > 20000 && dateValue < 65000) {
+        d = new Date(Math.round((dateValue - 25569) * 86400 * 1000));
+        const year = d.getUTCFullYear();
+        const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(d.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      } else {
+        d = new Date(dateValue);
+      }
+      if (isNaN(d.getTime())) return '';
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    if (typeof dateValue === 'string') {
+      const str = dateValue.trim();
+      if (!str) return '';
+
+      // Pure Excel serial numeric string (e.g. "46274" or "46274.0")
+      if (/^\d{5,6}(\.\d+)?$/.test(str)) {
+        const num = parseFloat(str);
+        if (!isNaN(num) && num > 20000 && num < 65000) {
+          const d = new Date(Math.round((num - 25569) * 86400 * 1000));
+          if (!isNaN(d.getTime())) {
+            const year = d.getUTCFullYear();
+            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          }
+        }
+      }
+
+      // Check if already in YYYY-MM-DD
+      const yyyyMmDdMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+      if (yyyyMmDdMatch) {
+        const year = yyyyMmDdMatch[1];
+        const month = yyyyMmDdMatch[2].padStart(2, '0');
+        const day = yyyyMmDdMatch[3].padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      // Check if in DD-MMM-YYYY format (e.g. "09-Sep-2026", "16-Jan-2022")
+      const ddMmmYyyyMatch = str.match(/^(\d{1,2})[-/ ]([A-Za-z]{3})[-/ ](\d{4})$/);
+      if (ddMmmYyyyMatch) {
+        const day = ddMmmYyyyMatch[1].padStart(2, '0');
+        const monthRaw = ddMmmYyyyMatch[2].toLowerCase();
+        const monthIndex = MONTHS.findIndex(m => m.toLowerCase() === monthRaw);
+        const year = ddMmmYyyyMatch[3];
+        if (monthIndex !== -1) {
+          const month = String(monthIndex + 1).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        }
+      }
+
+      // DD-MM-YYYY or DD/MM/YYYY
+      const ddMmYyyyMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+      if (ddMmYyyyMatch) {
+        const p1 = ddMmYyyyMatch[1].padStart(2, '0');
+        const p2 = ddMmYyyyMatch[2].padStart(2, '0');
+        const year = ddMmYyyyMatch[3];
+        if (parseInt(p1, 10) <= 31 && parseInt(p2, 10) <= 12) {
+          return `${year}-${p2}-${p1}`;
+        }
+      }
+
+      // Standard Date parsing fallback
+      const parsed = new Date(str);
+      if (!isNaN(parsed.getTime())) {
+        const year = parsed.getFullYear();
+        const month = String(parsed.getMonth() + 1).padStart(2, '0');
+        const day = String(parsed.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+    }
+  } catch (e) {
+    return '';
+  }
+
+  return '';
+};
+
+/**
  * Formats the Global Master Record Serial Number (e.g. "134" -> "134").
  * Returns null if it only contains legacy word tokens like "sessionOne" without real digits.
  */
