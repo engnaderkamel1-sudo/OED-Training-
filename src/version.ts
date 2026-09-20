@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "2.0.7",
-  releaseName: "Excel Parser Column Disambiguation Fix: Resolved Course Duration Hijack & Live Master Sync",
+  version: "2.0.8",
+  releaseName: "Self-Healing Data Recovery: Restored 1,143 Master Records in Firestore & Automatic Numeric Course Cache Purge",
   buildDate: "2026",
   buildTimestamp: "2026",
   

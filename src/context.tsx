@@ -758,7 +758,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length >= 500) {
-            return parsed;
+            // Data integrity check: courses should be genuine names, not single-digit numbers
+            const sampleCourses = parsed.slice(0, 30).map((r: any) => String(r.courseName || '').trim());
+            const isCorrupted = sampleCourses.every((c: string) => /^\d+$/.test(c) || c.length <= 2);
+            if (!isCorrupted) {
+              return parsed;
+            } else {
+              localStorage.removeItem('oed_cached_cleaned_data_v23');
+              localStorage.removeItem('oed_cached_cleaned_data');
+              localStorage.removeItem('oed_cached_global_kpis');
+            }
           }
         }
       } catch (e) {}
@@ -1197,11 +1206,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } catch (e) {
           console.warn("Broad fetch error:", e);
         }
-        if (broadData.length === 0) {
+        const isBroadCorrupted = broadData.length > 0 && broadData.slice(0, 30).every((r: any) => /^\d+$/.test(String(r.courseName || '').trim()) || String(r.courseName || '').trim().length <= 2);
+        if (broadData.length === 0 || isBroadCorrupted) {
           broadData = MASTER_VERIFIED_RECORDS;
         }
         setCleanedDataState(broadData);
         try {
+          localStorage.setItem('oed_cached_cleaned_data_v23', JSON.stringify(broadData));
           localStorage.setItem('oed_cached_cleaned_data', JSON.stringify(broadData));
         } catch (e) {}
         setRecordsLoaded(true);

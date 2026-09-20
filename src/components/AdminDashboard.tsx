@@ -4,7 +4,7 @@ import { FirebaseUsageModal } from './FirebaseUsageModal';
 import { EditRecordModal } from './EditRecordModal';
 import { EditUserModal } from './EditUserModal';
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { useAppContext } from "../context";
+import { useAppContext, MASTER_VERIFIED_RECORDS } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment, collection, getDocs, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { Clock, CalendarX, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2, SearchX, UserCheck, ExternalLink, GraduationCap } from "lucide-react";
@@ -837,6 +837,29 @@ Please log in to register for this session through the OED-TTMS Application.
 
   const [showBackupPromptModal, setShowBackupPromptModal] = useState(false);
   const [isExportingBackup, setIsExportingBackup] = useState(false);
+
+  // Self-Healing Cache Recovery: Purge any corrupt numeric course names immediately
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('oed_cached_cleaned_data_v23') || localStorage.getItem('oed_cached_cleaned_data');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const sample = parsed.slice(0, 30).map((r: any) => String(r.courseName || '').trim());
+          const isCorrupted = sample.every((c: string) => /^\d+$/.test(c) || c.length <= 2);
+          if (isCorrupted) {
+            console.warn("Self-healing: Cleared corrupt numeric courses from localStorage and restored master records.");
+            localStorage.removeItem('oed_cached_cleaned_data_v23');
+            localStorage.removeItem('oed_cached_cleaned_data');
+            localStorage.removeItem('oed_cached_global_kpis');
+            if (setCleanedData) {
+              setCleanedData(MASTER_VERIFIED_RECORDS);
+            }
+          }
+        }
+      }
+    } catch (e) {}
+  }, []);
 
   useEffect(() => {
     const checkAndRunAutoBackup = () => {
