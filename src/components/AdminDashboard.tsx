@@ -3007,32 +3007,79 @@ Content-Type: text/html; charset="utf-8"
                             className="border rounded-2xl overflow-hidden shadow-2xs transition-all" 
                             style={{ backgroundColor: cardColor, borderColor: borderColor }}
                           >
-                            <button 
-                              onClick={() => toggleDateExpansion(date)} 
-                              className="w-full px-4 sm:px-5 py-3.5 flex justify-between items-center transition-colors cursor-pointer hover:bg-blue-50/50 dark:hover:bg-slate-800/60" 
+                            <div 
+                              className="w-full px-4 sm:px-5 py-3.5 flex flex-wrap justify-between items-center gap-2 transition-colors hover:bg-blue-50/50 dark:hover:bg-slate-800/60" 
                               style={{ backgroundColor: isDark ? '#15243F' : '#FFFFFF' }}
                             >
-                              <span className="font-extrabold text-sm sm:text-base" style={{ color: textColor }}>
-                                {formatDateToStandard(date)}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                                  {attendeesOnDate.length} {language === "ar" ? "حاضرين" : "attendees"}
+                              <div 
+                                onClick={() => toggleDateExpansion(date)} 
+                                className="flex-1 flex items-center gap-3 cursor-pointer select-none min-w-[180px]"
+                              >
+                                <span className="font-extrabold text-sm sm:text-base tracking-wide" style={{ color: textColor }}>
+                                  {formatDateToStandard(date)}
                                 </span>
                               </div>
-                            </button>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-xs font-bold px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                  {attendeesOnDate.length} {attendeesOnDate.length === 1 ? 'attendee' : 'attendees'}
+                                </span>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    safePrintReport({
+                                      title: `${selectedCourseDetails.title} - Session Attendance Roster`,
+                                      subtitle: `Date: ${formatDateToStandard(date)} | Total Attendees: ${attendeesOnDate.length}`,
+                                      language: 'en',
+                                      records: attendeesOnDate.map((r) => {
+                                        const u = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}`);
+                                        return {
+                                          id: r.id,
+                                          hrCode: u?.hrCode || r.hrCode || r.userId || r.raw?.['HR Code'] || r.raw?.['ID'] || '-',
+                                          name: u?.name || r.traineeName || r.name || 'Unknown Trainee',
+                                          department: u?.department || r.department || '-',
+                                          role: u?.jobRole || u?.role || '-',
+                                          courseName: selectedCourseDetails.title,
+                                          attendedDays: String(r.raw?.['Attended Days'] || r.daysAttended || r.attendedDays || '1'),
+                                          duration: String(r.raw?.['Course Duration'] || r.totalDays || r.duration || '1'),
+                                          score: formatScore(r.raw?.['Score'] || r.score),
+                                          date: formatDateToStandard(date),
+                                          raw: r.raw
+                                        };
+                                      }),
+                                      fileName: `Session_${selectedCourseDetails.title.replace(/[^a-zA-Z0-9]/g, '_')}_${date}.pdf`
+                                    });
+                                  }}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#002D62] hover:bg-blue-900 text-white text-xs font-bold transition-all shadow-xs hover:shadow cursor-pointer active:scale-95"
+                                  title="Print Session Roster"
+                                >
+                                  <Printer size={13} className="text-[#FFC000]" />
+                                  <span>Print</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => toggleDateExpansion(date)}
+                                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-xs font-bold"
+                                  title={isExpanded ? "Collapse" : "Expand"}
+                                >
+                                  {isExpanded ? "▲" : "▼"}
+                                </button>
+                              </div>
+                            </div>
                             {isExpanded && (
-                              <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/60 p-3 sm:p-4 max-h-80 overflow-y-auto">
+                              <div className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F1B2E] max-h-80 overflow-y-auto overflow-x-auto relative">
                                 <table className="w-full text-xs border-collapse">
-                                  <thead className="sticky top-0 z-10 shadow-xs">
-                                    <tr className="bg-[#002D62] text-white text-[11px] font-extrabold uppercase tracking-wider shadow-xs">
-                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 rounded-l-lg text-center w-10">#</th>
-                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left w-24">HR CODE</th>
-                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left">TRAINEE NAME</th>
-                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left">DEPARTMENT</th>
-                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-center w-32">ATTENDANCE</th>
-                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-center w-24">SCORE</th>
-                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 rounded-r-lg text-right w-20">ACTIONS</th>
+                                  <thead className="sticky top-0 z-20 shadow-md">
+                                    <tr className="bg-[#002D62] text-white text-[11px] font-extrabold uppercase tracking-wider">
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-center w-10 border-b border-blue-900">#</th>
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left w-24 border-b border-blue-900">HR CODE</th>
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left border-b border-blue-900">TRAINEE NAME</th>
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left border-b border-blue-900">DEPARTMENT</th>
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-center w-32 border-b border-blue-900">ATTENDANCE</th>
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-center w-24 border-b border-blue-900">SCORE</th>
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-right w-20 border-b border-blue-900">ACTIONS</th>
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 bg-white dark:bg-[#0F1B2E]">
@@ -5057,8 +5104,35 @@ Content-Type: text/html; charset="utf-8"
 
                             <div className="flex items-center gap-2 shrink-0">
                               <button
+                                type="button"
+                                onClick={() => {
+                                  safePrintReport({
+                                    title: `${session.courseTitle} - Session Attendance Roster`,
+                                    subtitle: `Date: ${session.date} | Total Attendees: ${session.attendees.length}`,
+                                    language: 'en',
+                                    records: session.attendees.map(att => ({
+                                      hrCode: att.hrCode || '-',
+                                      name: att.name || 'Unknown Trainee',
+                                      department: att.department || '-',
+                                      role: att.role || '-',
+                                      courseName: session.courseTitle,
+                                      attendedDays: String(att.attendedDays || '1'),
+                                      duration: String(att.duration || '1'),
+                                      score: formatScore(att.score),
+                                      date: session.date
+                                    })),
+                                    fileName: `Session_${session.courseTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${session.date}.pdf`
+                                  });
+                                }}
+                                className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
+                                title="Print Session Roster"
+                              >
+                                <Printer size={13} className="text-[#002D62] dark:text-[#FFC000]" />
+                                <span>Print</span>
+                              </button>
+                              <button
                                 onClick={() => setDrillDownExpandedSession(isExpanded ? null : session.sessionKey)}
-                                className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors"
+                                className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
                               >
                                 {isExpanded ? 'Hide Trainees' : `View ${session.attendees.length} Trainees`}
                               </button>
@@ -5077,7 +5151,7 @@ Content-Type: text/html; charset="utf-8"
                                   const el = document.getElementById('training-records-table-anchor');
                                   if (el) el.scrollIntoView({ behavior: 'smooth' });
                                 }}
-                                className="px-3.5 py-1.5 rounded-xl bg-[#002D62] hover:bg-blue-900 text-white text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                                className="px-3.5 py-1.5 rounded-xl bg-[#002D62] hover:bg-blue-900 text-white text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer active:scale-95"
                               >
                                 <span>Filter</span>
                                 <ExternalLink size={12} />
@@ -5087,16 +5161,16 @@ Content-Type: text/html; charset="utf-8"
 
                           {/* Expanded Trainee Sub-Table */}
                           {isExpanded && (
-                            <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/60 p-3 sm:p-4 max-h-72 overflow-y-auto">
+                            <div className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F1B2E] max-h-72 overflow-y-auto overflow-x-auto relative">
                               <table className="w-full text-xs border-collapse">
-                                <thead className="sticky top-0 z-10 shadow-xs">
-                                  <tr className="bg-[#002D62] text-white text-[11px] font-extrabold uppercase tracking-wider rounded-lg shadow-xs">
-                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 rounded-l-lg text-center w-10">#</th>
-                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left w-24">HR Code</th>
-                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left">Trainee Name</th>
-                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left">Department</th>
-                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-center w-32">Attendance</th>
-                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 rounded-r-lg text-right w-24">Score</th>
+                                <thead className="sticky top-0 z-20 shadow-md">
+                                  <tr className="bg-[#002D62] text-white text-[11px] font-extrabold uppercase tracking-wider">
+                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-center w-10 border-b border-blue-900">#</th>
+                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left w-24 border-b border-blue-900">HR Code</th>
+                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left border-b border-blue-900">Trainee Name</th>
+                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left border-b border-blue-900">Department</th>
+                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-center w-32 border-b border-blue-900">Attendance</th>
+                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-right w-24 border-b border-blue-900">Score</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
