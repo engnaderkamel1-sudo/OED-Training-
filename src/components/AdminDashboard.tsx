@@ -119,6 +119,9 @@ export const AdminDashboard: React.FC = () => {
     isExecutiveDemoEnabled, toggleExecutiveDemo
   } = useAppContext();
 
+  const isAdmin = user?.role === 'admin';
+  const isExecutive = user?.role === 'executive';
+  
   // Unified Dark/Light Mode Palette (Orascom Brand Theme)
   const isDark = theme === 'dark';
   const bgColor = isDark ? '#0F1E36' : 'transparent'; 
@@ -2650,13 +2653,15 @@ Content-Type: text/html; charset="utf-8"
                   </h2>
                   <div className="flex gap-2">
                     {/* -- NEW MANUAL ADD BUTTON -- */}
-                    <button 
-                      onClick={() => setShowManualAddModal(true)} 
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFC000] text-[#002D62] rounded-xl text-sm font-bold transition-all shadow-xs cursor-pointer hover:bg-yellow-500"
-                    >
-                      <PlusCircle size={16} />
-                      <span>{language === "ar" ? "إضافة حضور يدوي" : "Add Record"}</span>
-                    </button>
+                    {isAdmin && (
+                      <button 
+                        onClick={() => setShowManualAddModal(true)} 
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFC000] text-[#002D62] rounded-xl text-sm font-bold transition-all shadow-xs cursor-pointer hover:bg-yellow-500"
+                      >
+                        <PlusCircle size={16} />
+                        <span>{language === "ar" ? "إضافة حضور يدوي" : "Add Record"}</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -3452,14 +3457,16 @@ Content-Type: text/html; charset="utf-8"
                             <label className="block text-sm font-medium" style={{ color: textMuted }}>
                               {language === "ar" ? "اسم الدورة" : "Course Name"}
                             </label>
-                            <button
-                              type="button"
-                              onClick={() => setShowNewCourseModal(true)}
-                              className="text-xs font-bold text-[#002D62] dark:text-[#70B2FF] hover:underline flex items-center gap-1 cursor-pointer bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700"
-                            >
-                              <PlusCircle size={13} />
-                              <span>{language === "ar" ? "+ إضافة دورة جديدة" : "+ Add New Course"}</span>
-                            </button>
+                            {isAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => setShowNewCourseModal(true)}
+                                className="text-xs font-bold text-[#002D62] dark:text-[#70B2FF] hover:underline flex items-center gap-1 cursor-pointer bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-700"
+                              >
+                                <PlusCircle size={13} />
+                                <span>{language === "ar" ? "+ إضافة دورة جديدة" : "+ Add New Course"}</span>
+                              </button>
+                            )}
                           </div>
                           <select 
                             required 
@@ -4010,104 +4017,108 @@ Content-Type: text/html; charset="utf-8"
                             </button>
                           </div>
 
-                          {/* Drag & Drop Master Excel Sync Zone */}
-                          <div 
-                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(true); }}
-                            onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(true); }}
-                            onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(false); }}
-                            onDrop={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setIsDragOver(false);
-                              const files = e.dataTransfer.files;
-                              if (files && files.length > 0) {
-                                processExcelFile(files[0]);
-                              }
-                            }}
-                            className={`p-5 rounded-2xl border-2 border-dashed transition-all duration-300 relative ${
-                              isDragOver 
-                                ? 'border-[#002D62] dark:border-[#FFC000] bg-blue-50/80 dark:bg-blue-950/50 scale-[1.01] shadow-lg' 
-                                : 'border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/40 hover:border-blue-400 dark:hover:border-slate-600'
-                            }`}
-                          >
-                            <input 
-                              type="file" 
-                              ref={excelFileInputRef}
-                              accept=".xlsx, .xls" 
-                              className="hidden" 
-                              onChange={handleFileUpload} 
-                            />
+                          {isAdmin && (
+                            <>
+                              {/* Drag & Drop Master Excel Sync Zone */}
+                              <div 
+                                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(true); }}
+                                onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(true); }}
+                                onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(false); }}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setIsDragOver(false);
+                                  const files = e.dataTransfer.files;
+                                  if (files && files.length > 0) {
+                                    processExcelFile(files[0]);
+                                  }
+                                }}
+                                className={`p-5 rounded-2xl border-2 border-dashed transition-all duration-300 relative ${
+                                  isDragOver 
+                                    ? 'border-[#002D62] dark:border-[#FFC000] bg-blue-50/80 dark:bg-blue-950/50 scale-[1.01] shadow-lg' 
+                                    : 'border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/40 hover:border-blue-400 dark:hover:border-slate-600'
+                                }`}
+                              >
+                                <input 
+                                  type="file" 
+                                  ref={excelFileInputRef}
+                                  accept=".xlsx, .xls" 
+                                  className="hidden" 
+                                  onChange={handleFileUpload} 
+                                />
 
-                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                              <div className="flex items-center gap-3.5 min-w-0">
-                                <div className={`p-3 rounded-2xl transition-transform ${isDragOver ? 'scale-110' : ''} bg-blue-100 dark:bg-blue-950/80 text-[#002D62] dark:text-[#FFC000] shrink-0 border border-blue-200 dark:border-blue-800/60 shadow-xs`}>
-                                  <FileSpreadsheet size={24} />
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                  <div className="flex items-center gap-3.5 min-w-0">
+                                    <div className={`p-3 rounded-2xl transition-transform ${isDragOver ? 'scale-110' : ''} bg-blue-100 dark:bg-blue-950/80 text-[#002D62] dark:text-[#FFC000] shrink-0 border border-blue-200 dark:border-blue-800/60 shadow-xs`}>
+                                      <FileSpreadsheet size={24} />
+                                    </div>
+                                    <div className="min-w-0 text-center sm:text-left">
+                                      <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
+                                        <h4 className="text-sm sm:text-base font-black" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>
+                                          {language === 'ar' ? 'استيراد ومزامنة شيت الإكسيل الكامل' : 'Master Excel Sheet Full Sync & Upload'}
+                                        </h4>
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300">
+                                          {language === 'ar' ? 'مزامنة واستبدال كامل' : 'Fresh Master Replace'}
+                                        </span>
+                                      </div>
+                                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+                                        {language === 'ar' 
+                                          ? 'اسحب وأفلت شيت الإكسيل هنا، أو انقر للاختيار (.xlsx, .xls) — سيتم تحديث كافة السجلات والـ KPIs فوراً'
+                                          : 'Drag & drop your Excel file here, or browse (.xlsx, .xls) — automatically replaces and refreshes all active records & KPIs'
+                                        }
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                                    <button
+                                      type="button"
+                                      disabled={isSyncing}
+                                      onClick={() => excelFileInputRef.current?.click()}
+                                      className="w-full sm:w-auto px-5 py-2.5 bg-[#002D62] hover:bg-blue-900 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                      {isSyncing ? (
+                                        <>
+                                          <Loader2 size={15} className="animate-spin text-[#FFC000]" />
+                                          <span>{language === 'ar' ? 'جاري المعالجة والمزامنة...' : 'Processing Excel...'}</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <UploadCloud size={15} className="text-[#FFC000]" />
+                                          <span>{language === 'ar' ? 'اختر ملف إكسيل' : 'Browse Excel File'}</span>
+                                        </>
+                                      )}
+                                    </button>
+                                  </div>
                                 </div>
-                                <div className="min-w-0 text-center sm:text-left">
-                                  <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
-                                    <h4 className="text-sm sm:text-base font-black" style={{ color: isDark ? '#93C5FD' : '#002D62' }}>
-                                      {language === 'ar' ? 'استيراد ومزامنة شيت الإكسيل الكامل' : 'Master Excel Sheet Full Sync & Upload'}
-                                    </h4>
-                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300">
-                                      {language === 'ar' ? 'مزامنة واستبدال كامل' : 'Fresh Master Replace'}
+
+                                {/* Live Status Feedback Banner */}
+                                {syncSummary && (
+                                  <div className="mt-4 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 flex flex-wrap items-center justify-between gap-2 animate-fade-in">
+                                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-200">
+                                      <CheckCircle size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                      <span>
+                                        {language === 'ar' 
+                                          ? `تم تحديث المنظومة بنجاح: ${syncSummary.total} سجل تدريبي عبر ${syncSummary.courses} كورس و${syncSummary.sessions} جلسة من (${syncSummary.fileName})`
+                                          : `Sync Complete: Loaded ${syncSummary.total} records across ${syncSummary.courses} courses and ${syncSummary.sessions} sessions from (${syncSummary.fileName})`
+                                        }
+                                      </span>
+                                    </div>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-200/60 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200">
+                                      Live & Saved
                                     </span>
                                   </div>
-                                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
-                                    {language === 'ar' 
-                                      ? 'اسحب وأفلت شيت الإكسيل هنا، أو انقر للاختيار (.xlsx, .xls) — سيتم تحديث كافة السجلات والـ KPIs فوراً'
-                                      : 'Drag & drop your Excel file here, or browse (.xlsx, .xls) — automatically replaces and refreshes all active records & KPIs'
-                                    }
-                                  </p>
-                                </div>
-                              </div>
+                                )}
 
-                              <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-                                <button
-                                  type="button"
-                                  disabled={isSyncing}
-                                  onClick={() => excelFileInputRef.current?.click()}
-                                  className="w-full sm:w-auto px-5 py-2.5 bg-[#002D62] hover:bg-blue-900 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
-                                >
-                                  {isSyncing ? (
-                                    <>
-                                      <Loader2 size={15} className="animate-spin text-[#FFC000]" />
-                                      <span>{language === 'ar' ? 'جاري المعالجة والمزامنة...' : 'Processing Excel...'}</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <UploadCloud size={15} className="text-[#FFC000]" />
-                                      <span>{language === 'ar' ? 'اختر ملف إكسيل' : 'Browse Excel File'}</span>
-                                    </>
-                                  )}
-                                </button>
+                                {syncError && (
+                                  <div className="mt-4 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-800 flex items-center gap-2 text-xs font-bold text-red-800 dark:text-red-200 animate-fade-in">
+                                    <AlertTriangle size={16} className="text-red-600 dark:text-red-400 shrink-0" />
+                                    <span>{syncError}</span>
+                                  </div>
+                                )}
                               </div>
-                            </div>
-
-                            {/* Live Status Feedback Banner */}
-                            {syncSummary && (
-                              <div className="mt-4 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 flex flex-wrap items-center justify-between gap-2 animate-fade-in">
-                                <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-200">
-                                  <CheckCircle size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                  <span>
-                                    {language === 'ar' 
-                                      ? `تم تحديث المنظومة بنجاح: ${syncSummary.total} سجل تدريبي عبر ${syncSummary.courses} كورس و${syncSummary.sessions} جلسة من (${syncSummary.fileName})`
-                                      : `Sync Complete: Loaded ${syncSummary.total} records across ${syncSummary.courses} courses and ${syncSummary.sessions} sessions from (${syncSummary.fileName})`
-                                    }
-                                  </span>
-                                </div>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-200/60 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200">
-                                  Live & Saved
-                                </span>
-                              </div>
-                            )}
-
-                            {syncError && (
-                              <div className="mt-4 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-800 flex items-center gap-2 text-xs font-bold text-red-800 dark:text-red-200 animate-fade-in">
-                                <AlertTriangle size={16} className="text-red-600 dark:text-red-400 shrink-0" />
-                                <span>{syncError}</span>
-                              </div>
-                            )}
-                          </div>
+                            </>
+                          )}
 
                           <div 
                             className="p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"

@@ -88,6 +88,9 @@ export const SessionCard: React.FC<SessionCardProps> = ({
     t 
   } = useAppContext();
 
+  const isExecutive = user?.role === 'executive';
+  const isAdmin = user?.role === 'admin';
+
   const requestConfirmation = (config: ActionConfirmModalState) => {
     setActionConfirm(config);
   };

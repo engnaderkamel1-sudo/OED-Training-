@@ -1,5 +1,5 @@
 ```typescript
-export type Role = "trainee" | "manager" | "admin" | "supervisor" | null;
+export type Role = "trainee" | "manager" | "admin" | "supervisor" | "executive" | null;
 export type Language = "ar" | "en";
 
 export interface User {

@@ -6,7 +6,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if true;
       allow create: if request.resource.data.role == 'trainee' && request.resource.data.status == 'pending';
-      allow update, delete: if true;
+      allow update, delete: if request.auth == null || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role != 'executive';
     }
 
     // 2. Secret Vault: Write allowed for registration/login, read blocked
@@ -15,15 +15,15 @@ service cloud.firestore {
       allow read, delete: if false;
     }
 
-    // 3. Application Collections: Fully accessible for UI listeners without auth errors
-    match /courses/{id} { allow read, write: if true; }
-    match /sessions/{id} { allow read, write: if true; }
-    match /announcements/{id} { allow read, write: if true; }
-    match /system_announcements/{id} { allow read, write: if true; }
-    match /cleanedData/{id} { allow read, write: if true; }
-    match /records/{id} { allow read, write: if true; }
-    match /suggestions/{id} { allow read, write: if true; }
-    match /handoutRevisions/{id} { allow read, write: if true; }
+    // 3. Application Collections: Fully accessible for UI listeners, but block executive writes
+    match /courses/{id} { allow read: if true; allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role != 'executive'; }
+    match /sessions/{id} { allow read: if true; allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role != 'executive'; }
+    match /announcements/{id} { allow read: if true; allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role != 'executive'; }
+    match /system_announcements/{id} { allow read: if true; allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role != 'executive'; }
+    match /cleanedData/{id} { allow read: if true; allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role != 'executive'; }
+    match /records/{id} { allow read: if true; allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role != 'executive'; }
+    match /suggestions/{id} { allow read: if true; allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role != 'executive'; }
+    match /handoutRevisions/{id} { allow read: if true; allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role != 'executive'; }
     match /error_reports/{id} { allow read, write: if true; }
     match /activity_logs/{id} { allow read, write: if true; }
     match /login_logs/{id} { allow read, write: if true; }

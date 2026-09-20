@@ -163,6 +163,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose }) =
               >
                 <option value="trainee">{language === 'ar' ? 'متدرب (Trainee)' : 'Trainee'}</option>
                 <option value="admin">{language === 'ar' ? 'مسؤول (Admin)' : 'Admin'}</option>
+                <option value="executive">{language === 'ar' ? 'مدير مشاهد (Executive)' : 'Executive'}</option>
               </select>
             </div>
           </div>

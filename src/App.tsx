@@ -333,7 +333,7 @@ const AppContent: React.FC = () => {
                 <HandoutRevisionsPage />
               ) : currentView === 'annualPlan' ? (
                 <AnnualTrainingPlanPage />
-              ) : user.role === 'admin' ? (
+              ) : (user.role === 'admin' || user.role === 'executive') ? (
                 currentView === 'coursesCatalog' ? (
                   <CoursesPage />
                 ) : currentView === 'activityLogs' ? (
