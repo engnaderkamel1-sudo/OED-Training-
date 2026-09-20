@@ -3022,46 +3022,77 @@ Content-Type: text/html; charset="utf-8"
                               </div>
                             </button>
                             {isExpanded && (
-                              <div className="p-4 overflow-x-auto border-t" style={{ backgroundColor: cardColor, borderColor: borderColor }}>
-                                <table className="w-full text-left border-collapse text-sm">
-                                  <thead>
-                                    <tr className="border-b" style={{ borderColor: borderColor, color: textMuted }}>
-                                      <th className="pb-2 font-bold">{language === "ar" ? "الكود" : "HR Code"}</th>
-                                      <th className="pb-2 font-bold">{language === "ar" ? "الاسم" : "Name"}</th>
-                                      <th className="pb-2 font-bold">{language === "ar" ? "القسم" : "Department"}</th>
-                                      <th className="pb-2 font-bold">{language === "ar" ? "الدرجة" : "Score"}</th>
-                                      <th className="pb-2 font-bold">{language === "ar" ? "إجراءات" : "Actions"}</th>
+                              <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/60 p-3 sm:p-4 max-h-80 overflow-y-auto">
+                                <table className="w-full text-xs border-collapse">
+                                  <thead className="sticky top-0 z-10 shadow-xs">
+                                    <tr className="bg-[#002D62] text-white text-[11px] font-extrabold uppercase tracking-wider shadow-xs">
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 rounded-l-lg text-center w-10">#</th>
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left w-24">HR CODE</th>
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left">TRAINEE NAME</th>
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left">DEPARTMENT</th>
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-center w-32">ATTENDANCE</th>
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-center w-24">SCORE</th>
+                                      <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 rounded-r-lg text-right w-20">ACTIONS</th>
                                     </tr>
                                   </thead>
-                                  <tbody>
-                                    {attendeesOnDate.map((r) => {
+                                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 bg-white dark:bg-[#0F1B2E]">
+                                    {attendeesOnDate.map((r, attIdx) => {
                                       const u = users.find((u) => u.id === r.userId || u.hrCode === r.userId || u.hrCode === `HR${r.userId}`);
-                                      const recHrCode = u?.hrCode || r.hrCode || r.userId || r.raw?.['HR Code'] || r.raw?.['ID'] || '';
-                                    
+                                      const recHrCode = u?.hrCode || r.hrCode || r.userId || r.raw?.['HR Code'] || r.raw?.['ID'] || '-';
+                                      const recName = u?.name || r.traineeName || r.name || 'Unknown Trainee';
+                                      const recDept = u?.department || r.department || '-';
+                                      const scoreFormatted = formatScore(r.raw?.['Score'] || r.score);
+                                      const attendedNum = String(r.raw?.['Attended Days'] || r.daysAttended || r.attendedDays || '1').replace(/[^0-9.]/g, '') || '1';
+                                      const durationNum = String(r.raw?.['Course Duration'] || r.totalDays || r.duration || '1').replace(/[^0-9.]/g, '') || '1';
+                                      const isSingleDay = durationNum === '1';
 
-  return (
-                                        <tr key={r.id} className="border-b last:border-0 transition-colors hover:opacity-80" style={{ borderColor: borderColor, color: textColor }}>
-                                          <td className="py-2.5 font-bold font-mono text-xs">{recHrCode}</td>
-                                          <td className="py-2.5 font-medium"><DataField>{u?.name || r.traineeName || r.name}</DataField></td>
-                                          <td className="py-2.5 font-medium"><DataField>{u?.department || r.department}</DataField></td>
-                                          <td className="py-2.5 font-black text-[#FFC000]">{r.score}</td>
-                                          <td className="py-2.5 flex items-center gap-1.5">
-                                            <button 
-                                              type="button"
-                                              onClick={() => setEditingRecord(r)} 
-                                              className="p-1 rounded-md text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/40 transition-colors"
-                                              title={language === 'ar' ? 'تعديل' : 'Edit'}
-                                            >
-                                              <Edit2 size={13} />
-                                            </button>
-                                            <button 
-                                              type="button"
-                                              onClick={() => handleDeleteRecord(r.id)} 
-                                              className="p-1 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
-                                              title={language === 'ar' ? 'حذف' : 'Delete'}
-                                            >
-                                              <Trash2 size={13} />
-                                            </button>
+                                      return (
+                                        <tr key={`${r.id || recHrCode}-${attIdx}`} className="hover:bg-blue-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                                          <td className="py-2.5 px-3 text-center font-bold text-slate-400 font-mono text-[11px]">
+                                            {attIdx + 1}
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono font-bold text-blue-900 dark:text-blue-300">
+                                            {recHrCode}
+                                          </td>
+                                          <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-slate-100">
+                                            {recName}
+                                          </td>
+                                          <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400 font-medium">
+                                            {recDept}
+                                          </td>
+                                          <td className="py-2.5 px-3 text-center">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-900 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-2xs">
+                                              {attendedNum} / {durationNum} {isSingleDay ? 'Day' : 'Days'}
+                                            </span>
+                                          </td>
+                                          <td className="py-2.5 px-3 text-center">
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-2xs ${
+                                              scoreFormatted === 'Pass' || parseInt(scoreFormatted, 10) >= 80 
+                                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800' 
+                                                : 'bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                                            }`}>
+                                              {scoreFormatted}
+                                            </span>
+                                          </td>
+                                          <td className="py-2.5 px-3 text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                              <button 
+                                                type="button"
+                                                onClick={() => setEditingRecord(r)} 
+                                                className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition-colors cursor-pointer"
+                                                title={language === 'ar' ? 'تعديل' : 'Edit'}
+                                              >
+                                                <Edit2 size={13} />
+                                              </button>
+                                              <button 
+                                                type="button"
+                                                onClick={() => handleDeleteRecord(r.id)} 
+                                                className="p-1.5 rounded-lg text-red-500 hover:bg-red-100/80 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
+                                                title={language === 'ar' ? 'حذف' : 'Delete'}
+                                              >
+                                                <Trash2 size={13} />
+                                              </button>
+                                            </div>
                                           </td>
                                         </tr>
                                       );
@@ -5058,14 +5089,14 @@ Content-Type: text/html; charset="utf-8"
                           {isExpanded && (
                             <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/60 p-3 sm:p-4 max-h-72 overflow-y-auto">
                               <table className="w-full text-xs border-collapse">
-                                <thead>
+                                <thead className="sticky top-0 z-10 shadow-xs">
                                   <tr className="bg-[#002D62] text-white text-[11px] font-extrabold uppercase tracking-wider rounded-lg shadow-xs">
-                                    <th className="py-2.5 px-3 rounded-l-lg text-center w-10">#</th>
-                                    <th className="py-2.5 px-3 text-left w-24">HR Code</th>
-                                    <th className="py-2.5 px-3 text-left">Trainee Name</th>
-                                    <th className="py-2.5 px-3 text-left">Department</th>
-                                    <th className="py-2.5 px-3 text-center w-32">Attendance</th>
-                                    <th className="py-2.5 px-3 rounded-r-lg text-right w-24">Score</th>
+                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 rounded-l-lg text-center w-10">#</th>
+                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left w-24">HR Code</th>
+                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left">Trainee Name</th>
+                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-left">Department</th>
+                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 text-center w-32">Attendance</th>
+                                    <th className="sticky top-0 bg-[#002D62] py-2.5 px-3 rounded-r-lg text-right w-24">Score</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
