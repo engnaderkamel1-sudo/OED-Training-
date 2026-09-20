@@ -2313,7 +2313,7 @@ Content-Type: text/html; charset="utf-8"
   }, [allRecordsPool]);
 
   const drillDownSessionsList = useMemo(() => {
-    const map = new Map<string, { sessionKey: string; courseTitle: string; date: string; attendees: Array<{ hrCode: string; name: string; department: string; score?: any }> }>();
+    const map = new Map<string, { sessionKey: string; courseTitle: string; date: string; attendees: Array<{ hrCode: string; name: string; department: string; score?: any; attendedDays?: any; duration?: any }> }>();
     (allRecordsPool || []).forEach(r => {
       const courseTitle = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
       const rawDate = r.attendanceDate || r.date || r.trainingDate || r.raw?.['Date'] || r.raw?.['Attendance Date'] || '';
@@ -2322,12 +2322,14 @@ Content-Type: text/html; charset="utf-8"
       const hrCode = (r.hrCode || r.userId || '').toString().trim();
       const name = r.traineeName || r.name || 'Unknown Trainee';
       const department = r.department || '';
-      const score = r.score;
+      const score = r.score ?? r.raw?.['Score'];
+      const attendedDays = r.attendedDays ?? r.daysAttended ?? r.raw?.['Attended Days'] ?? '1';
+      const duration = r.duration ?? r.courseDuration ?? r.raw?.['Course Duration'] ?? '1';
 
       if (!map.has(sessionKey)) {
         map.set(sessionKey, { sessionKey, courseTitle, date, attendees: [] });
       }
-      map.get(sessionKey)!.attendees.push({ hrCode, name, department, score });
+      map.get(sessionKey)!.attendees.push({ hrCode, name, department, score, attendedDays, duration });
     });
     return Array.from(map.values()).sort((a, b) => {
       const timeA = new Date(a.date).getTime();
@@ -5045,25 +5047,56 @@ Content-Type: text/html; charset="utf-8"
 
                           {/* Expanded Trainee Sub-Table */}
                           {isExpanded && (
-                            <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/40 p-4 max-h-60 overflow-y-auto">
-                              <table className="w-full text-xs">
+                            <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/60 p-3 sm:p-4 max-h-72 overflow-y-auto">
+                              <table className="w-full text-xs border-collapse">
                                 <thead>
-                                  <tr className="text-left font-bold text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2">
-                                    <th className="pb-2">HR Code</th>
-                                    <th className="pb-2">Trainee Name</th>
-                                    <th className="pb-2">Department</th>
-                                    <th className="pb-2 text-right">Score</th>
+                                  <tr className="bg-[#002D62] text-white text-[11px] font-extrabold uppercase tracking-wider rounded-lg shadow-xs">
+                                    <th className="py-2.5 px-3 rounded-l-lg text-center w-10">#</th>
+                                    <th className="py-2.5 px-3 text-left w-24">HR Code</th>
+                                    <th className="py-2.5 px-3 text-left">Trainee Name</th>
+                                    <th className="py-2.5 px-3 text-left">Department</th>
+                                    <th className="py-2.5 px-3 text-center w-32">Attendance</th>
+                                    <th className="py-2.5 px-3 rounded-r-lg text-right w-24">Score</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                                  {session.attendees.map((att, attIdx) => (
-                                    <tr key={`${att.hrCode}-${attIdx}`} className="hover:bg-slate-100/50 dark:hover:bg-slate-800/30">
-                                      <td className="py-2 font-mono font-bold text-slate-700 dark:text-slate-300">{att.hrCode || '-'}</td>
-                                      <td className="py-2 font-semibold text-slate-900 dark:text-slate-100">{att.name}</td>
-                                      <td className="py-2 text-slate-500 dark:text-slate-400">{att.department || '-'}</td>
-                                      <td className="py-2 text-right font-black text-amber-500">{att.score ?? '-'}</td>
-                                    </tr>
-                                  ))}
+                                <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
+                                  {session.attendees.map((att, attIdx) => {
+                                    const scoreFormatted = formatScore(att.score);
+                                    const attendedNum = String(att.attendedDays || '1').replace(/[^0-9.]/g, '') || '1';
+                                    const durationNum = String(att.duration || '1').replace(/[^0-9.]/g, '') || '1';
+                                    const isSingleDay = durationNum === '1';
+
+                                    return (
+                                      <tr key={`${att.hrCode}-${attIdx}`} className="hover:bg-blue-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                                        <td className="py-2.5 px-3 text-center font-bold text-slate-400 font-mono text-[11px]">
+                                          {attIdx + 1}
+                                        </td>
+                                        <td className="py-2.5 px-3 font-mono font-bold text-blue-900 dark:text-blue-300">
+                                          {att.hrCode || '-'}
+                                        </td>
+                                        <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-slate-100">
+                                          {att.name}
+                                        </td>
+                                        <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400 font-medium">
+                                          {att.department || '-'}
+                                        </td>
+                                        <td className="py-2.5 px-3 text-center">
+                                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-900 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-2xs">
+                                            {attendedNum} / {durationNum} {isSingleDay ? 'Day' : 'Days'}
+                                          </span>
+                                        </td>
+                                        <td className="py-2.5 px-3 text-right">
+                                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-2xs ${
+                                            scoreFormatted === 'Pass' || parseInt(scoreFormatted, 10) >= 80 
+                                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800' 
+                                              : 'bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                                          }`}>
+                                            {scoreFormatted}
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
                                 </tbody>
                               </table>
                             </div>
