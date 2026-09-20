@@ -30,3 +30,8 @@ This rule is **permanently active** and applies unconditionally to every turn an
 - **Mandatory English-Only Rule:** Arabic is strictly prohibited across all system interfaces, components, buttons, badges, tables, modal dialogs, notifications, and user-facing text.
 - All UI text, course titles, locations, notes, months, statuses, tooltips, and labels MUST be written strictly in English.
 - Do not render Arabic strings, translations, or RTL Arabic text anywhere. Keep typography Left-to-Right (LTR).
+
+### 5. Deployment & Execution Speed: Never Poll or Wait for Vercel
+- When pushing commits to GitHub, complete the push and notify the user immediately.
+- **NEVER** set timers, loops, or background tasks to wait for or monitor Vercel deployment.
+- Vercel automatically builds and deploys in the background; blocking or polling Vercel wastes time and disrupts the user's active momentum.
