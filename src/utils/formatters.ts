@@ -70,10 +70,10 @@ export const formatDateToStandard = (dateValue: any): string => {
       const str = dateValue.trim();
       if (!str) return '--';
 
-      // If string is pure Excel serial numeric string (e.g. "44000")
-      if (/^\d{5,6}$/.test(str)) {
-        const num = Number(str);
-        if (!isNaN(num) && num > 20000 && num < 60000) {
+      // If string is pure Excel serial numeric string (e.g. "46274" or "46274.0")
+      if (/^\d{5,6}(\.\d+)?$/.test(str)) {
+        const num = parseFloat(str);
+        if (!isNaN(num) && num > 20000 && num < 65000) {
           const d = new Date(Math.round((num - 25569) * 86400 * 1000));
           if (!isNaN(d.getTime())) {
             const day = String(d.getDate()).padStart(2, '0');

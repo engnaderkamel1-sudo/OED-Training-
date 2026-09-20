@@ -2296,7 +2296,7 @@ Content-Type: text/html; charset="utf-8"
     (allRecordsPool || []).forEach(r => {
       const title = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
       const rawDate = r.attendanceDate || r.date || r.trainingDate || r.raw?.['Date'] || r.raw?.['Attendance Date'] || '';
-      const dateStr = String(rawDate).trim() || 'Unknown';
+      const dateStr = formatDateToStandard(rawDate);
       const sessionKey = `${title}__${dateStr}`;
       const hrKey = (r.hrCode || r.userId || r.traineeName || '').toLowerCase().trim();
       if (!map.has(title)) {
@@ -2317,7 +2317,7 @@ Content-Type: text/html; charset="utf-8"
     (allRecordsPool || []).forEach(r => {
       const courseTitle = (r.courseName || r.trainingProgram || r.program || 'Untitled Course').trim();
       const rawDate = r.attendanceDate || r.date || r.trainingDate || r.raw?.['Date'] || r.raw?.['Attendance Date'] || '';
-      const date = String(rawDate).trim() || 'Unknown Date';
+      const date = formatDateToStandard(rawDate);
       const sessionKey = `${courseTitle}__${date}`;
       const hrCode = (r.hrCode || r.userId || '').toString().trim();
       const name = r.traineeName || r.name || 'Unknown Trainee';

@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "2.0.8",
-  releaseName: "Self-Healing Data Recovery: Restored 1,143 Master Records in Firestore & Automatic Numeric Course Cache Purge",
+  version: "2.0.9",
+  releaseName: "Session Date Formatter: Convert Raw Excel Serial Dates into Standard Readable Dates (e.g. 09-Sep-2026)",
   buildDate: "2026",
   buildTimestamp: "2026",
   
