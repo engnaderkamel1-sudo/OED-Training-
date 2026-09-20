@@ -162,9 +162,20 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose }) =
                 style={{ backgroundColor: inputBg, borderColor: borderColor, color: textColor }}
               >
                 <option value="trainee">{language === 'ar' ? 'متدرب (Trainee)' : 'Trainee'}</option>
-                <option value="admin">{language === 'ar' ? 'مسؤول (Admin)' : 'Admin'}</option>
-                <option value="executive">{language === 'ar' ? 'مدير مشاهد (Executive)' : 'Executive'}</option>
+                <option value="admin">{language === 'ar' ? 'مسؤول نظام كامل (Admin)' : 'Admin'}</option>
+                <option value="supervisor">{language === 'ar' ? 'مشرف موقع / ورشة (Supervisor)' : 'Supervisor'}</option>
+                <option value="executive">{language === 'ar' ? 'مدير تنفيذي - عرض فقط (Executive)' : 'Executive'}</option>
               </select>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 font-medium">
+                {role === 'executive' 
+                  ? (language === 'ar' ? '⭐ عرض الداشبورد والجلسات والتقارير بأمان دون تعديل' : '⭐ View Admin Dashboard & Sessions only (no edits)')
+                  : role === 'supervisor'
+                    ? (language === 'ar' ? '👷 متابعة فريق ورشته وترشيحهم للدورات التدريبية' : '👷 Team compliance & course nominations for their shop')
+                    : role === 'admin'
+                      ? (language === 'ar' ? '🛡️ تحكم كامل وإدارة شاملة للجلسات والمستخدمين' : '🛡️ Full administrative system authority')
+                      : (language === 'ar' ? '🎓 تسجيل ذاتي في الدورات وحضور بالـ QR' : '🎓 Self-enrollment and QR attendance')
+                }
+              </p>
             </div>
           </div>
 

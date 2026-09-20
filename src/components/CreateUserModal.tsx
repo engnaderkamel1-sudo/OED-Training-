@@ -18,7 +18,9 @@ import {
   RefreshCw, 
   Sparkles, 
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Ban,
+  Info
 } from 'lucide-react';
 import { User as UserType, Role } from '../types';
 import { validateHrCode, validatePhone, validateEmail, sanitizePlainText } from '../utils/securityUtils';
@@ -65,12 +67,82 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ onClose, defau
   } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const handleRoleChange = (newRole: Role) => {
-    setRole(newRole);
-    if (newRole === 'executive' && !jobRole) {
-      setJobRole('Executive Director');
+  const [hoveredRole, setHoveredRole] = useState<Role | null>(null);
+  
+  const ROLE_DETAILS: Record<string, {
+    titleEn: string;
+    titleAr: string;
+    badge: string;
+    badgeBg: string;
+    descriptionEn: string;
+    descriptionAr: string;
+    permissions: { en: string; ar: string }[];
+    restrictions?: { en: string; ar: string }[];
+  }> = {
+    executive: {
+      titleEn: 'Executive (View-Only Admin)',
+      titleAr: 'مدير تنفيذي (عرض ومتابعة الإدارة)',
+      badge: 'EXECUTIVE ⭐',
+      badgeBg: 'bg-[#FFC000] text-[#001D42]',
+      descriptionEn: 'Designed for top management and department directors who need full oversight without data modification capabilities.',
+      descriptionAr: 'مخصص لقيادات الشركة ومديري القطاعات للمتابعة الشاملة واتخاذ القرار دون إمكانية التعديل في البيانات.',
+      permissions: [
+        { en: 'Full access to Admin Dashboard and KPI executive statistics', ar: 'اطلاع كامل على لوحة تحكم الإدارة وإحصائيات الـ KPIs' },
+        { en: 'View all training sessions, schedules, and attendee lists', ar: 'استعراض كافة الجلسات التدريبية ومواعيدها وقوائم الحاضرين' },
+        { en: 'Download & print official training registers and PDF reports', ar: 'طباعة وتحميل التقارير الرسمية وكشوف الحضور بصيغة PDF' }
+      ],
+      restrictions: [
+        { en: 'Restricted: Add/Edit/Cancel sessions and Excel upload are hidden & protected', ar: 'محظور: أزرار إضافة أو تعديل أو إلغاء الجلسات ورفع الإكسيل محجوبة بالكامل' }
+      ]
+    },
+    admin: {
+      titleEn: 'System Administrator (Full Control)',
+      titleAr: 'مدير النظام (تحكم كامل في المنظومة)',
+      badge: 'FULL ADMIN 🛡️',
+      badgeBg: 'bg-[#002D62] text-white',
+      descriptionEn: 'Highest privilege level for training department officers with unrestricted system authority.',
+      descriptionAr: 'أعلى صلاحية في المنظومة لمسؤولي إدارة التدريب مع صلاحيات إدارة وتحكم شاملة.',
+      permissions: [
+        { en: 'Create, schedule, edit, cancel, and reactivate sessions & courses', ar: 'إنشاء وتعديل وإلغاء وتفعيل كافة الجلسات والدورات التدريبية' },
+        { en: 'Manage, approve, edit, and provision all user accounts & roles', ar: 'إدارة واعتماد وإنشاء وتعديل صلاحيات حسابات جميع المستخدمين' },
+        { en: 'Full Master Excel sheet upload, automatic KPI refresh, and sync', ar: 'رفع ومزامنة شيت الإكسيل الكامل وتحديث المنظومة ومؤشرات الأداء' },
+        { en: 'Record manual attendance, edit grades, and broadcast email drafts', ar: 'رصد الحضور اليدوي والدرجات وإصدار ونشر إيميلات الإعلان الرسمية' }
+      ]
+    },
+    supervisor: {
+      titleEn: 'Site / Workshop Supervisor',
+      titleAr: 'مشرف موقع / ورشة (ترشيح ومتابعة)',
+      badge: 'SUPERVISOR 👷',
+      badgeBg: 'bg-purple-700 text-white',
+      descriptionEn: 'Dedicated workshop and site in-charge supervisors who manage and nominate their technical teams.',
+      descriptionAr: 'مشرفو الورش والمواقع (مثل ورشة القطامية والمشاريع) لمتابعة فريق عملهم وترشيحهم للدورات التدريبية.',
+      permissions: [
+        { en: 'Access to dedicated Site / Workshop Dashboard for their department', ar: 'لوحة تحكم خاصة بقسمه أو ورشته لمتابعة مهندسيه وفنييه' },
+        { en: 'Nominate and register team technicians & engineers to upcoming sessions', ar: 'ترشيح وتسكين موظفي قسمه في الدورات التدريبية المتاحة مباشرة' },
+        { en: 'Track team training compliance rates, attended courses, and history', ar: 'متابعة نسبة التزام فريقه بالتدريب وسجلات الحضور والغياب' }
+      ],
+      restrictions: [
+        { en: 'Restricted from global Admin Dashboard, user management, and course creation', ar: 'محظور: لا يمكنه الدخول على لوحة الإدارة العامة أو تعديل المستخدمين أو إنشاء دورات' }
+      ]
+    },
+    trainee: {
+      titleEn: 'Trainee (Engineer / Technician)',
+      titleAr: 'متدرب (مهندس / فني / موظف)',
+      badge: 'TRAINEE 🎓',
+      badgeBg: 'bg-emerald-600 text-white',
+      descriptionEn: 'Standard employee account for company engineers, technicians, and staff attending training courses.',
+      descriptionAr: 'الحساب القياسي لجميع مهندسي وفنيي الشركة والموظفين لحضور الدورات التدريبية.',
+      permissions: [
+        { en: 'Personal Trainee Dashboard with eligible upcoming training courses', ar: 'لوحة شخصية تعرض الدورات التدريبية المتاحة المناسبة لتخصصه' },
+        { en: 'Self-register and withdraw from scheduled training sessions', ar: 'التسجيل الذاتي والانسحاب من الدورات التدريبية المفتوحة' },
+        { en: 'Scan daily attendance QR code inside the training hall', ar: 'مسح كود الـ QR اليومي في القاعة التدريبية لتسجيل الحضور' },
+        { en: 'Access training certificates, personal history, and course evaluation form', ar: 'استعراض سجل الدورات المنجزة ونموذج تقييم الدورة التدريبية' }
+      ]
     }
   };
+
+  const activeRoleKey = (hoveredRole || role || 'executive') as string;
+  const currentRoleInfo = ROLE_DETAILS[activeRoleKey] || ROLE_DETAILS.executive;
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -376,17 +448,21 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ onClose, defau
                   {[
                     { id: 'executive', label: 'Executive ⭐', sub: language === 'ar' ? 'مدير تنفيذي (عرض فقط)' : 'View-Only Admin' },
                     { id: 'admin', label: 'Admin 🛡️', sub: language === 'ar' ? 'مدير نظام كامل' : 'Full Admin' },
-                    { id: 'supervisor', label: 'Supervisor', sub: language === 'ar' ? 'مشرف تدريب' : 'Supervisor' },
-                    { id: 'trainee', label: 'Trainee', sub: language === 'ar' ? 'متدرب' : 'Trainee' }
+                    { id: 'supervisor', label: 'Supervisor 👷', sub: language === 'ar' ? 'مشرف موقع / ورشة' : 'Site Supervisor' },
+                    { id: 'trainee', label: 'Trainee 🎓', sub: language === 'ar' ? 'متدرب' : 'Trainee' }
                   ].map((r) => (
                     <button
                       key={r.id}
                       type="button"
                       onClick={() => handleRoleChange(r.id as Role)}
+                      onMouseEnter={() => setHoveredRole(r.id as Role)}
+                      onMouseLeave={() => setHoveredRole(null)}
                       className={`p-2.5 rounded-xl border text-left rtl:text-right transition-all cursor-pointer flex flex-col justify-between ${
                         role === r.id 
-                          ? 'border-[#002D62] dark:border-[#FFC000] bg-blue-50/80 dark:bg-blue-950/60 shadow-xs'
-                          : 'border-slate-200 dark:border-slate-700/80 hover:border-blue-300'
+                          ? 'border-[#002D62] dark:border-[#FFC000] bg-blue-50/90 dark:bg-blue-950/70 shadow-xs scale-[1.01]'
+                          : hoveredRole === r.id
+                            ? 'border-blue-300 dark:border-blue-600 bg-blue-50/40 dark:bg-blue-950/30'
+                            : 'border-slate-200 dark:border-slate-700/80 hover:border-blue-300'
                       }`}
                     >
                       <span className={`text-xs font-black ${role === r.id ? 'text-[#002D62] dark:text-[#FFC000]' : ''}`}>
@@ -398,17 +474,57 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ onClose, defau
                     </button>
                   ))}
                 </div>
-                {role === 'executive' && (
-                  <p className="text-[11px] font-medium text-blue-700 dark:text-blue-300 mt-2 bg-blue-50/60 dark:bg-blue-950/40 p-2.5 rounded-xl border border-blue-200 dark:border-blue-800 flex items-center gap-1.5">
-                    <Sparkles size={14} className="text-[#FFC000] shrink-0" />
-                    <span>
-                      {language === 'ar' 
-                        ? 'حساب الـ Executive يتيح للمدير الدخول إلى لوحة تحكم الإدارة وعرض الجلسات وقوائم الحضور والتقارير بأمان تام مع إخفاء أزرار التعديل والحذف والرفع.'
-                        : 'Executive accounts provide read-only access to the Admin Dashboard and Session Management with mutation controls securely hidden.'
-                      }
+
+                {/* Dynamic Role Permissions & Scope Inspector */}
+                <div 
+                  className="mt-3 p-3.5 rounded-2xl border transition-all duration-200 animate-fadeIn"
+                  style={{ backgroundColor: isDark ? '#10223D' : '#F8FAFC', borderColor }}
+                >
+                  <div className="flex items-center justify-between gap-2 border-b pb-2 mb-2.5" style={{ borderColor }}>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase shadow-2xs ${currentRoleInfo.badgeBg}`}>
+                        {currentRoleInfo.badge}
+                      </span>
+                      <span className="text-xs font-black" style={{ color: textColor }}>
+                        {language === 'ar' ? currentRoleInfo.titleAr : currentRoleInfo.titleEn}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-gray-400 flex items-center gap-1">
+                      <Info size={12} />
+                      <span>{language === 'ar' ? 'معاينة الصلاحيات المتاحة' : 'Live Permissions Inspector'}</span>
                     </span>
+                  </div>
+
+                  <p className="text-xs text-gray-600 dark:text-gray-300 font-medium mb-3 leading-relaxed">
+                    {language === 'ar' ? currentRoleInfo.descriptionAr : currentRoleInfo.descriptionEn}
                   </p>
-                )}
+
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block mb-1">
+                      {language === 'ar' ? '✓ الصلاحيات والقدرات المتاحة:' : '✓ Available Capabilities & Access:'}
+                    </span>
+                    {currentRoleInfo.permissions.map((perm, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-xs text-gray-700 dark:text-gray-200 font-medium">
+                        <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <span>{language === 'ar' ? perm.ar : perm.en}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {currentRoleInfo.restrictions && currentRoleInfo.restrictions.length > 0 && (
+                    <div className="space-y-1.5 mt-2.5 pt-2 border-t" style={{ borderColor }}>
+                      <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider block mb-1">
+                        {language === 'ar' ? '🔒 القيود والصلاحيات المحجوبة:' : '🔒 System Restrictions & Safeguards:'}
+                      </span>
+                      {currentRoleInfo.restrictions.map((restr, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-xs text-amber-800 dark:text-amber-300 font-medium">
+                          <Ban size={13} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                          <span>{language === 'ar' ? restr.ar : restr.en}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Full Name & HR Code */}
