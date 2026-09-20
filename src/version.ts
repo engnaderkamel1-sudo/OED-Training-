@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "2.1.0",
-  releaseName: "Session Trainees Roster Upgrade: Trainee Index (#), Formatted Percentage Scores (%), Attendance Days Ratio & Executive Navy Header Row",
+  version: "2.1.1",
+  releaseName: "Session Filter & Date Normalizer: Seamless Session-to-Records Filter Navigation with ISO Date Standardization",
   buildDate: "2026",
   buildTimestamp: "2026",
   
