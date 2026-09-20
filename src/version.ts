@@ -16,10 +16,10 @@
  */
 
 export const APP_VERSION = {
-  version: "2.1.4",
-  releaseName: "Standardized Role Capitalization (Title Case) across Entire Application & Reports",
+  version: "2.1.5",
+  releaseName: "Updated Session Printout Title to 'Session Attendance Report'",
   releaseDate: "20-Sep-2026",
-  build: "2026.09.20.04",
+  build: "2026.09.20.05",
   
   // Official Developer Credit
   creditLine: "Designed & Developed by Nader Reda | OED Technical Training Manager",

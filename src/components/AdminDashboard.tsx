@@ -3029,7 +3029,7 @@ Content-Type: text/html; charset="utf-8"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     safePrintReport({
-                                      title: `${selectedCourseDetails.title} - Session Attendance Roster`,
+                                      title: `${selectedCourseDetails.title} - Session Attendance Report`,
                                       subtitle: `Date: ${formatDateToStandard(date)} | Total Attendees: ${attendeesOnDate.length}`,
                                       language: 'en',
                                       records: attendeesOnDate.map((r) => {
@@ -3052,7 +3052,7 @@ Content-Type: text/html; charset="utf-8"
                                     });
                                   }}
                                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#002D62] hover:bg-blue-900 text-white text-xs font-bold transition-all shadow-xs hover:shadow cursor-pointer active:scale-95"
-                                  title="Print Session Roster"
+                                  title="Print Session Report"
                                 >
                                   <Printer size={13} className="text-[#FFC000]" />
                                   <span>Print</span>
@@ -5107,7 +5107,7 @@ Content-Type: text/html; charset="utf-8"
                                 type="button"
                                 onClick={() => {
                                   safePrintReport({
-                                    title: `${session.courseTitle} - Session Attendance Roster`,
+                                    title: `${session.courseTitle} - Session Attendance Report`,
                                     subtitle: `Date: ${session.date} | Total Attendees: ${session.attendees.length}`,
                                     language: 'en',
                                     records: session.attendees.map(att => ({
@@ -5125,7 +5125,7 @@ Content-Type: text/html; charset="utf-8"
                                   });
                                 }}
                                 className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
-                                title="Print Session Roster"
+                                title="Print Session Report"
                               >
                                 <Printer size={13} className="text-[#002D62] dark:text-[#FFC000]" />
                                 <span>Print</span>
