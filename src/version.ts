@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "2.0.6",
-  releaseName: "Unified Summer Training Induction: 72 Interns Integrated into Master Dataset & Executive KPI Grid",
+  version: "2.0.7",
+  releaseName: "Excel Parser Column Disambiguation Fix: Resolved Course Duration Hijack & Live Master Sync",
   buildDate: "2026",
   buildTimestamp: "2026",
   

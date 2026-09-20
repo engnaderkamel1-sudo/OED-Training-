@@ -1904,15 +1904,15 @@ Content-Type: text/html; charset="utf-8"
           headerRowIdx = r;
           row.forEach((cellVal, colIdx) => {
             const s = String(cellVal || '').trim().toLowerCase();
-            if (s.includes('hr') || s === 'id' || s.includes('كود') || s.includes('code')) colMap['hrCode'] = colIdx;
+            if (s.includes('duration') || s.includes('مدة') || s === 'days' || s.includes('course duration')) colMap['duration'] = colIdx;
+            else if (s.includes('attended') || s.includes('attendance days') || s.includes('حضور')) colMap['attended'] = colIdx;
+            else if (s.includes('date') || s.includes('تاريخ') || s.includes('attendance date')) colMap['date'] = colIdx;
+            else if (s.includes('course') || s.includes('training') || s.includes('program') || s.includes('دورة') || s.includes('برنامج')) colMap['course'] = colIdx;
+            else if (s.includes('hr') || s === 'id' || s.includes('كود') || s.includes('code')) colMap['hrCode'] = colIdx;
             else if (s.includes('trainee') || s.includes('participant') || s.includes('employee name') || s === 'name' || s.includes('الاسم') || s.includes('متدرب')) colMap['name'] = colIdx;
             else if (s.includes('dept') || s.includes('department') || s.includes('قسم') || s.includes('إدارة')) colMap['dept'] = colIdx;
             else if (s.includes('role') || s.includes('job') || s.includes('position') || s.includes('وظيفة')) colMap['role'] = colIdx;
-            else if (s.includes('course') || s.includes('training') || s.includes('program') || s.includes('دورة') || s.includes('برنامج')) colMap['course'] = colIdx;
-            else if (s.includes('date') || s.includes('تاريخ') || s.includes('attendance date')) colMap['date'] = colIdx;
-            else if (s.includes('duration') || s.includes('مدة') || s.includes('days')) colMap['duration'] = colIdx;
-            else if (s.includes('attended') || s.includes('attendance') || s.includes('حضور')) colMap['attended'] = colIdx;
-            else if (s.includes('score') || s.includes('test') || s.includes('درجة') || s.includes('نتيجة')) colMap['score'] = colIdx;
+            else if (s.includes('score') || s.includes('test') || s.includes('درجة') || s.includes('نتيجة') || s.includes('grade')) colMap['score'] = colIdx;
           });
           break;
         }
@@ -1935,14 +1935,22 @@ Content-Type: text/html; charset="utf-8"
 
           const hrCode = String(hrRaw || '').trim().replace(/[^\w]/g, '');
           const name = String(nameRaw || '').trim();
-          const courseName = String(courseRaw || '').trim();
+          let courseName = String(courseRaw || '').trim();
           const dept = colMap['dept'] !== undefined && row[colMap['dept']] ? String(row[colMap['dept']]).trim() : 'ORC - Katamia - Workshop';
           
           let role = colMap['role'] !== undefined && row[colMap['role']] ? String(row[colMap['role']]).trim().toLowerCase() : 'technician';
-          if (role.includes('eng') || role.includes('مهندس')) role = 'engineer';
+          if (role.includes('intern') || role.includes('summer') || role.includes('طالب') || role.includes('صيفي')) {
+            role = 'intern';
+            courseName = 'Summer Training Induction';
+          } else if (role.includes('eng') || role.includes('مهندس')) role = 'engineer';
           else if (role.includes('tech') || role.includes('فني')) role = 'technician';
-          else if (role.includes('op') || role.includes('مشغل')) role = 'operator';
-          else if (!role) role = 'technician';
+          else if (role.includes('op') || role.includes('مشغل') || role.includes('سائق')) role = 'operator';
+          else role = 'technician';
+
+          if (dept.toLowerCase().includes('summer') || dept.toLowerCase().includes('intern')) {
+            role = 'intern';
+            courseName = 'Summer Training Induction';
+          }
 
           const formattedDate = parseDateVal(colMap['date'] !== undefined ? row[colMap['date']] : null);
           const duration = colMap['duration'] !== undefined && row[colMap['duration']] ? String(row[colMap['duration']]).trim() : '1';
@@ -2046,11 +2054,27 @@ Content-Type: text/html; charset="utf-8"
       const distinctCourses = new Set(parsedCleanedRecords.map(r => r.courseName)).size;
       const distinctSessions = new Set(parsedCleanedRecords.map(r => `${r.courseName}-${r.attendanceDate || r.date}`)).size;
       const distinctTrainees = new Set(parsedCleanedRecords.map(r => r.hrCode || r.name)).size;
-      let engCount = 0, techCount = 0, opCount = 0;
+      let engCount = 0, techCount = 0, opCount = 0, internCount = 0;
+      const engUnique = new Set<string>();
+      const techUnique = new Set<string>();
+      const opUnique = new Set<string>();
+      const internUnique = new Set<string>();
+
       parsedCleanedRecords.forEach(r => {
-        if (r.role === 'engineer') engCount++;
-        else if (r.role === 'technician') techCount++;
-        else if (r.role === 'operator') opCount++;
+        const traineeKey = (r.hrCode || r.name || '').trim().toLowerCase();
+        if (r.role === 'intern') {
+          internCount++;
+          if (traineeKey) internUnique.add(traineeKey);
+        } else if (r.role === 'operator') {
+          opCount++;
+          if (traineeKey) opUnique.add(traineeKey);
+        } else if (r.role === 'technician') {
+          techCount++;
+          if (traineeKey) techUnique.add(traineeKey);
+        } else {
+          engCount++;
+          if (traineeKey) engUnique.add(traineeKey);
+        }
       });
 
       const computedKPIs = {
@@ -2059,8 +2083,13 @@ Content-Type: text/html; charset="utf-8"
         totalParticipants: parsedCleanedRecords.length,
         uniqueTrainees: distinctTrainees,
         totalEngineers: engCount,
+        uniqueEngineers: engUnique.size,
         totalTechnicians: techCount,
-        totalOperators: opCount
+        uniqueTechnicians: techUnique.size,
+        totalOperators: opCount,
+        uniqueOperators: opUnique.size,
+        totalInterns: internCount,
+        uniqueInterns: internUnique.size
       };
 
       localStorage.setItem('oed_cached_global_kpis', JSON.stringify(computedKPIs));
