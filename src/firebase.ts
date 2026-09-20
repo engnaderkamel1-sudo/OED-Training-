@@ -1,6 +1,6 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
-import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence } from "firebase/auth";
+import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, getAuth, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { getMessaging } from "firebase/messaging";
 
 const firebaseConfig = {
@@ -30,4 +30,18 @@ export const auth = initializeAuth(app, {
   persistence: [indexedDBLocalPersistence, browserLocalPersistence]
 });
 export const messaging = typeof window !== 'undefined' && 'serviceWorker' in navigator ? getMessaging(app) : null;
+
+// Secondary Auth Instance: Provisions new accounts without logging out the active admin session
+export const createSecondaryAuthUser = async (email: string, pass: string) => {
+  const SECONDARY_NAME = "OED_Admin_User_Creator";
+  let secApp = getApps().find(a => a.name === SECONDARY_NAME);
+  if (!secApp) {
+    secApp = initializeApp(firebaseConfig, SECONDARY_NAME);
+  }
+  const secAuth = getAuth(secApp);
+  const cred = await createUserWithEmailAndPassword(secAuth, email, pass);
+  await signOut(secAuth);
+  return cred.user;
+};
+
 

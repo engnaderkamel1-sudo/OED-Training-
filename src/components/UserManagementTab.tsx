@@ -11,10 +11,12 @@ import {
   Save, 
   RotateCcw, 
   SearchX, 
-  Users 
+  Users,
+  UserPlus 
 } from 'lucide-react';
 
 interface UserManagementTabProps {
+  onOpenCreateUserModal?: () => void;
   users: User[];
   pendingUsers: User[];
   usersWithPendingUpdates: User[];
@@ -54,6 +56,7 @@ interface UserManagementTabProps {
 }
 
 export const UserManagementTab: React.FC<UserManagementTabProps> = ({
+  onOpenCreateUserModal,
   users,
   pendingUsers,
   usersWithPendingUpdates,
@@ -220,11 +223,24 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
           >
             <span>{language === 'ar' ? 'سجل التعديلات' : 'Processed Updates'}</span>
           </button>
+
+          {onOpenCreateUserModal && (
+            <div className="pt-3 border-t mt-2" style={{ borderColor }}>
+              <button
+                type="button"
+                onClick={onOpenCreateUserModal}
+                className="w-full text-center px-4 py-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 bg-[#FFC000] text-[#002D62] hover:bg-yellow-400 active:scale-95 shadow-sm cursor-pointer hover:scale-[1.02]"
+              >
+                <UserPlus size={16} className="stroke-[2.5]" />
+                <span>{language === 'ar' ? '+ إنشاء حساب مدير / مستخدم' : '+ Add User / Executive'}</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Content Tabs */}
         <div className="flex-1 overflow-x-auto">
-          {/* User Search Input */}
+          {/* User Search Input & Actions */}
           <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
             <div className="relative flex-1 min-w-[260px] max-w-md">
               <Search
@@ -252,11 +268,25 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                 </button>
               )}
             </div>
-            {userSearchTerm && (
-              <div className="text-xs font-semibold px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                {language === 'ar' ? `نتائج البحث: "${userSearchTerm}"` : `Filtered by: "${userSearchTerm}"`}
-              </div>
-            )}
+
+            <div className="flex items-center gap-2.5">
+              {userSearchTerm && (
+                <div className="text-xs font-semibold px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                  {language === 'ar' ? `نتائج البحث: "${userSearchTerm}"` : `Filtered by: "${userSearchTerm}"`}
+                </div>
+              )}
+
+              {onOpenCreateUserModal && (
+                <button
+                  type="button"
+                  onClick={onOpenCreateUserModal}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs sm:text-sm bg-[#002D62] hover:bg-blue-900 text-white active:scale-95 transition-all shadow-sm cursor-pointer shrink-0 hover:scale-[1.02]"
+                >
+                  <UserPlus size={16} className="text-[#FFC000] stroke-[2.5]" />
+                  <span>{language === 'ar' ? 'إضافة مستخدم جديد / مدير' : 'Add User / Executive'}</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* TAB 1: PENDING REGISTRATIONS */}

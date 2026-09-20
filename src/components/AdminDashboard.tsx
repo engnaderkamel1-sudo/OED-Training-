@@ -3,11 +3,12 @@ import { SystemErrorsModal } from './SystemErrorsModal';
 import { FirebaseUsageModal } from './FirebaseUsageModal';
 import { EditRecordModal } from './EditRecordModal';
 import { EditUserModal } from './EditUserModal';
+import { CreateUserModal } from './CreateUserModal';
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useAppContext, MASTER_VERIFIED_RECORDS } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment, collection, getDocs, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { Clock, CalendarX, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2, SearchX, UserCheck, ExternalLink, GraduationCap } from "lucide-react";
+import { Clock, CalendarX, Bell, Share2, Users, Database, UploadCloud, RefreshCw, CheckCircle, BookOpen, Calendar, HardHat, Wrench, Settings, Printer, X, Download, Mail, Globe, Megaphone, Radio, Volume2, Sparkles, Trash2, Edit2, RotateCcw, MapPin, Tag, BellOff, PlusCircle, Save, Search, ArrowUpDown, FileText, Ban, ShieldAlert, Lock, AlertTriangle, Key, Check, QrCode, FileSpreadsheet, Loader2, SearchX, UserCheck, ExternalLink, GraduationCap, UserPlus } from "lucide-react";
 import { mockCourses, mockRequests } from "../data";
 import { ReminderLogItem, UpcomingSession, User, TrainingRecord, Role } from "../types";
 import { formatScore, formatDateToStandard, formatDateToISO, formatRole } from "../utils/formatters";
@@ -110,6 +111,7 @@ export const AdminDashboard: React.FC = () => {
   const [newCourseTitle, setNewCourseTitle] = useState("");
   const [newCourseAudience, setNewCourseAudience] = useState("engineers");
   const [isSavingNewCourse, setIsSavingNewCourse] = useState(false);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
 
   const {
     t, language, user, users, setUsers, records, setRecords, upcomingSessions,
@@ -2586,6 +2588,16 @@ Content-Type: text/html; charset="utf-8"
             </p>
           </div>
 
+          {isAdmin && (
+            <button
+              onClick={() => setShowCreateUserModal(true)}
+              className="flex items-center gap-1.5 bg-[#FFC000] text-[#002D62] hover:bg-yellow-400 px-3.5 py-2 rounded-xl transition-all shadow-sm text-xs sm:text-sm font-black active:scale-95 cursor-pointer shrink-0 hover:scale-[1.02]"
+            >
+              <UserPlus size={16} className="stroke-[2.5]" />
+              <span>{language === "ar" ? "+ إنشاء حساب مدير / مستخدم" : "+ Add User / Executive"}</span>
+            </button>
+          )}
+
           {user?.role === 'admin' || user?.role === 'supervisor' ? (
             <button 
               onClick={handlePrint} 
@@ -2604,6 +2616,7 @@ Content-Type: text/html; charset="utf-8"
           {/* USER MANAGEMENT TAB (Modular Single Responsibility Component - ui-ux-pro-max Rule #15) */}
           {currentView === "userManagement" && (
             <UserManagementTab
+              onOpenCreateUserModal={() => setShowCreateUserModal(true)}
               users={users}
               pendingUsers={pendingUsers}
               usersWithPendingUpdates={usersWithPendingUpdates}
@@ -4709,6 +4722,7 @@ Content-Type: text/html; charset="utf-8"
       {previewRegisterSession && <TrainingRegisterPreviewModal session={previewRegisterSession} onClose={() => setPreviewRegisterSession(null)} users={users} records={records} cleanedData={cleanedData || []} />}
       {sessionToEditDirectly && <EditSessionModal session={sessionToEditDirectly} onClose={() => setSessionToEditDirectly(null)} />}
       {selectedUserToEdit && <EditUserModal user={selectedUserToEdit} onClose={() => setSelectedUserToEdit(null)} />}
+      {showCreateUserModal && <CreateUserModal onClose={() => setShowCreateUserModal(false)} />}
       {qrSession && <QRCodeModal session={qrSession} onClose={() => setQrSession(null)} language={language} />}
       {manualAttendanceSession && (
         <ManualAttendanceModal

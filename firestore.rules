@@ -2,10 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 1. Users collection: Strictly block creating admin or self-approved users
+    // 1. Users collection: Trainees and non-executive staff can create, executive blocked
     match /users/{userId} {
       allow read: if true;
-      allow create: if request.resource.data.role == 'trainee' && request.resource.data.status == 'pending';
+      allow create: if request.auth == null || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role != 'executive';
       allow update, delete: if request.auth == null || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role != 'executive';
     }
 
