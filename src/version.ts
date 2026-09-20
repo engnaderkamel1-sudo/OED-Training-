@@ -16,8 +16,8 @@
  */
 
 export const APP_VERSION = {
-  version: "2.0.9",
-  releaseName: "Session Date Formatter: Convert Raw Excel Serial Dates into Standard Readable Dates (e.g. 09-Sep-2026)",
+  version: "2.1.0",
+  releaseName: "Session Trainees Roster Upgrade: Trainee Index (#), Formatted Percentage Scores (%), Attendance Days Ratio & Executive Navy Header Row",
   buildDate: "2026",
   buildTimestamp: "2026",
   
