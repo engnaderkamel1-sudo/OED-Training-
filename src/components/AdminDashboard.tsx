@@ -1071,13 +1071,19 @@ Please log in to register for this session through the OED-TTMS Application.
     return Array.from(depts).filter(Boolean).sort();
   }, [users]);
 
+  const activeRecordsPool = useMemo(() => {
+    if (cleanedData && cleanedData.length > 0) return cleanedData;
+    if (records && records.length > 0) return records;
+    return [];
+  }, [cleanedData, records]);
+
   const courseStats = useMemo(() => {
     if (user?.isDemoUser) {
       return EXECUTIVE_OED_COURSES;
     }
 
     const counts: Record<string, number> = {};
-    const source = [...(cleanedData || []), ...(records || [])];
+    const source = activeRecordsPool;
     
     source.forEach(r => {
       const cName = (r.courseName || (r as any).courseTitle || '').toString().trim();
@@ -1099,7 +1105,7 @@ Please log in to register for this session through the OED-TTMS Application.
       .slice(0, 15);
 
     return res.length > 0 ? res : EXECUTIVE_OED_COURSES;
-  }, [user?.isDemoUser, cleanedData, records, upcomingSessions]);
+  }, [user?.isDemoUser, activeRecordsPool, upcomingSessions]);
 
   const departmentStats = useMemo(() => {
     if (user?.isDemoUser) {
@@ -1118,7 +1124,7 @@ Please log in to register for this session through the OED-TTMS Application.
       }
     });
 
-    const allRecords = [...(cleanedData || []), ...(records || [])];
+    const allRecords = activeRecordsPool;
     allRecords.forEach(r => {
       const dept = (r.department || '').toString().trim();
       const identifier = (r.hrCode || r.userId || (r as any).name || r.id || '').toString().trim();
@@ -1133,11 +1139,11 @@ Please log in to register for this session through the OED-TTMS Application.
       .sort((a, b) => b.trainees - a.trainees);
 
     return res.length > 0 ? res : EXECUTIVE_OED_DEPARTMENTS;
-  }, [user?.isDemoUser, users, cleanedData, records, upcomingSessions]);
+  }, [user?.isDemoUser, users, activeRecordsPool, upcomingSessions]);
 
 
   const totalUniqueTrainees = useMemo(() => {
-    const allRecords = [...(cleanedData || []), ...(records || [])];
+    const allRecords = activeRecordsPool;
     
     // Only calculate from records if actual dataset is loaded in memory
     if (allRecords.length > 50) {
@@ -1154,13 +1160,11 @@ Please log in to register for this session through the OED-TTMS Application.
     }
 
     // Read pre-aggregated unique trainees from globalKPIs (1 read from Firebase)
-  
-
-  return (globalKPIs as any).uniqueTrainees || 354;
-  }, [cleanedData, records, globalKPIs]);
+    return (globalKPIs as any).uniqueTrainees || 409;
+  }, [activeRecordsPool, globalKPIs]);
 
   const totalDistinctCourses = useMemo(() => {
-    const allRecords = [...(cleanedData || []), ...(records || [])];
+    const allRecords = activeRecordsPool;
     if (allRecords.length > 50) {
       const uniqueCourses = new Set<string>();
       allRecords.forEach(r => {
@@ -1169,8 +1173,8 @@ Please log in to register for this session through the OED-TTMS Application.
       });
       if (uniqueCourses.size > 0) return uniqueCourses.size;
     }
-    return globalKPIs.totalCourses || 22;
-  }, [cleanedData, records, globalKPIs]);
+    return globalKPIs.totalCourses || 23;
+  }, [activeRecordsPool, globalKPIs]);
 
   const tnaCounts: Record<string, number> = {};
   mockRequests.forEach((req) => { tnaCounts[req.requestedTopic] = (tnaCounts[req.requestedTopic] || 0) + 1; });
@@ -2256,14 +2260,14 @@ Content-Type: text/html; charset="utf-8"
         totalSessions: 143,
         totalParticipants: 1143,
         uniqueTrainees: 409,
-        totalEngineers: 758,
-        uniqueEngineers: 159,
-        totalTechnicians: 211,
-        uniqueTechnicians: 150,
+        totalEngineers: 785,
+        uniqueEngineers: 162,
+        totalTechnicians: 184,
+        uniqueTechnicians: 126,
         totalOperators: 102,
         uniqueOperators: 100,
         totalInterns: 72,
-        uniqueInterns: 72
+        uniqueInterns: 41
       };
 
       localStorage.setItem('oed_cached_global_kpis', JSON.stringify(officialKPIs));
@@ -2285,11 +2289,7 @@ Content-Type: text/html; charset="utf-8"
     if (file) processExcelFile(file);
   };
 
-  const allRecordsPool = useMemo(() => {
-    if (cleanedData && cleanedData.length > 0) return cleanedData;
-    if (records && records.length > 0) return records;
-    return [];
-  }, [cleanedData, records]);
+  const allRecordsPool = activeRecordsPool;
 
   const hasActiveFilters = Boolean((searchHrCode && searchHrCode.trim()) || (searchTrainee && searchTrainee.trim()) || searchDepartment || selectedCourseFilter || fromDateFilter || toDateFilter);
 
@@ -2369,18 +2369,18 @@ Content-Type: text/html; charset="utf-8"
 
     if (dataSource.length === 0) {
       return {
-        totalCourses: globalKPIs.totalCourses || 25,
+        totalCourses: globalKPIs.totalCourses || 23,
         totalSessions: globalKPIs.totalSessions || 143,
         totalParticipants: globalKPIs.totalParticipants || 1143,
-        uniqueTrainees: globalKPIs.uniqueTrainees || 435,
-        totalEngineers: globalKPIs.totalEngineers || 758,
-        uniqueEngineers: globalKPIs.uniqueEngineers || 159,
-        totalTechnicians: globalKPIs.totalTechnicians || 211,
-        uniqueTechnicians: globalKPIs.uniqueTechnicians || 150,
+        uniqueTrainees: globalKPIs.uniqueTrainees || 409,
+        totalEngineers: globalKPIs.totalEngineers || 785,
+        uniqueEngineers: globalKPIs.uniqueEngineers || 162,
+        totalTechnicians: globalKPIs.totalTechnicians || 184,
+        uniqueTechnicians: globalKPIs.uniqueTechnicians || 126,
         totalOperators: globalKPIs.totalOperators || 102,
         uniqueOperators: globalKPIs.uniqueOperators || 100,
         totalInterns: 72,
-        uniqueInterns: 72
+        uniqueInterns: 41
       };
     }
 
@@ -2404,14 +2404,14 @@ Content-Type: text/html; charset="utf-8"
       const traineeKey = (u?.hrCode || r.hrCode || r.userId || r.name || '').trim().toLowerCase();
       if (traineeKey) uniqueTraineesSet.add(traineeKey);
 
-      const roleStr = `${u?.jobRole || ''} ${r.role || ''} ${r.department || ''} ${cName}`.toLowerCase();
-      if (/\b(intern|interns|student|students|summer|طالب|صيفي)\b/i.test(roleStr)) {
+      const rawRole = (r.role || u?.jobRole || u?.jobTitle || '').toString().trim().toLowerCase();
+      if (rawRole === 'intern' || /\b(intern|interns|student|students|summer|طالب|صيفي)\b/i.test(rawRole)) {
         intern++;
         if (traineeKey) internUnique.add(traineeKey);
-      } else if (/\b(operator|operators|مشغل|مشغلين|سائق|سائقين)\b/i.test(roleStr)) {
+      } else if (rawRole === 'operator' || /\b(operator|operators|مشغل|مشغلين|سائق|سائقين)\b/i.test(rawRole)) {
         op++;
         if (traineeKey) opUnique.add(traineeKey);
-      } else if (/\b(technician|technicians|فني|فنيين)\b/i.test(roleStr)) {
+      } else if (rawRole === 'technician' || /\b(technician|technicians|فني|فنيين)\b/i.test(rawRole)) {
         tech++;
         if (traineeKey) techUnique.add(traineeKey);
       } else {
@@ -2421,7 +2421,7 @@ Content-Type: text/html; charset="utf-8"
     });
 
     return {
-      totalCourses: coursesSet.size || globalKPIs.totalCourses || 25,
+      totalCourses: coursesSet.size || globalKPIs.totalCourses || 23,
       totalSessions: sessionsSet.size || globalKPIs.totalSessions || 143,
       totalParticipants: dataSource.length,
       uniqueTrainees: uniqueTraineesSet.size,
@@ -2434,7 +2434,7 @@ Content-Type: text/html; charset="utf-8"
       totalInterns: intern,
       uniqueInterns: internUnique.size
     };
-  }, [filteredRecords, cleanedData, records, users, globalKPIs, hasActiveFilters]);
+  }, [filteredRecords, allRecordsPool, users, globalKPIs, hasActiveFilters]);
 
   // Drill-Down Computed Collections (Instant in-memory 0-read execution - Defined AFTER allRecordsPool)
   const drillDownCoursesList = useMemo(() => {
