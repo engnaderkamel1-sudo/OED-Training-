@@ -15,11 +15,17 @@ import { validateHrCode, validatePhone, validateEmail, sanitizePlainText } from 
 
 export const Login: React.FC = () => {
   const { t, language, setUser, users, setUsers, uniqueDepartments, addLoginLog, systemVersion, isExecutiveDemoEnabled } = useAppContext();
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(() => {
+    return typeof window !== 'undefined' && window.location.search.includes('modal=forgot');
+  });
+  const [isRegistering, setIsRegistering] = useState(() => {
+    return typeof window !== 'undefined' && window.location.search.includes('mode=register');
+  });
   
   // Register Mode: 'none' (selection screen), 'official' (full form), 'temporary' (guest form)
-  const [registerMode, setRegisterMode] = useState<'none' | 'official' | 'temporary'>('none');
+  const [registerMode, setRegisterMode] = useState<'none' | 'official' | 'temporary'>(() => {
+    return typeof window !== 'undefined' && window.location.search.includes('mode=register') ? 'official' : 'none';
+  });
   
   const [hrCode, setHrCode] = useState("");
   const [phone, setPhone] = useState("");
