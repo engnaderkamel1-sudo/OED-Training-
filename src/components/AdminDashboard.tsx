@@ -4,6 +4,7 @@ import { FirebaseUsageModal } from './FirebaseUsageModal';
 import { EditRecordModal } from './EditRecordModal';
 import { EditUserModal } from './EditUserModal';
 import { CreateUserModal } from './CreateUserModal';
+import { ExcelImportDiffModal } from './ExcelImportDiffModal';
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useAppContext, MASTER_VERIFIED_RECORDS } from "../context";
 import { doc, setDoc, deleteDoc, updateDoc, deleteField, increment, collection, getDocs, writeBatch, onSnapshot } from 'firebase/firestore';
@@ -663,6 +664,16 @@ Please log in to register for this session through the OED-TTMS Application.
   const [isDragOver, setIsDragOver] = useState(false);
   const [syncSummary, setSyncSummary] = useState<{ total: number; courses: number; sessions: number; fileName: string } | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [showExcelDiffModal, setShowExcelDiffModal] = useState(false);
+  const [pendingImportData, setPendingImportData] = useState<{
+    fileName: string;
+    newRecords: any[];
+    duplicateCount: number;
+    totalRowsInFile: number;
+    newUsers: any[];
+  } | null>(null);
+  const [isExecutingImport, setIsExecutingImport] = useState(false);
+  const [isResettingMaster, setIsResettingMaster] = useState(false);
 
   const handleSaveManualAttendance = async (sessionId: string, selectedUserCodes: string[]) => {
     try {
@@ -2065,38 +2076,96 @@ Content-Type: text/html; charset="utf-8"
         throw new Error(language === 'ar' ? 'لم يتم العثور على سجلات تدريبية صالحة في الملف' : 'No valid training records could be extracted from this Excel file.');
       }
 
-      // FULL MASTER REPLACEMENT
+      // 1. Build composite key set of existing database records to detect duplicates
+      const existingKeys = new Set<string>();
+      (allRecordsPool || []).forEach((r: any) => {
+        const hr = (r.hrCode || r.userId || '').toString().trim().toLowerCase();
+        const cName = (r.courseName || r.courseId || '').toString().trim().toLowerCase();
+        const dt = (r.attendanceDate || r.date || '').toString().trim();
+        if (hr && cName) {
+          existingKeys.add(`${hr}__${cName}__${dt}`);
+        }
+      });
+
+      // 2. Identify new unique records and skip already recorded sessions
+      const newIdentifiedRecords: any[] = [];
+      let dupCount = 0;
+      const seenInFile = new Set<string>();
+
+      parsedCleanedRecords.forEach(r => {
+        const hr = (r.hrCode || r.userId || '').toString().trim().toLowerCase();
+        const cName = (r.courseName || r.courseId || '').toString().trim().toLowerCase();
+        const dt = (r.attendanceDate || r.date || '').toString().trim();
+        const exactKey = `${hr}__${cName}__${dt}`;
+
+        if (seenInFile.has(exactKey)) {
+          dupCount++;
+          return;
+        }
+        seenInFile.add(exactKey);
+
+        if (existingKeys.has(exactKey)) {
+          dupCount++;
+        } else {
+          newIdentifiedRecords.push(r);
+        }
+      });
+
+      // 3. Stage for User Review & Approval in Diff Modal (Zero-Data-Loss Principle)
+      setPendingImportData({
+        fileName: file.name,
+        newRecords: newIdentifiedRecords,
+        duplicateCount: dupCount,
+        totalRowsInFile: parsedCleanedRecords.length,
+        newUsers: newUsers
+      });
+      setShowExcelDiffModal(true);
+    } catch (err: any) {
+      console.error("Excel import error:", err);
+      setSyncError(err?.message || (language === 'ar' ? 'حدث خطأ أثناء معالجة ملف الإكسيل' : 'Failed to parse and sync Excel file.'));
+    } finally {
+      setIsSyncing(false);
+      if (excelFileInputRef.current) excelFileInputRef.current.value = '';
+    }
+  };
+
+  const handleConfirmExcelImport = async () => {
+    if (!pendingImportData) return;
+    setIsExecutingImport(true);
+    try {
+      const mergedRecords = [...allRecordsPool, ...pendingImportData.newRecords];
+
+      // Update in memory & Firestore
       if (setCleanedData) {
-        await setCleanedData(parsedCleanedRecords);
+        await setCleanedData(mergedRecords);
+      }
+      setRecords(mergedRecords as any);
+
+      // Add newly identified users
+      if (pendingImportData.newUsers && pendingImportData.newUsers.length > 0) {
+        setUsers((prev) => [...prev, ...pendingImportData.newUsers.filter((nu: any) => !prev.some((u) => u.id === nu.id))]);
       }
 
-      setRecords(parsedCleanedRecords as any);
-      setUsers((prev) => [...prev, ...newUsers.filter((nu) => !prev.some((u) => u.id === nu.id))]);
-
-      try {
-        localStorage.setItem('oed_cached_cleaned_data_v23', JSON.stringify(parsedCleanedRecords));
-        localStorage.setItem('oed_cached_cleaned_data', JSON.stringify(parsedCleanedRecords));
-        localStorage.setItem('oed_training_filename', file.name);
-      } catch (e) {}
-
-      const distinctCourses = new Set(parsedCleanedRecords.map(r => r.courseName)).size;
-      const distinctSessions = new Set(parsedCleanedRecords.map(r => `${r.courseName}-${r.attendanceDate || r.date}`)).size;
-      const distinctTrainees = new Set(parsedCleanedRecords.map(r => r.hrCode || r.name)).size;
+      // Recompute verified KPIs based on actual merged pool
+      const distinctCourses = new Set(mergedRecords.map(r => r.courseName)).size;
+      const distinctSessions = new Set(mergedRecords.map(r => `${r.courseName}-${r.attendanceDate || r.date}`)).size;
+      const distinctTrainees = new Set(mergedRecords.map(r => r.hrCode || r.name)).size;
       let engCount = 0, techCount = 0, opCount = 0, internCount = 0;
       const engUnique = new Set<string>();
       const techUnique = new Set<string>();
       const opUnique = new Set<string>();
       const internUnique = new Set<string>();
 
-      parsedCleanedRecords.forEach(r => {
+      mergedRecords.forEach(r => {
         const traineeKey = (r.hrCode || r.name || '').trim().toLowerCase();
-        if (r.role === 'intern') {
+        const role = (r.role || '').toLowerCase();
+        if (role === 'intern') {
           internCount++;
           if (traineeKey) internUnique.add(traineeKey);
-        } else if (r.role === 'operator') {
+        } else if (role === 'operator') {
           opCount++;
           if (traineeKey) opUnique.add(traineeKey);
-        } else if (r.role === 'technician') {
+        } else if (role === 'technician') {
           techCount++;
           if (traineeKey) techUnique.add(traineeKey);
         } else {
@@ -2105,10 +2174,10 @@ Content-Type: text/html; charset="utf-8"
         }
       });
 
-      const computedKPIs = {
+      const updatedKPIs = {
         totalCourses: distinctCourses,
         totalSessions: distinctSessions,
-        totalParticipants: parsedCleanedRecords.length,
+        totalParticipants: mergedRecords.length,
         uniqueTrainees: distinctTrainees,
         totalEngineers: engCount,
         uniqueEngineers: engUnique.size,
@@ -2120,25 +2189,94 @@ Content-Type: text/html; charset="utf-8"
         uniqueInterns: internUnique.size
       };
 
-      localStorage.setItem('oed_cached_global_kpis', JSON.stringify(computedKPIs));
+      localStorage.setItem('oed_cached_global_kpis', JSON.stringify(updatedKPIs));
       try {
-        await setDoc(doc(db, "systemSettings", "globalKPIs"), computedKPIs, { merge: true });
+        await setDoc(doc(db, "systemSettings", "globalKPIs"), updatedKPIs, { merge: true });
       } catch (e) {}
 
       setSyncSummary({
-        total: parsedCleanedRecords.length,
+        total: mergedRecords.length,
         courses: distinctCourses,
         sessions: distinctSessions,
-        fileName: file.name
+        fileName: pendingImportData.fileName
       });
       setSyncSuccess(true);
       setTimeout(() => setSyncSuccess(false), 8000);
+      setShowExcelDiffModal(false);
+      setPendingImportData(null);
     } catch (err: any) {
-      console.error("Excel import error:", err);
-      setSyncError(err?.message || (language === 'ar' ? 'حدث خطأ أثناء معالجة ملف الإكسيل' : 'Failed to parse and sync Excel file.'));
+      console.error("Failed to commit merged import:", err);
+      alert(language === 'ar' ? 'حدث خطأ أثناء دمج البيانات' : 'Failed to merge records.');
     } finally {
-      setIsSyncing(false);
-      if (excelFileInputRef.current) excelFileInputRef.current.value = '';
+      setIsExecutingImport(false);
+    }
+  };
+
+  const handleResetToMasterRecords = async () => {
+    const confirmMsg = language === 'ar' 
+      ? 'هل أنت متأكد من رغبتك في تنظيف قاعدة البيانات وتثبيت الأرقام الرسمية المعتمدة (1,143 حضور • 143 جلسة • 23 دورة)؟'
+      : 'Are you sure you want to clean the database and restore the verified 1,143 master records?';
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsResettingMaster(true);
+    try {
+      // 1. Purge all dirty/duplicated docs from Firestore collection cleanedData
+      try {
+        const snap = await getDocs(collection(db, "cleanedData"));
+        const docChunks: string[] = [];
+        snap.forEach(d => docChunks.push(d.id));
+
+        const CHUNK_SIZE = 400;
+        for (let i = 0; i < docChunks.length; i += CHUNK_SIZE) {
+          const chunk = docChunks.slice(i, i + CHUNK_SIZE);
+          const delBatch = writeBatch(db);
+          chunk.forEach(docId => {
+            delBatch.delete(doc(db, "cleanedData", docId));
+          });
+          await delBatch.commit();
+        }
+      } catch (purgeErr) {
+        console.warn("Could not batch delete dirty cleanedData:", purgeErr);
+      }
+
+      // 2. Commit verified master records (1,143)
+      if (setCleanedData) {
+        await setCleanedData(MASTER_VERIFIED_RECORDS);
+      }
+      setRecords(MASTER_VERIFIED_RECORDS as any);
+
+      // 3. Clear local storage caches
+      localStorage.removeItem('oed_cached_cleaned_data_v23');
+      localStorage.removeItem('oed_cached_cleaned_data');
+      localStorage.setItem('oed_cached_cleaned_data_v23', JSON.stringify(MASTER_VERIFIED_RECORDS));
+
+      // 4. Set official verified KPIs
+      const officialKPIs = {
+        totalCourses: 23,
+        totalSessions: 143,
+        totalParticipants: 1143,
+        uniqueTrainees: 409,
+        totalEngineers: 758,
+        uniqueEngineers: 159,
+        totalTechnicians: 211,
+        uniqueTechnicians: 150,
+        totalOperators: 102,
+        uniqueOperators: 100,
+        totalInterns: 72,
+        uniqueInterns: 72
+      };
+
+      localStorage.setItem('oed_cached_global_kpis', JSON.stringify(officialKPIs));
+      try {
+        await setDoc(doc(db, "systemSettings", "globalKPIs"), officialKPIs, { merge: true });
+      } catch (e) {}
+
+      alert(language === 'ar' ? 'تم تنظيف قاعدة البيانات وتثبيت الأرقام الرسمية المعتمدة (1,143) بنجاح!' : 'Database cleaned and verified master KPIs (1,143) successfully restored!');
+    } catch (err) {
+      console.error("Master reset error:", err);
+      alert(language === 'ar' ? 'حدث خطأ أثناء تنظيف البيانات' : 'Failed to reset master records.');
+    } finally {
+      setIsResettingMaster(false);
     }
   };
 
@@ -2588,15 +2726,6 @@ Content-Type: text/html; charset="utf-8"
             </p>
           </div>
 
-          {isAdmin && (
-            <button
-              onClick={() => setShowCreateUserModal(true)}
-              className="flex items-center gap-1.5 bg-[#FFC000] text-[#002D62] hover:bg-yellow-400 px-3.5 py-2 rounded-xl transition-all shadow-sm text-xs sm:text-sm font-black active:scale-95 cursor-pointer shrink-0 hover:scale-[1.02]"
-            >
-              <UserPlus size={16} className="stroke-[2.5]" />
-              <span>{language === "ar" ? "+ إنشاء حساب مدير / مستخدم" : "+ Add User / Executive"}</span>
-            </button>
-          )}
 
           {user?.role === 'admin' || user?.role === 'supervisor' ? (
             <button 
@@ -2664,16 +2793,50 @@ Content-Type: text/html; charset="utf-8"
                   <h2 className="text-2xl font-bold border-l-4 border-[#FFC000] pl-3 rtl:pr-3 rtl:pl-0 rtl:border-r-4 rtl:border-l-0" style={{ color: isDark ? '#60a5fa' : '#002D62' }}>
                     {language === "ar" ? "السجلات الشاملة" : "Global Records"}
                   </h2>
-                  <div className="flex gap-2">
-                    {/* -- NEW MANUAL ADD BUTTON -- */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input 
+                      ref={excelFileInputRef} 
+                      type="file" 
+                      accept=".xlsx, .xls" 
+                      onChange={handleFileUpload} 
+                      className="hidden" 
+                    />
+
                     {isAdmin && (
-                      <button 
-                        onClick={() => setShowManualAddModal(true)} 
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFC000] text-[#002D62] rounded-xl text-sm font-bold transition-all shadow-xs cursor-pointer hover:bg-yellow-500"
-                      >
-                        <PlusCircle size={16} />
-                        <span>{language === "ar" ? "إضافة حضور يدوي" : "Add Record"}</span>
-                      </button>
+                      <>
+                        {/* 1. Upload & Compare Excel (Zero-Data-Loss Diff Engine) */}
+                        <button
+                          type="button"
+                          onClick={() => excelFileInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-emerald-500 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-2xs cursor-pointer hover:scale-[1.02]"
+                          title={language === 'ar' ? 'رفع ملف إكسيل ومقارنته لمنع تكرار السجلات وتأكيد الإضافة' : 'Upload Excel file with intelligent comparison and deduplication'}
+                        >
+                          <FileSpreadsheet size={16} className="text-emerald-600 dark:text-emerald-400" />
+                          <span>{language === "ar" ? "رفع ومقارنة إكسيل" : "Upload & Compare Excel"}</span>
+                        </button>
+
+                        {/* 2. Restore Official Baseline (1,143 Verified Records) */}
+                        <button
+                          type="button"
+                          onClick={handleResetToMasterRecords}
+                          disabled={isResettingMaster}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-blue-300 dark:border-blue-800 text-[#002D62] dark:text-blue-300 bg-blue-50/60 dark:bg-blue-950/30 hover:bg-blue-100 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-2xs cursor-pointer hover:scale-[1.02] disabled:opacity-50"
+                          title={language === 'ar' ? 'تنظيف التكرار واستعادة السجلات الرسمية المعتمدة (1,143 حضور)' : 'Clean database and restore verified 1,143 master records'}
+                        >
+                          <RotateCcw size={15} className={`text-blue-600 dark:text-blue-400 ${isResettingMaster ? 'animate-spin' : ''}`} />
+                          <span>{isResettingMaster ? (language === 'ar' ? 'جاري التنظيف...' : 'Cleaning...') : (language === 'ar' ? 'استعادة الماستر (1,143)' : 'Restore Master (1,143)')}</span>
+                        </button>
+
+                        {/* 3. Manual Add Record */}
+                        <button 
+                          type="button"
+                          onClick={() => setShowManualAddModal(true)} 
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFC000] text-[#002D62] rounded-xl text-xs sm:text-sm font-black transition-all shadow-xs cursor-pointer hover:bg-yellow-400 active:scale-95 hover:scale-[1.02]"
+                        >
+                          <PlusCircle size={16} className="stroke-[2.5]" />
+                          <span>{language === "ar" ? "إضافة حضور يدوي" : "Add Record"}</span>
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -5543,6 +5706,26 @@ Content-Type: text/html; charset="utf-8"
             </form>
           </div>
         </div>
+      )}
+
+      {/* Smart Excel Import Diff & Merge Confirmation Modal */}
+      {showExcelDiffModal && pendingImportData && (
+        <ExcelImportDiffModal
+          isOpen={showExcelDiffModal}
+          onClose={() => {
+            setShowExcelDiffModal(false);
+            setPendingImportData(null);
+          }}
+          onConfirm={handleConfirmExcelImport}
+          fileName={pendingImportData.fileName}
+          newRecords={pendingImportData.newRecords}
+          duplicateCount={pendingImportData.duplicateCount}
+          totalRowsInFile={pendingImportData.totalRowsInFile}
+          existingTotal={allRecordsPool.length}
+          isConfirming={isExecutingImport}
+          language={language}
+          isDark={isDark}
+        />
       )}
 
       {/* System Errors Modal (Admin Only) */}
