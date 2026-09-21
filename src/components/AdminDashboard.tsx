@@ -345,6 +345,38 @@ Please log in to register for this session through the OED-TTMS Application.
     return activeSessionsList;
   }, [sessionStatusTab, activeSessionsList, completedSessionsList, cancelledSessionsList]);
 
+  // Modal URL param support for automated uncropped captures
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const p = new URLSearchParams(window.location.search);
+    const m = p.get('modal');
+    if (!m) return;
+    if (m === 'createUser' || m === 'addUser') setShowCreateUserModal(true);
+    else if (m === 'newCourse') setShowNewCourseModal(true);
+    else if (m === 'reset') setShowFactoryResetModal(true);
+    else if (m === 'usage') setShowUsageModal(true);
+    else if (m === 'systemErrors') setShowSystemErrorsModal(true);
+    else if (m === 'monthlyReport') setShowMonthlyReport(true);
+    else if (m === 'finalize' && upcomingSessions && upcomingSessions.length > 0) {
+      setFinalizingSession(upcomingSessions[0]);
+    }
+    else if (m === 'register' && upcomingSessions && upcomingSessions.length > 0) {
+      setPreviewRegisterSession(upcomingSessions[0]);
+    }
+    else if (m === 'editSession' && upcomingSessions && upcomingSessions.length > 0) {
+      setSessionToEditDirectly(upcomingSessions[0]);
+    }
+    else if (m === 'manualAttendance' && upcomingSessions && upcomingSessions.length > 0) {
+      setManualAttendanceSession(upcomingSessions[0]);
+    }
+    else if (m === 'qr' && upcomingSessions && upcomingSessions.length > 0) {
+      setQrSession(upcomingSessions[0]);
+    }
+    else if (m === 'editUser' && users && users.length > 0) {
+      setSelectedUserToEdit(users[0]);
+    }
+  }, [upcomingSessions, users]);
+
   // -- FACTORY RESET STATE & HANDLER --
   const [showFactoryResetModal, setShowFactoryResetModal] = useState(false);
   const [resetPassword, setResetPassword] = useState("");
