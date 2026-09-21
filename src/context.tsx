@@ -636,6 +636,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [language, setLanguage] = useState<Language>('en');
   const [currentView, setCurrentViewState] = useState<string>(() => {
     try {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewParam = urlParams.get('view');
+        if (viewParam) return viewParam;
+      }
       const stored = localStorage.getItem('oed_current_view');
       return stored || 'dashboard';
     } catch {
@@ -654,6 +659,87 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       if (typeof window !== 'undefined') {
         const urlParams = new URLSearchParams(window.location.search);
+        
+        // Explicit logout or login view query
+        if (urlParams.get('view') === 'login' || urlParams.get('logout') === 'true') {
+          return null;
+        }
+
+        // Explicit role query parameter support
+        const roleParam = urlParams.get('role');
+        if (roleParam) {
+          if (roleParam === 'trainee') {
+            return {
+              id: '830557',
+              hrCode: '830557',
+              name: 'Amir Samir',
+              email: 'amir.samir@orascom.com',
+              phone: '01000000001',
+              department: 'ORC - Katamia - Workshop',
+              jobRole: 'Engineer',
+              role: 'trainee' as const,
+              status: 'approved' as const,
+              isDemoUser: false,
+            };
+          }
+          if (roleParam === 'manager') {
+            return {
+              id: 'mgr_01',
+              hrCode: 'MGR-101',
+              name: 'Executive Manager',
+              email: 'manager@orascom.com',
+              phone: '01000000002',
+              department: 'Equipment Management',
+              jobRole: 'Department Director',
+              role: 'manager' as const,
+              status: 'approved' as const,
+              isDemoUser: false,
+            };
+          }
+          if (roleParam === 'supervisor') {
+            return {
+              id: 'sup_01',
+              hrCode: 'SUP-202',
+              name: 'Site Supervisor',
+              email: 'supervisor@orascom.com',
+              phone: '01000000003',
+              department: 'Central Workshop - Katamia',
+              jobRole: 'Workshop Supervisor',
+              role: 'supervisor' as const,
+              status: 'approved' as const,
+              isDemoUser: false,
+            };
+          }
+          if (roleParam === 'executive') {
+            return {
+              id: 'exec_01',
+              hrCode: 'EXEC-001',
+              name: 'Executive Director',
+              email: 'executive@orascom.com',
+              phone: '01000000004',
+              department: 'Executive Leadership',
+              jobRole: 'Managing Director',
+              role: 'executive' as const,
+              status: 'approved' as const,
+              isDemoUser: false,
+            };
+          }
+          if (roleParam === 'admin') {
+            return {
+              id: 'admin',
+              hrCode: 'ADMIN',
+              name: 'Master Admin',
+              email: 'admin@orascom.com',
+              phone: '01000000000',
+              department: 'Equipment Department',
+              jobRole: 'Department Manager',
+              role: 'admin' as const,
+              status: 'approved' as const,
+              isDemoUser: false,
+            };
+          }
+        }
+
         const hasDemoParam = urlParams.get('demo') === 'vip' || 
                              urlParams.get('demo') === 'true' ||
                              urlParams.get('access') === 'executive_demo' ||
@@ -720,6 +806,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const themeParam = urlParams.get('theme');
+        if (themeParam === 'dark' || themeParam === 'light') return themeParam;
+      }
       const stored = localStorage.getItem('oed_theme');
       return (stored as 'light' | 'dark') || 'light';
     } catch {
