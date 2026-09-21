@@ -411,7 +411,7 @@ Please log in to register for this session through the OED-TTMS Application.
   }, [upcomingSessions, users]);
 
   // -- FACTORY RESET STATE & HANDLER --
-  const [showFactoryResetModal, setShowFactoryResetModal] = useState(false);
+  const [showFactoryResetModal, setShowFactoryResetModal] = useState(() => typeof window !== 'undefined' && (window.location.search.includes('modal=reset') || window.location.search.includes('modal=factoryReset')));
   const [resetPassword, setResetPassword] = useState("");
   const [isResetting, setIsResetting] = useState(false);
   const [resetError, setResetError] = useState("");
