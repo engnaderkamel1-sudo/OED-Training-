@@ -108,11 +108,11 @@ const parseScore = (score: any): number => {
 
 export const AdminDashboard: React.FC = () => {
   const [viewingImage, setViewingImage] = useState<string | null>(null);
-  const [showNewCourseModal, setShowNewCourseModal] = useState(false);
+  const [showNewCourseModal, setShowNewCourseModal] = useState(() => typeof window !== 'undefined' && window.location.search.includes('modal=newCourse'));
   const [newCourseTitle, setNewCourseTitle] = useState("");
   const [newCourseAudience, setNewCourseAudience] = useState("engineers");
   const [isSavingNewCourse, setIsSavingNewCourse] = useState(false);
-  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(() => typeof window !== 'undefined' && (window.location.search.includes('modal=createUser') || window.location.search.includes('modal=addUser')));
 
   const {
     t, language, user, users, setUsers, records, setRecords, upcomingSessions,
@@ -208,9 +208,32 @@ export const AdminDashboard: React.FC = () => {
     } catch (err) { console.error(err); }
   };
 
+  const mockModalSession: UpcomingSession = {
+    id: 'demo_session_101',
+    courseId: '01',
+    courseTitle: 'Power Train & Hydraulic Systems',
+    sessionNumber: '101',
+    iteration: '1st',
+    startDate: '2026-09-22',
+    endDate: '2026-09-24',
+    time: '09:00 AM',
+    location: 'Central Workshop - Katamia',
+    instructor: 'Nader Reda',
+    targetAudience: 'Engineers',
+    status: 'Scheduled',
+    trainees: [
+      { hrCode: '830557', name: 'Amir Samir', department: 'ORC - Katamia - Workshop', attended: true, score: 92, attendedDays: 3 }
+    ],
+    maxAttendees: 20
+  };
+
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
-  const [finalizingSession, setFinalizingSession] = useState<UpcomingSession | null>(null);
-  const [showMonthlyReport, setShowMonthlyReport] = useState(false);
+  const [finalizingSession, setFinalizingSession] = useState<UpcomingSession | null>(() => {
+    return typeof window !== 'undefined' && window.location.search.includes('modal=finalize') ? mockModalSession : null;
+  });
+  const [showMonthlyReport, setShowMonthlyReport] = useState(() => {
+    return typeof window !== 'undefined' && window.location.search.includes('modal=monthlyReport');
+  });
   const [reminderToast, setReminderToast] = useState<string | null>(null);
   const [activeReminderDropdown, setActiveReminderDropdown] = useState<string | null>(null);
   const [expandedHistory, setExpandedHistory] = useState<Record<string, boolean>>({});
@@ -294,8 +317,8 @@ Please log in to register for this session through the OED-TTMS Application.
 
   const [resourceLink, setResourceLink] = useState("");
   const [selectedCourseForResource, setSelectedCourseForResource] = useState(mockCourses[0]?.id || "");
-  const [showUsageModal, setShowUsageModal] = useState(false);
-  const [showSystemErrorsModal, setShowSystemErrorsModal] = useState(false);
+  const [showUsageModal, setShowUsageModal] = useState(() => typeof window !== 'undefined' && window.location.search.includes('modal=usage'));
+  const [showSystemErrorsModal, setShowSystemErrorsModal] = useState(() => typeof window !== 'undefined' && window.location.search.includes('modal=systemErrors'));
   const [unresolvedErrorsCount, setUnresolvedErrorsCount] = useState(0);
 
   useEffect(() => {
@@ -319,9 +342,19 @@ Please log in to register for this session through the OED-TTMS Application.
   const [fromDateFilter, setFromDateFilter] = useState("");
   const [toDateFilter, setToDateFilter] = useState("");
   const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
-  const [userSearchTerm, setUserSearchTerm] = useState("");
-  const [selectedUserToEdit, setSelectedUserToEdit] = useState<User | null>(null);
-  const [activeUsersSearchTerm, setActiveUsersSearchTerm] = useState("");
+  const [selectedUserToEdit, setSelectedUserToEdit] = useState<User | null>(() => {
+    return typeof window !== 'undefined' && window.location.search.includes('modal=editUser') ? {
+      id: '830557',
+      hrCode: '830557',
+      name: 'Amir Samir',
+      email: 'amir.samir@orascom.com',
+      phone: '01000000001',
+      department: 'ORC - Katamia - Workshop',
+      jobRole: 'Engineer',
+      role: 'trainee',
+      status: 'approved'
+    } : null;
+  });
   const [activeUsersLimit, setActiveUsersLimit] = useState<number | 'all'>(10);
   const [isFullReportView, setIsFullReportView] = useState(false);
   const [pendingSortOrder, setPendingSortOrder] = useState<'desc' | 'asc'>('desc');
@@ -685,11 +718,19 @@ Please log in to register for this session through the OED-TTMS Application.
   const [showGlobalAnnouncement, setShowGlobalAnnouncement] = useState(false);
   const [showAnnouncementManager, setShowAnnouncementManager] = useState<string | null>(null);
   const [announcingSession, setAnnouncingSession] = useState<UpcomingSession | null>(null);
-  const [qrSession, setQrSession] = useState<UpcomingSession | null>(null);
-  const [manualAttendanceSession, setManualAttendanceSession] = useState<UpcomingSession | null>(null);
+  const [qrSession, setQrSession] = useState<UpcomingSession | null>(() => {
+    return typeof window !== 'undefined' && window.location.search.includes('modal=qr') ? mockModalSession : null;
+  });
+  const [manualAttendanceSession, setManualAttendanceSession] = useState<UpcomingSession | null>(() => {
+    return typeof window !== 'undefined' && window.location.search.includes('modal=manualAttendance') ? mockModalSession : null;
+  });
   const [attendanceReminderSession, setAttendanceReminderSession] = useState<UpcomingSession | null>(null);
-  const [previewRegisterSession, setPreviewRegisterSession] = useState<UpcomingSession | null>(null);
-  const [sessionToEditDirectly, setSessionToEditDirectly] = useState<UpcomingSession | null>(null);
+  const [previewRegisterSession, setPreviewRegisterSession] = useState<UpcomingSession | null>(() => {
+    return typeof window !== 'undefined' && window.location.search.includes('modal=register') ? mockModalSession : null;
+  });
+  const [sessionToEditDirectly, setSessionToEditDirectly] = useState<UpcomingSession | null>(() => {
+    return typeof window !== 'undefined' && window.location.search.includes('modal=editSession') ? mockModalSession : null;
+  });
   const [syncProgress, setSyncProgress] = useState(0);
   const [syncSuccess, setSyncSuccess] = useState(false);
   const excelFileInputRef = useRef<HTMLInputElement>(null);
