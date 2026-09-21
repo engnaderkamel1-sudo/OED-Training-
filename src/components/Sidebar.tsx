@@ -33,7 +33,13 @@ import { ExecutiveQRModal } from './ExecutiveQRModal';
 
 export const Sidebar: React.FC = () => {
   const { user, language, t, currentView, setCurrentView, isExecutiveDemoEnabled, toggleExecutiveDemo } = useAppContext();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('sidebar') === 'open' || urlParams.get('menu') === 'open';
+    }
+    return false;
+  });
   const [showExecutiveQR, setShowExecutiveQR] = useState(false);
   const [openErrorsCount, setOpenErrorsCount] = useState(0);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
