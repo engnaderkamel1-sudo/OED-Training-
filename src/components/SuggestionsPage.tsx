@@ -5,7 +5,7 @@ import {
   Lightbulb, Bug, BookOpen, Sparkles, 
   Send, Clock, CheckCircle, XCircle, 
   Search, MessageSquare, AlertCircle, X,
-  Mail, ChevronDown, ChevronRight
+  Mail, ChevronDown, ChevronRight, RotateCcw
 } from 'lucide-react';
 
 const CATEGORIES: { value: SuggestionCategory; icon: React.FC<any>; color: string; activeColor: string }[] = [
@@ -488,10 +488,10 @@ export const SuggestionsPage: React.FC = () => {
                   <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mb-4 leading-relaxed">
                     {language === 'ar' ? 'جرب تغيير فلتر الحالة أو التصنيف لعرض مقترحات وملاحظات أخرى.' : 'Try changing status or category filter to view other submissions.'}
                   </p>
-                  {(statusFilter !== 'all' || categoryFilter !== 'all') && (
+                  {(filterStatus !== 'all' || filterCategory !== 'all') && (
                     <button
                       type="button"
-                      onClick={() => { setStatusFilter('all'); setCategoryFilter('all'); }}
+                      onClick={() => { setFilterStatus('all'); setFilterCategory('all'); }}
                       className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 hover:scale-105"
                     >
                       <RotateCcw size={14} className="text-[#FFC000]" />
