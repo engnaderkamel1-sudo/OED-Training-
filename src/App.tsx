@@ -36,15 +36,16 @@ import { ExecutiveDemoBanner } from './components/ExecutiveDemoBanner';
 
 const AppContent: React.FC = () => {
   const { user, isLoading, t, currentView, language, setUser } = useAppContext();
-  const [minSplashDone, setMinSplashDone] = useState(false);
+  const [minSplashDone, setMinSplashDone] = useState(() => typeof window !== 'undefined' && (window.location.search.includes('nosplash') || window.location.search.includes('demo=')));
 
   // Guarantee that the dynamic splash screen is visible for 5 seconds on app launch
   useEffect(() => {
+    if (minSplashDone) return;
     const timer = setTimeout(() => {
       setMinSplashDone(true);
     }, 5000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [minSplashDone]);
 
   const showAppLoading = isLoading || !minSplashDone;
 
