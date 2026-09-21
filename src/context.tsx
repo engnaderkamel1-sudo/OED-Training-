@@ -1668,7 +1668,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       raw: r.raw,
     }));
 
-    return [...localRecords, ...derivedRecords];
+    if (localRecords.length === 0) return derivedRecords;
+    
+    // Only append truly unique local records that do not exist in derived records
+    const existingIds = new Set(derivedRecords.map(d => d.id));
+    const existingKeys = new Set(derivedRecords.map(d => `${d.hrCode || ''}_${d.courseName || ''}_${d.attendanceDate || ''}`));
+    const uniqueLocal = localRecords.filter(r => !existingIds.has(r.id) && !existingKeys.has(`${r.hrCode || ''}_${r.courseName || ''}_${r.attendanceDate || ''}`));
+
+    return [...uniqueLocal, ...derivedRecords];
   }, [cleanedData, localRecords]);
 
   const t = (key: keyof typeof translations['en']) => {
